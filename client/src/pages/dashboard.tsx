@@ -915,8 +915,7 @@ export default function Dashboard() {
               <SidebarItem icon={Calendar} label="Calendar" id="calendar" />
             </>
           )}
-          
-                  </div>
+        </div>
 
         <div className="mt-auto pt-4 border-t">
           <DropdownMenu>
