@@ -109,6 +109,8 @@ export const insertCampaignSchema = z.object({
     start: z.string(),
     end: z.string(),
   }).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
 export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
@@ -118,6 +120,8 @@ export type Campaign = InsertCampaign & {
   callsMade: number;
   goalsMet: number;
   knowledgeBaseFiles?: KnowledgeBaseFile[];
+  startDate?: string;
+  endDate?: string;
   createdAt: Date;
 };
 

@@ -68,6 +68,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import dashboardImage from "@assets/generated_images/futuristic_dashboard_interface_mockup_glowing_in_orange..png";
 
 // Helper function to format time ago
@@ -131,6 +132,8 @@ export default function Dashboard() {
     additionalContext: string;
     callingHours: { start: string; end: string };
     knowledgeBaseFiles: UploadedFile[];
+    startDate: string;
+    endDate: string;
   }>({
     name: "",
     goal: "sales",
@@ -138,7 +141,9 @@ export default function Dashboard() {
     voice: "Rachel (American)",
     additionalContext: "",
     callingHours: { start: "09:00", end: "17:00" },
-    knowledgeBaseFiles: []
+    knowledgeBaseFiles: [],
+    startDate: "",
+    endDate: ""
   });
 
   // Edit Campaign Form State
@@ -151,6 +156,8 @@ export default function Dashboard() {
     callingHours: { start: string; end: string };
     status: "Active" | "Paused" | "Draft";
     knowledgeBaseFiles: UploadedFile[];
+    startDate: string;
+    endDate: string;
   }>({
     name: "",
     goal: "sales",
@@ -159,8 +166,20 @@ export default function Dashboard() {
     additionalContext: "",
     callingHours: { start: "09:00", end: "17:00" },
     status: "Draft",
-    knowledgeBaseFiles: []
+    knowledgeBaseFiles: [],
+    startDate: "",
+    endDate: ""
   });
+
+  // Notes State
+  const [notes, setNotes] = useState<Array<{ id: string; content: string; createdAt: Date }>>([]);
+  const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
+  const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [noteContent, setNoteContent] = useState("");
+  
+  // Campaign Search State
+  const [campaignSearch, setCampaignSearch] = useState("");
 
   // File upload state
   const [isUploading, setIsUploading] = useState(false);
@@ -211,6 +230,13 @@ export default function Dashboard() {
     companyName: user?.companyName || ""
   });
   const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
+
+  // Chart Filter State
+  const [selectedChartMonth, setSelectedChartMonth] = useState<number>(new Date().getMonth());
+  const [selectedChartYear, setSelectedChartYear] = useState<number>(new Date().getFullYear());
+
+  // Call/SMS Confirmation State
+  const [callConfirm, setCallConfirm] = useState<{ leadId: string; type: "call" | "sms" } | null>(null);
 
   // Stats derived from data
   const stats = [
@@ -883,6 +909,7 @@ export default function Dashboard() {
           ) : (
             <>
               <SidebarItem icon={Users} label="CRM / Leads" id="crm" />
+              <SidebarItem icon={History} label="Call History" id="callhistory" />
               <SidebarItem icon={Phone} label="Campaigns" id="campaigns" />
               <SidebarItem icon={MessageSquare} label="Bulk SMS" id="sms" />
               <SidebarItem icon={Calendar} label="Calendar" id="calendar" />
@@ -949,11 +976,8 @@ export default function Dashboard() {
         <div className="flex-1 p-6 overflow-auto">
           {activeTab === "overview" && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-                <div className="flex gap-2">
-                   <Badge variant="outline" className="px-3 py-1">Last 7 Days</Badge>
-                </div>
               </div>
 
               {/* Stats Grid */}
@@ -974,64 +998,193 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent Activity */}
-                <Card className="lg:col-span-2">
-                  <CardHeader>
-                    <CardTitle>{isAdmin ? "System Activity" : "Recent Calls"}</CardTitle>
-                    <CardDescription>{isAdmin ? "Latest system-wide events." : "Real-time log of AI interactions."}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{isAdmin ? "User" : "Lead"}</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Outcome</TableHead>
-                          <TableHead className="text-right">Time</TableHead>
+              {/* Recent Logs - Last 50 Records */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Logs</CardTitle>
+                  <CardDescription>Last 50 lead records</CardDescription>
+                </CardHeader>
+                <CardContent className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Lead Name</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Outcome</TableHead>
+                        <TableHead className="text-right">Last Interaction</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leads.slice(0, 50).map((lead) => (
+                        <TableRow key={lead._id}>
+                          <TableCell className="font-medium">{lead.name}</TableCell>
+                          <TableCell>
+                            <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'} className={lead.status === 'Interested' ? 'bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-none' : ''}>
+                              {lead.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{lead.outcome}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {leads.slice(0, 5).map((lead) => (
-                          <TableRow key={lead._id}>
-                            <TableCell className="font-medium">{lead.name}</TableCell>
-                            <TableCell>
-                              <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'} className={lead.status === 'Interested' ? 'bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-none' : ''}>
-                                {lead.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{lead.outcome}</TableCell>
-                            <TableCell className="text-right text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
-                          </TableRow>
-                        ))}
-                        {leads.length === 0 && (
-                          <TableRow>
-                            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">No leads yet. Add your first lead to get started.</TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
+                      ))}
+                      {leads.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">No leads yet.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* Charts Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Lead Status Distribution Pie Chart */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Lead Status Distribution</CardTitle>
+                    <CardDescription>Total leads by status</CardDescription>
+                  </CardHeader>
+                  <CardContent className="h-80 flex items-center justify-center">
+                    {leads.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: "New", value: leads.filter(l => l.status === "New").length },
+                              { name: "Interested", value: leads.filter(l => l.status === "Interested").length },
+                              { name: "Follow Up", value: leads.filter(l => l.status === "Follow Up").length },
+                              { name: "In Progress", value: leads.filter(l => l.status === "In Progress").length },
+                              { name: "Closed", value: leads.filter(l => l.status === "Closed").length },
+                              { name: "Unqualified", value: leads.filter(l => l.status === "Unqualified").length }
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            <Cell fill="#3b82f6" />
+                            <Cell fill="#10b981" />
+                            <Cell fill="#f59e0b" />
+                            <Cell fill="#8b5cf6" />
+                            <Cell fill="#ef4444" />
+                            <Cell fill="#6b7280" />
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="text-muted-foreground text-center">No data available</div>
+                    )}
                   </CardContent>
                 </Card>
 
-                {/* Quick Actions / Upsell */}
-                <Card className="bg-primary text-primary-foreground overflow-hidden relative">
-                  <div className="absolute inset-0 z-0 opacity-20">
-                     <img src={dashboardImage} alt="bg" className="w-full h-full object-cover" />
-                  </div>
-                  <CardHeader className="relative z-10">
-                    <CardTitle>{isAdmin ? "System Status" : "Upgrade to Pro"}</CardTitle>
-                    <CardDescription className="text-primary-foreground/80">
-                      {isAdmin ? "All systems operational." : "Unlock unlimited minutes and custom voice cloning."}
-                    </CardDescription>
+                {/* Last 12 Months Lead Counts */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Lead Trends (12 Months)</CardTitle>
+                    <CardDescription>Monthly lead count</CardDescription>
                   </CardHeader>
-                  <CardContent className="relative z-10 pt-4">
-                    <Button variant="secondary" className="w-full shadow-lg">
-                      {isAdmin ? "View Logs" : "View Plans"}
-                    </Button>
+                  <CardContent className="h-80 flex items-center justify-center">
+                    {leads.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={
+                          Array.from({ length: 12 }, (_, i) => {
+                            const date = new Date();
+                            date.setMonth(date.getMonth() - (11 - i));
+                            const monthLeads = leads.filter(l => {
+                              const leadDate = new Date(l.createdAt);
+                              return leadDate.getMonth() === date.getMonth() && leadDate.getFullYear() === date.getFullYear();
+                            }).length;
+                            return {
+                              month: date.toLocaleDateString('en-US', { month: 'short' }),
+                              leads: monthLeads
+                            };
+                          })
+                        }>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <Tooltip />
+                          <Line type="monotone" dataKey="leads" stroke="#3b82f6" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="text-muted-foreground text-center">No data available</div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Daily Calling Counts with Month/Year Filter */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Daily Call Activity</CardTitle>
+                      <CardDescription>Calling counts by day</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Select value={selectedChartMonth.toString()} onValueChange={(val) => setSelectedChartMonth(parseInt(val))}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <SelectItem key={i} value={i.toString()}>
+                              {new Date(2024, i).toLocaleDateString('en-US', { month: 'long' })}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={selectedChartYear.toString()} onValueChange={(val) => setSelectedChartYear(parseInt(val))}>
+                        <SelectTrigger className="w-24">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 5 }, (_, i) => {
+                            const year = new Date().getFullYear() - i;
+                            return <SelectItem key={year} value={year.toString()}>{year}</SelectItem>;
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="h-80 flex items-center justify-center">
+                  {leads.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={
+                        Array.from({ length: new Date(selectedChartYear, selectedChartMonth + 1, 0).getDate() }, (_, i) => {
+                          const day = i + 1;
+                          const callsCount = leads.reduce((acc, lead) => {
+                            const historyForDay = (lead.history || []).filter(h => {
+                              const hDate = new Date(h.date);
+                              return h.type === 'call' && hDate.getDate() === day && hDate.getMonth() === selectedChartMonth && hDate.getFullYear() === selectedChartYear;
+                            }).length;
+                            return acc + historyForDay;
+                          }, 0);
+                          return {
+                            day: `Day ${day}`,
+                            calls: callsCount
+                          };
+                        })
+                      }>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="day" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="calls" stroke="#10b981" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="text-muted-foreground text-center">No data available</div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -1091,10 +1244,17 @@ export default function Dashboard() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
-                <Dialog open={isCreateCampaignOpen} onOpenChange={setIsCreateCampaignOpen}>
-                  <DialogTrigger asChild>
-                    <Button><Plus className="mr-2 h-4 w-4" /> Create Campaign</Button>
-                  </DialogTrigger>
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="Search campaigns..." 
+                    className="w-64"
+                    value={campaignSearch}
+                    onChange={(e) => setCampaignSearch(e.target.value)}
+                  />
+                  <Dialog open={isCreateCampaignOpen} onOpenChange={setIsCreateCampaignOpen}>
+                    <DialogTrigger asChild>
+                      <Button><Plus className="mr-2 h-4 w-4" /> Create Campaign</Button>
+                    </DialogTrigger>
                   <DialogContent className="sm:max-w-[700px] h-[80vh] flex flex-col p-0 gap-0">
                     <DialogHeader className="px-6 py-4 border-b">
                       <DialogTitle>Create AI Campaign</DialogTitle>
@@ -1312,6 +1472,108 @@ export default function Dashboard() {
           )}
 
           {/* User: CRM */}
+          {/* User: Call History */}
+          {activeTab === "callhistory" && !isAdmin && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold tracking-tight">Call History</h1>
+              </div>
+
+              {/* Filters */}
+              <div className="flex flex-col gap-4">
+                <div className="flex gap-4 flex-wrap">
+                  <div className="flex-1 min-w-[200px]">
+                    <Label className="text-sm text-muted-foreground mb-2 block">Search by lead name</Label>
+                    <Input placeholder="Search leads..." className="w-full" />
+                  </div>
+                  <div className="min-w-[200px]">
+                    <Label className="text-sm text-muted-foreground mb-2 block">Campaign</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Campaigns" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Campaigns</SelectItem>
+                        {campaigns.map(c => (
+                          <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="min-w-[200px]">
+                    <Label className="text-sm text-muted-foreground mb-2 block">Start Date</Label>
+                    <Input type="date" />
+                  </div>
+                  <div className="min-w-[200px]">
+                    <Label className="text-sm text-muted-foreground mb-2 block">End Date</Label>
+                    <Input type="date" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Call History Table */}
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Lead Name</TableHead>
+                        <TableHead>Campaign</TableHead>
+                        <TableHead>Call Date & Time</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Recording</TableHead>
+                        <TableHead className="text-right">Call</TableHead>
+                        <TableHead className="text-right">SMS</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leads.flatMap(lead => 
+                        (lead.history || [])
+                          .filter(h => h.type === 'call')
+                          .map((history, idx) => (
+                            <TableRow key={`${lead._id}-${idx}`}>
+                              <TableCell className="font-medium">{lead.name}</TableCell>
+                              <TableCell>
+                                {lead.campaignName ? (
+                                  <Badge variant="secondary">{lead.campaignName}</Badge>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-sm">{new Date(history.date).toLocaleString()}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{history.outcome}</Badge>
+                              </TableCell>
+                              <TableCell className="text-sm">{history.duration}</TableCell>
+                              <TableCell>
+                                <Button size="sm" variant="ghost"><Play className="h-4 w-4 mr-1" /> Play</Button>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}>
+                                  <Phone className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}>
+                                  <MessageSquare className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                      )}
+                      {leads.flatMap(lead => (lead.history || []).filter(h => h.type === 'call')).length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">No call history yet.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {activeTab === "crm" && !isAdmin && (
              <div className="space-y-6">
                <div className="flex justify-between items-center">
@@ -1408,6 +1670,8 @@ export default function Dashboard() {
                         <TableHead>Campaign</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Last Interaction</TableHead>
+                        <TableHead className="text-right">Call</TableHead>
+                        <TableHead className="text-right">SMS</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1434,15 +1698,23 @@ export default function Dashboard() {
                           </TableCell>
                           <TableCell className="text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
                           <TableCell className="text-right">
+                            <Button size="sm" variant="ghost" data-testid={`button-call-${lead._id}`} onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}>
+                              <Phone className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button size="sm" variant="ghost" data-testid={`button-sms-${lead._id}`} onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}>
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                          <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" data-testid={`button-actions-${lead._id}`}><MoreVertical className="h-4 w-4" /></Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>View Details</DropdownMenuItem>
                                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditLead(lead); }}>Edit Lead</DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Call Now</DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Send SMS</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); confirmDeleteLead(lead); }} className="text-destructive">
                                   <Trash2 className="mr-2 h-4 w-4" /> Delete
@@ -1454,7 +1726,7 @@ export default function Dashboard() {
                       ))}
                       {leads.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No leads yet. Add your first lead to get started.</TableCell>
+                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">No leads yet. Add your first lead to get started.</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
@@ -2481,6 +2753,53 @@ export default function Dashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Call/SMS Confirmation Dialog */}
+      <AlertDialog open={!!callConfirm} onOpenChange={() => setCallConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {callConfirm?.type === "call" ? "Initiate Call" : "Send SMS"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {callConfirm?.type === "call" 
+                ? `Are you sure you want to call ${leads.find(l => l._id === callConfirm?.leadId)?.name}?`
+                : `Are you sure you want to send an SMS to ${leads.find(l => l._id === callConfirm?.leadId)?.name}?`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                const lead = leads.find(l => l._id === callConfirm?.leadId);
+                if (lead) {
+                  toast({
+                    title: callConfirm?.type === "call" ? "Call Initiated" : "SMS Sent",
+                    description: `${callConfirm?.type === "call" ? "Calling" : "Message sent to"} ${lead.name}`
+                  });
+                  // Log activity
+                  const newHistory = {
+                    type: callConfirm?.type === "call" ? "call" : "sms" as "call" | "email" | "note",
+                    date: new Date(),
+                    note: callConfirm?.type === "call" ? "Outbound call" : "SMS message sent",
+                    outcome: "Sent",
+                    duration: "0:00"
+                  };
+                  setLeads(leads.map(l => 
+                    l._id === lead._id 
+                      ? { ...l, history: [...(l.history || []), newHistory], lastContact: new Date() }
+                      : l
+                  ));
+                }
+                setCallConfirm(null);
+              }}
+            >
+              {callConfirm?.type === "call" ? "Call Now" : "Send SMS"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
