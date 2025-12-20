@@ -201,7 +201,7 @@ export default function Home() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to replace the busywork?</h2>
           <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto">
-            Join 2,000+ companies using AI Agent to automate their sales outreach.
+            Join 2,000+ companies using NIJVOX to automate their sales outreach.
           </p>
           <Link href="/register">
             <Button size="lg" variant="secondary" className="h-14 px-10 text-lg rounded-full">

@@ -14,7 +14,7 @@ export default function About() {
               We're building the <span className="text-primary">Voice of the Future</span>
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              AI Agent was founded on a simple belief: Humans shouldn't have to do robotic work. We're replacing the repetitive grind of outbound sales with intelligent, empathetic AI agents.
+              NIJVOX was founded on a simple belief: Humans shouldn't have to do robotic work. We're replacing the repetitive grind of outbound sales with intelligent, empathetic AI agents.
             </p>
           </div>
         </div>
@@ -33,7 +33,7 @@ export default function About() {
                  Sales teams are burning out. They spend hours dialing numbers, getting rejected, and repeating the same script. It's inefficient and demoralizing.
                </p>
                <p className="text-muted-foreground">
-                 We built AI Agent to take over the "grunt work" of sales—the cold calling, the qualifying, the follow-ups. This frees up human sales professionals to do what they do best: build genuine relationships and close complex deals.
+                 We built NIJVOX to take over the "grunt work" of sales—the cold calling, the qualifying, the follow-ups. This frees up human sales professionals to do what they do best: build genuine relationships and close complex deals.
                </p>
                <div className="pt-4">
                  <Link href="/contact">

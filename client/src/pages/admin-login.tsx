@@ -46,7 +46,7 @@ export default function AdminLogin() {
           <form className="space-y-4" onSubmit={handleLogin}>
             <div className="space-y-2">
               <Label htmlFor="email">Admin Email</Label>
-              <Input id="email" type="email" placeholder="admin@aiagent.com" required className="bg-background/50" />
+              <Input id="email" type="email" placeholder="admin@nijvox.com" required className="bg-background/50" />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">

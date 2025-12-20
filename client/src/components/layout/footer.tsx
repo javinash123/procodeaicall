@@ -11,7 +11,7 @@ export function Footer() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Phone className="h-4 w-4" />
               </div>
-              <span>AI Agent</span>
+              <span>NIJVOX</span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Replacing human effort with intelligent, voice-driven AI sales agents. Scale your outreach today.
@@ -48,7 +48,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} AI Agent Inc. All rights reserved.
+          © {new Date().getFullYear()} NIJVOX Inc. All rights reserved.
         </div>
       </div>
     </footer>

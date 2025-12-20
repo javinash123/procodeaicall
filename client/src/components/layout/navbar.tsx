@@ -25,7 +25,7 @@ export function Navbar() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Phone className="h-4 w-4" />
             </div>
-            <span>AI Agent</span>
+            <span>NIJVOX</span>
         </Link>
 
         {/* Desktop Nav */}
