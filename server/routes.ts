@@ -15,6 +15,8 @@ import {
   insertCampaignSchema,
   insertAppointmentSchema,
   updateSettingsSchema,
+  insertNoteSchema,
+  updateNoteSchema,
 } from "@shared/schema";
 
 // Configure multer for file uploads
@@ -575,6 +577,66 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       res.json({ settings: user.settings });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
+    }
+  });
+
+  // ==================== NOTES ROUTES ====================
+
+  // Get all notes
+  app.get("/api/notes", requireAuth, async (req, res) => {
+    try {
+      const notes = await storage.getNotes(req.session.userId!);
+      res.json({ notes });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create note
+  app.post("/api/notes", requireAuth, async (req, res) => {
+    try {
+      const data = insertNoteSchema.parse({
+        ...req.body,
+        userId: req.session.userId,
+      });
+      const note = await storage.createNote(data);
+      res.status(201).json({ note });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Update note
+  app.patch("/api/notes/:id", requireAuth, async (req, res) => {
+    try {
+      const note = await storage.getNote(req.params.id);
+      if (!note) {
+        return res.status(404).json({ message: "Note not found" });
+      }
+      if (note.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      const updatedNote = await storage.updateNote(req.params.id, req.body);
+      res.json({ note: updatedNote });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Delete note
+  app.delete("/api/notes/:id", requireAuth, async (req, res) => {
+    try {
+      const note = await storage.getNote(req.params.id);
+      if (!note) {
+        return res.status(404).json({ message: "Note not found" });
+      }
+      if (note.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      await storage.deleteNote(req.params.id);
+      res.json({ message: "Note deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
     }
   });
 }

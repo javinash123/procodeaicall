@@ -96,6 +96,8 @@ const campaignSchema = new mongoose.Schema({
     start: String,
     end: String,
   },
+  startDate: String,
+  endDate: String,
   progress: { type: Number, default: 0 },
   callsMade: { type: Number, default: 0 },
   goalsMet: { type: Number, default: 0 },
@@ -115,7 +117,17 @@ const appointmentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// Note Model
+const noteSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
 export const UserModel = mongoose.model("User", userSchema);
 export const LeadModel = mongoose.model("Lead", leadSchema);
 export const CampaignModel = mongoose.model("Campaign", campaignSchema);
 export const AppointmentModel = mongoose.model("Appointment", appointmentSchema);
+export const NoteModel = mongoose.model("Note", noteSchema);

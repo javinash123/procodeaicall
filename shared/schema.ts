@@ -156,3 +156,20 @@ export type UserSettings = UpdateSettings & {
   userId: string;
 };
 
+// Notes Schema
+export const insertNoteSchema = z.object({
+  userId: z.string(),
+  title: z.string().min(1),
+  content: z.string().min(1),
+});
+
+export const updateNoteSchema = insertNoteSchema.partial();
+
+export type InsertNote = z.infer<typeof insertNoteSchema>;
+export type UpdateNote = z.infer<typeof updateNoteSchema>;
+export type Note = InsertNote & {
+  _id: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+

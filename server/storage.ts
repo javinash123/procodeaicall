@@ -1,4 +1,4 @@
-import { UserModel, LeadModel, CampaignModel, AppointmentModel } from "./db";
+import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel } from "./db";
 import type {
   User,
   InsertUser,
@@ -11,6 +11,9 @@ import type {
   InsertAppointment,
   UpdateSettings,
   LeadHistoryItem,
+  Note,
+  InsertNote,
+  UpdateNote,
 } from "@shared/schema";
 import bcryptjs from "bcryptjs";
 
@@ -48,6 +51,13 @@ export interface IStorage {
   // Settings methods
   updateSettings(userId: string, settings: UpdateSettings): Promise<User | null>;
   getSettings(userId: string): Promise<User | null>;
+
+  // Note methods
+  getNotes(userId: string): Promise<Note[]>;
+  getNote(id: string): Promise<Note | null>;
+  createNote(note: InsertNote): Promise<Note>;
+  updateNote(id: string, updates: UpdateNote): Promise<Note | null>;
+  deleteNote(id: string): Promise<boolean>;
 }
 
 export class MongoStorage implements IStorage {
@@ -249,6 +259,35 @@ export class MongoStorage implements IStorage {
     const user = await UserModel.findById(userId).select("-password").lean();
     if (!user) return null;
     return { ...(user as any), _id: (user as any)._id.toString() } as any as User;
+  }
+
+  // Note methods
+  async getNotes(userId: string): Promise<Note[]> {
+    const notes = await NoteModel.find({ userId }).sort({ createdAt: -1 }).lean();
+    return notes.map((n: any) => ({ ...n, _id: n._id.toString(), userId: n.userId.toString() })) as any as Note[];
+  }
+
+  async getNote(id: string): Promise<Note | null> {
+    const note = await NoteModel.findById(id).lean();
+    if (!note) return null;
+    return { ...(note as any), _id: (note as any)._id.toString(), userId: (note as any).userId.toString() } as any as Note;
+  }
+
+  async createNote(note: InsertNote): Promise<Note> {
+    const newNote = await NoteModel.create(note);
+    const obj = newNote.toObject();
+    return { ...(obj as any), _id: obj._id.toString(), userId: obj.userId.toString() } as any as Note;
+  }
+
+  async updateNote(id: string, updates: UpdateNote): Promise<Note | null> {
+    const note = await NoteModel.findByIdAndUpdate(id, { ...updates, updatedAt: new Date() }, { new: true }).lean();
+    if (!note) return null;
+    return { ...(note as any), _id: (note as any)._id.toString(), userId: (note as any).userId.toString() } as any as Note;
+  }
+
+  async deleteNote(id: string): Promise<boolean> {
+    const result = await NoteModel.findByIdAndDelete(id);
+    return !!result;
   }
 }
 

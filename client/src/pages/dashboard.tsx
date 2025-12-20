@@ -172,11 +172,11 @@ export default function Dashboard() {
   });
 
   // Notes State
-  const [notes, setNotes] = useState<Array<{ id: string; content: string; createdAt: Date }>>([]);
+  const [notes, setNotes] = useState<Array<{ _id: string; title: string; content: string; createdAt: Date }>>([]);
   const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
   const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-  const [noteContent, setNoteContent] = useState("");
+  const [selectedNote, setSelectedNote] = useState<{ _id: string; title: string; content: string; createdAt: Date } | null>(null);
+  const [newNote, setNewNote] = useState({ title: "", content: "" });
   
   // Campaign Search State
   const [campaignSearch, setCampaignSearch] = useState("");
@@ -1397,6 +1397,19 @@ export default function Dashboard() {
                               </div>
                               {campaignErrors.callingHours && <p className="text-xs text-destructive">{campaignErrors.callingHours}</p>}
                             </div>
+                            <div className="space-y-2">
+                              <Label>Campaign Duration</Label>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-muted-foreground">Start Date</Label>
+                                  <Input type="date" value={newCampaign.startDate} onChange={(e) => setNewCampaign({...newCampaign, startDate: e.target.value})} />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-muted-foreground">End Date</Label>
+                                  <Input type="date" value={newCampaign.endDate} onChange={(e) => setNewCampaign({...newCampaign, endDate: e.target.value})} />
+                                </div>
+                              </div>
+                            </div>
                           </TabsContent>
                         </div>
                       </Tabs>
@@ -1412,6 +1425,7 @@ export default function Dashboard() {
                   </DialogContent>
                 </Dialog>
               </div>
+            </div>
 
               <div className="grid gap-6">
                  {campaigns.map(camp => (
