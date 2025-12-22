@@ -47,7 +47,7 @@ import {
   Megaphone
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, type UploadedFile } from "@/lib/api";
+import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, notesApi, type UploadedFile } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead, Campaign, Appointment, User as UserType, KnowledgeBaseFile } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -97,6 +97,7 @@ export default function Dashboard() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [registeredUsers, setRegisteredUsers] = useState<UserType[]>([]);
+  const [notes, setNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // UI State
@@ -109,6 +110,10 @@ export default function Dashboard() {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [campaignTab, setCampaignTab] = useState("basics");
+  const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
+  const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<any | null>(null);
+  const [noteForm, setNoteForm] = useState({ title: "", content: "" });
 
   // Form State for New Lead
   const [newLead, setNewLead] = useState({ name: "", company: "", email: "", phone: "", notes: "", status: "New" as const, campaignId: "" });
@@ -171,13 +176,6 @@ export default function Dashboard() {
     endDate: ""
   });
 
-  // Notes State
-  const [notes, setNotes] = useState<Array<{ _id: string; title: string; content: string; createdAt: Date }>>([]);
-  const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
-  const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<{ _id: string; title: string; content: string; createdAt: Date } | null>(null);
-  const [newNote, setNewNote] = useState({ title: "", content: "" });
-  
   // Campaign Search State
   const [campaignSearch, setCampaignSearch] = useState("");
 
@@ -253,14 +251,16 @@ export default function Dashboard() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [leadsData, campaignsData, appointmentsData] = await Promise.all([
+        const [leadsData, campaignsData, appointmentsData, notesData] = await Promise.all([
           leadsApi.getAll(),
           campaignsApi.getAll(),
-          appointmentsApi.getAll()
+          appointmentsApi.getAll(),
+          notesApi.getAll()
         ]);
         setLeads(leadsData);
         setCampaigns(campaignsData);
         setAppointments(appointmentsData);
+        setNotes(notesData);
 
         // Admin: fetch all users
         if (isAdmin) {
@@ -729,7 +729,9 @@ export default function Dashboard() {
         voice: "Rachel (American)",
         additionalContext: "",
         callingHours: { start: "09:00", end: "17:00" },
-        knowledgeBaseFiles: []
+        knowledgeBaseFiles: [],
+        startDate: "",
+        endDate: ""
       });
       setCampaignErrors({});
       setCampaignTab("basics");
@@ -751,7 +753,9 @@ export default function Dashboard() {
       additionalContext: campaign.additionalContext || "",
       callingHours: campaign.callingHours || { start: "09:00", end: "17:00" },
       status: campaign.status,
-      knowledgeBaseFiles: (campaign.knowledgeBaseFiles || []) as UploadedFile[]
+      knowledgeBaseFiles: (campaign.knowledgeBaseFiles || []) as UploadedFile[],
+      startDate: campaign.startDate || "",
+      endDate: campaign.endDate || ""
     });
     setCampaignErrors({});
     setCampaignTab("basics");
@@ -1118,6 +1122,86 @@ export default function Dashboard() {
                 </Card>
               </div>
 
+              {/* Notes Section */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Notes</CardTitle>
+                    <CardDescription>All your saved notes</CardDescription>
+                  </div>
+                  <Dialog open={isAddNoteOpen} onOpenChange={setIsAddNoteOpen}>
+                    <DialogTrigger asChild>
+                      <Button><Plus className="mr-2 h-4 w-4" /> Add Note</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>Add Note</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="note-title">Title</Label>
+                          <Input id="note-title" placeholder="Note title" value={noteForm.title} onChange={(e) => setNoteForm({...noteForm, title: e.target.value})} data-testid="input-note-title" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="note-content">Content</Label>
+                          <Textarea id="note-content" placeholder="Note content" className="min-h-32" value={noteForm.content} onChange={(e) => setNoteForm({...noteForm, content: e.target.value})} data-testid="input-note-content" />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => { setIsAddNoteOpen(false); setNoteForm({title: "", content: ""}); }} data-testid="button-cancel">Cancel</Button>
+                        <Button onClick={async () => { if (noteForm.title.trim() && noteForm.content.trim()) { const newNote = await notesApi.create(noteForm); setNotes([newNote, ...notes]); setNoteForm({title: "", content: ""}); setIsAddNoteOpen(false); toast({title: "Success", description: "Note added successfully"}); } }} data-testid="button-add-note">Add Note</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {notes.length > 0 ? (
+                      notes.map((note) => (
+                        <div key={note._id} className="p-3 border rounded-md bg-muted/30 hover:bg-muted/50 transition-colors" data-testid={`card-note-${note._id}`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm">{note.title}</h4>
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{note.content}</p>
+                              <p className="text-xs text-muted-foreground mt-2">{new Date(note.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div className="flex gap-1">
+                              <Dialog open={isEditNoteOpen && selectedNote?._id === note._id} onOpenChange={(open) => { if (!open) { setSelectedNote(null); setNoteForm({title: "", content: ""}); } setIsEditNoteOpen(open); }}>
+                                <DialogTrigger asChild>
+                                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setSelectedNote(note); setNoteForm({title: note.title, content: note.content}); }} data-testid={`button-edit-note-${note._id}`}><Edit3 className="h-4 w-4" /></Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[500px]">
+                                  <DialogHeader>
+                                    <DialogTitle>Edit Note</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div className="space-y-2">
+                                      <Label htmlFor="edit-note-title">Title</Label>
+                                      <Input id="edit-note-title" placeholder="Note title" value={noteForm.title} onChange={(e) => setNoteForm({...noteForm, title: e.target.value})} />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor="edit-note-content">Content</Label>
+                                      <Textarea id="edit-note-content" placeholder="Note content" className="min-h-32" value={noteForm.content} onChange={(e) => setNoteForm({...noteForm, content: e.target.value})} />
+                                    </div>
+                                  </div>
+                                  <DialogFooter>
+                                    <Button variant="outline" onClick={() => { setIsEditNoteOpen(false); setSelectedNote(null); setNoteForm({title: "", content: ""}); }}>Cancel</Button>
+                                    <Button onClick={async () => { if (selectedNote && noteForm.title.trim() && noteForm.content.trim()) { const updated = await notesApi.update(selectedNote._id, noteForm); setNotes(notes.map(n => n._id === selectedNote._id ? updated : n)); setNoteForm({title: "", content: ""}); setIsEditNoteOpen(false); setSelectedNote(null); toast({title: "Success", description: "Note updated successfully"}); } }}>Update Note</Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={async () => { if (confirm("Delete this note?")) { await notesApi.delete(note._id); setNotes(notes.filter(n => n._id !== note._id)); toast({title: "Success", description: "Note deleted"}); } }} data-testid={`button-delete-note-${note._id}`}><Trash2 className="h-4 w-4" /></Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center text-muted-foreground py-8">No notes yet. Create one to get started!</div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Daily Calling Counts with Month/Year Filter */}
               <Card>
                 <CardHeader>
@@ -1249,6 +1333,7 @@ export default function Dashboard() {
                     className="w-64"
                     value={campaignSearch}
                     onChange={(e) => setCampaignSearch(e.target.value)}
+                    data-testid="input-campaign-search"
                   />
                   <Dialog open={isCreateCampaignOpen} onOpenChange={setIsCreateCampaignOpen}>
                     <DialogTrigger asChild>
@@ -1428,8 +1513,10 @@ export default function Dashboard() {
             </div>
 
               <div className="grid gap-6">
-                 {campaigns.map(camp => (
-                   <Card key={camp._id}>
+                 {campaigns.filter(camp => camp.name.toLowerCase().includes(campaignSearch.toLowerCase())).map(camp => {
+                   const campaignLeads = leads.filter(l => l.campaignId === camp._id).length;
+                   return (
+                   <Card key={camp._id} data-testid={`card-campaign-${camp._id}`}>
                      <CardHeader className="flex flex-row items-center justify-between pb-2">
                        <div className="space-y-1">
                          <CardTitle className="text-xl">{camp.name}</CardTitle>
@@ -1438,7 +1525,21 @@ export default function Dashboard() {
                        <Badge variant={camp.status === 'Active' ? 'default' : 'secondary'}>{camp.status}</Badge>
                      </CardHeader>
                      <CardContent>
-                       <div className="space-y-2">
+                       <div className="space-y-3">
+                         <div className="grid grid-cols-3 gap-4 text-sm border-b pb-3">
+                           <div>
+                             <span className="text-muted-foreground">Start Date</span>
+                             <div className="font-medium">{camp.startDate ? new Date(camp.startDate).toLocaleDateString() : '-'}</div>
+                           </div>
+                           <div>
+                             <span className="text-muted-foreground">End Date</span>
+                             <div className="font-medium">{camp.endDate ? new Date(camp.endDate).toLocaleDateString() : '-'}</div>
+                           </div>
+                           <div>
+                             <span className="text-muted-foreground">Total Leads</span>
+                             <div className="font-medium">{campaignLeads}</div>
+                           </div>
+                         </div>
                          <div className="flex justify-between text-sm">
                            <span>Progress</span>
                            <span className="font-medium">{camp.progress || 0}%</span>
@@ -1446,7 +1547,7 @@ export default function Dashboard() {
                          <div className="h-2 rounded-full bg-muted overflow-hidden">
                            <div className="h-full bg-primary transition-all" style={{ width: `${camp.progress || 0}%` }} />
                          </div>
-                         <div className="flex gap-4 text-sm text-muted-foreground mt-4">
+                         <div className="flex gap-4 text-sm text-muted-foreground mt-2">
                            <div className="flex items-center gap-1"><Phone className="h-4 w-4" /> {camp.callsMade || 0} Calls Made</div>
                            <div className="flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> {camp.goalsMet || 0} Goals Met</div>
                          </div>
@@ -1469,7 +1570,8 @@ export default function Dashboard() {
                         </Button>
                      </CardFooter>
                    </Card>
-                 ))}
+                   );
+                 })}
                  {campaigns.length === 0 && (
                    <Card className="border-dashed">
                      <CardContent className="flex flex-col items-center justify-center py-12">

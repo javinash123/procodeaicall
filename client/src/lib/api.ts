@@ -290,6 +290,47 @@ export const appointmentsApi = {
   },
 };
 
+// Notes API
+export const notesApi = {
+  getAll: async (): Promise<any[]> => {
+    const response = await fetch(`${API_BASE}/notes`, {
+      credentials: "include",
+    });
+    const data = await handleResponse<{ notes: any[] }>(response);
+    return data.notes;
+  },
+
+  create: async (data: { title: string; content: string }): Promise<any> => {
+    const response = await fetch(`${API_BASE}/notes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+    const result = await handleResponse<{ note: any }>(response);
+    return result.note;
+  },
+
+  update: async (id: string, data: { title: string; content: string }): Promise<any> => {
+    const response = await fetch(`${API_BASE}/notes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+    const result = await handleResponse<{ note: any }>(response);
+    return result.note;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/notes/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    await handleResponse(response);
+  },
+};
+
 // Settings API
 export const settingsApi = {
   get: async (): Promise<{ settings: any; subscription: any }> => {

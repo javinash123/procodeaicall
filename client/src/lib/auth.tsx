@@ -36,13 +36,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const loggedInUser = await authApi.login(email, password);
     setUser(loggedInUser);
-    setLocation("/dashboard");
+    const dashboardPath = import.meta.env.PROD ? "/aiagent/dashboard" : "/dashboard";
+    setLocation(dashboardPath);
   };
 
   const logout = async () => {
     await authApi.logout();
     setUser(null);
-    setLocation("/");
+    const homePath = import.meta.env.PROD ? "/aiagent/" : "/";
+    setLocation(homePath);
   };
 
   const refetchUser = async () => {

@@ -1,0 +1,125 @@
+n_ [MongooseServerSelectionError]: connect ECONNREFUSED 127.0.0.1:27017
+    at _Q (/var/www/html/aiagent/dist/index.cjs:75:256099)
+    at Fs.le.openUri (/var/www/html/aiagent/dist/index.cjs:75:255490)
+    at async Ote (/var/www/html/aiagent/dist/index.cjs:83:74340)
+    at async lse (/var/www/html/aiagent/dist/index.cjs:83:164934)
+    at async /var/www/html/aiagent/dist/index.cjs:83:175104 {
+  errorLabelSet: Set(0) {},
+  reason: t {
+    type: 'Unknown',
+    servers: Map(1) {
+      'localhost:27017' => gA {
+        address: 'localhost:27017',
+        type: 'Unknown',
+        hosts: [],
+        passives: [],
+        arbiters: [],
+        tags: {},
+        minWireVersion: 0,
+        maxWireVersion: 0,
+        roundTripTime: -1,
+        minRoundTripTime: 0,
+        lastUpdateTime: 341977,
+        lastWriteDate: 0,
+        error: Ia [MongoNetworkError]: connect ECONNREFUSED 127.0.0.1:27017
+            at Socket.<anonymous> (/var/www/html/aiagent/dist/index.cjs:70:480461)
+            at Object.onceWrapper (node:events:628:26)
+            at Socket.emit (node:events:513:28)
+            at emitErrorNT (node:internal/streams/destroy:157:8)
+            at emitErrorCloseNT (node:internal/streams/destroy:122:3)
+            at processTicksAndRejections (node:internal/process/task_queues:83:21) {
+          errorLabelSet: Set(1) { 'ResetPool' },
+          beforeHandshake: false,
+          [cause]: Error: connect ECONNREFUSED 127.0.0.1:27017
+              at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1278:16) {
+            errno: -111,
+            code: 'ECONNREFUSED',
+            syscall: 'connect',
+            address: '127.0.0.1',
+            port: 27017
+          }
+        },
+        topologyVersion: null,
+        setName: null,
+        setVersion: null,
+        electionId: null,
+        logicalSessionTimeoutMinutes: null,
+        maxMessageSizeBytes: null,
+        maxWriteBatchSize: null,
+        maxBsonObjectSize: null,
+        primary: null,
+        me: null,
+        '$clusterTime': null,
+        iscryptd: false
+      }
+    },
+    stale: false,
+    compatible: true,
+    heartbeatFrequencyMS: 10000,
+    localThresholdMS: 15,
+    setName: null,
+    maxElectionId: null,
+    maxSetVersion: null,
+    commonWireVersion: 0,
+    logicalSessionTimeoutMinutes: null
+  },
+  code: undefined,
+  cause: t {
+    type: 'Unknown',
+    servers: Map(1) {
+      'localhost:27017' => gA {
+        address: 'localhost:27017',
+        type: 'Unknown',
+        hosts: [],
+        passives: [],
+        arbiters: [],
+        tags: {},
+        minWireVersion: 0,
+        maxWireVersion: 0,
+        roundTripTime: -1,
+        minRoundTripTime: 0,
+        lastUpdateTime: 341977,
+        lastWriteDate: 0,
+        error: Ia [MongoNetworkError]: connect ECONNREFUSED 127.0.0.1:27017
+            at Socket.<anonymous> (/var/www/html/aiagent/dist/index.cjs:70:480461)
+            at Object.onceWrapper (node:events:628:26)
+            at Socket.emit (node:events:513:28)
+            at emitErrorNT (node:internal/streams/destroy:157:8)
+            at emitErrorCloseNT (node:internal/streams/destroy:122:3)
+            at processTicksAndRejections (node:internal/process/task_queues:83:21) {
+          errorLabelSet: Set(1) { 'ResetPool' },
+          beforeHandshake: false,
+          [cause]: Error: connect ECONNREFUSED 127.0.0.1:27017
+              at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1278:16) {
+            errno: -111,
+            code: 'ECONNREFUSED',
+            syscall: 'connect',
+            address: '127.0.0.1',
+            port: 27017
+          }
+        },
+        topologyVersion: null,
+        setName: null,
+        setVersion: null,
+        electionId: null,
+        logicalSessionTimeoutMinutes: null,
+        maxMessageSizeBytes: null,
+        maxWriteBatchSize: null,
+        maxBsonObjectSize: null,
+        primary: null,
+        me: null,
+        '$clusterTime': null,
+        iscryptd: false
+      }
+    },
+    stale: false,
+    compatible: true,
+    heartbeatFrequencyMS: 10000,
+    localThresholdMS: 15,
+    setName: null,
+    maxElectionId: null,
+    maxSetVersion: null,
+    commonWireVersion: 0,
+    logicalSessionTimeoutMinutes: null
+  }
+}
