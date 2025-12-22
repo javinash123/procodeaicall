@@ -2,8 +2,9 @@ import type { User, InsertUser, Lead, InsertLead, Campaign, InsertCampaign, Appo
 
 const getApiBase = () => {
   if (typeof window !== 'undefined') {
-    const basePath = import.meta.env.BASE_URL || '/';
-    return basePath.endsWith('/') ? `${basePath}api` : `${basePath}/api`;
+    // In production, we are at /aiagent/ so we should use that as base for API calls
+    const isProd = import.meta.env.PROD;
+    return isProd ? '/aiagent/api' : '/api';
   }
   return '/api';
 };
