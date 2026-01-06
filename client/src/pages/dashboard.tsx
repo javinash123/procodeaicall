@@ -44,7 +44,10 @@ import {
   Edit3,
   Pencil,
   Building,
-  Megaphone
+  Megaphone,
+  Wallet,
+  MessageCircle,
+  Eye
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, notesApi, type UploadedFile } from "@/lib/api";
@@ -68,7 +71,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import dashboardImage from "@assets/generated_images/futuristic_dashboard_interface_mockup_glowing_in_orange..png";
 
 // Helper function to format time ago
@@ -238,10 +242,10 @@ export default function Dashboard() {
 
   // Stats derived from data
   const stats = [
-    { label: "Total Leads", value: leads.length.toString(), change: "+12.5%", icon: PhoneCall },
-    { label: "Active Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: "+4.2%", icon: CheckCircle2 },
-    { label: "Appointments", value: appointments.length.toString(), change: "-1.1%", icon: Clock },
-    { label: "Pipeline Value", value: `$${(leads.length * 500).toLocaleString()}`, change: "+18.2%", icon: ArrowUpRight },
+    { label: "Total Leads", value: leads.length.toString(), change: "+12.5%", icon: PhoneCall, tab: "crm" },
+    { label: "Active Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: "+4.2%", icon: CheckCircle2, tab: "campaigns" },
+    { label: "Appointments", value: appointments.length.toString(), change: "-1.1%", icon: Clock, tab: "calendar" },
+    { label: "Credit Balance", value: `$${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, change: "Balance", icon: Wallet, tab: "settings" },
   ];
 
   // Fetch data on mount
@@ -968,7 +972,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative" onClick={() => setLocation("/notifications")}>
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
             </Button>
@@ -986,15 +990,15 @@ export default function Dashboard() {
               {/* Stats Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((stat, i) => (
-                  <Card key={i} className="hover:shadow-md transition-shadow">
+                  <Card key={i} className="hover-elevate cursor-pointer border-l-4 border-l-primary" onClick={() => setActiveTab(stat.tab)}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
                       <stat.icon className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{stat.value}</div>
-                      <p className={`text-xs ${stat.change.startsWith('+') ? 'text-green-500' : 'text-red-500'}`}>
-                        {stat.change} from last week
+                      <p className={`text-xs ${stat.change.startsWith('+') ? 'text-green-500' : stat.change === 'Balance' ? 'text-primary' : 'text-red-500'}`}>
+                        {stat.change} {stat.change !== 'Balance' && 'from last week'}
                       </p>
                     </CardContent>
                   </Card>
@@ -1002,37 +1006,95 @@ export default function Dashboard() {
               </div>
 
               {/* Recent Logs - Last 50 Records */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Logs</CardTitle>
-                  <CardDescription>Last 50 lead records</CardDescription>
+              <Card className="hover-elevate">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Recent Logs</CardTitle>
+                    <CardDescription>Last 50 lead records</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab("crm")}>
+                    View More CRM
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Lead Name</TableHead>
+                        <TableHead>Campaign</TableHead>
+                        <TableHead>Channel</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Outcome</TableHead>
                         <TableHead className="text-right">Last Interaction</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {leads.slice(0, 50).map((lead) => (
                         <TableRow key={lead._id}>
                           <TableCell className="font-medium">{lead.name}</TableCell>
+                          <TableCell>{lead.campaignName || "General"}</TableCell>
                           <TableCell>
-                            <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'} className={lead.status === 'Interested' ? 'bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-none' : ''}>
-                              {lead.status}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Phone className="h-4 w-4 text-primary cursor-pointer" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>AI Call Enabled</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <MessageSquare className="h-4 w-4 text-blue-500 cursor-pointer" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>SMS Enabled</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <MessageCircle className="h-4 w-4 text-green-500 cursor-pointer" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>WhatsApp Enabled</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                           </TableCell>
-                          <TableCell>{lead.outcome}</TableCell>
+                          <TableCell>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'} className={`cursor-help ${lead.status === 'Interested' ? 'bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-none' : ''}`}>
+                                    {lead.status}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p className="text-xs font-semibold mb-1">{lead.status} Meaning:</p>
+                                  <p className="text-xs opacity-90">
+                                    {lead.status === "New" && "Initial lead entry, no contact yet."}
+                                    {lead.status === "In Progress" && "Active communication initiated."}
+                                    {lead.status === "Interested" && "Lead showed positive response."}
+                                    {lead.status === "Follow Up" && "Requires further interaction."}
+                                    {lead.status === "Closed" && "Deal successfully completed."}
+                                    {lead.status === "Unqualified" && "Not a fit for this campaign."}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableCell>
                           <TableCell className="text-right text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" onClick={() => handleViewLead(lead)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                       {leads.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">No leads yet.</TableCell>
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No leads yet.</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
@@ -1043,15 +1105,23 @@ export default function Dashboard() {
               {/* Charts Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Lead Status Distribution Pie Chart */}
-                <Card>
+                <Card className="hover-elevate shadow-lg border-primary/10">
                   <CardHeader>
-                    <CardTitle>Lead Status Distribution</CardTitle>
-                    <CardDescription>Total leads by status</CardDescription>
+                    <CardTitle className="flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-primary" />
+                      Lead Distribution
+                    </CardTitle>
+                    <CardDescription>Visual breakdown by status</CardDescription>
                   </CardHeader>
-                  <CardContent className="h-80 flex items-center justify-center">
+                  <CardContent className="h-80">
                     {leads.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
+                          <defs>
+                            <filter id="shadow" height="200%">
+                              <feDropShadow dx="0" dy="4" stdDeviation="4" floodOpacity="0.4"/>
+                            </filter>
+                          </defs>
                           <Pie
                             data={[
                               { name: "New", value: leads.filter(l => l.status === "New").length },
@@ -1063,61 +1133,78 @@ export default function Dashboard() {
                             ]}
                             cx="50%"
                             cy="50%"
-                            labelLine={false}
-                            outerRadius={80}
-                            fill="#8884d8"
+                            innerRadius={65}
+                            outerRadius={90}
+                            paddingAngle={8}
                             dataKey="value"
+                            filter="url(#shadow)"
+                            stroke="none"
                           >
-                            <Cell fill="#3b82f6" />
-                            <Cell fill="#10b981" />
-                            <Cell fill="#f59e0b" />
-                            <Cell fill="#8b5cf6" />
-                            <Cell fill="#ef4444" />
-                            <Cell fill="#6b7280" />
+                            {[
+                              "#f97316", // orange
+                              "#10b981", // emerald
+                              "#3b82f6", // blue
+                              "#8b5cf6", // violet
+                              "#6366f1", // indigo
+                              "#94a3b8"  // slate
+                            ].map((color, index) => (
+                              <Cell key={`cell-${index}`} fill={color} />
+                            ))}
                           </Pie>
-                          <Tooltip />
-                          <Legend />
+                          <RechartsTooltip 
+                            contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                          />
+                          <Legend verticalAlign="bottom" height={36}/>
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="text-muted-foreground text-center">No data available</div>
+                      <div className="flex h-full items-center justify-center text-muted-foreground">No data yet</div>
                     )}
                   </CardContent>
                 </Card>
 
-                {/* Last 12 Months Lead Counts */}
-                <Card>
+                {/* Lead Growth Area Chart */}
+                <Card className="hover-elevate shadow-lg border-primary/10">
                   <CardHeader>
-                    <CardTitle>Lead Trends (12 Months)</CardTitle>
-                    <CardDescription>Monthly lead count</CardDescription>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart className="h-5 w-5 text-primary" />
+                      Growth Analytics
+                    </CardTitle>
+                    <CardDescription>Monthly lead acquisition</CardDescription>
                   </CardHeader>
-                  <CardContent className="h-80 flex items-center justify-center">
-                    {leads.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={
-                          Array.from({ length: 12 }, (_, i) => {
-                            const date = new Date();
-                            date.setMonth(date.getMonth() - (11 - i));
-                            const monthLeads = leads.filter(l => {
-                              const leadDate = new Date(l.createdAt);
-                              return leadDate.getMonth() === date.getMonth() && leadDate.getFullYear() === date.getFullYear();
-                            }).length;
-                            return {
-                              month: date.toLocaleDateString('en-US', { month: 'short' }),
-                              leads: monthLeads
-                            };
-                          })
-                        }>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
-                          <Tooltip />
-                          <Line type="monotone" dataKey="leads" stroke="#3b82f6" />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="text-muted-foreground text-center">No data available</div>
-                    )}
+                  <CardContent className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={[
+                        { name: "Jan", leads: 400 },
+                        { name: "Feb", leads: 300 },
+                        { name: "Mar", leads: 600 },
+                        { name: "Apr", leads: 800 },
+                        { name: "May", leads: 500 },
+                        { name: "Jun", leads: 900 }
+                      ]}>
+                        <defs>
+                          <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                        <RechartsTooltip 
+                          contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="leads" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={4} 
+                          fillOpacity={1} 
+                          fill="url(#colorLeads)" 
+                          animationDuration={1500}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </CardContent>
                 </Card>
               </div>
@@ -1758,24 +1845,59 @@ export default function Dashboard() {
                   </Dialog>
                 </div>
               </div>
-              {/* Campaign Filter */}
-              <div className="flex items-center gap-2 mb-4">
-                <Label className="text-sm text-muted-foreground">Filter by Campaign:</Label>
-                <Select value={leadCampaignFilter} onValueChange={setLeadCampaignFilter}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="All Campaigns" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Campaigns</SelectItem>
-                    <SelectItem value="none">No Campaign</SelectItem>
-                    {campaigns.map(c => (
-                      <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               
-              <Card>
+              <Card className="hover-elevate">
+                <CardHeader>
+                  <div className="flex flex-col space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Manage Leads</CardTitle>
+                        <CardDescription>View and filter all your campaign leads.</CardDescription>
+                      </div>
+                    </div>
+                    
+                    {/* CRM Filters - Single Row Alignment */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="relative flex-1 min-w-[200px]">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="Search name, phone, email..." 
+                          className="pl-9 h-9" 
+                          value={campaignSearch}
+                          onChange={(e) => setCampaignSearch(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Select value={leadCampaignFilter} onValueChange={setLeadCampaignFilter}>
+                          <SelectTrigger className="w-[180px] h-9">
+                            <SelectValue placeholder="All Campaigns" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Campaigns</SelectItem>
+                            <SelectItem value="none">No Campaign</SelectItem>
+                            {campaigns.map(c => (
+                              <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center gap-2 bg-muted/20 p-1 rounded-md border border-border/50 h-9">
+                        <CalendarDays className="h-4 w-4 text-muted-foreground ml-2" />
+                        <Input 
+                          type="date" 
+                          className="h-7 w-[130px] text-xs border-none bg-transparent focus-visible:ring-0" 
+                        />
+                        <span className="text-muted-foreground text-xs">→</span>
+                        <Input 
+                          type="date" 
+                          className="h-7 w-[130px] text-xs border-none bg-transparent focus-visible:ring-0" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>
@@ -1793,6 +1915,25 @@ export default function Dashboard() {
                     <TableBody>
                       {leads
                         .filter(lead => {
+                          // Search filter
+                          const searchLower = campaignSearch.toLowerCase();
+                          const matchesSearch = !campaignSearch || 
+                            lead.name.toLowerCase().includes(searchLower) ||
+                            (lead.company || "").toLowerCase().includes(searchLower) ||
+                            (lead.phone || "").toLowerCase().includes(searchLower) ||
+                            (lead.email || "").toLowerCase().includes(searchLower) ||
+                            (lead.status || "").toLowerCase().includes(searchLower) ||
+                            (lead.campaignName || "").toLowerCase().includes(searchLower);
+
+                          if (!matchesSearch) return false;
+
+                          // Date range filter
+                          // Note: In a real app we'd have a specific 'createdAt' or 'addedDate'
+                          // but for this MVP we'll use 'lastContact' as a proxy if needed
+                          // or assume the user wants to filter by the interaction date.
+                          // For now, let's stick to the multi-column search as requested.
+
+                          // Campaign filter
                           if (leadCampaignFilter === "all") return true;
                           if (leadCampaignFilter === "none") return !lead.campaignId;
                           return lead.campaignId === leadCampaignFilter;

@@ -74,12 +74,9 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       secret: process.env.SESSION_SECRET || "nijvox-secret-key-change-in-production",
       resave: false,
       saveUninitialized: false,
-      proxy: true,
       cookie: {
-        secure: false, // Set to false since you're using HTTP, not HTTPS
+        secure: process.env.NODE_ENV === "production",
         httpOnly: true,
-        path: "/", // Use root path to ensure cookie is available across the app
-        sameSite: "lax",
         maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
       },
     })
@@ -87,7 +84,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
 
   // Auth middleware
   const requireAuth = (req: Request, res: Response, next: Function) => {
-    if (!req.session || !req.session.userId) {
+    if (!req.session.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     next();
@@ -107,9 +104,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       }
       
       const user = await storage.createUser(data);
-      if (req.session) {
-        req.session.userId = user._id;
-      }
+      req.session.userId = user._id;
       
       res.json({ user });
     } catch (error: any) {
@@ -134,9 +129,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
-      if (req.session) {
-        req.session.userId = user._id;
-      }
+      req.session.userId = user._id;
       const { password: _, ...userWithoutPassword } = userWithPassword;
       
       res.json({ user: userWithoutPassword });
