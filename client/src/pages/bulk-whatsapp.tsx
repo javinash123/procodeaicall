@@ -64,104 +64,91 @@ export default function BulkWhatsapp() {
         <p className="text-muted-foreground">View-only list of WhatsApp communications and lead status.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="md:col-span-1 border-border/50">
-          <CardHeader>
-            <CardTitle className="text-lg">Filters</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Search</label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Name or phone..." 
-                  className="pl-8" 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+      <div className="flex flex-wrap items-center gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
+        <div className="relative min-w-[240px]">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search name or phone..." 
+            className="pl-9 h-9" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Campaign</label>
-              <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Campaigns" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Campaigns</SelectItem>
-                  {campaigns.map(c => (
-                    <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+          <SelectTrigger className="w-[200px] h-9">
+            <SelectValue placeholder="All Campaigns" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Campaigns</SelectItem>
+            {campaigns.map(c => (
+              <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date Range</label>
-              <div className="grid grid-cols-1 gap-2">
-                <Input 
-                  type="date" 
-                  value={dateRange.start} 
-                  onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                />
-                <Input 
-                  type="date" 
-                  value={dateRange.end} 
-                  onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-3 border-border/50">
-          <CardHeader>
-            <CardTitle>WhatsApp History</CardTitle>
-            <CardDescription>{filteredLeads.length} leads found</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border h-[600px] overflow-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 sticky top-0 z-10">
-                  <tr>
-                    <th className="p-3 text-left">Name</th>
-                    <th className="p-3 text-left">Phone</th>
-                    <th className="p-3 text-left">Campaign</th>
-                    <th className="p-3 text-left">Status</th>
-                    <th className="p-3 text-left">Last Interaction</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLeads.map(lead => (
-                    <tr key={lead._id} className="border-t hover:bg-muted/30 transition-colors">
-                      <td className="p-3 font-medium">{lead.name}</td>
-                      <td className="p-3">{lead.phone}</td>
-                      <td className="p-3">
-                        {campaigns.find(c => c._id === lead.campaignId)?.name || "-"}
-                      </td>
-                      <td className="p-3">
-                        <Badge variant="outline">{lead.status}</Badge>
-                      </td>
-                      <td className="p-3 text-muted-foreground">
-                        {lead.lastContact ? new Date(lead.lastContact).toLocaleDateString() : "No contact"}
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredLeads.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="p-12 text-center text-muted-foreground">
-                        No WhatsApp records found matching your filters.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-2 h-9">
+          <Input 
+            type="date" 
+            className="h-9 w-[150px]"
+            value={dateRange.start} 
+            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+          />
+          <span className="text-muted-foreground">→</span>
+          <Input 
+            type="date" 
+            className="h-9 w-[150px]"
+            value={dateRange.end} 
+            onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+          />
+        </div>
       </div>
+
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle>WhatsApp History</CardTitle>
+          <CardDescription>{filteredLeads.length} leads found</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border h-[600px] overflow-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 sticky top-0 z-10">
+                <tr>
+                  <th className="p-3 text-left">Name</th>
+                  <th className="p-3 text-left">Phone</th>
+                  <th className="p-3 text-left">Campaign</th>
+                  <th className="p-3 text-left">Status</th>
+                  <th className="p-3 text-left">Last Interaction</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLeads.map(lead => (
+                  <tr key={lead._id} className="border-t hover:bg-muted/30 transition-colors">
+                    <td className="p-3 font-medium">{lead.name}</td>
+                    <td className="p-3">{lead.phone}</td>
+                    <td className="p-3">
+                      {campaigns.find(c => c._id === lead.campaignId)?.name || "-"}
+                    </td>
+                    <td className="p-3">
+                      <Badge variant="outline">{lead.status}</Badge>
+                    </td>
+                    <td className="p-3 text-muted-foreground">
+                      {lead.lastContact ? new Date(lead.lastContact).toLocaleDateString() : "No contact"}
+                    </td>
+                  </tr>
+                ))}
+                {filteredLeads.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-12 text-center text-muted-foreground">
+                      No WhatsApp records found matching your filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

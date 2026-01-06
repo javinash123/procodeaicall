@@ -47,7 +47,8 @@ import {
   Megaphone,
   Wallet,
   MessageCircle,
-  Eye
+  Eye,
+  Send
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, notesApi, type UploadedFile } from "@/lib/api";
@@ -244,6 +245,7 @@ export default function Dashboard() {
   const [logsCampaignFilter, setLogsCampaignFilter] = useState<string>("all");
   const [dailyActivityCampaignFilter, setDailyActivityCampaignFilter] = useState<string>("all");
   const [overviewCampaignFilter, setOverviewCampaignFilter] = useState<string>("all");
+  const [callActivityCampaignFilter, setCallActivityCampaignFilter] = useState<string>("all");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [campaignFilter, setCampaignFilter] = useState("all");
@@ -1373,9 +1375,20 @@ export default function Dashboard() {
                       <CardTitle>Daily Call Activity</CardTitle>
                       <CardDescription>Calling counts by day</CardDescription>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
+                      <Select value={callActivityCampaignFilter} onValueChange={setCallActivityCampaignFilter}>
+                        <SelectTrigger className="w-[160px] h-8 text-xs">
+                          <SelectValue placeholder="All Campaigns" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Campaigns</SelectItem>
+                          {campaigns.map(c => (
+                            <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Select value={selectedChartMonth.toString()} onValueChange={(val) => setSelectedChartMonth(parseInt(val))}>
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-32 h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1387,7 +1400,7 @@ export default function Dashboard() {
                         </SelectContent>
                       </Select>
                       <Select value={selectedChartYear.toString()} onValueChange={(val) => setSelectedChartYear(parseInt(val))}>
-                        <SelectTrigger className="w-24">
+                        <SelectTrigger className="w-24 h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1403,10 +1416,11 @@ export default function Dashboard() {
                 <CardContent className="h-80 flex items-center justify-center">
                   {leads.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={
+                      <AreaChart data={
                         Array.from({ length: new Date(selectedChartYear, selectedChartMonth + 1, 0).getDate() }, (_, i) => {
                           const day = i + 1;
                           const callsCount = leads.reduce((acc, lead) => {
+                            if (callActivityCampaignFilter !== "all" && lead.campaignId !== callActivityCampaignFilter) return acc;
                             const historyForDay = (lead.history || []).filter(h => {
                               const hDate = new Date(h.date);
                               return h.type === 'call' && hDate.getDate() === day && hDate.getMonth() === selectedChartMonth && hDate.getFullYear() === selectedChartYear;
@@ -1414,17 +1428,32 @@ export default function Dashboard() {
                             return acc + historyForDay;
                           }, 0);
                           return {
-                            day: `Day ${day}`,
+                            day: day.toString(),
                             calls: callsCount
                           };
                         })
                       }>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="day" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="calls" stroke="#10b981" />
-                      </LineChart>
+                        <defs>
+                          <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} />
+                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                        <RechartsTooltip 
+                          contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="calls" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2} 
+                          fillOpacity={1} 
+                          fill="url(#colorCalls)" 
+                        />
+                      </AreaChart>
                     </ResponsiveContainer>
                   ) : (
                     <div className="text-muted-foreground text-center">No data available</div>
@@ -2821,67 +2850,70 @@ export default function Dashboard() {
                   <MessageSquare className="h-8 w-8 text-primary" />
                   Bulk SMS
                 </h1>
-                <p className="text-muted-foreground">Send and manage bulk SMS communications.</p>
+                <p className="text-muted-foreground">Manage and track bulk SMS communications.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="md:col-span-1 border-border/50">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Filters</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Search</label>
-                      <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                          placeholder="Name or phone..." 
-                          className="pl-8" 
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                      </div>
-                    </div>
+              <div className="flex flex-wrap items-center gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
+                <div className="relative min-w-[240px]">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search name or phone..." 
+                    className="pl-9 h-9" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Campaign</label>
-                      <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Campaigns" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Campaigns</SelectItem>
-                          {campaigns.map(c => (
-                            <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+                  <SelectTrigger className="w-[200px] h-9">
+                    <SelectValue placeholder="All Campaigns" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Campaigns</SelectItem>
+                    {campaigns.map(c => (
+                      <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Date Range</label>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Input 
-                          type="date" 
-                          value={dateRange.start} 
-                          onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                        />
-                        <Input 
-                          type="date" 
-                          value={dateRange.end} 
-                          onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="flex items-center gap-2 h-9">
+                  <Input 
+                    type="date" 
+                    className="h-9 w-[150px]"
+                    value={dateRange.start} 
+                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                  />
+                  <span className="text-muted-foreground">→</span>
+                  <Input 
+                    type="date" 
+                    className="h-9 w-[150px]"
+                    value={dateRange.end} 
+                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                  />
+                </div>
+              </div>
 
-                <Card className="md:col-span-3 border-border/50">
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle>Recipient List</CardTitle>
-                      <CardDescription>
-                        {leads.filter(lead => {
+              <Card className="border-border/50">
+                <CardHeader>
+                  <CardTitle>SMS Logs</CardTitle>
+                  <CardDescription>
+                    History of all SMS interactions with leads
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Recipient</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Campaign</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leads
+                        .filter(lead => {
                           const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.phone.includes(searchTerm);
                           const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
                           let matchesDate = true;
@@ -2891,126 +2923,31 @@ export default function Dashboard() {
                             if (dateRange.end && contactDate > new Date(dateRange.end)) matchesDate = false;
                           }
                           return matchesSearch && matchesCampaign && matchesDate;
-                        }).length} leads found
-                      </CardDescription>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => {
-                      const filtered = leads.filter(lead => {
-                        const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.phone.includes(searchTerm);
-                        const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
-                        let matchesDate = true;
-                        if (dateRange.start || dateRange.end) {
-                          const contactDate = lead.lastContact ? new Date(lead.lastContact) : new Date(lead.createdAt);
-                          if (dateRange.start && contactDate < new Date(dateRange.start)) matchesDate = false;
-                          if (dateRange.end && contactDate > new Date(dateRange.end)) matchesDate = false;
-                        }
-                        return matchesSearch && matchesCampaign && matchesDate;
-                      });
-                      if (selectedLeads.length === filtered.length) {
-                        setSelectedLeads([]);
-                      } else {
-                        setSelectedLeads(filtered.map(l => l._id));
-                      }
-                    }}>
-                      {selectedLeads.length === leads.filter(lead => {
-                        const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.phone.includes(searchTerm);
-                        const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
-                        let matchesDate = true;
-                        if (dateRange.start || dateRange.end) {
-                          const contactDate = lead.lastContact ? new Date(lead.lastContact) : new Date(lead.createdAt);
-                          if (dateRange.start && contactDate < new Date(dateRange.start)) matchesDate = false;
-                          if (dateRange.end && contactDate > new Date(dateRange.end)) matchesDate = false;
-                        }
-                        return matchesSearch && matchesCampaign && matchesDate;
-                      }).length ? "Deselect All" : "Select All"}
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="rounded-md border h-[400px] overflow-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted/50 sticky top-0 z-10">
-                          <tr>
-                            <th className="p-3 text-left w-10"></th>
-                            <th className="p-3 text-left">Name</th>
-                            <th className="p-3 text-left">Phone</th>
-                            <th className="p-3 text-left">Campaign</th>
-                            <th className="p-3 text-left">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {leads.filter(lead => {
-                            const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.phone.includes(searchTerm);
-                            const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
-                            let matchesDate = true;
-                            if (dateRange.start || dateRange.end) {
-                              const contactDate = lead.lastContact ? new Date(lead.lastContact) : new Date(lead.createdAt);
-                              if (dateRange.start && contactDate < new Date(dateRange.start)) matchesDate = false;
-                              if (dateRange.end && contactDate > new Date(dateRange.end)) matchesDate = false;
-                            }
-                            return matchesSearch && matchesCampaign && matchesDate;
-                          }).map(lead => (
-                            <tr key={lead._id} className="border-t hover:bg-muted/30 transition-colors">
-                              <td className="p-3">
-                                <input 
-                                  type="checkbox" 
-                                  checked={selectedLeads.includes(lead._id)}
-                                  onChange={() => {
-                                    setSelectedLeads(prev => 
-                                      prev.includes(lead._id) 
-                                        ? prev.filter(id => id !== lead._id) 
-                                        : [...prev, lead._id]
-                                    );
-                                  }}
-                                />
-                              </td>
-                              <td className="p-3 font-medium">{lead.name}</td>
-                              <td className="p-3">{lead.phone}</td>
-                              <td className="p-3">
-                                {campaigns.find(c => c._id === lead.campaignId)?.name || "-"}
-                              </td>
-                              <td className="p-3">
-                                <Badge variant="outline">{lead.status}</Badge>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex flex-col gap-4 border-t pt-4">
-                    <div className="w-full space-y-2">
-                      <label className="text-sm font-medium">SMS Message</label>
-                      <textarea 
-                        className="w-full min-h-[100px] p-3 rounded-md border bg-background resize-none focus:ring-2 focus:ring-primary outline-none"
-                        placeholder="Type your SMS message here..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex w-full items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        {selectedLeads.length} leads selected
-                      </p>
-                      <Button disabled={sending || selectedLeads.length === 0} onClick={async () => {
-                        setSending(true);
-                        try {
-                          await new Promise(resolve => setTimeout(resolve, 2000));
-                          toast({ title: "SMS messages queued", description: `Sending to ${selectedLeads.length} leads.` });
-                          setMessage("");
-                          setSelectedLeads([]);
-                        } catch (error: any) {
-                          toast({ variant: "destructive", title: "Error", description: error.message });
-                        } finally {
-                          setSending(false);
-                        }
-                      }}>
-                        {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                        Send SMS Bulk
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              </div>
+                        })
+                        .map((lead) => (
+                          <TableRow key={lead._id}>
+                            <TableCell className="font-medium">{lead.name}</TableCell>
+                            <TableCell>{lead.phone}</TableCell>
+                            <TableCell>
+                              {lead.campaignName ? <Badge variant="secondary">{lead.campaignName}</Badge> : "-"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{lead.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-right text-muted-foreground">
+                              {formatTimeAgo(lead.lastContact)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      {leads.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No leads found.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>
