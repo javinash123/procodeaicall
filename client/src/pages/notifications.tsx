@@ -23,7 +23,7 @@ export default function Notifications() {
   }, []);
 
   const goToOverview = () => {
-    setLocation("/");
+    setLocation("/dashboard");
   };
 
   const removeNotification = (id: number) => {

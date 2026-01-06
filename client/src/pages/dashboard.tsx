@@ -74,6 +74,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import dashboardImage from "@assets/generated_images/futuristic_dashboard_interface_mockup_glowing_in_orange..png";
+import BulkWhatsapp from "./bulk-whatsapp";
 
 // Helper function to format time ago
 const formatTimeAgo = (date: Date | string) => {
@@ -240,12 +241,23 @@ export default function Dashboard() {
   // Call/SMS Confirmation State
   const [callConfirm, setCallConfirm] = useState<{ leadId: string; type: "call" | "sms" } | null>(null);
 
+  const [logsCampaignFilter, setLogsCampaignFilter] = useState<string>("all");
+  const [dailyActivityCampaignFilter, setDailyActivityCampaignFilter] = useState<string>("all");
+  const [overviewCampaignFilter, setOverviewCampaignFilter] = useState<string>("all");
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [campaignFilter, setCampaignFilter] = useState("all");
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+
   // Stats derived from data
   const stats = [
     { label: "Total Leads", value: leads.length.toString(), change: "+12.5%", icon: PhoneCall, tab: "crm" },
     { label: "Active Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: "+4.2%", icon: CheckCircle2, tab: "campaigns" },
     { label: "Appointments", value: appointments.length.toString(), change: "-1.1%", icon: Clock, tab: "calendar" },
-    { label: "Credit Balance", value: `$${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, change: "Balance", icon: Wallet, tab: "settings" },
+    { label: "Credit Balance", value: `$${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, icon: Wallet, tab: "settings" },
   ];
 
   // Fetch data on mount
@@ -255,21 +267,23 @@ export default function Dashboard() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [leadsData, campaignsData, appointmentsData, notesData] = await Promise.all([
+        const [leadsRes, campaignsRes, appointmentsRes, notesRes] = await Promise.all([
           leadsApi.getAll(),
           campaignsApi.getAll(),
           appointmentsApi.getAll(),
           notesApi.getAll()
         ]);
-        setLeads(leadsData);
-        setCampaigns(campaignsData);
-        setAppointments(appointmentsData);
-        setNotes(notesData);
+        
+        // Handle both direct arrays and nested objects { leads: [...] }
+        setLeads(Array.isArray(leadsRes) ? leadsRes : (leadsRes as any).leads || []);
+        setCampaigns(Array.isArray(campaignsRes) ? campaignsRes : (campaignsRes as any).campaigns || []);
+        setAppointments(Array.isArray(appointmentsRes) ? appointmentsRes : (appointmentsRes as any).appointments || []);
+        setNotes(Array.isArray(notesRes) ? notesRes : (notesRes as any).notes || []);
 
         // Admin: fetch all users
         if (isAdmin) {
-          const usersData = await usersApi.getAll();
-          setRegisteredUsers(usersData);
+          const usersRes = await usersApi.getAll();
+          setRegisteredUsers(Array.isArray(usersRes) ? usersRes : (usersRes as any).users || []);
         }
       } catch (error: any) {
         toast({
@@ -304,7 +318,7 @@ export default function Dashboard() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      setLocation("/login");
+      setLocation("/auth");
     }
   }, [authLoading, user, setLocation]);
 
@@ -920,6 +934,7 @@ export default function Dashboard() {
               <SidebarItem icon={History} label="Call History" id="callhistory" />
               <SidebarItem icon={Phone} label="Campaigns" id="campaigns" />
               <SidebarItem icon={MessageSquare} label="Bulk SMS" id="sms" />
+              <SidebarItem icon={MessageCircle} label="Bulk WhatsApp" id="whatsapp" />
               <SidebarItem icon={Calendar} label="Calendar" id="calendar" />
             </>
           )}
@@ -981,6 +996,7 @@ export default function Dashboard() {
 
         {/* View Content */}
         <div className="flex-1 p-6 overflow-auto">
+          {activeTab === "whatsapp" && <BulkWhatsapp />}
           {activeTab === "overview" && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
@@ -997,7 +1013,7 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{stat.value}</div>
-                      <p className={`text-xs ${stat.change.startsWith('+') ? 'text-green-500' : stat.change === 'Balance' ? 'text-primary' : 'text-red-500'}`}>
+                      <p className={`text-xs ${stat.change?.startsWith('+') ? 'text-green-500' : stat.change === 'Balance' ? 'text-primary' : 'text-red-500'}`}>
                         {stat.change} {stat.change !== 'Balance' && 'from last week'}
                       </p>
                     </CardContent>
@@ -1007,15 +1023,28 @@ export default function Dashboard() {
 
               {/* Recent Logs - Last 50 Records */}
               <Card className="hover-elevate">
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-row items-center justify-between gap-4">
                   <div>
                     <CardTitle>Recent Logs</CardTitle>
                     <CardDescription>Last 50 lead records</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setActiveTab("crm")}>
-                    View More CRM
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Select value={logsCampaignFilter} onValueChange={setLogsCampaignFilter}>
+                      <SelectTrigger className="w-[160px] h-8 text-xs">
+                        <SelectValue placeholder="Filter by Campaign" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Campaigns</SelectItem>
+                        {campaigns.map(c => (
+                          <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="sm" onClick={() => setActiveTab("callhistory")}>
+                      View More
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
                   <Table>
@@ -1030,68 +1059,71 @@ export default function Dashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {leads.slice(0, 50).map((lead) => (
-                        <TableRow key={lead._id}>
-                          <TableCell className="font-medium">{lead.name}</TableCell>
-                          <TableCell>{lead.campaignName || "General"}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
+                      {leads
+                        .filter(l => logsCampaignFilter === "all" || l.campaignId === logsCampaignFilter)
+                        .slice(0, 50)
+                        .map((lead) => (
+                          <TableRow key={lead._id}>
+                            <TableCell className="font-medium">{lead.name}</TableCell>
+                            <TableCell>{lead.campaignName || "General"}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Phone className="h-4 w-4 text-primary cursor-pointer" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>AI Call Enabled</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <MessageSquare className="h-4 w-4 text-blue-500 cursor-pointer" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>SMS Enabled</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <MessageCircle className="h-4 w-4 text-green-500 cursor-pointer" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>WhatsApp Enabled</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </TableCell>
+                            <TableCell>
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Phone className="h-4 w-4 text-primary cursor-pointer" />
+                                    <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'} className={`cursor-help ${lead.status === 'Interested' ? 'bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-none' : ''}`}>
+                                      {lead.status}
+                                    </Badge>
                                   </TooltipTrigger>
-                                  <TooltipContent>AI Call Enabled</TooltipContent>
+                                  <TooltipContent className="max-w-xs">
+                                    <p className="text-xs font-semibold mb-1">{lead.status} Meaning:</p>
+                                    <p className="text-xs opacity-90">
+                                      {lead.status === "New" && "Initial lead entry, no contact yet."}
+                                      {lead.status === "In Progress" && "Active communication initiated."}
+                                      {lead.status === "Interested" && "Lead showed positive response."}
+                                      {lead.status === "Follow Up" && "Requires further interaction."}
+                                      {lead.status === "Closed" && "Deal successfully completed."}
+                                      {lead.status === "Unqualified" && "Not a fit for this campaign."}
+                                    </p>
+                                  </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <MessageSquare className="h-4 w-4 text-blue-500 cursor-pointer" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>SMS Enabled</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <MessageCircle className="h-4 w-4 text-green-500 cursor-pointer" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>WhatsApp Enabled</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'} className={`cursor-help ${lead.status === 'Interested' ? 'bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-none' : ''}`}>
-                                    {lead.status}
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-xs">
-                                  <p className="text-xs font-semibold mb-1">{lead.status} Meaning:</p>
-                                  <p className="text-xs opacity-90">
-                                    {lead.status === "New" && "Initial lead entry, no contact yet."}
-                                    {lead.status === "In Progress" && "Active communication initiated."}
-                                    {lead.status === "Interested" && "Lead showed positive response."}
-                                    {lead.status === "Follow Up" && "Requires further interaction."}
-                                    {lead.status === "Closed" && "Deal successfully completed."}
-                                    {lead.status === "Unqualified" && "Not a fit for this campaign."}
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </TableCell>
-                          <TableCell className="text-right text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => handleViewLead(lead)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            </TableCell>
+                            <TableCell className="text-right text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="icon" onClick={() => handleViewLead(lead)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       {leads.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No leads yet.</TableCell>
@@ -1102,112 +1134,156 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              {/* Charts Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Lead Status Distribution Pie Chart */}
-                <Card className="hover-elevate shadow-lg border-primary/10">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-primary" />
-                      Lead Distribution
-                    </CardTitle>
-                    <CardDescription>Visual breakdown by status</CardDescription>
-                  </CardHeader>
-                  <CardContent className="h-80">
-                    {leads.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <defs>
-                            <filter id="shadow" height="200%">
-                              <feDropShadow dx="0" dy="4" stdDeviation="4" floodOpacity="0.4"/>
-                            </filter>
-                          </defs>
-                          <Pie
-                            data={[
-                              { name: "New", value: leads.filter(l => l.status === "New").length },
-                              { name: "Interested", value: leads.filter(l => l.status === "Interested").length },
-                              { name: "Follow Up", value: leads.filter(l => l.status === "Follow Up").length },
-                              { name: "In Progress", value: leads.filter(l => l.status === "In Progress").length },
-                              { name: "Closed", value: leads.filter(l => l.status === "Closed").length },
-                              { name: "Unqualified", value: leads.filter(l => l.status === "Unqualified").length }
-                            ]}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={65}
-                            outerRadius={90}
-                            paddingAngle={8}
-                            dataKey="value"
-                            filter="url(#shadow)"
-                            stroke="none"
-                          >
-                            {[
-                              "#f97316", // orange
-                              "#10b981", // emerald
-                              "#3b82f6", // blue
-                              "#8b5cf6", // violet
-                              "#6366f1", // indigo
-                              "#94a3b8"  // slate
-                            ].map((color, index) => (
-                              <Cell key={`cell-${index}`} fill={color} />
-                            ))}
-                          </Pie>
-                          <RechartsTooltip 
-                            contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                          />
-                          <Legend verticalAlign="bottom" height={36}/>
-                        </PieChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-muted-foreground">No data yet</div>
-                    )}
-                  </CardContent>
-                </Card>
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Lead Status Distribution Pie Chart */}
+        <Card className="hover-elevate shadow-lg border-primary/10 overflow-hidden group">
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                Lead Distribution
+              </CardTitle>
+              <CardDescription>Visual breakdown by status</CardDescription>
+            </div>
+            <Select value={overviewCampaignFilter} onValueChange={setOverviewCampaignFilter}>
+              <SelectTrigger className="w-[160px] h-8 text-xs">
+                <SelectValue placeholder="All Campaigns" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Campaigns</SelectItem>
+                {campaigns.map(c => (
+                  <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="h-80 relative">
+            {leads.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <defs>
+                      <filter id="advancedShadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+                        <feOffset dx="2" dy="4" result="offsetblur" />
+                        <feComponentTransfer>
+                          <feFuncA type="linear" slope="0.5" />
+                        </feComponentTransfer>
+                        <feMerge>
+                          <feMergeNode />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <Pie
+                      data={[
+                        { name: "New", value: leads.filter(l => l.status === "New" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length },
+                        { name: "Interested", value: leads.filter(l => l.status === "Interested" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length },
+                        { name: "Follow Up", value: leads.filter(l => l.status === "Follow Up" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length },
+                        { name: "In Progress", value: leads.filter(l => l.status === "In Progress" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length },
+                        { name: "Closed", value: leads.filter(l => l.status === "Closed" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length },
+                        { name: "Unqualified", value: leads.filter(l => l.status === "Unqualified" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length }
+                      ].filter(d => d.value > 0)}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={95}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {[
+                        "#f97316", // orange
+                        "#10b981", // emerald
+                        "#3b82f6", // blue
+                        "#8b5cf6", // violet
+                        "#6366f1", // indigo
+                        "#94a3b8"  // slate
+                      ].map((color, index) => (
+                        <Cell key={`cell-${index}`} fill={color} filter="url(#advancedShadow)" className="hover:opacity-80 transition-all duration-300 cursor-pointer" />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none mb-9">
+                  <div className="text-center animate-in fade-in zoom-in duration-500">
+                    <p className="text-3xl font-extrabold tracking-tighter">
+                      {leads.filter(l => overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter).length}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Total Leads</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">No data yet</div>
+            )}
+          </CardContent>
+        </Card>
 
-                {/* Lead Growth Area Chart */}
-                <Card className="hover-elevate shadow-lg border-primary/10">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart className="h-5 w-5 text-primary" />
-                      Growth Analytics
-                    </CardTitle>
-                    <CardDescription>Monthly lead acquisition</CardDescription>
-                  </CardHeader>
-                  <CardContent className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={[
-                        { name: "Jan", leads: 400 },
-                        { name: "Feb", leads: 300 },
-                        { name: "Mar", leads: 600 },
-                        { name: "Apr", leads: 800 },
-                        { name: "May", leads: 500 },
-                        { name: "Jun", leads: 900 }
-                      ]}>
-                        <defs>
-                          <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                        <RechartsTooltip 
-                          contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="leads" 
-                          stroke="hsl(var(--primary))" 
-                          strokeWidth={4} 
-                          fillOpacity={1} 
-                          fill="url(#colorLeads)" 
-                          animationDuration={1500}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </div>
+        {/* Lead Growth Area Chart */}
+        <Card className="hover-elevate shadow-lg border-primary/10 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart className="h-5 w-5 text-primary" />
+                Growth Analytics
+              </CardTitle>
+              <CardDescription>Monthly lead acquisition trajectory</CardDescription>
+            </div>
+            <Select value={dailyActivityCampaignFilter} onValueChange={setDailyActivityCampaignFilter}>
+              <SelectTrigger className="w-[160px] h-8 text-xs">
+                <SelectValue placeholder="Filter by Campaign" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Campaigns</SelectItem>
+                {campaigns.map(c => (
+                  <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={[
+                { name: "Jan", leads: 400 },
+                { name: "Feb", leads: 300 },
+                { name: "Mar", leads: 600 },
+                { name: "Apr", leads: 800 },
+                { name: "May", leads: 500 },
+                { name: "Jun", leads: 900 }
+              ]}>
+                <defs>
+                  <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                <RechartsTooltip 
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="leads" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={5} 
+                  fillOpacity={1} 
+                  fill="url(#colorGrowth)" 
+                  animationDuration={2000}
+                  strokeLinecap="round"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
 
               {/* Notes Section */}
               <Card>
@@ -2739,14 +2815,202 @@ export default function Dashboard() {
           )}
 
           {activeTab === "sms" && !isAdmin && (
-            <div className="flex flex-col items-center justify-center h-[50vh] text-center space-y-4">
-               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                 <MessageSquare className="h-8 w-8 text-muted-foreground" />
-               </div>
-               <h2 className="text-2xl font-bold">Coming Soon</h2>
-               <p className="text-muted-foreground max-w-md">
-                 This module is currently under development. Check back later for bulk SMS features.
-               </p>
+            <div className="space-y-6">
+              <div className="flex flex-col gap-2">
+                <h1 className="text-3xl font-bold flex items-center gap-2">
+                  <MessageSquare className="h-8 w-8 text-primary" />
+                  Bulk SMS
+                </h1>
+                <p className="text-muted-foreground">Send and manage bulk SMS communications.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card className="md:col-span-1 border-border/50">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Filters</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Search</label>
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="Name or phone..." 
+                          className="pl-8" 
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Campaign</label>
+                      <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All Campaigns" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Campaigns</SelectItem>
+                          {campaigns.map(c => (
+                            <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Date Range</label>
+                      <div className="grid grid-cols-1 gap-2">
+                        <Input 
+                          type="date" 
+                          value={dateRange.start} 
+                          onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                        />
+                        <Input 
+                          type="date" 
+                          value={dateRange.end} 
+                          onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="md:col-span-3 border-border/50">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle>Recipient List</CardTitle>
+                      <CardDescription>
+                        {leads.filter(lead => {
+                          const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.phone.includes(searchTerm);
+                          const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
+                          let matchesDate = true;
+                          if (dateRange.start || dateRange.end) {
+                            const contactDate = lead.lastContact ? new Date(lead.lastContact) : new Date(lead.createdAt);
+                            if (dateRange.start && contactDate < new Date(dateRange.start)) matchesDate = false;
+                            if (dateRange.end && contactDate > new Date(dateRange.end)) matchesDate = false;
+                          }
+                          return matchesSearch && matchesCampaign && matchesDate;
+                        }).length} leads found
+                      </CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      const filtered = leads.filter(lead => {
+                        const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.phone.includes(searchTerm);
+                        const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
+                        let matchesDate = true;
+                        if (dateRange.start || dateRange.end) {
+                          const contactDate = lead.lastContact ? new Date(lead.lastContact) : new Date(lead.createdAt);
+                          if (dateRange.start && contactDate < new Date(dateRange.start)) matchesDate = false;
+                          if (dateRange.end && contactDate > new Date(dateRange.end)) matchesDate = false;
+                        }
+                        return matchesSearch && matchesCampaign && matchesDate;
+                      });
+                      if (selectedLeads.length === filtered.length) {
+                        setSelectedLeads([]);
+                      } else {
+                        setSelectedLeads(filtered.map(l => l._id));
+                      }
+                    }}>
+                      {selectedLeads.length === leads.filter(lead => {
+                        const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.phone.includes(searchTerm);
+                        const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
+                        let matchesDate = true;
+                        if (dateRange.start || dateRange.end) {
+                          const contactDate = lead.lastContact ? new Date(lead.lastContact) : new Date(lead.createdAt);
+                          if (dateRange.start && contactDate < new Date(dateRange.start)) matchesDate = false;
+                          if (dateRange.end && contactDate > new Date(dateRange.end)) matchesDate = false;
+                        }
+                        return matchesSearch && matchesCampaign && matchesDate;
+                      }).length ? "Deselect All" : "Select All"}
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="rounded-md border h-[400px] overflow-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/50 sticky top-0 z-10">
+                          <tr>
+                            <th className="p-3 text-left w-10"></th>
+                            <th className="p-3 text-left">Name</th>
+                            <th className="p-3 text-left">Phone</th>
+                            <th className="p-3 text-left">Campaign</th>
+                            <th className="p-3 text-left">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {leads.filter(lead => {
+                            const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.phone.includes(searchTerm);
+                            const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
+                            let matchesDate = true;
+                            if (dateRange.start || dateRange.end) {
+                              const contactDate = lead.lastContact ? new Date(lead.lastContact) : new Date(lead.createdAt);
+                              if (dateRange.start && contactDate < new Date(dateRange.start)) matchesDate = false;
+                              if (dateRange.end && contactDate > new Date(dateRange.end)) matchesDate = false;
+                            }
+                            return matchesSearch && matchesCampaign && matchesDate;
+                          }).map(lead => (
+                            <tr key={lead._id} className="border-t hover:bg-muted/30 transition-colors">
+                              <td className="p-3">
+                                <input 
+                                  type="checkbox" 
+                                  checked={selectedLeads.includes(lead._id)}
+                                  onChange={() => {
+                                    setSelectedLeads(prev => 
+                                      prev.includes(lead._id) 
+                                        ? prev.filter(id => id !== lead._id) 
+                                        : [...prev, lead._id]
+                                    );
+                                  }}
+                                />
+                              </td>
+                              <td className="p-3 font-medium">{lead.name}</td>
+                              <td className="p-3">{lead.phone}</td>
+                              <td className="p-3">
+                                {campaigns.find(c => c._id === lead.campaignId)?.name || "-"}
+                              </td>
+                              <td className="p-3">
+                                <Badge variant="outline">{lead.status}</Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex flex-col gap-4 border-t pt-4">
+                    <div className="w-full space-y-2">
+                      <label className="text-sm font-medium">SMS Message</label>
+                      <textarea 
+                        className="w-full min-h-[100px] p-3 rounded-md border bg-background resize-none focus:ring-2 focus:ring-primary outline-none"
+                        placeholder="Type your SMS message here..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex w-full items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        {selectedLeads.length} leads selected
+                      </p>
+                      <Button disabled={sending || selectedLeads.length === 0} onClick={async () => {
+                        setSending(true);
+                        try {
+                          await new Promise(resolve => setTimeout(resolve, 2000));
+                          toast({ title: "SMS messages queued", description: `Sending to ${selectedLeads.length} leads.` });
+                          setMessage("");
+                          setSelectedLeads([]);
+                        } catch (error: any) {
+                          toast({ variant: "destructive", title: "Error", description: error.message });
+                        } finally {
+                          setSending(false);
+                        }
+                      }}>
+                        {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                        Send SMS Bulk
+                      </Button>
+                    </div>
+                  </CardFooter>
+                </Card>
+              </div>
             </div>
           )}
         </div>

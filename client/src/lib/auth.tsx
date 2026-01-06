@@ -36,8 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const loggedInUser = await authApi.login(email, password);
     setUser(loggedInUser);
-    const dashboardPath = import.meta.env.PROD ? "/aiagent/dashboard" : "/dashboard";
-    setLocation(dashboardPath);
+    setLocation("/dashboard");
   };
 
   const logout = async () => {
