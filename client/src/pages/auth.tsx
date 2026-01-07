@@ -49,6 +49,10 @@ export default function Auth() {
     const lastName = formData.get("last-name") as string;
     const email = formData.get("reg-email") as string;
     const password = formData.get("reg-password") as string;
+    
+    // Get plan from URL
+    const queryParams = new URLSearchParams(window.location.search);
+    const selectedPlanId = queryParams.get("plan");
 
     try {
       await authApi.register({
@@ -57,6 +61,7 @@ export default function Auth() {
         firstName,
         lastName,
         role: "user",
+        selectedPlanId: selectedPlanId || undefined,
       });
       await login(email, password);
       toast({

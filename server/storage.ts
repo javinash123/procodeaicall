@@ -18,6 +18,7 @@ import type {
   InsertPlan,
   Feature,
   InsertFeature,
+  SubscriptionInfo,
 } from "@shared/schema";
 import bcryptjs from "bcryptjs";
 
@@ -55,6 +56,7 @@ export interface IStorage {
   // Settings methods
   updateSettings(userId: string, settings: UpdateSettings): Promise<User | null>;
   getSettings(userId: string): Promise<User | null>;
+  updateUserSubscription(userId: string, subscription: SubscriptionInfo): Promise<User | null>;
 
   // Note methods
   getNotes(userId: string): Promise<Note[]>;
@@ -278,6 +280,16 @@ export class MongoStorage implements IStorage {
 
   async getSettings(userId: string): Promise<User | null> {
     const user = await UserModel.findById(userId).select("-password").lean();
+    if (!user) return null;
+    return { ...(user as any), _id: (user as any)._id.toString() } as any as User;
+  }
+
+  async updateUserSubscription(userId: string, subscription: SubscriptionInfo): Promise<User | null> {
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      { $set: { subscription } },
+      { new: true }
+    ).select("-password").lean();
     if (!user) return null;
     return { ...(user as any), _id: (user as any)._id.toString() } as any as User;
   }

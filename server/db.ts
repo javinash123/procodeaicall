@@ -134,6 +134,7 @@ const planSchema = new mongoose.Schema({
   credits: { type: Number, required: true },
   features: [String],
   limitations: [String],
+  description: String,
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
 });

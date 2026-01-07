@@ -18,6 +18,7 @@ export const insertPlanSchema = z.object({
   credits: z.number().min(0),
   features: z.array(z.string()),
   limitations: z.array(z.string()),
+  description: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -47,6 +48,7 @@ export const insertUserSchema = z.object({
   role: z.enum(["admin", "user"]).default("user"),
   companyName: z.string().optional(),
   phone: z.string().optional(),
+  selectedPlanId: z.string().optional(),
 });
 
 export const updateUserSchema = insertUserSchema.partial().omit({ password: true });

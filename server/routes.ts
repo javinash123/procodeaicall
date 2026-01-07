@@ -107,7 +107,21 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       
       const user = await storage.createUser(data);
       req.session.userId = user._id;
-      
+
+      // Handle subscription if plan is selected
+      if (data.selectedPlanId) {
+        const plan = await storage.getPlan(data.selectedPlanId);
+        if (plan) {
+          await storage.updateUserSubscription(user._id, {
+            plan: plan.name,
+            status: "Active",
+            monthlyCallCredits: plan.credits,
+            creditsUsed: 0,
+            joinedDate: new Date(),
+          });
+        }
+      }
+
       res.json({ user });
     } catch (error: any) {
       res.status(400).json({ message: error.message });

@@ -1,9 +1,43 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, HelpCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { type Plan, type Feature } from "@shared/schema";
+import { Check, X, Loader2 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { useLocation } from "wouter";
 
 export default function Pricing() {
+  const [, setLocation] = useLocation();
+  const { data: plansResponse, isLoading: plansLoading } = useQuery<{ plans: Plan[] }>({ 
+    queryKey: ["/api/plans"] 
+  });
+  const { data: featuresResponse, isLoading: featuresLoading } = useQuery<{ features: Feature[] }>({ 
+    queryKey: ["/api/features"] 
+  });
+
+  const plans = plansResponse?.plans || [];
+  const features = featuresResponse?.features || [];
+
+  const handleGetStarted = (planId: string) => {
+    setLocation(`/auth?plan=${planId}`);
+  };
+
+  if (plansLoading || featuresLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <section className="py-24 bg-muted/10">
@@ -18,73 +52,70 @@ export default function Pricing() {
       </section>
 
       <section className="py-12">
-        <div className="container mx-auto px-4">
-           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-             {/* Starter */}
-             <Card className="flex flex-col">
-               <CardHeader>
-                 <CardTitle className="text-xl">Starter</CardTitle>
-                 <div className="text-4xl font-bold mt-4">$49<span className="text-base font-normal text-muted-foreground">/mo</span></div>
-                 <CardDescription>For solo founders and small tests.</CardDescription>
-               </CardHeader>
-               <CardContent className="flex-1 space-y-4">
-                 <ul className="space-y-3 text-sm">
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> 500 AI Call Minutes</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> 1 Voice Agent</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Basic Analytics</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Email Support</li>
-                 </ul>
-               </CardContent>
-               <CardFooter>
-                 <Button className="w-full" variant="outline">Get Started</Button>
-               </CardFooter>
-             </Card>
-
-             {/* Growth */}
-             <Card className="flex flex-col border-primary shadow-lg shadow-primary/10 relative scale-105 z-10">
-               <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-3 py-1 rounded-bl-lg font-medium">MOST POPULAR</div>
-               <CardHeader>
-                 <CardTitle className="text-xl">Growth</CardTitle>
-                 <div className="text-4xl font-bold mt-4">$199<span className="text-base font-normal text-muted-foreground">/mo</span></div>
-                 <CardDescription>For growing sales teams.</CardDescription>
-               </CardHeader>
-               <CardContent className="flex-1 space-y-4">
-                 <ul className="space-y-3 text-sm">
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> 5,000 AI Call Minutes</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> 5 Voice Agents</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Advanced Analytics</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Bulk SMS Module</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> CRM Integrations</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Priority Support</li>
-                 </ul>
-               </CardContent>
-               <CardFooter>
-                 <Button className="w-full">Get Started</Button>
-               </CardFooter>
-             </Card>
-
-             {/* Enterprise */}
-             <Card className="flex flex-col">
-               <CardHeader>
-                 <CardTitle className="text-xl">Enterprise</CardTitle>
-                 <div className="text-4xl font-bold mt-4">Custom</div>
-                 <CardDescription>For large organizations.</CardDescription>
-               </CardHeader>
-               <CardContent className="flex-1 space-y-4">
-                 <ul className="space-y-3 text-sm">
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Unlimited Minutes</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Unlimited Agents</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Custom Voice Cloning</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Dedicated Success Manager</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> SSO & Audit Logs</li>
-                   <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> SLA Guarantee</li>
-                 </ul>
-               </CardContent>
-               <CardFooter>
-                 <Button className="w-full" variant="outline">Contact Sales</Button>
-               </CardFooter>
-             </Card>
-           </div>
+        <div className="container mx-auto px-4 overflow-x-auto">
+          <Card className="max-w-6xl mx-auto border-none shadow-none bg-transparent">
+            <CardContent className="p-0">
+              <Table className="border-collapse">
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-b-2">
+                    <TableHead className="w-[300px] text-lg font-bold py-6">Features</TableHead>
+                    {plans.map((plan) => (
+                      <TableHead key={plan._id} className="text-center py-6">
+                        <div className="space-y-2">
+                          <div className="text-xl font-bold text-foreground">{plan.name}</div>
+                          <div className="text-3xl font-bold text-primary">₹{plan.price}</div>
+                          <div className="text-sm text-muted-foreground capitalize">{plan.duration}</div>
+                          <Button 
+                            size="sm" 
+                            className="w-full mt-4" 
+                            variant={plan.name.toLowerCase().includes('growth') ? 'default' : 'outline'}
+                            onClick={() => handleGetStarted(plan._id)}
+                          >
+                            Get Started
+                          </Button>
+                        </div>
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow className="bg-muted/50">
+                    <TableCell className="font-semibold py-4">Credits</TableCell>
+                    {plans.map((plan) => (
+                      <TableCell key={plan._id} className="text-center font-bold py-4">
+                        {plan.credits.toLocaleString()}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {features.map((feature) => (
+                    <TableRow key={feature._id} className="hover:bg-muted/30 border-b">
+                      <TableCell className="py-4">
+                        <div className="font-medium">{feature.name}</div>
+                        {feature.description && (
+                          <div 
+                            className="text-xs text-muted-foreground mt-1"
+                            dangerouslySetInnerHTML={{ __html: feature.description }}
+                          />
+                        )}
+                      </TableCell>
+                      {plans.map((plan) => {
+                        const hasFeature = plan.features?.includes(feature.name);
+                        return (
+                          <TableCell key={plan._id} className="text-center py-4">
+                            {hasFeature ? (
+                              <Check className="h-5 w-5 text-primary mx-auto" />
+                            ) : (
+                              <X className="h-5 w-5 text-muted-foreground/30 mx-auto" />
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </div>
       </section>
 

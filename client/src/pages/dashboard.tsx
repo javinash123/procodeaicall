@@ -94,6 +94,7 @@ export default function Dashboard() {
   const [location, setLocation] = useLocation();
   const { theme } = useTheme();
   const [plans, setPlans] = useState<Plan[]>([]);
+  const userPlan = plans.find(p => p.name === user?.subscription?.plan);
   const [isCreatePlanOpen, setIsCreatePlanOpen] = useState(false);
   const [isEditPlanOpen, setIsEditPlanOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
@@ -2716,8 +2717,8 @@ export default function Dashboard() {
                               <div className="text-xs text-muted-foreground">Current Tier</div>
                            </div>
                            <div className="bg-muted/50 p-3 rounded-lg text-center">
-                              <div className="text-2xl font-bold">${user.subscription?.plan === "Enterprise" ? "499" : user.subscription?.plan === "Pro" ? "199" : "49"}</div>
-                              <div className="text-xs text-muted-foreground">Per Month</div>
+                              <div className="text-2xl font-bold">₹{userPlan?.price || 0}</div>
+                              <div className="text-xs text-muted-foreground">Per {userPlan?.duration || "Month"}</div>
                            </div>
                            <div className="bg-muted/50 p-3 rounded-lg text-center">
                               <div className="text-2xl font-bold">{user.subscription?.status || "Active"}</div>
@@ -2725,8 +2726,30 @@ export default function Dashboard() {
                            </div>
                         </div>
 
+                        {userPlan?.description && (
+                          <div className="bg-muted/30 p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">Plan Details</h4>
+                            <div 
+                              className="text-sm text-muted-foreground prose prose-sm dark:prose-invert"
+                              dangerouslySetInnerHTML={{ __html: userPlan.description }}
+                            />
+                          </div>
+                        )}
+
+                        <div className="space-y-3">
+                          <h4 className="font-semibold">Included Features</h4>
+                          <div className="grid sm:grid-cols-2 gap-2">
+                            {userPlan?.features?.map((feature, i) => (
+                              <div key={i} className="flex items-center gap-2 text-sm">
+                                <CheckCircle2 className="h-4 w-4 text-primary" />
+                                {feature}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
                         <div className="flex gap-4">
-                           <Button>Upgrade Plan</Button>
+                           <Button onClick={() => setLocation("/pricing")}>Change Plan</Button>
                            <Button variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10">Cancel Subscription</Button>
                         </div>
                      </CardContent>
