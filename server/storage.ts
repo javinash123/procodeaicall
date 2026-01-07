@@ -1,4 +1,4 @@
-import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel, PlanModel } from "./db";
+import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel, PlanModel, FeatureModel } from "./db";
 import type {
   User,
   InsertUser,
@@ -16,6 +16,8 @@ import type {
   UpdateNote,
   Plan,
   InsertPlan,
+  Feature,
+  InsertFeature,
 } from "@shared/schema";
 import bcryptjs from "bcryptjs";
 
@@ -67,6 +69,10 @@ export interface IStorage {
   createPlan(plan: InsertPlan): Promise<Plan>;
   updatePlan(id: string, updates: Partial<InsertPlan>): Promise<Plan | null>;
   deletePlan(id: string): Promise<boolean>;
+
+  // Feature methods
+  getFeatures(): Promise<Feature[]>;
+  createFeature(feature: InsertFeature): Promise<Feature>;
 }
 
 export class MongoStorage implements IStorage {
@@ -201,7 +207,7 @@ export class MongoStorage implements IStorage {
 
   async createCampaign(campaign: InsertCampaign): Promise<Campaign> {
     const newCampaign = await CampaignModel.create(campaign as any);
-    const obj = newCampaign.toObject();
+    const obj = (newCampaign as any).toObject();
     return { ...(obj as any), _id: obj._id.toString(), userId: obj.userId.toString() } as any as Campaign;
   }
 
@@ -332,6 +338,18 @@ export class MongoStorage implements IStorage {
   async deletePlan(id: string): Promise<boolean> {
     const result = await PlanModel.findByIdAndDelete(id);
     return !!result;
+  }
+
+  // Feature methods
+  async getFeatures(): Promise<Feature[]> {
+    const features = await FeatureModel.find().lean();
+    return features.map((f: any) => ({ ...f, _id: f._id.toString() })) as any as Feature[];
+  }
+
+  async createFeature(feature: InsertFeature): Promise<Feature> {
+    const newFeature = await FeatureModel.create(feature);
+    const obj = newFeature.toObject();
+    return { ...(obj as any), _id: obj._id.toString() } as any as Feature;
   }
 }
 

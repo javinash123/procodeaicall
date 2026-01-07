@@ -27,6 +27,17 @@ export type Plan = InsertPlan & {
   createdAt: Date;
 };
 
+// Feature Schema (for dynamic management)
+export const insertFeatureSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+});
+
+export type InsertFeature = z.infer<typeof insertFeatureSchema>;
+export type Feature = InsertFeature & {
+  _id: string;
+};
+
 // User Schema
 export const insertUserSchema = z.object({
   email: z.string().email(),

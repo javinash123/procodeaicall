@@ -16,6 +16,7 @@ import Pricing from "@/pages/pricing";
 import About from "@/pages/about";
 import Contact from "@/pages/contact";
 import AdminLogin from "@/pages/admin-login";
+import AdminPlans from "@/pages/admin-plans";
 import Notifications from "@/pages/notifications";
 import BulkWhatsapp from "@/pages/bulk-whatsapp";
 
@@ -31,6 +32,7 @@ function Router() {
         <Route path="/notifications" component={Notifications} />
         <Route path="/bulk-whatsapp" component={BulkWhatsapp} />
         <Route path="/admin/dashboard" component={Dashboard} />
+        <Route path="/admin/plans" component={AdminPlans} />
         <Route path="/admin" component={AdminLogin} />
         <Route path="/login" component={Auth} />
         <Route path="/register" component={Auth} />

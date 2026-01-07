@@ -138,9 +138,16 @@ const planSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// Feature Model
+const featureSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  description: String,
+});
+
 export const UserModel = mongoose.model("User", userSchema);
 export const LeadModel = mongoose.model("Lead", leadSchema);
 export const CampaignModel = mongoose.model("Campaign", campaignSchema);
 export const AppointmentModel = mongoose.model("Appointment", appointmentSchema);
 export const NoteModel = mongoose.model("Note", noteSchema);
 export const PlanModel = mongoose.model("Plan", planSchema);
+export const FeatureModel = mongoose.model("Feature", featureSchema);

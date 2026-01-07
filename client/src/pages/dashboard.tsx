@@ -51,9 +51,9 @@ import {
   Send
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, notesApi, type UploadedFile } from "@/lib/api";
+import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, notesApi, plansApi, type UploadedFile } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import type { Lead, Campaign, Appointment, User as UserType, KnowledgeBaseFile } from "@shared/schema";
+import type { Lead, Campaign, Appointment, User as UserType, KnowledgeBaseFile, Plan, InsertPlan } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -76,6 +76,7 @@ import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tool
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import dashboardImage from "@assets/generated_images/futuristic_dashboard_interface_mockup_glowing_in_orange..png";
 import BulkWhatsapp from "./bulk-whatsapp";
+import AdminPlans from "./admin-plans";
 
 // Helper function to format time ago
 const formatTimeAgo = (date: Date | string) => {
@@ -271,6 +272,7 @@ export default function Dashboard() {
   // Stats derived from data
   const stats = [
     { label: "Total Leads", value: leads.length.toString(), change: "+12.5%", icon: PhoneCall, tab: "crm" },
+    { label: "Subscription Plans", value: plans.length.toString(), icon: CreditCard, tab: "plans", href: "/admin/plans" },
     { label: "Active Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: "+4.2%", icon: CheckCircle2, tab: "campaigns" },
     { label: "Appointments", value: appointments.length.toString(), change: "-1.1%", icon: Clock, tab: "calendar" },
     { label: "Credit Balance", value: `$${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, icon: Wallet, tab: "settings" },
@@ -944,6 +946,7 @@ export default function Dashboard() {
           
           {isAdmin ? (
             <>
+              <SidebarItem icon={CreditCard} label="Plans" id="plans" />
               <SidebarItem icon={Users} label="SaaS Management" id="saas" />
             </>
           ) : (
@@ -1015,6 +1018,7 @@ export default function Dashboard() {
         {/* View Content */}
         <div className="flex-1 p-6 overflow-auto">
           {activeTab === "whatsapp" && <BulkWhatsapp />}
+          {activeTab === "plans" && <AdminPlans />}
           {activeTab === "overview" && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">

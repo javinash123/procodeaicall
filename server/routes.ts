@@ -18,6 +18,7 @@ import {
   insertNoteSchema,
   updateNoteSchema,
   insertPlanSchema,
+  insertFeatureSchema,
 } from "@shared/schema";
 
 // ... Configure multer for file uploads ...
@@ -650,6 +651,31 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       res.json({ plans });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get all features
+  app.get("/api/features", async (req, res) => {
+    try {
+      const features = await storage.getFeatures();
+      res.json({ features });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create feature (admin only)
+  app.post("/api/features", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (user?.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      const data = insertFeatureSchema.parse(req.body);
+      const feature = await storage.createFeature(data);
+      res.status(201).json({ feature });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   });
 

@@ -1,4 +1,4 @@
-import type { User, InsertUser, Lead, InsertLead, Campaign, InsertCampaign, Appointment, InsertAppointment } from "@shared/schema";
+import type { User, InsertUser, Lead, InsertLead, Campaign, InsertCampaign, Appointment, InsertAppointment, Plan, Feature, InsertPlan, InsertFeature } from "@shared/schema";
 
 const getApiBase = () => {
   if (typeof window !== 'undefined') {
@@ -358,5 +358,68 @@ export const settingsApi = {
       credentials: "include",
     });
     await handleResponse(response);
+  },
+};
+
+// Plans API
+export const plansApi = {
+  getAll: async (): Promise<Plan[]> => {
+    const response = await fetch(`${API_BASE}/plans`, {
+      credentials: "include",
+    });
+    const data = await handleResponse<{ plans: Plan[] }>(response);
+    return data.plans;
+  },
+
+  create: async (data: InsertPlan): Promise<Plan> => {
+    const response = await fetch(`${API_BASE}/plans`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+    const result = await handleResponse<{ plan: Plan }>(response);
+    return result.plan;
+  },
+
+  update: async (id: string, data: Partial<InsertPlan>): Promise<Plan> => {
+    const response = await fetch(`${API_BASE}/plans/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+    const result = await handleResponse<{ plan: Plan }>(response);
+    return result.plan;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/plans/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    await handleResponse(response);
+  },
+};
+
+// Features API
+export const featuresApi = {
+  getAll: async (): Promise<Feature[]> => {
+    const response = await fetch(`${API_BASE}/features`, {
+      credentials: "include",
+    });
+    const data = await handleResponse<{ features: Feature[] }>(response);
+    return data.features;
+  },
+
+  create: async (data: InsertFeature): Promise<Feature> => {
+    const response = await fetch(`${API_BASE}/features`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+    const result = await handleResponse<{ feature: Feature }>(response);
+    return result.feature;
   },
 };
