@@ -36,7 +36,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const loggedInUser = await authApi.login(email, password);
     setUser(loggedInUser);
-    setLocation("/dashboard");
+    
+    // Redirect based on role
+    if (loggedInUser.role === "admin") {
+      setLocation("/admin/dashboard");
+    } else {
+      setLocation("/dashboard");
+    }
   };
 
   const logout = async () => {

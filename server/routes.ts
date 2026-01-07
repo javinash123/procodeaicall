@@ -17,9 +17,10 @@ import {
   updateSettingsSchema,
   insertNoteSchema,
   updateNoteSchema,
+  insertPlanSchema,
 } from "@shared/schema";
 
-// Configure multer for file uploads
+// ... Configure multer for file uploads ...
 const uploadDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -635,6 +636,70 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       }
       await storage.deleteNote(req.params.id);
       res.json({ message: "Note deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ==================== PLAN ROUTES ====================
+
+  // Get all plans
+  app.get("/api/plans", async (req, res) => {
+    try {
+      const plans = await storage.getPlans();
+      res.json({ plans });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create plan (admin only)
+  app.post("/api/plans", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (user?.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const data = insertPlanSchema.parse(req.body);
+      const plan = await storage.createPlan(data);
+      res.status(201).json({ plan });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Update plan (admin only)
+  app.patch("/api/plans/:id", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (user?.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const updatedPlan = await storage.updatePlan(req.params.id, req.body);
+      if (!updatedPlan) {
+        return res.status(404).json({ message: "Plan not found" });
+      }
+      res.json({ plan: updatedPlan });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Delete plan (admin only)
+  app.delete("/api/plans/:id", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (user?.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const success = await storage.deletePlan(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Plan not found" });
+      }
+      res.json({ message: "Plan deleted successfully" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

@@ -2,12 +2,29 @@ import { z } from "zod";
 
 // Subscription Info Type
 export type SubscriptionInfo = {
-  plan: "Starter" | "Pro" | "Enterprise";
+  plan: string; // Dynamic plan name
   status: "Active" | "Inactive" | "Cancelled";
   monthlyCallCredits: number;
   creditsUsed: number;
   renewalDate?: Date;
   joinedDate: Date;
+};
+
+// Plan Schema
+export const insertPlanSchema = z.object({
+  name: z.string().min(1),
+  price: z.number().min(0),
+  duration: z.enum(["monthly", "yearly", "quarterly", "lifetime"]),
+  credits: z.number().min(0),
+  features: z.array(z.string()),
+  limitations: z.array(z.string()),
+  isActive: z.boolean().default(true),
+});
+
+export type InsertPlan = z.infer<typeof insertPlanSchema>;
+export type Plan = InsertPlan & {
+  _id: string;
+  createdAt: Date;
 };
 
 // User Schema

@@ -126,8 +126,21 @@ const noteSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+// Plan Model
+const planSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  duration: { type: String, enum: ["monthly", "yearly", "quarterly", "lifetime"], required: true },
+  credits: { type: Number, required: true },
+  features: [String],
+  limitations: [String],
+  isActive: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now },
+});
+
 export const UserModel = mongoose.model("User", userSchema);
 export const LeadModel = mongoose.model("Lead", leadSchema);
 export const CampaignModel = mongoose.model("Campaign", campaignSchema);
 export const AppointmentModel = mongoose.model("Appointment", appointmentSchema);
 export const NoteModel = mongoose.model("Note", noteSchema);
+export const PlanModel = mongoose.model("Plan", planSchema);

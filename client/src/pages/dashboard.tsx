@@ -92,6 +92,20 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [location, setLocation] = useLocation();
   const { theme } = useTheme();
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [isCreatePlanOpen, setIsCreatePlanOpen] = useState(false);
+  const [isEditPlanOpen, setIsEditPlanOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [planForm, setPlanForm] = useState<InsertPlan>({
+    name: "",
+    price: 0,
+    duration: "monthly",
+    credits: 0,
+    features: [""],
+    limitations: [""],
+    isActive: true
+  });
+
   const { user, logout, loading: authLoading } = useAuth();
   const { toast } = useToast();
   
@@ -269,11 +283,12 @@ export default function Dashboard() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [leadsRes, campaignsRes, appointmentsRes, notesRes] = await Promise.all([
+        const [leadsRes, campaignsRes, appointmentsRes, notesRes, plansRes] = await Promise.all([
           leadsApi.getAll(),
           campaignsApi.getAll(),
           appointmentsApi.getAll(),
-          notesApi.getAll()
+          notesApi.getAll(),
+          plansApi.getAll()
         ]);
         
         // Handle both direct arrays and nested objects { leads: [...] }
@@ -281,6 +296,7 @@ export default function Dashboard() {
         setCampaigns(Array.isArray(campaignsRes) ? campaignsRes : (campaignsRes as any).campaigns || []);
         setAppointments(Array.isArray(appointmentsRes) ? appointmentsRes : (appointmentsRes as any).appointments || []);
         setNotes(Array.isArray(notesRes) ? notesRes : (notesRes as any).notes || []);
+        setPlans(Array.isArray(plansRes) ? plansRes : (plansRes as any).plans || []);
 
         // Admin: fetch all users
         if (isAdmin) {

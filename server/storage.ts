@@ -1,4 +1,4 @@
-import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel } from "./db";
+import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel, PlanModel } from "./db";
 import type {
   User,
   InsertUser,
@@ -14,6 +14,8 @@ import type {
   Note,
   InsertNote,
   UpdateNote,
+  Plan,
+  InsertPlan,
 } from "@shared/schema";
 import bcryptjs from "bcryptjs";
 
@@ -58,10 +60,17 @@ export interface IStorage {
   createNote(note: InsertNote): Promise<Note>;
   updateNote(id: string, updates: UpdateNote): Promise<Note | null>;
   deleteNote(id: string): Promise<boolean>;
+
+  // Plan methods
+  getPlans(): Promise<Plan[]>;
+  getPlan(id: string): Promise<Plan | null>;
+  createPlan(plan: InsertPlan): Promise<Plan>;
+  updatePlan(id: string, updates: Partial<InsertPlan>): Promise<Plan | null>;
+  deletePlan(id: string): Promise<boolean>;
 }
 
 export class MongoStorage implements IStorage {
-  // User methods
+  // ... existing user methods ...
   async getUser(id: string): Promise<User | null> {
     const user = await UserModel.findById(id).select("-password").lean();
     if (!user) return null;
@@ -80,7 +89,12 @@ export class MongoStorage implements IStorage {
       ...insertUser,
       password: hashedPassword,
       subscription: {
+        plan: "Starter",
+        status: "Active",
+        monthlyCallCredits: 100,
+        creditsUsed: 0,
         renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        joinedDate: new Date(),
       },
     });
     
@@ -89,6 +103,7 @@ export class MongoStorage implements IStorage {
     return { ...rest, _id: _id.toString() } as any as User;
   }
 
+  // ... rest of MongoStorage methods ...
   async updateUser(id: string, updates: UpdateUser): Promise<User | null> {
     const user = await UserModel.findByIdAndUpdate(id, updates, { new: true }).select("-password").lean();
     if (!user) return null;
@@ -287,6 +302,35 @@ export class MongoStorage implements IStorage {
 
   async deleteNote(id: string): Promise<boolean> {
     const result = await NoteModel.findByIdAndDelete(id);
+    return !!result;
+  }
+
+  // Plan methods
+  async getPlans(): Promise<Plan[]> {
+    const plans = await PlanModel.find().lean();
+    return plans.map((p: any) => ({ ...p, _id: p._id.toString() })) as any as Plan[];
+  }
+
+  async getPlan(id: string): Promise<Plan | null> {
+    const plan = await PlanModel.findById(id).lean();
+    if (!plan) return null;
+    return { ...(plan as any), _id: (plan as any)._id.toString() } as any as Plan;
+  }
+
+  async createPlan(plan: InsertPlan): Promise<Plan> {
+    const newPlan = await PlanModel.create(plan);
+    const obj = newPlan.toObject();
+    return { ...(obj as any), _id: obj._id.toString() } as any as Plan;
+  }
+
+  async updatePlan(id: string, updates: Partial<InsertPlan>): Promise<Plan | null> {
+    const plan = await PlanModel.findByIdAndUpdate(id, updates, { new: true }).lean();
+    if (!plan) return null;
+    return { ...(plan as any), _id: (plan as any)._id.toString() } as any as Plan;
+  }
+
+  async deletePlan(id: string): Promise<boolean> {
+    const result = await PlanModel.findByIdAndDelete(id);
     return !!result;
   }
 }
