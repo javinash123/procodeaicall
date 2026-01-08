@@ -27,7 +27,7 @@ export default function Pricing() {
   const features = featuresResponse?.features || [];
 
   const handleGetStarted = (planId: string) => {
-    setLocation(`/auth?plan=${planId}`);
+    setLocation(`/register?plan=${planId}`);
   };
 
   if (plansLoading || featuresLoading) {

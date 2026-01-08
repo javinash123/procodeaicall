@@ -94,24 +94,9 @@ export default function Dashboard() {
   const [location, setLocation] = useLocation();
   const { theme } = useTheme();
   const [plans, setPlans] = useState<Plan[]>([]);
-  const userPlan = plans.find(p => p.name === user?.subscription?.plan);
-  const [isCreatePlanOpen, setIsCreatePlanOpen] = useState(false);
-  const [isEditPlanOpen, setIsEditPlanOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [planForm, setPlanForm] = useState<InsertPlan>({
-    name: "",
-    price: 0,
-    duration: "monthly",
-    credits: 0,
-    callingRate: 0,
-    smsRate: 0,
-    whatsappRate: 0,
-    features: [""],
-    limitations: [""],
-    isActive: true
-  });
-
   const { user, logout, loading: authLoading } = useAuth();
+  const userPlan = plans.find(p => p.name === user?.subscription?.plan);
+
   const { toast } = useToast();
   
   // Role Detection
@@ -257,6 +242,12 @@ export default function Dashboard() {
   // Chart Filter State
   const [selectedChartMonth, setSelectedChartMonth] = useState<number>(new Date().getMonth());
   const [selectedChartYear, setSelectedChartYear] = useState<number>(new Date().getFullYear());
+  const [selectedAdminSubYear, setSelectedAdminSubYear] = useState<number>(new Date().getFullYear());
+  const [selectedAdminPieMonth, setSelectedAdminPieMonth] = useState<number>(new Date().getMonth());
+  const [selectedAdminPieYear, setSelectedAdminPieYear] = useState<number>(new Date().getFullYear());
+  const [selectedAdminRevenueYear, setSelectedAdminRevenueYear] = useState<number>(new Date().getFullYear());
+  const [selectedAdminCreditMonth, setSelectedAdminCreditMonth] = useState<number>(new Date().getMonth());
+  const [selectedAdminCreditYear, setSelectedAdminCreditYear] = useState<number>(new Date().getFullYear());
 
   // Call/SMS Confirmation State
   const [callConfirm, setCallConfirm] = useState<{ leadId: string; type: "call" | "sms" } | null>(null);
@@ -274,12 +265,16 @@ export default function Dashboard() {
   const [sending, setSending] = useState(false);
 
   // Stats derived from data
-  const stats = [
+  const stats = isAdmin ? [
+    { label: "Total Users", value: registeredUsers.length.toString(), icon: Users, tab: "admin-users", change: "" },
+    { label: "Total Plans", value: plans.length.toString(), icon: CreditCard, tab: "plans", change: "", href: "/admin/plans" },
+    { label: "Active Subscriptions", value: registeredUsers.filter(u => u.subscription?.status === "Active").length.toString(), icon: CheckCircle2, tab: "admin-users", change: "" },
+    { label: "Total Revenue", value: `₹${registeredUsers.reduce((acc, u) => acc + (plans.find(p => p.name === u.subscription?.plan)?.price || 0), 0).toLocaleString()}`, icon: Wallet, tab: "admin-users", change: "" },
+  ] : [
     { label: "Leads", value: leads.length.toString(), change: "+12.5%", icon: PhoneCall, tab: "crm" },
     { label: "Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: "+4.2%", icon: CheckCircle2, tab: "campaigns" },
-    { label: "Subscription Plans", value: plans.length.toString(), icon: CreditCard, tab: "plans", href: "/admin/plans" },
     { label: "Appointments", value: appointments.length.toString(), change: "-1.1%", icon: Clock, tab: "calendar" },
-    { label: "Credit Balance", value: `₹${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, icon: Wallet, tab: "settings" },
+    { label: "Credit Balance", value: `₹${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, change: "0%", icon: Wallet, tab: "settings" },
   ];
 
   // Fetch data on mount
@@ -297,14 +292,12 @@ export default function Dashboard() {
           plansApi.getAll()
         ]);
         
-        // Handle both direct arrays and nested objects { leads: [...] }
         setLeads(Array.isArray(leadsRes) ? leadsRes : (leadsRes as any).leads || []);
         setCampaigns(Array.isArray(campaignsRes) ? campaignsRes : (campaignsRes as any).campaigns || []);
         setAppointments(Array.isArray(appointmentsRes) ? appointmentsRes : (appointmentsRes as any).appointments || []);
         setNotes(Array.isArray(notesRes) ? notesRes : (notesRes as any).notes || []);
         setPlans(Array.isArray(plansRes) ? plansRes : (plansRes as any).plans || []);
 
-        // Admin: fetch all users
         if (isAdmin) {
           const usersRes = await usersApi.getAll();
           setRegisteredUsers(Array.isArray(usersRes) ? usersRes : (usersRes as any).users || []);
@@ -357,7 +350,7 @@ export default function Dashboard() {
     return Object.keys(errors).length === 0;
   };
 
-  const validateCampaign = (data: typeof newCampaign): boolean => {
+  const validateCampaign = (data: any): boolean => {
     const errors: typeof campaignErrors = {};
     if (!data.name.trim()) errors.name = "Campaign name is required";
     if (!data.script.trim()) errors.script = "Script/opening message is required";
@@ -384,7 +377,6 @@ export default function Dashboard() {
         outcome: "Pending",
         campaignId: newLead.campaignId && newLead.campaignId !== "none" ? newLead.campaignId : undefined
       });
-      // Add campaign name for display if campaign was selected
       const leadWithCampaign = newLead.campaignId && newLead.campaignId !== "none"
         ? { ...lead, campaignName: campaigns.find(c => c._id === newLead.campaignId)?.name }
         : lead;
@@ -431,7 +423,6 @@ export default function Dashboard() {
         status: editLead.status,
         campaignId: editLead.campaignId && editLead.campaignId !== "none" ? editLead.campaignId : undefined
       });
-      // Add campaign name for display
       const updatedWithCampaign = editLead.campaignId && editLead.campaignId !== "none"
         ? { ...updated, campaignName: campaigns.find(c => c._id === editLead.campaignId)?.name }
         : { ...updated, campaignName: undefined };
@@ -468,7 +459,6 @@ export default function Dashboard() {
     setIsLeadDetailsOpen(true);
   };
 
-  // Log activity for lead
   const handleLogActivity = async () => {
     if (!selectedLead || !activityLog.note.trim()) {
       toast({ variant: "destructive", title: "Please enter a note" });
@@ -487,10 +477,9 @@ export default function Dashboard() {
 
       await leadsApi.addHistory(selectedLead._id, historyItem);
       
-      // Update local state
       const updatedLead = {
         ...selectedLead,
-        history: [...(selectedLead.history || []), historyItem] as typeof selectedLead.history,
+        history: [...(selectedLead.history || []), historyItem] as any,
         lastContact: new Date(historyItem.date)
       };
       setSelectedLead(updatedLead);
@@ -506,7 +495,6 @@ export default function Dashboard() {
     }
   };
 
-  // Schedule meeting from lead
   const handleScheduleMeeting = (lead: Lead) => {
     setScheduleFromLead(lead);
     setAppointmentForm({
@@ -521,7 +509,6 @@ export default function Dashboard() {
     setIsAddAppointmentOpen(true);
   };
 
-  // Add appointment
   const handleAddAppointment = async () => {
     if (!user || !appointmentForm.title || !appointmentForm.date || !appointmentForm.leadId) {
       toast({ variant: "destructive", title: "Please fill in all required fields" });
@@ -552,7 +539,6 @@ export default function Dashboard() {
     }
   };
 
-  // Edit appointment
   const handleEditAppointment = (apt: Appointment) => {
     setSelectedAppointment(apt);
     setAppointmentForm({
@@ -567,7 +553,6 @@ export default function Dashboard() {
     setIsEditAppointmentOpen(true);
   };
 
-  // Update appointment
   const handleUpdateAppointment = async () => {
     if (!selectedAppointment || !appointmentForm.title || !appointmentForm.date) {
       toast({ variant: "destructive", title: "Please fill in all required fields" });
@@ -594,7 +579,6 @@ export default function Dashboard() {
     }
   };
 
-  // Delete appointment
   const confirmDeleteAppointment = (apt: Appointment) => {
     setDeleteConfirm({ type: "appointment", id: apt._id, name: apt.title });
   };
@@ -610,309 +594,16 @@ export default function Dashboard() {
     }
   };
 
-  // Calendar navigation
-  const goToPreviousMonth = () => {
-    setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1));
-  };
-
-  const goToNextMonth = () => {
-    setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1));
-  };
-
-  const goToToday = () => {
-    setCalendarDate(new Date());
-  };
-
-  // Calendar helpers
-  const getCalendarDays = () => {
-    const year = calendarDate.getFullYear();
-    const month = calendarDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    
-    const days: { day: number; isCurrentMonth: boolean; date: string }[] = [];
-    
-    // Previous month filler days
-    const prevMonthLastDay = new Date(year, month, 0).getDate();
-    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-      const d = prevMonthLastDay - i;
-      const prevMonth = month === 0 ? 11 : month - 1;
-      const prevYear = month === 0 ? year - 1 : year;
-      days.push({ 
-        day: d, 
-        isCurrentMonth: false, 
-        date: `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` 
-      });
-    }
-    
-    // Current month days
-    for (let d = 1; d <= daysInMonth; d++) {
-      days.push({ 
-        day: d, 
-        isCurrentMonth: true, 
-        date: `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` 
-      });
-    }
-    
-    // Next month filler days
-    const remainingDays = 42 - days.length; // 6 rows * 7 days
-    for (let d = 1; d <= remainingDays; d++) {
-      const nextMonth = month === 11 ? 0 : month + 1;
-      const nextYear = month === 11 ? year + 1 : year;
-      days.push({ 
-        day: d, 
-        isCurrentMonth: false, 
-        date: `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` 
-      });
-    }
-    
-    return days;
-  };
-
-  const isToday = (dateStr: string) => {
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    return dateStr === todayStr;
-  };
-
-  const formatMonthYear = () => {
-    return calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  };
-
-  // File upload handlers
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setIsUploading(true);
-    try {
-      const uploadedFiles = await uploadApi.uploadFiles(Array.from(files));
-      if (isEdit) {
-        setEditCampaignForm(prev => ({
-          ...prev,
-          knowledgeBaseFiles: [...prev.knowledgeBaseFiles, ...uploadedFiles]
-        }));
-      } else {
-        setNewCampaign(prev => ({
-          ...prev,
-          knowledgeBaseFiles: [...prev.knowledgeBaseFiles, ...uploadedFiles]
-        }));
-      }
-      toast({ title: `${uploadedFiles.length} file(s) uploaded successfully!` });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error uploading files", description: error.message });
-    } finally {
-      setIsUploading(false);
-      e.target.value = "";
-    }
-  };
-
-  const handleRemoveFile = async (fileId: string, fileUrl: string, isEdit: boolean) => {
-    try {
-      const filename = fileUrl.split("/").pop();
-      if (filename) {
-        await uploadApi.deleteFile(filename);
-      }
-      if (isEdit) {
-        setEditCampaignForm(prev => ({
-          ...prev,
-          knowledgeBaseFiles: prev.knowledgeBaseFiles.filter(f => f.id !== fileId)
-        }));
-      } else {
-        setNewCampaign(prev => ({
-          ...prev,
-          knowledgeBaseFiles: prev.knowledgeBaseFiles.filter(f => f.id !== fileId)
-        }));
-      }
-      toast({ title: "File removed" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error removing file", description: error.message });
-    }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-  };
-
-  const getFileIcon = (type: string) => {
-    if (type.includes("pdf")) return <FileText className="h-5 w-5 text-red-500" />;
-    if (type.includes("word") || type.includes("document")) return <File className="h-5 w-5 text-blue-500" />;
-    if (type.includes("image")) return <File className="h-5 w-5 text-green-500" />;
-    return <File className="h-5 w-5 text-gray-500" />;
-  };
-
-  const handleCreateCampaign = async () => {
-    if (!user) return;
-    if (!validateCampaign(newCampaign)) return;
-    
-    setIsSaving(true);
-    try {
-      const campaign = await campaignsApi.create({
-        userId: user._id,
-        name: newCampaign.name.trim(),
-        goal: newCampaign.goal,
-        script: newCampaign.script.trim(),
-        voice: newCampaign.voice,
-        additionalContext: newCampaign.additionalContext.trim(),
-        callingHours: newCampaign.callingHours,
-        knowledgeBaseFiles: newCampaign.knowledgeBaseFiles as any,
-        status: "Draft"
-      });
-      setCampaigns([campaign, ...campaigns]);
-      setIsCreateCampaignOpen(false);
-      setNewCampaign({
-        name: "",
-        goal: "sales",
-        script: "",
-        voice: "Rachel (American)",
-        additionalContext: "",
-        callingHours: { start: "09:00", end: "17:00" },
-        knowledgeBaseFiles: [],
-        startDate: "",
-        endDate: ""
-      });
-      setCampaignErrors({});
-      setCampaignTab("basics");
-      toast({ title: "Campaign created successfully!" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error creating campaign", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleEditCampaign = (campaign: Campaign) => {
-    setSelectedCampaign(campaign);
-    setEditCampaignForm({
-      name: campaign.name,
-      goal: campaign.goal,
-      script: campaign.script || "",
-      voice: campaign.voice || "Rachel (American)",
-      additionalContext: campaign.additionalContext || "",
-      callingHours: campaign.callingHours || { start: "09:00", end: "17:00" },
-      status: campaign.status,
-      knowledgeBaseFiles: (campaign.knowledgeBaseFiles || []) as UploadedFile[],
-      startDate: campaign.startDate || "",
-      endDate: campaign.endDate || ""
-    });
-    setCampaignErrors({});
-    setCampaignTab("basics");
-    setIsEditCampaignOpen(true);
-  };
-
-  const handleUpdateCampaign = async () => {
-    if (!selectedCampaign) return;
-    if (!validateCampaign(editCampaignForm)) return;
-    
-    setIsSaving(true);
-    try {
-      const updated = await campaignsApi.update(selectedCampaign._id, {
-        name: editCampaignForm.name.trim(),
-        goal: editCampaignForm.goal,
-        script: editCampaignForm.script.trim(),
-        voice: editCampaignForm.voice,
-        additionalContext: editCampaignForm.additionalContext.trim(),
-        callingHours: editCampaignForm.callingHours,
-        knowledgeBaseFiles: editCampaignForm.knowledgeBaseFiles as any,
-        status: editCampaignForm.status
-      });
-      setCampaigns(campaigns.map(c => c._id === selectedCampaign._id ? updated : c));
-      setIsEditCampaignOpen(false);
-      setCampaignErrors({});
-      toast({ title: "Campaign updated successfully!" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error updating campaign", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleToggleCampaignStatus = async (campaign: Campaign) => {
-    const newStatus = campaign.status === "Active" ? "Paused" : "Active";
-    setIsSaving(true);
-    try {
-      const updated = await campaignsApi.update(campaign._id, { status: newStatus });
-      setCampaigns(campaigns.map(c => c._id === campaign._id ? updated : c));
-      toast({ title: `Campaign ${newStatus === "Active" ? "resumed" : "paused"}!` });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error updating campaign", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const confirmDeleteCampaign = (campaign: Campaign) => {
-    setDeleteConfirm({ type: "campaign", id: campaign._id, name: campaign.name });
-  };
-  
-  const handleDeleteCampaign = async (id: string) => {
-    try {
-      await campaignsApi.delete(id);
-      setCampaigns(campaigns.filter(c => c._id !== id));
-      setDeleteConfirm({ type: null, id: "", name: "" });
-      toast({ title: "Campaign deleted" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error deleting campaign", description: error.message });
-    }
-  };
-
-  const handleSaveSettings = async () => {
-    setIsSaving(true);
-    try {
-      await settingsApi.update({
-        dailyCallLimit: callLimit,
-        dndEnabled,
-        localPresenceDialing: localPresence
-      });
-      toast({ title: "Settings saved!" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error saving settings", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSaveProfile = async () => {
-    setIsSaving(true);
-    try {
-      await settingsApi.update(profileForm);
-      toast({ title: "Profile updated!" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error updating profile", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleChangePassword = async () => {
-    if (!user) return;
-    if (passwordForm.new !== passwordForm.confirm) {
-      toast({ variant: "destructive", title: "Passwords don't match" });
-      return;
-    }
-    setIsSaving(true);
-    try {
-      await settingsApi.changePassword(user._id, passwordForm.current, passwordForm.new);
-      setPasswordForm({ current: "", new: "", confirm: "" });
-      toast({ title: "Password changed successfully!" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error changing password", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const handleLogout = async () => {
-    await logout();
-    setLocation("/");
+    try {
+      await logout();
+      setLocation("/auth");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Logout failed", description: error.message });
+    }
   };
 
-  // Show loading state
-  if (authLoading || loading) {
+  if (authLoading || (loading && registeredUsers.length === 0 && isAdmin)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -920,62 +611,109 @@ export default function Dashboard() {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  const SidebarItem = ({ icon: Icon, label, id }: { icon: any, label: string, id: string }) => (
-    <button 
-      onClick={() => setActiveTab(id)}
-      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-all ${activeTab === id ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
-    >
-      <Icon className="h-4 w-4" />
-      {label}
-    </button>
-  );
-
   return (
-    <div className="flex min-h-screen bg-background text-foreground font-sans">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 border-r bg-sidebar p-4 sticky top-0 h-screen">
-        <div className="flex items-center gap-2 px-2 mb-8 mt-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Phone className="h-4 w-4" />
+      <aside className="w-64 border-r bg-card flex flex-col shrink-0">
+        <div className="p-6 border-b flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+            <BrainCircuit className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xl font-bold tracking-tight">NIJVOX</span>
+          <div>
+            <h2 className="font-bold text-xl tracking-tight">NIJVOX</h2>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">AI Platform</p>
+          </div>
         </div>
+        
+        <ScrollArea className="flex-1 px-4 py-6">
+          <nav className="space-y-1.5">
+            <Button 
+              variant={activeTab === "overview" ? "secondary" : "ghost"} 
+              className="w-full justify-start hover-elevate h-11"
+              onClick={() => setActiveTab("overview")}
+            >
+              <LayoutDashboard className="mr-3 h-5 w-5" />
+              Overview
+            </Button>
+            
+            {isAdmin ? (
+              <>
+                <div className="mt-6 mb-2 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Administration</div>
+                <Button 
+                  variant={activeTab === "admin-users" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("admin-users")}
+                >
+                  <Users className="mr-3 h-5 w-5" />
+                  User Management
+                </Button>
+                <Button 
+                  variant={activeTab === "plans" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("plans")}
+                >
+                  <CreditCard className="mr-3 h-5 w-5" />
+                  Plan Management
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="mt-6 mb-2 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Core Tools</div>
+                <Button 
+                  variant={activeTab === "crm" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("crm")}
+                >
+                  <Users className="mr-3 h-5 w-5" />
+                  Lead CRM
+                </Button>
+                <Button 
+                  variant={activeTab === "campaigns" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("campaigns")}
+                >
+                  <Megaphone className="mr-3 h-5 w-5" />
+                  Campaigns
+                </Button>
+                <Button 
+                  variant={activeTab === "calendar" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("calendar")}
+                >
+                  <Calendar className="mr-3 h-5 w-5" />
+                  Calendar
+                </Button>
+                <Button 
+                  variant={activeTab === "whatsapp" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("whatsapp")}
+                >
+                  <MessageCircle className="mr-3 h-5 w-5" />
+                  Bulk WhatsApp
+                </Button>
+                <Button 
+                  variant={activeTab === "callhistory" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("callhistory")}
+                >
+                  <History className="mr-3 h-5 w-5" />
+                  Call History
+                </Button>
+              </>
+            )}
+          </nav>
+        </ScrollArea>
 
-        <div className="space-y-1 flex-1">
-          <SidebarItem icon={LayoutDashboard} label="Overview" id="overview" />
-          
-          {isAdmin ? (
-            <>
-              <SidebarItem icon={CreditCard} label="Plans" id="plans" />
-              <SidebarItem icon={Users} label="SaaS Management" id="saas" />
-            </>
-          ) : (
-            <>
-              <SidebarItem icon={Users} label="Leads" id="crm" />
-              <SidebarItem icon={Phone} label="Campaigns" id="campaigns" />
-              <SidebarItem icon={History} label="Call History" id="callhistory" />
-              <SidebarItem icon={MessageSquare} label="Bulk SMS" id="sms" />
-              <SidebarItem icon={MessageCircle} label="Bulk WhatsApp" id="whatsapp" />
-              <SidebarItem icon={Calendar} label="Calendar" id="calendar" />
-            </>
-          )}
-        </div>
-
-        <div className="mt-auto pt-4 border-t">
+        <div className="p-4 border-t bg-muted/10">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="flex items-center gap-3 px-2 py-2 mb-2 cursor-pointer hover:bg-muted rounded-md transition-colors">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="" />
-                  <AvatarFallback>{user.firstName?.[0]}{user.lastName?.[0]}</AvatarFallback>
+              <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors group">
+                <Avatar className="h-9 w-9 border-2 border-background shadow-sm ring-1 ring-border group-hover:ring-primary/50 transition-all">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <div className="flex-1 overflow-hidden text-left">
-                  <div className="text-sm font-medium truncate">{user.firstName} {user.lastName}</div>
-                  <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate leading-none mb-1">{user?.firstName} {user?.lastName}</p>
+                  <p className="text-[10px] text-muted-foreground truncate uppercase tracking-widest font-bold">{user?.role || 'User'}</p>
                 </div>
                 <MoreVertical className="h-4 w-4 text-muted-foreground" />
               </div>
@@ -1003,7 +741,6 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
         <header className="h-16 border-b flex items-center justify-between px-6 bg-background/50 backdrop-blur sticky top-0 z-10">
           <div className="flex items-center gap-4 w-full max-w-md">
             <div className="relative w-full">
@@ -1019,7 +756,6 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* View Content */}
         <div className="flex-1 p-6 overflow-auto">
           {activeTab === "whatsapp" && <BulkWhatsapp />}
           {activeTab === "plans" && <AdminPlans />}
@@ -1039,812 +775,263 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{stat.value}</div>
-                      <p className={`text-xs ${stat.change?.startsWith('+') ? 'text-green-500' : stat.change === 'Balance' ? 'text-primary' : 'text-red-500'}`}>
-                        {stat.change} {stat.change !== 'Balance' && 'from last week'}
-                      </p>
+                      {(stat as any).change && (
+                        <p className={`text-xs ${(stat as any).change?.startsWith('+') ? 'text-green-500' : (stat as any).change === 'Balance' ? 'text-primary' : 'text-red-500'}`}>
+                          {(stat as any).change} {(stat as any).change !== 'Balance' && 'from last week'}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
               </div>
 
-              {/* Recent Logs - Last 50 Records */}
-              <Card className="hover-elevate">
-                <CardHeader className="flex flex-row items-center justify-between gap-4">
-                  <div>
-                    <CardTitle>Recent Logs</CardTitle>
-                    <CardDescription>Last 50 lead records</CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Select value={logsCampaignFilter} onValueChange={setLogsCampaignFilter}>
-                      <SelectTrigger className="w-[160px] h-8 text-xs">
-                        <SelectValue placeholder="Filter by Campaign" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Campaigns</SelectItem>
-                        {campaigns.map(c => (
-                          <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button variant="outline" size="sm" onClick={() => setActiveTab("callhistory")}>
-                      View More
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Lead Name</TableHead>
-                        <TableHead>Campaign</TableHead>
-                        <TableHead>Channel</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Last Interaction</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {leads
-                        .filter(l => logsCampaignFilter === "all" || l.campaignId === logsCampaignFilter)
-                        .slice(0, 50)
-                        .map((lead) => (
-                          <TableRow key={lead._id}>
-                            <TableCell className="font-medium">{lead.name}</TableCell>
-                            <TableCell>{lead.campaignName || "General"}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Phone className="h-4 w-4 text-primary cursor-pointer" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>AI Call Enabled</TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <MessageSquare className="h-4 w-4 text-blue-500 cursor-pointer" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>SMS Enabled</TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <MessageCircle className="h-4 w-4 text-green-500 cursor-pointer" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>WhatsApp Enabled</TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'} className={`cursor-help ${lead.status === 'Interested' ? 'bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-none' : ''}`}>
-                                      {lead.status}
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-xs">
-                                    <p className="text-xs font-semibold mb-1">{lead.status} Meaning:</p>
-                                    <p className="text-xs opacity-90">
-                                      {lead.status === "New" && "Initial lead entry, no contact yet."}
-                                      {lead.status === "In Progress" && "Active communication initiated."}
-                                      {lead.status === "Interested" && "Lead showed positive response."}
-                                      {lead.status === "Follow Up" && "Requires further interaction."}
-                                      {lead.status === "Closed" && "Deal successfully completed."}
-                                      {lead.status === "Unqualified" && "Not a fit for this campaign."}
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </TableCell>
-                            <TableCell className="text-right text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="icon" onClick={() => handleViewLead(lead)}>
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      {leads.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No leads yet.</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Lead Status Distribution Pie Chart */}
-        <Card className="hover-elevate shadow-lg border-primary/10 overflow-hidden group">
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                Lead Distribution
-              </CardTitle>
-              <CardDescription>Visual breakdown by status</CardDescription>
-            </div>
-            <Select value={overviewCampaignFilter} onValueChange={setOverviewCampaignFilter}>
-              <SelectTrigger className="w-[160px] h-8 text-xs">
-                <SelectValue placeholder="All Campaigns" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Campaigns</SelectItem>
-                {campaigns.map(c => (
-                  <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent className="h-80 relative">
-            {leads.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <defs>
-                      <filter id="advancedShadow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
-                        <feOffset dx="2" dy="4" result="offsetblur" />
-                        <feComponentTransfer>
-                          <feFuncA type="linear" slope="0.5" />
-                        </feComponentTransfer>
-                        <feMerge>
-                          <feMergeNode />
-                          <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                      </filter>
-                    </defs>
-                    <Pie
-                      data={[
-                        { name: "New", value: leads.filter(l => l.status === "New" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length },
-                        { name: "Interested", value: leads.filter(l => l.status === "Interested" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length },
-                        { name: "Follow Up", value: leads.filter(l => l.status === "Follow Up" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length },
-                        { name: "In Progress", value: leads.filter(l => l.status === "In Progress" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length },
-                        { name: "Closed", value: leads.filter(l => l.status === "Closed" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length },
-                        { name: "Unqualified", value: leads.filter(l => l.status === "Unqualified" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length }
-                      ].filter(d => d.value > 0)}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={95}
-                      paddingAngle={5}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {[
-                        "#f97316", // orange
-                        "#10b981", // emerald
-                        "#3b82f6", // blue
-                        "#8b5cf6", // violet
-                        "#6366f1", // indigo
-                        "#94a3b8"  // slate
-                      ].map((color, index) => (
-                        <Cell key={`cell-${index}`} fill={color} filter="url(#advancedShadow)" className="hover:opacity-80 transition-all duration-300 cursor-pointer" />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip 
-                      contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                    />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none mb-9">
-                  <div className="text-center animate-in fade-in zoom-in duration-500">
-                    <p className="text-3xl font-extrabold tracking-tighter">
-                      {leads.filter(l => overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter).length}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Total Leads</p>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground">No data yet</div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Lead Growth Area Chart */}
-        <Card className="hover-elevate shadow-lg border-primary/10 overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart className="h-5 w-5 text-primary" />
-                Growth Analytics
-              </CardTitle>
-              <CardDescription>Monthly lead acquisition trajectory</CardDescription>
-            </div>
-            <Select value={dailyActivityCampaignFilter} onValueChange={setDailyActivityCampaignFilter}>
-              <SelectTrigger className="w-[160px] h-8 text-xs">
-                <SelectValue placeholder="Filter by Campaign" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Campaigns</SelectItem>
-                {campaigns.map(c => (
-                  <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={[
-                { name: "Jan", leads: 400 },
-                { name: "Feb", leads: 300 },
-                { name: "Mar", leads: 600 },
-                { name: "Apr", leads: 800 },
-                { name: "May", leads: 500 },
-                { name: "Jun", leads: 900 }
-              ]}>
-                <defs>
-                  <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                <RechartsTooltip 
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="leads" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={5} 
-                  fillOpacity={1} 
-                  fill="url(#colorGrowth)" 
-                  animationDuration={2000}
-                  strokeLinecap="round"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-              {/* Notes Section */}
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>Notes</CardTitle>
-                    <CardDescription>All your saved notes</CardDescription>
-                  </div>
-                  <Dialog open={isAddNoteOpen} onOpenChange={setIsAddNoteOpen}>
-                    <DialogTrigger asChild>
-                      <Button><Plus className="mr-2 h-4 w-4" /> Add Note</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px]">
-                      <DialogHeader>
-                        <DialogTitle>Add Note</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="note-title">Title</Label>
-                          <Input id="note-title" placeholder="Note title" value={noteForm.title} onChange={(e) => setNoteForm({...noteForm, title: e.target.value})} data-testid="input-note-title" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="note-content">Content</Label>
-                          <Textarea id="note-content" placeholder="Note content" className="min-h-32" value={noteForm.content} onChange={(e) => setNoteForm({...noteForm, content: e.target.value})} data-testid="input-note-content" />
-                        </div>
+              {/* Admin Dashboard Charts */}
+              {isAdmin && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <Card className="hover-elevate">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg">Subscription Growth</CardTitle>
+                        <CardDescription>Monthly new subscriptions</CardDescription>
                       </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => { setIsAddNoteOpen(false); setNoteForm({title: "", content: ""}); }} data-testid="button-cancel">Cancel</Button>
-                        <Button onClick={async () => { if (noteForm.title.trim() && noteForm.content.trim()) { const newNote = await notesApi.create(noteForm); setNotes([newNote, ...notes]); setNoteForm({title: "", content: ""}); setIsAddNoteOpen(false); toast({title: "Success", description: "Note added successfully"}); } }} data-testid="button-add-note">Add Note</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {notes.length > 0 ? (
-                      notes.map((note) => (
-                        <div key={note._id} className="p-3 border rounded-md bg-muted/30 hover:bg-muted/50 transition-colors" data-testid={`card-note-${note._id}`}>
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm">{note.title}</h4>
-                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{note.content}</p>
-                              <p className="text-xs text-muted-foreground mt-2">{new Date(note.createdAt).toLocaleDateString()}</p>
-                            </div>
-                            <div className="flex gap-1">
-                              <Dialog open={isEditNoteOpen && selectedNote?._id === note._id} onOpenChange={(open) => { if (!open) { setSelectedNote(null); setNoteForm({title: "", content: ""}); } setIsEditNoteOpen(open); }}>
-                                <DialogTrigger asChild>
-                                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setSelectedNote(note); setNoteForm({title: note.title, content: note.content}); }} data-testid={`button-edit-note-${note._id}`}><Edit3 className="h-4 w-4" /></Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[500px]">
-                                  <DialogHeader>
-                                    <DialogTitle>Edit Note</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="edit-note-title">Title</Label>
-                                      <Input id="edit-note-title" placeholder="Note title" value={noteForm.title} onChange={(e) => setNoteForm({...noteForm, title: e.target.value})} />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label htmlFor="edit-note-content">Content</Label>
-                                      <Textarea id="edit-note-content" placeholder="Note content" className="min-h-32" value={noteForm.content} onChange={(e) => setNoteForm({...noteForm, content: e.target.value})} />
-                                    </div>
-                                  </div>
-                                  <DialogFooter>
-                                    <Button variant="outline" onClick={() => { setIsEditNoteOpen(false); setSelectedNote(null); setNoteForm({title: "", content: ""}); }}>Cancel</Button>
-                                    <Button onClick={async () => { if (selectedNote && noteForm.title.trim() && noteForm.content.trim()) { const updated = await notesApi.update(selectedNote._id, noteForm); setNotes(notes.map(n => n._id === selectedNote._id ? updated : n)); setNoteForm({title: "", content: ""}); setIsEditNoteOpen(false); setSelectedNote(null); toast({title: "Success", description: "Note updated successfully"}); } }}>Update Note</Button>
-                                  </DialogFooter>
-                                </DialogContent>
-                              </Dialog>
-                              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={async () => { if (confirm("Delete this note?")) { await notesApi.delete(note._id); setNotes(notes.filter(n => n._id !== note._id)); toast({title: "Success", description: "Note deleted"}); } }} data-testid={`button-delete-note-${note._id}`}><Trash2 className="h-4 w-4" /></Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center text-muted-foreground py-8">No notes yet. Create one to get started!</div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                      <Select value={selectedAdminSubYear.toString()} onValueChange={(val) => setSelectedAdminSubYear(parseInt(val))}>
+                        <SelectTrigger className="w-[100px]"><SelectValue placeholder="Year" /></SelectTrigger>
+                        <SelectContent>{[2024, 2025, 2026].map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={[{ month: "Jan", subs: 45 }, { month: "Feb", subs: 52 }, { month: "Mar", subs: 61 }, { month: "Apr", subs: 58 }, { month: "May", subs: 72 }, { month: "Jun", subs: 85 }, { month: "Jul", subs: 94 }, { month: "Aug", subs: 103 }, { month: "Sep", subs: 110 }, { month: "Oct", subs: 125 }, { month: "Nov", subs: 140 }, { month: "Dec", subs: 155 }]}>
+                          <defs><linearGradient id="colorSubs" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/></linearGradient></defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground) / 0.1)" />
+                          <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
+                          <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
+                          <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} />
+                          <Area type="monotone" dataKey="subs" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorSubs)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
 
-              {/* Daily Calling Counts with Month/Year Filter */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Daily Call Activity</CardTitle>
-                      <CardDescription>Calling counts by day</CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
+                  <Card className="hover-elevate">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div><CardTitle className="text-lg">Plan Distribution</CardTitle><CardDescription>Month-wise subscription split</CardDescription></div>
+                      <div className="flex gap-2">
+                        <Select value={selectedAdminPieMonth.toString()} onValueChange={(val) => setSelectedAdminPieMonth(parseInt(val))}>
+                          <SelectTrigger className="w-[110px]"><SelectValue placeholder="Month" /></SelectTrigger>
+                          <SelectContent>{["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, i) => <SelectItem key={m} value={i.toString()}>{m}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <Select value={selectedAdminPieYear.toString()} onValueChange={(val) => setSelectedAdminPieYear(parseInt(val))}>
+                          <SelectTrigger className="w-[100px]"><SelectValue placeholder="Year" /></SelectTrigger>
+                          <SelectContent>{[2024, 2025, 2026].map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={[{ name: 'Basic', value: 400 }, { name: 'Advanced', value: 300 }, { name: 'Enterprise', value: 200 }]} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                            {['#f97316', '#3b82f6', '#10b981'].map((color, index) => <Cell key={`cell-${index}`} fill={color} />)}
+                          </Pie>
+                          <RechartsTooltip /><Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="hover-elevate">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div><CardTitle className="text-lg">Revenue Growth</CardTitle><CardDescription>Month-on-month sales (₹)</CardDescription></div>
+                      <Select value={selectedAdminRevenueYear.toString()} onValueChange={(val) => setSelectedAdminRevenueYear(parseInt(val))}>
+                        <SelectTrigger className="w-[100px]"><SelectValue placeholder="Year" /></SelectTrigger>
+                        <SelectContent>{[2024, 2025, 2026].map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={[{ month: "Jan", rev: 120000 }, { month: "Feb", rev: 145000 }, { month: "Mar", rev: 168000 }, { month: "Apr", rev: 155000 }, { month: "May", rev: 192000 }, { month: "Jun", rev: 225000 }, { month: "Jul", rev: 254000 }, { month: "Aug", rev: 283000 }, { month: "Sep", rev: 310000 }, { month: "Oct", rev: 345000 }, { month: "Nov", rev: 380000 }, { month: "Dec", rev: 425000 }]}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground) / 0.1)" />
+                          <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
+                          <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
+                          <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} />
+                          <Line type="monotone" dataKey="rev" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4, fill: 'hsl(var(--primary))' }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="hover-elevate">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div><CardTitle className="text-lg">Credit Usage</CardTitle><CardDescription>Daily platform consumption</CardDescription></div>
+                      <div className="flex gap-2">
+                        <Select value={selectedAdminCreditMonth.toString()} onValueChange={(val) => setSelectedAdminCreditMonth(parseInt(val))}>
+                          <SelectTrigger className="w-[110px]"><SelectValue placeholder="Month" /></SelectTrigger>
+                          <SelectContent>{["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, i) => <SelectItem key={m} value={i.toString()}>{m}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <Select value={selectedAdminCreditYear.toString()} onValueChange={(val) => setSelectedAdminCreditYear(parseInt(val))}>
+                          <SelectTrigger className="w-[100px]"><SelectValue placeholder="Year" /></SelectTrigger>
+                          <SelectContent>{[2024, 2025, 2026].map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={[{ day: "1", usage: 4500 }, { day: "5", usage: 5200 }, { day: "10", usage: 6100 }, { day: "15", usage: 5800 }, { day: "20", usage: 7200 }, { day: "25", usage: 8500 }, { day: "30", usage: 9400 }]}>
+                          <defs><linearGradient id="colorUsage" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/></linearGradient></defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground) / 0.1)" />
+                          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
+                          <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
+                          <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} />
+                          <Area type="monotone" dataKey="usage" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorUsage)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {!isAdmin && (
+                <>
+                  <Card className="hover-elevate">
+                    <CardHeader className="flex flex-row items-center justify-between gap-4">
+                      <div><CardTitle>Recent Logs</CardTitle><CardDescription>Last 50 lead records</CardDescription></div>
+                      <div className="flex items-center gap-2">
+                        <Select value={logsCampaignFilter} onValueChange={setLogsCampaignFilter}>
+                          <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Filter by Campaign" /></SelectTrigger>
+                          <SelectContent><SelectItem value="all">All Campaigns</SelectItem>{campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab("callhistory")}>View More<ChevronRight className="ml-2 h-4 w-4" /></Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="overflow-x-auto">
+                      <Table>
+                        <TableHeader><TableRow><TableHead>Lead Name</TableHead><TableHead>Campaign</TableHead><TableHead>Channel</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Last Interaction</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                          {leads.filter(l => logsCampaignFilter === "all" || l.campaignId === logsCampaignFilter).slice(0, 50).map((lead) => (
+                            <TableRow key={lead._id}>
+                              <TableCell className="font-medium">{lead.name}</TableCell>
+                              <TableCell>{lead.campaignName || "General"}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <TooltipProvider><Tooltip><TooltipTrigger asChild><Phone className="h-4 w-4 text-primary cursor-pointer" /></TooltipTrigger><TooltipContent>AI Call Enabled</TooltipContent></Tooltip></TooltipProvider>
+                                  <TooltipProvider><Tooltip><TooltipTrigger asChild><MessageSquare className="h-4 w-4 text-blue-500 cursor-pointer" /></TooltipTrigger><TooltipContent>SMS Enabled</TooltipContent></Tooltip></TooltipProvider>
+                                  <TooltipProvider><Tooltip><TooltipTrigger asChild><MessageCircle className="h-4 w-4 text-green-500 cursor-pointer" /></TooltipTrigger><TooltipContent>WhatsApp Enabled</TooltipContent></Tooltip></TooltipProvider>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <TooltipProvider><Tooltip><TooltipTrigger asChild><Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'} className={`cursor-help ${lead.status === 'Interested' ? 'bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-none' : ''}`}>{lead.status}</Badge></TooltipTrigger><TooltipContent className="max-w-xs"><p className="text-xs font-semibold mb-1">{lead.status} Meaning:</p><p className="text-xs opacity-90">{lead.status === "New" && "Initial lead entry, no contact yet."}{lead.status === "In Progress" && "Active communication initiated."}{lead.status === "Interested" && "Lead showed positive response."}{lead.status === "Follow Up" && "Requires further interaction."}{lead.status === "Closed" && "Deal successfully completed."}{lead.status === "Unqualified" && "Not a fit for this campaign."}</p></TooltipContent></Tooltip></TooltipProvider>
+                              </TableCell>
+                              <TableCell className="text-right text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
+                              <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleViewLead(lead)}><Eye className="h-4 w-4" /></Button></TableCell>
+                            </TableRow>
+                          ))}
+                          {leads.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No leads yet.</TableCell></TableRow>}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card className="hover-elevate shadow-lg border-primary/10 overflow-hidden group">
+                      <CardHeader className="flex flex-row items-center justify-between gap-4">
+                        <div><CardTitle className="flex items-center gap-2"><Zap className="h-5 w-5 text-primary" />Lead Distribution</CardTitle><CardDescription>Visual breakdown by status</CardDescription></div>
+                        <Select value={overviewCampaignFilter} onValueChange={setOverviewCampaignFilter}>
+                          <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="All Campaigns" /></SelectTrigger>
+                          <SelectContent><SelectItem value="all">All Campaigns</SelectItem>{campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </CardHeader>
+                      <CardContent className="h-80 relative">
+                        {leads.length > 0 ? (
+                          <><ResponsiveContainer width="100%" height="100%"><PieChart><defs><filter id="advancedShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="3" /><feOffset dx="2" dy="4" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.5" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><Pie data={[{ name: "New", value: leads.filter(l => l.status === "New" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length }, { name: "Interested", value: leads.filter(l => l.status === "Interested" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length }, { name: "Follow Up", value: leads.filter(l => l.status === "Follow Up" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length }, { name: "In Progress", value: leads.filter(l => l.status === "In Progress" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length }, { name: "Closed", value: leads.filter(l => l.status === "Closed" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length }, { name: "Unqualified", value: leads.filter(l => l.status === "Unqualified" && (overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter)).length }].filter(d => d.value > 0)} cx="50%" cy="50%" innerRadius={70} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">{["#f97316", "#10b981", "#3b82f6", "#8b5cf6", "#6366f1", "#94a3b8"].map((color, index) => <Cell key={`cell-${index}`} fill={color} filter="url(#advancedShadow)" className="hover:opacity-80 transition-all duration-300 cursor-pointer" />)}</Pie><RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} /><Legend verticalAlign="bottom" height={36} iconType="circle" /></PieChart></ResponsiveContainer><div className="absolute inset-0 flex items-center justify-center pointer-events-none mb-9"><div className="text-center animate-in fade-in zoom-in duration-500"><p className="text-3xl font-extrabold tracking-tighter">{leads.filter(l => overviewCampaignFilter === "all" || l.campaignId === overviewCampaignFilter).length}</p><p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Total Leads</p></div></div></>
+                        ) : <div className="flex h-full items-center justify-center text-muted-foreground">No data yet</div>}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover-elevate shadow-lg border-primary/10 overflow-hidden">
+                      <CardHeader className="flex flex-row items-center justify-between gap-4">
+                        <div><CardTitle className="flex items-center gap-2"><BarChart className="h-5 w-5 text-primary" />Growth Analytics</CardTitle><CardDescription>Monthly lead acquisition trajectory</CardDescription></div>
+                        <Select value={dailyActivityCampaignFilter} onValueChange={setDailyActivityCampaignFilter}>
+                          <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Filter by Campaign" /></SelectTrigger>
+                          <SelectContent><SelectItem value="all">All Campaigns</SelectItem>{campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </CardHeader>
+                      <CardContent className="h-80"><ResponsiveContainer width="100%" height="100%"><AreaChart data={[{ name: "Jan", leads: 400 }, { name: "Feb", leads: 300 }, { name: "Mar", leads: 600 }, { name: "Apr", leads: 800 }, { name: "May", leads: 500 }, { name: "Jun", leads: 900 }]}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6}/><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} /><Area type="monotone" dataKey="leads" stroke="hsl(var(--primary))" strokeWidth={5} fillOpacity={1} fill="url(#colorGrowth)" animationDuration={2000} strokeLinecap="round" /></AreaChart></ResponsiveContainer></CardContent>
+                    </Card>
+                  </div>
+
+                  <Card className="hover-elevate shadow-lg border-primary/10 overflow-hidden">
+                    <CardHeader className="flex flex-row items-center justify-between gap-4">
+                      <div><CardTitle className="flex items-center gap-2"><History className="h-5 w-5 text-primary" />Daily Call Activity</CardTitle><CardDescription>AI Call attempts per day</CardDescription></div>
                       <Select value={callActivityCampaignFilter} onValueChange={setCallActivityCampaignFilter}>
-                        <SelectTrigger className="w-[160px] h-8 text-xs">
-                          <SelectValue placeholder="All Campaigns" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Campaigns</SelectItem>
-                          {campaigns.map(c => (
-                            <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
+                        <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Filter by Campaign" /></SelectTrigger>
+                        <SelectContent><SelectItem value="all">All Campaigns</SelectItem>{campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent>
                       </Select>
-                      <Select value={selectedChartMonth.toString()} onValueChange={(val) => setSelectedChartMonth(parseInt(val))}>
-                        <SelectTrigger className="w-32 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 12 }, (_, i) => (
-                            <SelectItem key={i} value={i.toString()}>
-                              {new Date(2024, i).toLocaleDateString('en-US', { month: 'long' })}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select value={selectedChartYear.toString()} onValueChange={(val) => setSelectedChartYear(parseInt(val))}>
-                        <SelectTrigger className="w-24 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 5 }, (_, i) => {
-                            const year = new Date().getFullYear() - i;
-                            return <SelectItem key={year} value={year.toString()}>{year}</SelectItem>;
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="h-80 flex items-center justify-center">
-                  {leads.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={
-                        Array.from({ length: new Date(selectedChartYear, selectedChartMonth + 1, 0).getDate() }, (_, i) => {
-                          const day = i + 1;
-                          const callsCount = leads.reduce((acc, lead) => {
-                            if (callActivityCampaignFilter !== "all" && lead.campaignId !== callActivityCampaignFilter) return acc;
-                            const historyForDay = (lead.history || []).filter(h => {
-                              const hDate = new Date(h.date);
-                              return h.type === 'call' && hDate.getDate() === day && hDate.getMonth() === selectedChartMonth && hDate.getFullYear() === selectedChartYear;
-                            }).length;
-                            return acc + historyForDay;
-                          }, 0);
-                          return {
-                            day: day.toString(),
-                            calls: callsCount
-                          };
-                        })
-                      }>
-                        <defs>
-                          <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} />
-                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                        <RechartsTooltip 
-                          contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="calls" 
-                          stroke="hsl(var(--primary))" 
-                          strokeWidth={2} 
-                          fillOpacity={1} 
-                          fill="url(#colorCalls)" 
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="text-muted-foreground text-center">No data available</div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                    </CardHeader>
+                    <CardContent className="h-80"><ResponsiveContainer width="100%" height="100%"><LineChart data={[{ name: "Mon", calls: 120 }, { name: "Tue", calls: 150 }, { name: "Wed", calls: 180 }, { name: "Thu", calls: 140 }, { name: "Fri", calls: 160 }, { name: "Sat", calls: 90 }, { name: "Sun", calls: 70 }]}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} /><Line type="monotone" dataKey="calls" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 6, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--background))" }} /></LineChart></ResponsiveContainer></CardContent>
+                  </Card>
 
-          {/* Admin: SaaS Management */}
-          {activeTab === "saas" && isAdmin && (
-            <div className="space-y-6">
-               <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold tracking-tight">SaaS Management</h1>
-                <Button><Plus className="mr-2 h-4 w-4" /> Invite User</Button>
-              </div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Registered Users</CardTitle>
-                  <CardDescription>Manage all registered users on the platform.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Plan</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Joined</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {registeredUsers.map((u) => (
-                        <TableRow key={u._id}>
-                          <TableCell className="font-medium">{u.firstName} {u.lastName}</TableCell>
-                          <TableCell>{u.email}</TableCell>
-                          <TableCell><Badge variant="outline">{u.subscription?.plan || "Free"}</Badge></TableCell>
-                          <TableCell>
-                            <Badge variant={u.subscription?.status === 'Active' ? 'default' : 'destructive'}>{u.subscription?.status || "Inactive"}</Badge>
-                          </TableCell>
-                          <TableCell className="text-right text-muted-foreground">{new Date(u.createdAt).toLocaleDateString()}</TableCell>
-                          <TableCell className="text-right">
-                             <Button variant="ghost" size="icon"><Settings className="h-4 w-4" /></Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {registeredUsers.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No registered users yet.</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* User: Campaigns */}
-          {activeTab === "campaigns" && !isAdmin && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
-                <div className="flex gap-2">
-                  <Input 
-                    placeholder="Search campaigns..." 
-                    className="w-64"
-                    value={campaignSearch}
-                    onChange={(e) => setCampaignSearch(e.target.value)}
-                    data-testid="input-campaign-search"
-                  />
-                  <Dialog open={isCreateCampaignOpen} onOpenChange={setIsCreateCampaignOpen}>
-                    <DialogTrigger asChild>
-                      <Button><Plus className="mr-2 h-4 w-4" /> Create Campaign</Button>
-                    </DialogTrigger>
-                  <DialogContent className="sm:max-w-[700px] h-[80vh] flex flex-col p-0 gap-0">
-                    <DialogHeader className="px-6 py-4 border-b">
-                      <DialogTitle>Create AI Campaign</DialogTitle>
-                      <DialogDescription>
-                        Configure your AI agent and knowledge base for this campaign.
-                      </DialogDescription>
-                    </DialogHeader>
-                    
-                    <div className="flex-1 overflow-y-auto">
-                      <Tabs defaultValue="basics" className="w-full">
-                        <div className="px-6 pt-4">
-                          <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="basics">Basics</TabsTrigger>
-                            <TabsTrigger value="knowledge">AI Knowledge</TabsTrigger>
-                            <TabsTrigger value="config">Configuration</TabsTrigger>
-                          </TabsList>
-                        </div>
-                        
-                        <div className="p-6">
-                          <TabsContent value="basics" className="mt-0 space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="camp-name">Campaign Name <span className="text-destructive">*</span></Label>
-                              <Input id="camp-name" placeholder="e.g., Summer Outreach 2024" value={newCampaign.name} onChange={(e) => setNewCampaign({...newCampaign, name: e.target.value})} className={campaignErrors.name ? "border-destructive" : ""} />
-                              {campaignErrors.name && <p className="text-xs text-destructive">{campaignErrors.name}</p>}
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="camp-goal">Campaign Goal <span className="text-destructive">*</span></Label>
-                              <Select value={newCampaign.goal} onValueChange={(value: "sales" | "support" | "survey" | "appointment") => setNewCampaign({...newCampaign, goal: value})}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a goal" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="sales">Sales / Cold Call</SelectItem>
-                                  <SelectItem value="support">Customer Support</SelectItem>
-                                  <SelectItem value="survey">Survey / Feedback</SelectItem>
-                                  <SelectItem value="appointment">Appointment Setting</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="camp-script">Initial Script / Opening <span className="text-destructive">*</span></Label>
-                              <Textarea id="camp-script" placeholder="Hi, this is Alex from NIJVOX. I'm calling about..." className={`h-32 ${campaignErrors.script ? "border-destructive" : ""}`} value={newCampaign.script} onChange={(e) => setNewCampaign({...newCampaign, script: e.target.value})} />
-                              {campaignErrors.script && <p className="text-xs text-destructive">{campaignErrors.script}</p>}
-                            </div>
-                          </TabsContent>
-
-                          <TabsContent value="knowledge" className="mt-0 space-y-6">
-                            <div className="space-y-4">
-                              <div className="bg-muted/30 border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:bg-muted/50 transition-colors cursor-pointer relative">
-                                <input
-                                  type="file"
-                                  multiple
-                                  accept=".pdf,.doc,.docx,.txt,image/*"
-                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                  onChange={(e) => handleFileUpload(e, false)}
-                                  disabled={isUploading}
-                                />
-                                {isUploading ? (
-                                  <Loader2 className="mx-auto h-10 w-10 text-muted-foreground mb-4 animate-spin" />
-                                ) : (
-                                  <Upload className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
-                                )}
-                                <h3 className="font-semibold text-lg">{isUploading ? "Uploading..." : "Upload Training Documents"}</h3>
-                                <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-                                  Click or drag PDF, DOCX, TXT, or images here to train the AI.
-                                </p>
-                                <Button variant="outline" className="mt-4" disabled={isUploading}>Select Files</Button>
-                              </div>
-
-                              {newCampaign.knowledgeBaseFiles.length > 0 && (
-                                <div className="space-y-2">
-                                  <Label className="text-base">Uploaded Knowledge Base ({newCampaign.knowledgeBaseFiles.length} files)</Label>
-                                  <div className="space-y-2">
-                                    {newCampaign.knowledgeBaseFiles.map((file) => (
-                                      <div key={file.id} className="flex items-center justify-between p-3 border rounded-md bg-card">
-                                        <div className="flex items-center gap-3">
-                                          {getFileIcon(file.type)}
-                                          <div>
-                                            <div className="font-medium">{file.name}</div>
-                                            <div className="text-xs text-muted-foreground">{formatFileSize(file.size)}</div>
-                                          </div>
-                                        </div>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                          onClick={() => handleRemoveFile(file.id, file.url, false)}
-                                        >
-                                          <X className="h-4 w-4" />
-                                        </Button>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div><CardTitle>Notes</CardTitle><CardDescription>All your saved notes</CardDescription></div>
+                      <Dialog open={isAddNoteOpen} onOpenChange={setIsAddNoteOpen}>
+                        <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Note</Button></DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px]">
+                          <DialogHeader><DialogTitle>Add Note</DialogTitle></DialogHeader>
+                          <div className="space-y-4">
+                            <div className="space-y-2"><Label htmlFor="note-title">Title</Label><Input id="note-title" placeholder="Note title" value={noteForm.title} onChange={(e) => setNoteForm({...noteForm, title: e.target.value})} data-testid="input-note-title" /></div>
+                            <div className="space-y-2"><Label htmlFor="note-content">Content</Label><Textarea id="note-content" placeholder="Note content" className="min-h-32" value={noteForm.content} onChange={(e) => setNoteForm({...noteForm, content: e.target.value})} data-testid="input-note-content" /></div>
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => { setIsAddNoteOpen(false); setNoteForm({title: "", content: ""}); }} data-testid="button-cancel">Cancel</Button>
+                            <Button onClick={async () => { if (noteForm.title.trim() && noteForm.content.trim()) { const newNote = await notesApi.create(noteForm); setNotes([newNote, ...notes]); setNoteForm({title: "", content: ""}); setIsAddNoteOpen(false); toast({title: "Success", description: "Note added successfully"}); } }} data-testid="button-add-note">Add Note</Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {notes.length > 0 ? (
+                          notes.map((note) => (
+                            <div key={note._id} className="p-3 border rounded-md bg-muted/30 hover:bg-muted/50 transition-colors" data-testid={`card-note-${note._id}`}>
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 min-w-0"><h4 className="font-medium text-sm">{note.title}</h4><p className="text-sm text-muted-foreground mt-1 line-clamp-2">{note.content}</p><p className="text-xs text-muted-foreground mt-2">{new Date(note.createdAt).toLocaleDateString()}</p></div>
+                                <div className="flex gap-1">
+                                  <Dialog open={isEditNoteOpen && selectedNote?._id === note._id} onOpenChange={(open) => { if (!open) { setSelectedNote(null); setNoteForm({title: "", content: ""}); } setIsEditNoteOpen(open); }}>
+                                    <DialogTrigger asChild><Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setSelectedNote(note); setNoteForm({title: note.title, content: note.content}); }} data-testid={`button-edit-note-${note._id}`}><Edit3 className="h-4 w-4" /></Button></DialogTrigger>
+                                    <DialogContent className="sm:max-w-[500px]">
+                                      <DialogHeader><DialogTitle>Edit Note</DialogTitle></DialogHeader>
+                                      <div className="space-y-4">
+                                        <div className="space-y-2"><Label htmlFor="edit-note-title">Title</Label><Input id="edit-note-title" placeholder="Note title" value={noteForm.title} onChange={(e) => setNoteForm({...noteForm, title: e.target.value})} /></div>
+                                        <div className="space-y-2"><Label htmlFor="edit-note-content">Content</Label><Textarea id="edit-note-content" placeholder="Note content" className="min-h-32" value={noteForm.content} onChange={(e) => setNoteForm({...noteForm, content: e.target.value})} /></div>
                                       </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className="space-y-2">
-                                <Label htmlFor="kb-text">Additional Context (Text)</Label>
-                                <Textarea id="kb-text" placeholder="Paste FAQs, objection handling scripts, or specific details here..." className="h-32" value={newCampaign.additionalContext} onChange={(e) => setNewCampaign({...newCampaign, additionalContext: e.target.value})} />
-                              </div>
-                            </div>
-                          </TabsContent>
-
-                          <TabsContent value="config" className="mt-0 space-y-4">
-                            <div className="space-y-2">
-                              <Label>AI Voice <span className="text-destructive">*</span></Label>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div 
-                                  className={`border rounded-md p-4 cursor-pointer hover:border-primary transition-colors ${newCampaign.voice === "Rachel (American)" ? "bg-primary/5 border-primary" : ""}`}
-                                  onClick={() => setNewCampaign({...newCampaign, voice: "Rachel (American)"})}
-                                >
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Mic className={`h-4 w-4 ${newCampaign.voice === "Rachel (American)" ? "text-primary" : ""}`} />
-                                    <span className="font-medium">Rachel (American)</span>
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">Professional, warm, clear. Best for sales.</div>
-                                </div>
-                                <div 
-                                  className={`border rounded-md p-4 cursor-pointer hover:border-primary transition-colors ${newCampaign.voice === "Drew (British)" ? "bg-primary/5 border-primary" : ""}`}
-                                  onClick={() => setNewCampaign({...newCampaign, voice: "Drew (British)"})}
-                                >
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Mic className={`h-4 w-4 ${newCampaign.voice === "Drew (British)" ? "text-primary" : ""}`} />
-                                    <span className="font-medium">Drew (British)</span>
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">Sophisticated, calm. Best for support.</div>
+                                      <DialogFooter><Button variant="outline" onClick={() => { setIsEditNoteOpen(false); setSelectedNote(null); setNoteForm({title: "", content: ""}); }}>Cancel</Button><Button onClick={async () => { if (selectedNote && noteForm.title.trim() && noteForm.content.trim()) { const updated = await notesApi.update(selectedNote._id, noteForm); setNotes(notes.map(n => n._id === selectedNote._id ? updated : n)); setNoteForm({title: "", content: ""}); setIsEditNoteOpen(false); setSelectedNote(null); toast({title: "Success", description: "Note updated successfully"}); } }}>Update Note</Button></DialogFooter>
+                                    </DialogContent>
+                                  </Dialog>
+                                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={async () => { if (confirm("Delete this note?")) { await notesApi.delete(note._id); setNotes(notes.filter(n => n._id !== note._id)); toast({title: "Success", description: "Note deleted"}); } }} data-testid={`button-delete-note-${note._id}`}><Trash2 className="h-4 w-4" /></Button>
                                 </div>
                               </div>
                             </div>
-                            <div className="space-y-2">
-                              <Label>Calling Hours <span className="text-destructive">*</span></Label>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-muted-foreground">Start Time</Label>
-                                  <Input type="time" value={newCampaign.callingHours.start} onChange={(e) => setNewCampaign({...newCampaign, callingHours: {...newCampaign.callingHours, start: e.target.value}})} />
-                                </div>
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-muted-foreground">End Time</Label>
-                                  <Input type="time" value={newCampaign.callingHours.end} onChange={(e) => setNewCampaign({...newCampaign, callingHours: {...newCampaign.callingHours, end: e.target.value}})} />
-                                </div>
-                              </div>
-                              {campaignErrors.callingHours && <p className="text-xs text-destructive">{campaignErrors.callingHours}</p>}
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Campaign Duration</Label>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-muted-foreground">Start Date</Label>
-                                  <Input type="date" value={newCampaign.startDate} onChange={(e) => setNewCampaign({...newCampaign, startDate: e.target.value})} />
-                                </div>
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-muted-foreground">End Date</Label>
-                                  <Input type="date" value={newCampaign.endDate} onChange={(e) => setNewCampaign({...newCampaign, endDate: e.target.value})} />
-                                </div>
-                              </div>
-                            </div>
-                          </TabsContent>
-                        </div>
-                      </Tabs>
-                    </div>
-
-                    <DialogFooter className="px-6 py-4 border-t mt-auto">
-                      <Button variant="outline" onClick={() => setIsCreateCampaignOpen(false)}>Cancel</Button>
-                      <Button onClick={handleCreateCampaign} disabled={isSaving}>
-                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        Create & Train AI
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-
-              <div className="grid gap-6">
-                 {campaigns.filter(camp => camp.name.toLowerCase().includes(campaignSearch.toLowerCase())).map(camp => {
-                   const campaignLeads = leads.filter(l => l.campaignId === camp._id).length;
-                   return (
-                   <Card key={camp._id} data-testid={`card-campaign-${camp._id}`}>
-                     <CardHeader className="flex flex-row items-center justify-between pb-2">
-                       <div className="space-y-1">
-                         <CardTitle className="text-xl">{camp.name}</CardTitle>
-                         <CardDescription>Goal: {camp.goal} • Voice: {camp.voice}</CardDescription>
-                       </div>
-                       <Badge variant={camp.status === 'Active' ? 'default' : 'secondary'}>{camp.status}</Badge>
-                     </CardHeader>
-                     <CardContent>
-                       <div className="space-y-3">
-                         <div className="grid grid-cols-3 gap-4 text-sm border-b pb-3">
-                           <div>
-                             <span className="text-muted-foreground">Start Date</span>
-                             <div className="font-medium">{camp.startDate ? new Date(camp.startDate).toLocaleDateString() : '-'}</div>
-                           </div>
-                           <div>
-                             <span className="text-muted-foreground">End Date</span>
-                             <div className="font-medium">{camp.endDate ? new Date(camp.endDate).toLocaleDateString() : '-'}</div>
-                           </div>
-                           <div>
-                             <span className="text-muted-foreground">Total Leads</span>
-                             <div className="font-medium">{campaignLeads}</div>
-                           </div>
-                         </div>
-                         <div className="flex justify-between text-sm">
-                           <span>Progress</span>
-                           <span className="font-medium">{camp.progress || 0}%</span>
-                         </div>
-                         <div className="h-2 rounded-full bg-muted overflow-hidden">
-                           <div className="h-full bg-primary transition-all" style={{ width: `${camp.progress || 0}%` }} />
-                         </div>
-                         <div className="flex gap-4 text-sm text-muted-foreground mt-2">
-                           <div className="flex items-center gap-1"><Phone className="h-4 w-4" /> {camp.callsMade || 0} Calls Made</div>
-                           <div className="flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> {camp.goalsMet || 0} Goals Met</div>
-                         </div>
-                       </div>
-                     </CardContent>
-                     <CardFooter className="border-t pt-4 flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handleToggleCampaignStatus(camp)}
-                          disabled={isSaving}
-                        >
-                          {camp.status === 'Active' ? <><Clock className="mr-2 h-4 w-4" /> Pause</> : <><Play className="mr-2 h-4 w-4" /> Resume</>}
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleEditCampaign(camp)}>
-                          <Settings className="mr-2 h-4 w-4" /> Edit Config
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => confirmDeleteCampaign(camp)}>
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </Button>
-                     </CardFooter>
-                   </Card>
-                   );
-                 })}
-                 {campaigns.length === 0 && (
-                   <Card className="border-dashed">
-                     <CardContent className="flex flex-col items-center justify-center py-12">
-                       <BrainCircuit className="h-12 w-12 text-muted-foreground mb-4" />
-                       <h3 className="font-semibold text-lg mb-2">No Campaigns Yet</h3>
-                       <p className="text-muted-foreground text-center mb-4">Create your first AI calling campaign to start reaching leads automatically.</p>
-                       <Button onClick={() => setIsCreateCampaignOpen(true)}><Plus className="mr-2 h-4 w-4" /> Create Campaign</Button>
-                     </CardContent>
-                   </Card>
-                 )}
-              </div>
+                          ))
+                        ) : <div className="text-center py-6 text-muted-foreground text-sm">No notes found.</div>}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           )}
 
-          {/* User: CRM */}
-          {/* User: Call History */}
           {activeTab === "callhistory" && !isAdmin && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Call History</h1>
               </div>
-
-              {/* Filters */}
-              <div className="flex flex-col gap-4">
-                <div className="flex gap-4 flex-wrap">
-                  <div className="flex-1 min-w-[200px]">
-                    <Label className="text-sm text-muted-foreground mb-2 block">Search by lead name</Label>
-                    <Input placeholder="Search leads..." className="w-full" />
-                  </div>
-                  <div className="min-w-[200px]">
-                    <Label className="text-sm text-muted-foreground mb-2 block">Campaign</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Campaigns" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Campaigns</SelectItem>
-                        {campaigns.map(c => (
-                          <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="min-w-[200px]">
-                    <Label className="text-sm text-muted-foreground mb-2 block">Start Date</Label>
-                    <Input type="date" />
-                  </div>
-                  <div className="min-w-[200px]">
-                    <Label className="text-sm text-muted-foreground mb-2 block">End Date</Label>
-                    <Input type="date" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Call History Table */}
-              <Card>
-                <CardContent className="p-0">
+              <Card className="hover-elevate">
+                <CardHeader>
+                  <CardTitle>Call Records</CardTitle>
+                  <CardDescription>Logs of all AI agent calling activity.</CardDescription>
+                </CardHeader>
+                <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -1865,39 +1052,17 @@ export default function Dashboard() {
                           .map((history, idx) => (
                             <TableRow key={`${lead._id}-${idx}`}>
                               <TableCell className="font-medium">{lead.name}</TableCell>
-                              <TableCell>
-                                {lead.campaignName ? (
-                                  <Badge variant="secondary">{lead.campaignName}</Badge>
-                                ) : (
-                                  <span className="text-muted-foreground">-</span>
-                                )}
-                              </TableCell>
+                              <TableCell>{lead.campaignName ? <Badge variant="secondary">{lead.campaignName}</Badge> : <span className="text-muted-foreground">-</span>}</TableCell>
                               <TableCell className="text-sm">{new Date(history.date).toLocaleString()}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline">{history.outcome}</Badge>
-                              </TableCell>
+                              <TableCell><Badge variant="outline">{history.outcome}</Badge></TableCell>
                               <TableCell className="text-sm">{history.duration}</TableCell>
-                              <TableCell>
-                                <Button size="sm" variant="ghost"><Play className="h-4 w-4 mr-1" /> Play</Button>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}>
-                                  <Phone className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}>
-                                  <MessageSquare className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
+                              <TableCell><Button size="sm" variant="ghost"><Play className="h-4 w-4 mr-1" /> Play</Button></TableCell>
+                              <TableCell className="text-right"><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}><Phone className="h-4 w-4" /></Button></TableCell>
+                              <TableCell className="text-right"><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}><MessageSquare className="h-4 w-4" /></Button></TableCell>
                             </TableRow>
                           ))
                       )}
-                      {leads.flatMap(lead => (lead.history || []).filter(h => h.type === 'call')).length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">No call history yet.</TableCell>
-                        </TableRow>
-                      )}
+                      {leads.flatMap(lead => (lead.history || []).filter(h => h.type === 'call')).length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No call history yet.</TableCell></TableRow>}
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -1911,209 +1076,49 @@ export default function Dashboard() {
                 <h1 className="text-3xl font-bold tracking-tight">Lead CRM</h1>
                 <div className="flex gap-2">
                   <Button variant="outline">Import CSV</Button>
-                  
                   <Dialog open={isAddLeadOpen} onOpenChange={setIsAddLeadOpen}>
-                    <DialogTrigger asChild>
-                      <Button><Plus className="mr-2 h-4 w-4" /> Add Lead</Button>
-                    </DialogTrigger>
+                    <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Lead</Button></DialogTrigger>
                     <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add New Lead</DialogTitle>
-                        <DialogDescription>
-                          Enter the details of the new prospect.
-                        </DialogDescription>
-                      </DialogHeader>
+                      <DialogHeader><DialogTitle>Add New Lead</DialogTitle><DialogDescription>Enter the details of the new prospect.</DialogDescription></DialogHeader>
                       <form onSubmit={handleAddLead} className="space-y-4 py-4">
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="name">Full Name <span className="text-destructive">*</span></Label>
-                            <Input id="name" placeholder="John Doe" value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className={leadErrors.name ? "border-destructive" : ""} />
-                            {leadErrors.name && <p className="text-xs text-destructive">{leadErrors.name}</p>}
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="company">Company</Label>
-                            <Input id="company" placeholder="Acme Inc" value={newLead.company} onChange={e => setNewLead({...newLead, company: e.target.value})} />
-                          </div>
+                          <div className="space-y-2"><Label htmlFor="name">Full Name <span className="text-destructive">*</span></Label><Input id="name" placeholder="John Doe" value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className={leadErrors.name ? "border-destructive" : ""} />{leadErrors.name && <p className="text-xs text-destructive">{leadErrors.name}</p>}</div>
+                          <div className="space-y-2"><Label htmlFor="company">Company</Label><Input id="company" placeholder="Acme Inc" value={newLead.company} onChange={e => setNewLead({...newLead, company: e.target.value})} /></div>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
-                          <Input id="email" type="email" placeholder="john@example.com" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className={leadErrors.email ? "border-destructive" : ""} />
-                          {leadErrors.email && <p className="text-xs text-destructive">{leadErrors.email}</p>}
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="phone">Phone Number <span className="text-destructive">*</span></Label>
-                          <Input id="phone" placeholder="+1 (555) 000-0000" value={newLead.phone} onChange={e => setNewLead({...newLead, phone: e.target.value})} className={leadErrors.phone ? "border-destructive" : ""} />
-                          {leadErrors.phone && <p className="text-xs text-destructive">{leadErrors.phone}</p>}
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="notes">Initial Notes</Label>
-                          <Textarea id="notes" placeholder="Any specific details..." value={newLead.notes} onChange={e => setNewLead({...newLead, notes: e.target.value})} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="campaign">Associated Campaign</Label>
-                          <Select value={newLead.campaignId} onValueChange={(value) => setNewLead({...newLead, campaignId: value})}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a campaign (optional)" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">No Campaign</SelectItem>
-                              {campaigns.map(c => (
-                                <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <DialogFooter>
-                          <Button type="submit" disabled={isSaving}>
-                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Add Lead
-                          </Button>
-                        </DialogFooter>
+                        <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="john@example.com" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className={leadErrors.email ? "border-destructive" : ""} />{leadErrors.email && <p className="text-xs text-destructive">{leadErrors.email}</p>}</div>
+                        <div className="space-y-2"><Label htmlFor="phone">Phone Number <span className="text-destructive">*</span></Label><Input id="phone" placeholder="+1 (555) 000-0000" value={newLead.phone} onChange={e => setNewLead({...newLead, phone: e.target.value})} className={leadErrors.phone ? "border-destructive" : ""} />{leadErrors.phone && <p className="text-xs text-destructive">{leadErrors.phone}</p>}</div>
+                        <div className="space-y-2"><Label htmlFor="notes">Initial Notes</Label><Textarea id="notes" placeholder="Any specific details..." value={newLead.notes} onChange={e => setNewLead({...newLead, notes: e.target.value})} /></div>
+                        <div className="space-y-2"><Label htmlFor="campaign">Associated Campaign</Label><Select value={newLead.campaignId} onValueChange={(value) => setNewLead({...newLead, campaignId: value})}><SelectTrigger><SelectValue placeholder="Select a campaign (optional)" /></SelectTrigger><SelectContent><SelectItem value="none">No Campaign</SelectItem>{campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+                        <DialogFooter><Button type="submit" disabled={isSaving}>{isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Add Lead</Button></DialogFooter>
                       </form>
                     </DialogContent>
                   </Dialog>
                 </div>
               </div>
-              
               <Card className="hover-elevate">
                 <CardHeader>
                   <div className="flex flex-col space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>Manage Leads</CardTitle>
-                        <CardDescription>View and filter all your campaign leads.</CardDescription>
-                      </div>
-                    </div>
-                    
-                    {/* CRM Filters - Single Row Alignment */}
+                    <div className="flex items-center justify-between"><div><CardTitle>Manage Leads</CardTitle><CardDescription>View and filter all your campaign leads.</CardDescription></div></div>
                     <div className="flex flex-wrap items-center gap-3">
-                      <div className="relative flex-1 min-w-[200px]">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                          placeholder="Search name, phone, email..." 
-                          className="pl-9 h-9" 
-                          value={campaignSearch}
-                          onChange={(e) => setCampaignSearch(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Select value={leadCampaignFilter} onValueChange={setLeadCampaignFilter}>
-                          <SelectTrigger className="w-[180px] h-9">
-                            <SelectValue placeholder="All Campaigns" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Campaigns</SelectItem>
-                            <SelectItem value="none">No Campaign</SelectItem>
-                            {campaigns.map(c => (
-                              <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="flex items-center gap-2 bg-muted/20 p-1 rounded-md border border-border/50 h-9">
-                        <CalendarDays className="h-4 w-4 text-muted-foreground ml-2" />
-                        <Input 
-                          type="date" 
-                          className="h-7 w-[130px] text-xs border-none bg-transparent focus-visible:ring-0" 
-                        />
-                        <span className="text-muted-foreground text-xs">→</span>
-                        <Input 
-                          type="date" 
-                          className="h-7 w-[130px] text-xs border-none bg-transparent focus-visible:ring-0" 
-                        />
-                      </div>
+                      <div className="relative flex-1 min-w-[200px]"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input placeholder="Search name, phone, email..." className="pl-9 h-9" value={campaignSearch} onChange={(e) => setCampaignSearch(e.target.value)} /></div>
+                      <div className="flex items-center gap-2"><Select value={leadCampaignFilter} onValueChange={setLeadCampaignFilter}><SelectTrigger className="w-[180px] h-9"><SelectValue placeholder="All Campaigns" /></SelectTrigger><SelectContent><SelectItem value="all">All Campaigns</SelectItem><SelectItem value="none">No Campaign</SelectItem>{campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+                      <div className="flex items-center gap-2 bg-muted/20 p-1 rounded-md border border-border/50 h-9"><CalendarDays className="h-4 w-4 text-muted-foreground ml-2" /><Input type="date" className="h-7 w-[130px] text-xs border-none bg-transparent focus-visible:ring-0" /><span className="text-muted-foreground text-xs">→</span><Input type="date" className="h-7 w-[130px] text-xs border-none bg-transparent focus-visible:ring-0" /></div>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Company</TableHead>
-                        <TableHead>Campaign</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Last Interaction</TableHead>
-                        <TableHead className="text-right">Call</TableHead>
-                        <TableHead className="text-right">SMS</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                    <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Company</TableHead><TableHead>Campaign</TableHead><TableHead>Status</TableHead><TableHead>Last Interaction</TableHead><TableHead className="text-right">Call</TableHead><TableHead className="text-right">SMS</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                     <TableBody>
-                      {leads
-                        .filter(lead => {
-                          // Search filter
-                          const searchLower = campaignSearch.toLowerCase();
-                          const matchesSearch = !campaignSearch || 
-                            lead.name.toLowerCase().includes(searchLower) ||
-                            (lead.company || "").toLowerCase().includes(searchLower) ||
-                            (lead.phone || "").toLowerCase().includes(searchLower) ||
-                            (lead.email || "").toLowerCase().includes(searchLower) ||
-                            (lead.status || "").toLowerCase().includes(searchLower) ||
-                            (lead.campaignName || "").toLowerCase().includes(searchLower);
-
-                          if (!matchesSearch) return false;
-
-                          // Date range filter
-                          // Note: In a real app we'd have a specific 'createdAt' or 'addedDate'
-                          // but for this MVP we'll use 'lastContact' as a proxy if needed
-                          // or assume the user wants to filter by the interaction date.
-                          // For now, let's stick to the multi-column search as requested.
-
-                          // Campaign filter
-                          if (leadCampaignFilter === "all") return true;
-                          if (leadCampaignFilter === "none") return !lead.campaignId;
-                          return lead.campaignId === leadCampaignFilter;
-                        })
-                        .map((lead) => (
+                      {leads.filter(lead => { const searchLower = campaignSearch.toLowerCase(); const matchesSearch = !campaignSearch || lead.name.toLowerCase().includes(searchLower) || (lead.company || "").toLowerCase().includes(searchLower) || (lead.phone || "").toLowerCase().includes(searchLower) || (lead.email || "").toLowerCase().includes(searchLower) || (lead.status || "").toLowerCase().includes(searchLower) || (lead.campaignName || "").toLowerCase().includes(searchLower); if (!matchesSearch) return false; if (leadCampaignFilter === "all") return true; if (leadCampaignFilter === "none") return !lead.campaignId; return lead.campaignId === leadCampaignFilter; }).map((lead) => (
                         <TableRow key={lead._id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleViewLead(lead)}>
-                          <TableCell className="font-medium">{lead.name}</TableCell>
-                          <TableCell>{lead.company || "-"}</TableCell>
-                          <TableCell>
-                            {lead.campaignName ? (
-                              <Badge variant="secondary">{lead.campaignName}</Badge>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                             <Badge variant="outline">{lead.status}</Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
-                          <TableCell className="text-right">
-                            <Button size="sm" variant="ghost" data-testid={`button-call-${lead._id}`} onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}>
-                              <Phone className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button size="sm" variant="ghost" data-testid={`button-sms-${lead._id}`} onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}>
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" data-testid={`button-actions-${lead._id}`}><MoreVertical className="h-4 w-4" /></Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>View Details</DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditLead(lead); }}>Edit Lead</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); confirmDeleteLead(lead); }} className="text-destructive">
-                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
+                          <TableCell className="font-medium">{lead.name}</TableCell><TableCell>{lead.company || "-"}</TableCell><TableCell>{lead.campaignName ? <Badge variant="secondary">{lead.campaignName}</Badge> : <span className="text-muted-foreground">-</span>}</TableCell><TableCell><Badge variant="outline">{lead.status}</Badge></TableCell><TableCell className="text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
+                          <TableCell className="text-right"><Button size="sm" variant="ghost" data-testid={`button-call-${lead._id}`} onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}><Phone className="h-4 w-4" /></Button></TableCell>
+                          <TableCell className="text-right"><Button size="sm" variant="ghost" data-testid={`button-sms-${lead._id}`} onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}><MessageSquare className="h-4 w-4" /></Button></TableCell>
+                          <TableCell className="text-right"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" data-testid={`button-actions-${lead._id}`}><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>View Details</DropdownMenuItem><DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditLead(lead); }}>Edit Lead</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onClick={(e) => { e.stopPropagation(); confirmDeleteLead(lead); }} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
                         </TableRow>
                       ))}
-                      {leads.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">No leads yet. Add your first lead to get started.</TableCell>
-                        </TableRow>
-                      )}
+                      {leads.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No leads yet. Add your first lead to get started.</TableCell></TableRow>}
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -2128,1180 +1133,141 @@ export default function Dashboard() {
                 <>
                   <div className="p-6 border-b bg-muted/10">
                     <div className="flex items-center gap-4">
-                      <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
-                        <AvatarFallback className="text-xl bg-primary/10 text-primary">{selectedLead.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-bold tracking-tight">{selectedLead.name}</h3>
-                        <p className="text-muted-foreground text-sm font-medium">{selectedLead.company}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                           <Badge variant={selectedLead.status === 'Interested' ? 'default' : 'secondary'}>
-                              {selectedLead.status}
-                           </Badge>
-                           {selectedLead.outcome === "Meeting Booked" && (
-                             <Badge variant="outline" className="border-green-500 text-green-600 bg-green-500/10">Meeting Booked</Badge>
-                           )}
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                         <Button size="sm"><Phone className="mr-2 h-4 w-4" /> Call</Button>
-                         <Button size="sm" variant="outline"><MessageSquare className="mr-2 h-4 w-4" /> SMS</Button>
-                         <Button size="sm" variant="ghost" onClick={() => { setIsLeadDetailsOpen(false); handleEditLead(selectedLead); }}>
-                           <Settings className="mr-2 h-4 w-4" /> Edit
-                         </Button>
-                      </div>
+                      <Avatar className="h-16 w-16 border-2 border-background shadow-sm"><AvatarFallback className="text-xl bg-primary/10 text-primary">{selectedLead.name.charAt(0)}</AvatarFallback></Avatar>
+                      <div className="flex-1"><h3 className="text-2xl font-bold tracking-tight">{selectedLead.name}</h3><p className="text-muted-foreground text-sm font-medium">{selectedLead.company}</p><div className="flex items-center gap-2 mt-2"><Badge variant={selectedLead.status === 'Interested' ? 'default' : 'secondary'}>{selectedLead.status}</Badge>{selectedLead.outcome === "Meeting Booked" && <Badge variant="outline" className="border-green-500 text-green-600 bg-green-500/10">Meeting Booked</Badge>}</div></div>
+                      <div className="flex flex-col gap-2"><Button size="sm"><Phone className="mr-2 h-4 w-4" /> Call</Button><Button size="sm" variant="outline"><MessageSquare className="mr-2 h-4 w-4" /> SMS</Button><Button size="sm" variant="ghost" onClick={() => { setIsLeadDetailsOpen(false); handleEditLead(selectedLead); }}><Settings className="mr-2 h-4 w-4" /> Edit</Button></div>
                     </div>
                   </div>
-
                   <Tabs defaultValue="overview" className="flex-1 flex flex-col">
-                    <div className="px-6 border-b bg-muted/5">
-                      <TabsList className="w-full justify-start h-12 bg-transparent p-0 gap-6">
-                        <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-full">Overview</TabsTrigger>
-                        <TabsTrigger value="activity" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-full">Activity & Logs</TabsTrigger>
-                        <TabsTrigger value="schedule" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-full">Schedule</TabsTrigger>
-                      </TabsList>
-                    </div>
-
-                    <ScrollArea className="flex-1">
-                       <div className="p-6">
-                          <TabsContent value="overview" className="mt-0 space-y-6">
-                             <div className="grid grid-cols-2 gap-6">
-                               <div className="space-y-1">
-                                 <Label className="text-xs text-muted-foreground uppercase tracking-wider">Email</Label>
-                                 <div className="flex items-center gap-2 font-medium">
-                                   <Mail className="h-4 w-4 text-muted-foreground" />
-                                   {selectedLead.email || "N/A"}
-                                 </div>
-                               </div>
-                               <div className="space-y-1">
-                                 <Label className="text-xs text-muted-foreground uppercase tracking-wider">Phone</Label>
-                                 <div className="flex items-center gap-2 font-medium">
-                                   <Phone className="h-4 w-4 text-muted-foreground" />
-                                   {selectedLead.phone}
-                                 </div>
-                               </div>
-                               <div className="space-y-1">
-                                 <Label className="text-xs text-muted-foreground uppercase tracking-wider">Last Contact</Label>
-                                 <div className="flex items-center gap-2 font-medium">
-                                   <History className="h-4 w-4 text-muted-foreground" />
-                                   {formatTimeAgo(selectedLead.lastContact)}
-                                 </div>
-                               </div>
-                               <div className="space-y-1">
-                                 <Label className="text-xs text-muted-foreground uppercase tracking-wider">Pipeline Stage</Label>
-                                 <div className="flex items-center gap-2 font-medium">
-                                   <BarChart className="h-4 w-4 text-muted-foreground" />
-                                   {selectedLead.outcome}
-                                 </div>
-                               </div>
-                               <div className="space-y-1">
-                                 <Label className="text-xs text-muted-foreground uppercase tracking-wider">Campaign</Label>
-                                 <div className="flex items-center gap-2 font-medium">
-                                   <Megaphone className="h-4 w-4 text-muted-foreground" />
-                                   {selectedLead.campaignName || "Not assigned"}
-                                 </div>
-                               </div>
-                               <div className="space-y-1">
-                                 <Label className="text-xs text-muted-foreground uppercase tracking-wider">Company</Label>
-                                 <div className="flex items-center gap-2 font-medium">
-                                   <Building className="h-4 w-4 text-muted-foreground" />
-                                   {selectedLead.company || "N/A"}
-                                 </div>
-                               </div>
-                             </div>
-
-                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2"><FileText className="h-4 w-4" /> Notes</Label>
-                                <div className="bg-muted/50 p-4 rounded-md text-sm leading-relaxed border">
-                                  {selectedLead.notes || "No notes available."}
-                                </div>
-                             </div>
-                          </TabsContent>
-
-                          <TabsContent value="activity" className="mt-0 space-y-6">
-                             <div className="flex items-center justify-between mb-4">
-                               <h4 className="font-semibold">Interaction History</h4>
-                               <Button size="sm" variant="outline" onClick={() => setIsLogActivityOpen(true)}>
-                                 <Plus className="h-3 w-3 mr-1" /> Log Activity
-                               </Button>
-                             </div>
-                             <div className="space-y-6 relative pl-6 border-l-2 border-muted">
-                               {(selectedLead.history || []).map((item, i) => (
-                                 <div key={i} className="relative">
-                                    <div className="absolute -left-[31px] top-0 h-8 w-8 rounded-full bg-background border-2 border-muted flex items-center justify-center">
-                                       {item.type === 'call' ? <Phone className="h-4 w-4 text-primary" /> : 
-                                        item.type === 'email' ? <Mail className="h-4 w-4 text-blue-500" /> : 
-                                        <FileText className="h-4 w-4 text-orange-500" />}
-                                    </div>
-                                    <div className="bg-card border rounded-lg p-4 shadow-sm">
-                                      <div className="flex justify-between items-start mb-1">
-                                        <div className="font-medium capitalize">{item.type} Log</div>
-                                        <div className="text-xs text-muted-foreground">{new Date(item.date).toLocaleString()}</div>
-                                      </div>
-                                      <p className="text-sm text-muted-foreground mb-2">{item.note}</p>
-                                      {item.type === 'call' && (
-                                        <div className="flex items-center gap-3 mt-3 pt-3 border-t">
-                                           <Badge variant="outline" className="text-xs">{item.outcome}</Badge>
-                                           <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> {item.duration}</span>
-                                           <Button size="sm" variant="ghost" className="h-6 ml-auto"><Play className="h-3 w-3 mr-1" /> Listen</Button>
-                                        </div>
-                                      )}
-                                    </div>
-                                 </div>
-                               ))}
-                               {(!selectedLead.history || selectedLead.history.length === 0) && (
-                                  <div className="text-sm text-muted-foreground italic pl-2">No history recorded yet.</div>
-                               )}
-                             </div>
-                          </TabsContent>
-
-                          <TabsContent value="schedule" className="mt-0 space-y-6">
-                             <div className="flex items-center justify-between mb-4">
-                               <h4 className="font-semibold">Upcoming Appointments</h4>
-                               <Button size="sm" variant="outline" onClick={() => selectedLead && handleScheduleMeeting(selectedLead)}><Plus className="h-3 w-3 mr-1" /> Schedule New</Button>
-                             </div>
-                             
-                             {appointments.filter(apt => apt.leadId === selectedLead._id).map((apt) => (
-                               <Card key={apt._id} className="mb-4">
-                                 <CardContent className="p-4 flex items-center gap-4">
-                                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex flex-col items-center justify-center text-primary font-bold leading-none">
-                                     <span className="text-xs uppercase">{new Date(apt.date).toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                     <span className="text-lg">{new Date(apt.date).getDate()}</span>
-                                   </div>
-                                   <div className="flex-1">
-                                     <h5 className="font-medium">{apt.title}</h5>
-                                     <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                       <Clock className="h-3 w-3" /> {apt.time} • {apt.type}
-                                     </div>
-                                   </div>
-                                   <DropdownMenu>
-                                     <DropdownMenuTrigger asChild>
-                                       <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
-                                     </DropdownMenuTrigger>
-                                     <DropdownMenuContent align="end">
-                                       <DropdownMenuItem onClick={() => handleEditAppointment(apt)}>
-                                         <Pencil className="mr-2 h-4 w-4" /> Edit
-                                       </DropdownMenuItem>
-                                       <DropdownMenuSeparator />
-                                       <DropdownMenuItem onClick={() => setDeleteConfirm({ type: "appointment", id: apt._id, name: apt.title })} className="text-destructive">
-                                         <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                       </DropdownMenuItem>
-                                     </DropdownMenuContent>
-                                   </DropdownMenu>
-                                 </CardContent>
-                               </Card>
-                             ))}
-                             
-                             {appointments.filter(apt => apt.leadId === selectedLead._id).length === 0 && (
-                               <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                                  <Calendar className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                                  <p className="text-sm text-muted-foreground">No upcoming appointments.</p>
-                                  <Button variant="link" className="mt-2" onClick={() => selectedLead && handleScheduleMeeting(selectedLead)}>Schedule a Meeting</Button>
-                               </div>
-                             )}
-                          </TabsContent>
-                       </div>
-                    </ScrollArea>
+                    <div className="px-6 border-b bg-muted/5"><TabsList className="w-full justify-start h-12 bg-transparent p-0 gap-6"><TabsTrigger value="overview" className="rounded-none px-0 h-full">Overview</TabsTrigger><TabsTrigger value="activity" className="rounded-none px-0 h-full">Activity & Logs</TabsTrigger><TabsTrigger value="schedule" className="rounded-none px-0 h-full">Schedule</TabsTrigger></TabsList></div>
+                    <ScrollArea className="flex-1"><div className="p-6">
+                      <TabsContent value="overview" className="mt-0 space-y-6">
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-1"><Label className="text-xs text-muted-foreground uppercase tracking-wider">Email</Label><div className="flex items-center gap-2 font-medium"><Mail className="h-4 w-4 text-muted-foreground" />{selectedLead.email || "N/A"}</div></div>
+                          <div className="space-y-1"><Label className="text-xs text-muted-foreground uppercase tracking-wider">Phone</Label><div className="flex items-center gap-2 font-medium"><Phone className="h-4 w-4 text-muted-foreground" />{selectedLead.phone}</div></div>
+                          <div className="space-y-1"><Label className="text-xs text-muted-foreground uppercase tracking-wider">Last Contact</Label><div className="flex items-center gap-2 font-medium"><History className="h-4 w-4 text-muted-foreground" />{formatTimeAgo(selectedLead.lastContact)}</div></div>
+                          <div className="space-y-1"><Label className="text-xs text-muted-foreground uppercase tracking-wider">Pipeline Stage</Label><div className="flex items-center gap-2 font-medium"><BarChart className="h-4 w-4 text-muted-foreground" />{selectedLead.outcome}</div></div>
+                          <div className="space-y-1"><Label className="text-xs text-muted-foreground uppercase tracking-wider">Campaign</Label><div className="flex items-center gap-2 font-medium"><Megaphone className="h-4 w-4 text-muted-foreground" />{selectedLead.campaignName || "Not assigned"}</div></div>
+                          <div className="space-y-1"><Label className="text-xs text-muted-foreground uppercase tracking-wider">Company</Label><div className="flex items-center gap-2 font-medium"><Building className="h-4 w-4 text-muted-foreground" />{selectedLead.company || "N/A"}</div></div>
+                        </div>
+                        <div className="space-y-2"><Label className="flex items-center gap-2"><FileText className="h-4 w-4" /> Notes</Label><div className="bg-muted/50 p-4 rounded-md text-sm leading-relaxed border">{selectedLead.notes || "No notes available."}</div></div>
+                      </TabsContent>
+                      <TabsContent value="activity" className="mt-0 space-y-6">
+                        <div className="flex items-center justify-between mb-4"><h4 className="font-semibold">Interaction History</h4><Button size="sm" variant="outline" onClick={() => setIsLogActivityOpen(true)}><Plus className="h-3 w-3 mr-1" /> Log Activity</Button></div>
+                        <div className="space-y-6 relative pl-6 border-l-2 border-muted">{(selectedLead.history || []).map((item, i) => (<div key={i} className="relative"><div className="absolute -left-[31px] top-0 h-8 w-8 rounded-full bg-background border-2 border-muted flex items-center justify-center">{item.type === 'call' ? <Phone className="h-4 w-4 text-primary" /> : item.type === 'email' ? <Mail className="h-4 w-4 text-blue-500" /> : <FileText className="h-4 w-4 text-orange-500" />}</div><div className="bg-card border rounded-lg p-4 shadow-sm"><div className="flex justify-between items-start mb-1"><div className="text-sm font-semibold">{item.type.charAt(0).toUpperCase() + item.type.slice(1)} {item.outcome && `- ${item.outcome}`}</div><div className="text-xs text-muted-foreground">{new Date(item.date).toLocaleString()}</div></div><div className="text-sm text-muted-foreground">{item.note}</div>{item.type === 'call' && item.duration && <div className="mt-2 flex items-center gap-4"><div className="text-xs font-medium">Duration: {item.duration}</div><Button size="sm" variant="ghost" className="h-6 ml-auto"><Play className="h-3 w-3 mr-1" /> Listen</Button></div>}</div></div>))}</div>
+                      </TabsContent>
+                      <TabsContent value="schedule" className="mt-0 space-y-6">
+                        <div className="flex items-center justify-between mb-4"><h4 className="font-semibold">Scheduled Appointments</h4><Button size="sm" variant="outline" onClick={() => handleScheduleMeeting(selectedLead)}><Plus className="h-3 w-3 mr-1" /> Schedule</Button></div>
+                        <div className="space-y-3">{appointments.filter(a => a.leadId === selectedLead._id).map((apt) => (<div key={apt._id} className="p-4 border rounded-lg bg-card shadow-sm"><div className="flex justify-between items-start mb-2"><div><div className="font-semibold">{apt.title}</div><div className="text-xs text-muted-foreground flex items-center gap-1 mt-1"><Calendar className="h-3 w-3" />{new Date(apt.date).toLocaleDateString()} at {apt.time}</div></div><Badge variant="secondary">{apt.type}</Badge></div>{apt.notes && <div className="text-xs text-muted-foreground italic mt-2 border-t pt-2">{apt.notes}</div>}<div className="flex justify-end gap-2 mt-3 pt-3 border-t"><Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => handleEditAppointment(apt)}><Edit3 className="h-3 w-3 mr-1" /> Edit</Button><Button size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:text-destructive" onClick={() => confirmDeleteAppointment(apt)}><Trash2 className="h-3 w-3 mr-1" /> Cancel</Button></div></div>))}
+                        {appointments.filter(a => a.leadId === selectedLead._id).length === 0 && <div className="text-center py-8 text-muted-foreground text-sm border-2 border-dashed rounded-lg">No meetings scheduled.</div>}</div>
+                      </TabsContent>
+                    </div></ScrollArea>
                   </Tabs>
                 </>
               )}
             </SheetContent>
           </Sheet>
 
-          {/* Edit Lead Dialog */}
-          <Dialog open={isEditLeadOpen} onOpenChange={setIsEditLeadOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Lead</DialogTitle>
-                <DialogDescription>
-                  Update the lead information.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleUpdateLead} className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-name">Full Name <span className="text-destructive">*</span></Label>
-                    <Input id="edit-name" placeholder="John Doe" value={editLead.name} onChange={e => setEditLead({...editLead, name: e.target.value})} className={leadErrors.name ? "border-destructive" : ""} />
-                    {leadErrors.name && <p className="text-xs text-destructive">{leadErrors.name}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-company">Company</Label>
-                    <Input id="edit-company" placeholder="Acme Inc" value={editLead.company} onChange={e => setEditLead({...editLead, company: e.target.value})} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-email">Email</Label>
-                  <Input id="edit-email" type="email" placeholder="john@example.com" value={editLead.email} onChange={e => setEditLead({...editLead, email: e.target.value})} className={leadErrors.email ? "border-destructive" : ""} />
-                  {leadErrors.email && <p className="text-xs text-destructive">{leadErrors.email}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-phone">Phone Number <span className="text-destructive">*</span></Label>
-                  <Input id="edit-phone" placeholder="+1 (555) 000-0000" value={editLead.phone} onChange={e => setEditLead({...editLead, phone: e.target.value})} className={leadErrors.phone ? "border-destructive" : ""} />
-                  {leadErrors.phone && <p className="text-xs text-destructive">{leadErrors.phone}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-status">Status</Label>
-                  <Select value={editLead.status} onValueChange={(value: typeof editLead.status) => setEditLead({...editLead, status: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="New">New</SelectItem>
-                      <SelectItem value="Interested">Interested</SelectItem>
-                      <SelectItem value="Follow Up">Follow Up</SelectItem>
-                      <SelectItem value="In Progress">In Progress</SelectItem>
-                      <SelectItem value="Closed">Closed</SelectItem>
-                      <SelectItem value="Unqualified">Unqualified</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-notes">Notes</Label>
-                  <Textarea id="edit-notes" placeholder="Any specific details..." value={editLead.notes} onChange={e => setEditLead({...editLead, notes: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-campaign">Associated Campaign</Label>
-                  <Select value={editLead.campaignId} onValueChange={(value) => setEditLead({...editLead, campaignId: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a campaign (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No Campaign</SelectItem>
-                      {campaigns.map(c => (
-                        <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsEditLeadOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={isSaving}>
-                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Save Changes
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-
-          {/* Edit Campaign Dialog */}
-          <Dialog open={isEditCampaignOpen} onOpenChange={setIsEditCampaignOpen}>
-            <DialogContent className="sm:max-w-[700px] h-[80vh] flex flex-col p-0 gap-0">
-              <DialogHeader className="px-6 py-4 border-b">
-                <DialogTitle>Edit Campaign</DialogTitle>
-                <DialogDescription>
-                  Update your campaign settings and configuration.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="flex-1 overflow-y-auto">
-                <Tabs value={campaignTab} onValueChange={setCampaignTab} className="w-full">
-                  <div className="px-6 pt-4">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="basics">Basics</TabsTrigger>
-                      <TabsTrigger value="knowledge">AI Knowledge</TabsTrigger>
-                      <TabsTrigger value="config">Configuration</TabsTrigger>
-                    </TabsList>
-                  </div>
-                  
-                  <div className="p-6">
-                    <TabsContent value="basics" className="mt-0 space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-camp-name">Campaign Name <span className="text-destructive">*</span></Label>
-                        <Input id="edit-camp-name" placeholder="e.g., Summer Outreach 2024" value={editCampaignForm.name} onChange={(e) => setEditCampaignForm({...editCampaignForm, name: e.target.value})} className={campaignErrors.name ? "border-destructive" : ""} />
-                        {campaignErrors.name && <p className="text-xs text-destructive">{campaignErrors.name}</p>}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-camp-goal">Campaign Goal <span className="text-destructive">*</span></Label>
-                        <Select value={editCampaignForm.goal} onValueChange={(value: "sales" | "support" | "survey" | "appointment") => setEditCampaignForm({...editCampaignForm, goal: value})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a goal" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="sales">Sales / Cold Call</SelectItem>
-                            <SelectItem value="support">Customer Support</SelectItem>
-                            <SelectItem value="survey">Survey / Feedback</SelectItem>
-                            <SelectItem value="appointment">Appointment Setting</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-camp-status">Status</Label>
-                        <Select value={editCampaignForm.status} onValueChange={(value: "Active" | "Paused" | "Draft") => setEditCampaignForm({...editCampaignForm, status: value})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Draft">Draft</SelectItem>
-                            <SelectItem value="Active">Active</SelectItem>
-                            <SelectItem value="Paused">Paused</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-camp-script">Initial Script / Opening <span className="text-destructive">*</span></Label>
-                        <Textarea id="edit-camp-script" placeholder="Hi, this is Alex from NIJVOX. I'm calling about..." className={`h-32 ${campaignErrors.script ? "border-destructive" : ""}`} value={editCampaignForm.script} onChange={(e) => setEditCampaignForm({...editCampaignForm, script: e.target.value})} />
-                        {campaignErrors.script && <p className="text-xs text-destructive">{campaignErrors.script}</p>}
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="knowledge" className="mt-0 space-y-6">
-                      <div className="space-y-4">
-                        <div className="bg-muted/30 border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:bg-muted/50 transition-colors cursor-pointer relative">
-                          <input
-                            type="file"
-                            multiple
-                            accept=".pdf,.doc,.docx,.txt,image/*"
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            onChange={(e) => handleFileUpload(e, true)}
-                            disabled={isUploading}
-                          />
-                          {isUploading ? (
-                            <Loader2 className="mx-auto h-10 w-10 text-muted-foreground mb-4 animate-spin" />
-                          ) : (
-                            <Upload className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
-                          )}
-                          <h3 className="font-semibold text-lg">{isUploading ? "Uploading..." : "Upload Training Documents"}</h3>
-                          <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-                            Click or drag PDF, DOCX, TXT, or images here to train the AI.
-                          </p>
-                          <Button variant="outline" className="mt-4" disabled={isUploading}>Select Files</Button>
-                        </div>
-
-                        {editCampaignForm.knowledgeBaseFiles.length > 0 && (
-                          <div className="space-y-2">
-                            <Label className="text-base">Uploaded Knowledge Base ({editCampaignForm.knowledgeBaseFiles.length} files)</Label>
-                            <div className="space-y-2">
-                              {editCampaignForm.knowledgeBaseFiles.map((file) => (
-                                <div key={file.id} className="flex items-center justify-between p-3 border rounded-md bg-card">
-                                  <div className="flex items-center gap-3">
-                                    {getFileIcon(file.type)}
-                                    <div>
-                                      <div className="font-medium">{file.name}</div>
-                                      <div className="text-xs text-muted-foreground">{formatFileSize(file.size)}</div>
-                                    </div>
-                                  </div>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                    onClick={() => handleRemoveFile(file.id, file.url, true)}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="space-y-2">
-                          <Label htmlFor="edit-kb-text">Additional Context (Text)</Label>
-                          <Textarea id="edit-kb-text" placeholder="Paste FAQs, objection handling scripts, or specific details here..." className="h-32" value={editCampaignForm.additionalContext} onChange={(e) => setEditCampaignForm({...editCampaignForm, additionalContext: e.target.value})} />
-                        </div>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="config" className="mt-0 space-y-4">
-                      <div className="space-y-2">
-                        <Label>AI Voice <span className="text-destructive">*</span></Label>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div 
-                            className={`border rounded-md p-4 cursor-pointer hover:border-primary transition-colors ${editCampaignForm.voice === "Rachel (American)" ? "bg-primary/5 border-primary" : ""}`}
-                            onClick={() => setEditCampaignForm({...editCampaignForm, voice: "Rachel (American)"})}
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              <Mic className={`h-4 w-4 ${editCampaignForm.voice === "Rachel (American)" ? "text-primary" : ""}`} />
-                              <span className="font-medium">Rachel (American)</span>
-                            </div>
-                            <div className="text-xs text-muted-foreground">Professional, warm, clear. Best for sales.</div>
-                          </div>
-                          <div 
-                            className={`border rounded-md p-4 cursor-pointer hover:border-primary transition-colors ${editCampaignForm.voice === "Drew (British)" ? "bg-primary/5 border-primary" : ""}`}
-                            onClick={() => setEditCampaignForm({...editCampaignForm, voice: "Drew (British)"})}
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              <Mic className={`h-4 w-4 ${editCampaignForm.voice === "Drew (British)" ? "text-primary" : ""}`} />
-                              <span className="font-medium">Drew (British)</span>
-                            </div>
-                            <div className="text-xs text-muted-foreground">Sophisticated, calm. Best for support.</div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Calling Hours <span className="text-destructive">*</span></Label>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">Start Time</Label>
-                            <Input type="time" value={editCampaignForm.callingHours.start} onChange={(e) => setEditCampaignForm({...editCampaignForm, callingHours: {...editCampaignForm.callingHours, start: e.target.value}})} />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">End Time</Label>
-                            <Input type="time" value={editCampaignForm.callingHours.end} onChange={(e) => setEditCampaignForm({...editCampaignForm, callingHours: {...editCampaignForm.callingHours, end: e.target.value}})} />
-                          </div>
-                        </div>
-                        {campaignErrors.callingHours && <p className="text-xs text-destructive">{campaignErrors.callingHours}</p>}
-                      </div>
-                    </TabsContent>
-                  </div>
-                </Tabs>
-              </div>
-
-              <DialogFooter className="px-6 py-4 border-t mt-auto">
-                <Button variant="outline" onClick={() => setIsEditCampaignOpen(false)}>Cancel</Button>
-                <Button onClick={handleUpdateCampaign} disabled={isSaving}>
-                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Calendar View */}
-          {activeTab === "calendar" && !isAdmin && (
+          {/* User Management View (Admin) */}
+          {activeTab === "admin-users" && isAdmin && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
-                <div className="flex items-center gap-2">
-                   <Button variant="outline" size="sm" onClick={goToPreviousMonth}><ChevronLeft className="h-4 w-4" /></Button>
-                   <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
-                   <span className="text-sm font-medium w-40 text-center">{formatMonthYear()}</span>
-                   <Button variant="outline" size="sm" onClick={goToNextMonth}><ChevronRight className="h-4 w-4" /></Button>
-                   
-                   <Button className="ml-4" onClick={() => {
-                     setAppointmentForm({ leadId: "", leadName: "", title: "", date: new Date().toISOString().split('T')[0], time: "09:00", type: "Zoom", notes: "" });
-                     setIsAddAppointmentOpen(true);
-                   }}><Plus className="mr-2 h-4 w-4" /> New Appointment</Button>
-                </div>
+                <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+                <Button><Plus className="mr-2 h-4 w-4" /> Add User</Button>
               </div>
-              
-              <div className="border rounded-md shadow-sm bg-card">
-                <div className="grid grid-cols-7 border-b bg-muted/40">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                    <div key={day} className="p-3 text-center text-sm font-medium text-muted-foreground">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 auto-rows-[120px]">
-                  {getCalendarDays().map((dayInfo, index) => {
-                    const dayApts = appointments.filter(apt => apt.date === dayInfo.date);
-                    const todayHighlight = isToday(dayInfo.date);
-                    
-                    return (
-                      <div 
-                        key={index} 
-                        className={`border-b border-r p-2 relative group hover:bg-muted/5 transition-colors ${!dayInfo.isCurrentMonth ? "bg-muted/10 text-muted-foreground/50" : ""} ${todayHighlight ? "bg-primary/5" : ""}`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <span className={`text-sm font-medium ${todayHighlight ? "bg-primary text-primary-foreground h-6 w-6 rounded-full flex items-center justify-center" : ""}`}>
-                            {dayInfo.day}
-                          </span>
-                          {todayHighlight && <span className="text-[10px] text-primary font-medium">Today</span>}
-                        </div>
-                        
-                        <div className="mt-1 space-y-1 overflow-hidden max-h-[80px]">
-                          {dayApts.slice(0, 3).map(apt => (
-                            <div 
-                              key={apt._id} 
-                              className="text-[10px] truncate px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-medium cursor-pointer hover:bg-primary/20"
-                              onClick={() => handleEditAppointment(apt)}
-                            >
-                              {apt.time} {apt.title}
-                            </div>
-                          ))}
-                          {dayApts.length > 3 && (
-                            <div className="text-[10px] text-muted-foreground">+{dayApts.length - 3} more</div>
-                          )}
-                        </div>
-                        
-                        {dayInfo.isCurrentMonth && (
-                          <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              className="h-6 w-6"
-                              onClick={() => {
-                                setAppointmentForm({ leadId: "", leadName: "", title: "", date: dayInfo.date, time: "09:00", type: "Zoom", notes: "" });
-                                setIsAddAppointmentOpen(true);
-                              }}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              
-              {/* Upcoming Appointments List */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Upcoming Appointments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {appointments.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>No appointments scheduled</p>
-                      <Button variant="outline" className="mt-4" onClick={() => {
-                        setAppointmentForm({ leadId: "", leadName: "", title: "", date: new Date().toISOString().split('T')[0], time: "09:00", type: "Zoom", notes: "" });
-                        setIsAddAppointmentOpen(true);
-                      }}>
-                        <Plus className="mr-2 h-4 w-4" /> Schedule Appointment
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {appointments
-                        .sort((a, b) => new Date(a.date + ' ' + a.time).getTime() - new Date(b.date + ' ' + b.time).getTime())
-                        .slice(0, 10)
-                        .map(apt => (
-                          <div key={apt._id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                <CalendarDays className="h-5 w-5 text-primary" />
-                              </div>
-                              <div>
-                                <div className="font-medium">{apt.title}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {new Date(apt.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {apt.time} - {apt.leadName}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline">{apt.type}</Badge>
-                              <Button variant="ghost" size="icon" onClick={() => handleEditAppointment(apt)}>
-                                <Edit3 className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => confirmDeleteAppointment(apt)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Settings View */}
-          {activeTab === "settings" && (
-            <div className="max-w-4xl mx-auto space-y-8">
-               <div>
-                 <h1 className="text-3xl font-bold tracking-tight mb-2">Settings</h1>
-                 <p className="text-muted-foreground">Manage your subscription, preferences, and account.</p>
-               </div>
-
-               <div className="grid gap-8">
-                  {/* Subscription Card */}
-                  <Card>
-                     <CardHeader>
-                       <CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" /> Subscription & Usage</CardTitle>
-                       <CardDescription>You are currently on the <span className="font-semibold text-foreground">{user.subscription?.plan || "Free"} Plan</span>.</CardDescription>
-                     </CardHeader>
-                     <CardContent className="space-y-6">
-                        <div className="space-y-2">
-                           <div className="flex justify-between text-sm">
-                             <span>Monthly Call Credits</span>
-                             <span className="font-medium">{user.subscription?.creditsUsed || 0} / {user.subscription?.monthlyCallCredits || 0} used</span>
-                           </div>
-                           <Progress value={user.subscription?.monthlyCallCredits ? ((user.subscription?.creditsUsed || 0) / user.subscription.monthlyCallCredits) * 100 : 0} className="h-2" />
-                           <p className="text-xs text-muted-foreground">Plan renews on {user.subscription?.renewalDate ? new Date(user.subscription.renewalDate).toLocaleDateString() : "N/A"}.</p>
-                        </div>
-                        
-                        <div className="grid sm:grid-cols-3 gap-4">
-                           <div className="bg-muted/50 p-3 rounded-lg text-center">
-                              <div className="text-2xl font-bold">{user.subscription?.plan || "Free"}</div>
-                              <div className="text-xs text-muted-foreground">Current Tier</div>
-                           </div>
-                           <div className="bg-muted/50 p-3 rounded-lg text-center">
-                              <div className="text-2xl font-bold">₹{userPlan?.price || 0}</div>
-                              <div className="text-xs text-muted-foreground">Per {userPlan?.duration || "Month"}</div>
-                           </div>
-                           <div className="bg-muted/50 p-3 rounded-lg text-center">
-                              <div className="text-2xl font-bold">{user.subscription?.status || "Active"}</div>
-                              <div className="text-xs text-muted-foreground">Status</div>
-                           </div>
-                        </div>
-
-                        {userPlan?.description && (
-                          <div className="bg-muted/30 p-4 rounded-lg">
-                            <h4 className="font-semibold mb-2">Plan Details</h4>
-                            <div 
-                              className="text-sm text-muted-foreground prose prose-sm dark:prose-invert"
-                              dangerouslySetInnerHTML={{ __html: userPlan.description }}
-                            />
-                          </div>
-                        )}
-
-                        <div className="space-y-3">
-                          <h4 className="font-semibold">Included Features</h4>
-                          <div className="grid sm:grid-cols-2 gap-2">
-                            {userPlan?.features?.map((feature, i) => (
-                              <div key={i} className="flex items-center gap-2 text-sm">
-                                <CheckCircle2 className="h-4 w-4 text-primary" />
-                                {feature}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="flex gap-4">
-                           <Button onClick={() => setLocation("/pricing")}>Change Plan</Button>
-                           <Button variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10">Cancel Subscription</Button>
-                        </div>
-                     </CardContent>
-                  </Card>
-
-                  {/* Calling Preferences */}
-                  <Card>
-                     <CardHeader>
-                       <CardTitle className="flex items-center gap-2"><Phone className="h-5 w-5 text-primary" /> Calling Preferences</CardTitle>
-                       <CardDescription>Configure constraints for your AI agents.</CardDescription>
-                     </CardHeader>
-                     <CardContent className="space-y-6">
-                        <div className="flex items-center justify-between">
-                           <div className="space-y-0.5">
-                              <Label className="text-base">Daily Call Limit</Label>
-                              <p className="text-sm text-muted-foreground">Maximum number of outbound calls per day.</p>
-                           </div>
-                           <div className="flex items-center gap-2">
-                              <Input 
-                                type="number" 
-                                value={callLimit} 
-                                onChange={(e) => setCallLimit(parseInt(e.target.value) || 0)} 
-                                className="w-24 text-right" 
-                              />
-                           </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                           <div className="space-y-0.5">
-                              <Label className="text-base">Do Not Disturb (DND)</Label>
-                              <p className="text-sm text-muted-foreground">Pause all outgoing calls immediately.</p>
-                           </div>
-                           <Switch checked={dndEnabled} onCheckedChange={setDndEnabled} />
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                           <div className="space-y-0.5">
-                              <Label className="text-base">Local Presence Dialing</Label>
-                              <p className="text-sm text-muted-foreground">Match caller ID area code to lead's location.</p>
-                           </div>
-                           <Switch checked={localPresence} onCheckedChange={setLocalPresence} />
-                        </div>
-
-                        <div className="flex justify-end pt-4">
-                           <Button onClick={handleSaveSettings} disabled={isSaving}>
-                             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                             Save Settings
-                           </Button>
-                        </div>
-                     </CardContent>
-                  </Card>
-               </div>
-            </div>
-          )}
-
-          {/* Profile View */}
-          {activeTab === "profile" && (
-            <div className="max-w-2xl mx-auto space-y-8">
-               <div>
-                 <h1 className="text-3xl font-bold tracking-tight mb-2">My Profile</h1>
-                 <p className="text-muted-foreground">Manage your personal information and security.</p>
-               </div>
-
-               <Card>
-                  <CardHeader>
-                    <CardTitle>Personal Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                     <div className="flex items-center gap-6">
-                        <Avatar className="h-20 w-20">
-                          <AvatarFallback className="text-2xl">{user.firstName?.[0]}{user.lastName?.[0]}</AvatarFallback>
-                        </Avatar>
-                        <Button variant="outline">Change Avatar</Button>
-                     </div>
-
-                     <div className="grid gap-4">
-                        <div className="grid grid-cols-2 gap-4">
-                           <div className="space-y-2">
-                              <Label>First Name</Label>
-                              <Input value={profileForm.firstName} onChange={(e) => setProfileForm({...profileForm, firstName: e.target.value})} />
-                           </div>
-                           <div className="space-y-2">
-                              <Label>Last Name</Label>
-                              <Input value={profileForm.lastName} onChange={(e) => setProfileForm({...profileForm, lastName: e.target.value})} />
-                           </div>
-                        </div>
-                        <div className="space-y-2">
-                           <Label>Email Address</Label>
-                           <Input value={profileForm.email} onChange={(e) => setProfileForm({...profileForm, email: e.target.value})} disabled />
-                        </div>
-                        <div className="space-y-2">
-                           <Label>Phone Number</Label>
-                           <Input value={profileForm.phone} onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})} placeholder="+1 (555) 000-0000" />
-                        </div>
-                        <div className="space-y-2">
-                           <Label>Company Name</Label>
-                           <Input value={profileForm.companyName} onChange={(e) => setProfileForm({...profileForm, companyName: e.target.value})} placeholder="Your Company" />
-                        </div>
-                     </div>
-                     <div className="flex justify-end">
-                        <Button onClick={handleSaveProfile} disabled={isSaving}>
-                          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                          Save Changes
-                        </Button>
-                     </div>
-                  </CardContent>
-               </Card>
-
-               <Card>
-                  <CardHeader>
-                    <CardTitle>Security</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                     <div className="space-y-2">
-                        <Label>Current Password</Label>
-                        <Input type="password" value={passwordForm.current} onChange={(e) => setPasswordForm({...passwordForm, current: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                        <Label>New Password</Label>
-                        <Input type="password" value={passwordForm.new} onChange={(e) => setPasswordForm({...passwordForm, new: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                        <Label>Confirm New Password</Label>
-                        <Input type="password" value={passwordForm.confirm} onChange={(e) => setPasswordForm({...passwordForm, confirm: e.target.value})} />
-                     </div>
-                     <div className="flex justify-end pt-2">
-                        <Button variant="outline" onClick={handleChangePassword} disabled={isSaving || !passwordForm.current || !passwordForm.new}>
-                          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                          Update Password
-                        </Button>
-                     </div>
-                  </CardContent>
-               </Card>
-            </div>
-          )}
-
-          {activeTab === "sms" && !isAdmin && (
-            <div className="space-y-6">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <MessageSquare className="h-8 w-8 text-primary" />
-                  Bulk SMS
-                </h1>
-                <p className="text-muted-foreground">Manage and track bulk SMS communications.</p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
-                <div className="relative min-w-[240px]">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search name or phone..." 
-                    className="pl-9 h-9" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-
-                <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-                  <SelectTrigger className="w-[200px] h-9">
-                    <SelectValue placeholder="All Campaigns" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Campaigns</SelectItem>
-                    {campaigns.map(c => (
-                      <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <div className="flex items-center gap-2 h-9">
-                  <Input 
-                    type="date" 
-                    className="h-9 w-[150px]"
-                    value={dateRange.start} 
-                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                  />
-                  <span className="text-muted-foreground">→</span>
-                  <Input 
-                    type="date" 
-                    className="h-9 w-[150px]"
-                    value={dateRange.end} 
-                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle>SMS Logs</CardTitle>
-                  <CardDescription>
-                    History of all SMS interactions with leads
-                  </CardDescription>
-                </CardHeader>
+                <CardHeader><CardTitle>Platform Users</CardTitle><CardDescription>Total {registeredUsers.length} registered users.</CardDescription></CardHeader>
                 <CardContent>
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Recipient</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Campaign</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Date</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                    <TableHeader><TableRow><TableHead>User</TableHead><TableHead>Company</TableHead><TableHead>Plan</TableHead><TableHead>Status</TableHead><TableHead>Joined</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                     <TableBody>
-                      {leads
-                        .filter(lead => {
-                          const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.phone.includes(searchTerm);
-                          const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
-                          let matchesDate = true;
-                          if (dateRange.start || dateRange.end) {
-                            const contactDate = lead.lastContact ? new Date(lead.lastContact) : new Date(lead.createdAt);
-                            if (dateRange.start && contactDate < new Date(dateRange.start)) matchesDate = false;
-                            if (dateRange.end && contactDate > new Date(dateRange.end)) matchesDate = false;
-                          }
-                          return matchesSearch && matchesCampaign && matchesDate;
-                        })
-                        .map((lead) => (
-                          <TableRow key={lead._id}>
-                            <TableCell className="font-medium">{lead.name}</TableCell>
-                            <TableCell>{lead.phone}</TableCell>
-                            <TableCell>
-                              {lead.campaignName ? <Badge variant="secondary">{lead.campaignName}</Badge> : "-"}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{lead.status}</Badge>
-                            </TableCell>
-                            <TableCell className="text-right text-muted-foreground">
-                              {formatTimeAgo(lead.lastContact)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      {leads.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No leads found.</TableCell>
+                      {registeredUsers.map((u) => (
+                        <TableRow key={u._id}>
+                          <TableCell><div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarFallback>{u.firstName?.charAt(0)}{u.lastName?.charAt(0)}</AvatarFallback></Avatar><div><div className="font-medium">{u.firstName} {u.lastName}</div><div className="text-xs text-muted-foreground">{u.email}</div></div></div></TableCell>
+                          <TableCell>{u.companyName || "-"}</TableCell>
+                          <TableCell><Badge variant="secondary">{u.subscription?.plan || "Free"}</Badge></TableCell>
+                          <TableCell><Badge variant={u.subscription?.status === 'Active' ? 'default' : 'outline'} className={u.subscription?.status === 'Active' ? 'bg-green-500/15 text-green-600 border-none' : ''}>{u.subscription?.status || "Inactive"}</Badge></TableCell>
+                          <TableCell className="text-muted-foreground">{new Date(u.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-right"><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></TableCell>
                         </TableRow>
-                      )}
+                      ))}
                     </TableBody>
                   </Table>
                 </CardContent>
               </Card>
             </div>
           )}
+
+          {/* Campaigns View */}
+          {activeTab === "campaigns" && !isAdmin && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
+                <Button onClick={() => setIsCreateCampaignOpen(true)}><Plus className="mr-2 h-4 w-4" /> Create Campaign</Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {campaigns.map((campaign) => (
+                  <Card key={campaign._id} className="hover-elevate">
+                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                      <div className="space-y-1"><CardTitle className="text-xl">{campaign.name}</CardTitle><CardDescription className="flex items-center gap-1"><Badge variant="outline" className="text-[10px] uppercase py-0">{campaign.goal}</Badge></CardDescription></div>
+                      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => { setSelectedCampaign(campaign); setEditCampaignForm({ name: campaign.name, goal: campaign.goal as any, script: campaign.script, voice: campaign.voice, additionalContext: campaign.additionalContext || "", callingHours: campaign.callingHours || { start: "09:00", end: "17:00" }, status: campaign.status as any, knowledgeBaseFiles: campaign.knowledgeBaseFiles || [], startDate: campaign.startDate || "", endDate: campaign.endDate || "" }); setIsEditCampaignOpen(true); }}>Edit Campaign</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => setDeleteConfirm({ type: "campaign", id: campaign._id, name: campaign.name })}>Delete Campaign</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+                    </CardHeader>
+                    <CardContent className="pb-2"><p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{campaign.script}</p><div className="flex items-center gap-4 mt-4"><div className="flex flex-col"><span className="text-2xl font-bold">{leads.filter(l => l.campaignId === campaign._id).length}</span><span className="text-[10px] text-muted-foreground uppercase font-bold">Leads</span></div><div className="flex flex-col"><span className="text-2xl font-bold">{leads.filter(l => l.campaignId === campaign._id && l.status === 'Interested').length}</span><span className="text-[10px] text-muted-foreground uppercase font-bold">Interested</span></div></div></CardContent>
+                    <CardFooter className="pt-2 border-t flex items-center justify-between bg-muted/5"><Badge variant={campaign.status === "Active" ? "default" : "secondary"}>{campaign.status}</Badge><div className="flex items-center gap-2"><Button variant="ghost" size="icon" className="h-8 w-8">{campaign.status === "Active" ? <X className="h-4 w-4" /> : <Play className="h-4 w-4" />}</Button></div></CardFooter>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Calendar View */}
+          {activeTab === "calendar" && !isAdmin && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
+                <Button onClick={() => setIsAddAppointmentOpen(true)}><Plus className="mr-2 h-4 w-4" /> Schedule</Button>
+              </div>
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-8"><div className="flex items-center gap-4"><Button variant="outline" size="icon" onClick={() => setCalendarDate(new Date(calendarDate.setMonth(calendarDate.getMonth() - 1)))}><ChevronLeft className="h-4 w-4" /></Button><h2 className="text-xl font-bold">{calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h2><Button variant="outline" size="icon" onClick={() => setCalendarDate(new Date(calendarDate.setMonth(calendarDate.getMonth() + 1)))}><ChevronRight className="h-4 w-4" /></Button></div></div>
+                <div className="grid grid-cols-7 gap-px bg-muted overflow-hidden rounded-lg border">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <div key={day} className="bg-muted/50 p-2 text-center text-xs font-bold text-muted-foreground uppercase">{day}</div>)}
+                  {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay() }).map((_, i) => <div key={`empty-${i}`} className="bg-background min-h-[120px] p-2" />)}
+                  {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0).getDate() }).map((_, i) => {
+                    const day = i + 1;
+                    const dateStr = `${calendarDate.getFullYear()}-${String(calendarDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const dayApts = appointments.filter(a => a.date === dateStr);
+                    return (<div key={day} className={`bg-background min-h-[120px] p-2 border-t hover:bg-muted/5 transition-colors ${new Date().toISOString().split('T')[0] === dateStr ? 'bg-primary/5' : ''}`}><div className={`text-sm font-bold h-6 w-6 flex items-center justify-center rounded-full mb-1 ${new Date().toISOString().split('T')[0] === dateStr ? 'bg-primary text-primary-foreground' : ''}`}>{day}</div><div className="space-y-1">{dayApts.map(apt => (<div key={apt._id} className="text-[10px] p-1 rounded bg-primary/10 text-primary truncate border border-primary/20 cursor-pointer" onClick={() => handleEditAppointment(apt)}>{apt.time} - {apt.leadName}</div>))}</div></div>);
+                  })}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Profile & Settings View */}
+          {(activeTab === "profile" || activeTab === "settings") && (
+            <div className="max-w-4xl mx-auto space-y-8">
+              <div><h1 className="text-3xl font-bold tracking-tight">{activeTab === "profile" ? "Profile Settings" : "Account Settings"}</h1><p className="text-muted-foreground">Manage your personal information and platform preferences.</p></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="space-y-6">
+                  <Card className="p-6 text-center"><Avatar className="h-24 w-24 mx-auto mb-4 border-4 border-background shadow-xl ring-1 ring-primary/20"><AvatarFallback className="text-3xl bg-primary/10 text-primary font-bold">{user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}</AvatarFallback></Avatar><h3 className="font-bold text-lg">{user?.firstName} {user?.lastName}</h3><p className="text-sm text-muted-foreground mb-4">{user?.email}</p><Badge variant="secondary" className="uppercase tracking-widest text-[10px]">{user?.role || 'User'}</Badge></Card>
+                  <Card className="p-6"><h4 className="font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2 text-primary"><CreditCard className="h-4 w-4" /> Subscription</h4><div className="space-y-4"><div><p className="text-xs text-muted-foreground">Current Plan</p><p className="font-bold text-lg">{user?.subscription?.plan || "Free"}</p></div><div><p className="text-xs text-muted-foreground">Status</p><Badge variant="outline" className="mt-1 border-green-500 text-green-600 bg-green-500/10">{user?.subscription?.status || "Active"}</Badge></div><Button className="w-full mt-4" variant="outline" size="sm">Manage Billing</Button></div></Card>
+                </div>
+                <div className="md:col-span-2 space-y-6">
+                  <Tabs defaultValue={activeTab} className="w-full"><TabsList className="grid w-full grid-cols-3"><TabsTrigger value="profile">Profile</TabsTrigger><TabsTrigger value="settings">Settings</TabsTrigger><TabsTrigger value="security">Security</TabsTrigger></TabsList>
+                    <TabsContent value="profile" className="mt-6"><Card><CardHeader><CardTitle>Basic Information</CardTitle><CardDescription>Update your personal and company details.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>First Name</Label><Input value={profileForm.firstName} onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} /></div><div className="space-y-2"><Label>Last Name</Label><Input value={profileForm.lastName} onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} /></div></div><div className="space-y-2"><Label>Email Address</Label><Input value={profileForm.email} readOnly className="bg-muted" /></div><div className="space-y-2"><Label>Phone Number</Label><Input value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} /></div><div className="space-y-2"><Label>Company Name</Label><Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} /></div><Button className="mt-4">Save Changes</Button></CardContent></Card></TabsContent>
+                    <TabsContent value="settings" className="mt-6"><Card><CardHeader><CardTitle>Platform Preferences</CardTitle><CardDescription>Configure how you want the AI agents to behave.</CardDescription></CardHeader><CardContent className="space-y-6"><div className="flex items-center justify-between"><div><p className="font-medium">Do Not Disturb (DND)</p><p className="text-sm text-muted-foreground">Stop all automated calling activity.</p></div><Switch checked={dndEnabled} onCheckedChange={setDndEnabled} /></div><div className="space-y-2"><Label>Daily Call Limit</Label><Input type="number" value={callLimit} onChange={e => setCallLimit(parseInt(e.target.value))} /><p className="text-xs text-muted-foreground">Maximum calls allowed per 24-hour period.</p></div><div className="flex items-center justify-between"><div><p className="font-medium">Local Presence Dialing</p><p className="text-sm text-muted-foreground">Use local area codes for better answer rates.</p></div><Switch checked={localPresence} onCheckedChange={setLocalPresence} /></div><Button className="mt-4">Update Settings</Button></CardContent></Card></TabsContent>
+                    <TabsContent value="security" className="mt-6"><Card><CardHeader><CardTitle>Change Password</CardTitle><CardDescription>Ensure your account remains secure.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="space-y-2"><Label>Current Password</Label><Input type="password" /></div><div className="space-y-2"><Label>New Password</Label><Input type="password" /></div><div className="space-y-2"><Label>Confirm New Password</Label><Input type="password" /></div><Button className="mt-4">Update Password</Button></CardContent></Card></TabsContent>
+                  </Tabs>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
-      
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog 
-        open={deleteConfirm.type !== null} 
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteConfirm({ type: null, id: "", name: "" });
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteConfirm.type === "lead" && (
-                <>This will permanently delete the lead "<strong>{deleteConfirm.name}</strong>" and all associated data. This action cannot be undone.</>
-              )}
-              {deleteConfirm.type === "campaign" && (
-                <>This will permanently delete the campaign "<strong>{deleteConfirm.name}</strong>" and all associated data. This action cannot be undone.</>
-              )}
-              {deleteConfirm.type === "appointment" && (
-                <>This will permanently delete the appointment "<strong>{deleteConfirm.name}</strong>". This action cannot be undone.</>
-              )}
-              {deleteConfirm.type === "user" && (
-                <>This will permanently delete the user "<strong>{deleteConfirm.name}</strong>" and all their data. This action cannot be undone.</>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteConfirm({ type: null, id: "", name: "" })}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (deleteConfirm.type === "lead") handleDeleteLead(deleteConfirm.id);
-                if (deleteConfirm.type === "campaign") handleDeleteCampaign(deleteConfirm.id);
-                if (deleteConfirm.type === "appointment") handleDeleteAppointment(deleteConfirm.id);
-              }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
-      {/* Add Appointment Dialog */}
-      <Dialog open={isAddAppointmentOpen} onOpenChange={(open) => {
-        setIsAddAppointmentOpen(open);
-        if (!open) {
-          setScheduleFromLead(null);
-          setAppointmentForm({ leadId: "", leadName: "", title: "", date: "", time: "09:00", type: "Zoom", notes: "" });
-        }
-      }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Schedule Appointment</DialogTitle>
-            <DialogDescription>
-              {scheduleFromLead ? `Schedule a meeting with ${scheduleFromLead.name}` : "Create a new appointment"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Lead <span className="text-destructive">*</span></Label>
-              <Select value={appointmentForm.leadId} onValueChange={(value) => {
-                const lead = leads.find(l => l._id === value);
-                setAppointmentForm({
-                  ...appointmentForm, 
-                  leadId: value, 
-                  leadName: lead?.name || "",
-                  title: lead ? `Meeting with ${lead.name}` : appointmentForm.title
-                });
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a lead" />
-                </SelectTrigger>
-                <SelectContent>
-                  {leads.map(lead => (
-                    <SelectItem key={lead._id} value={lead._id}>{lead.name} - {lead.company || "No company"}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Title <span className="text-destructive">*</span></Label>
-              <Input placeholder="Meeting title" value={appointmentForm.title} onChange={(e) => setAppointmentForm({...appointmentForm, title: e.target.value})} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Date <span className="text-destructive">*</span></Label>
-                <Input type="date" value={appointmentForm.date} onChange={(e) => setAppointmentForm({...appointmentForm, date: e.target.value})} />
-              </div>
-              <div className="space-y-2">
-                <Label>Time <span className="text-destructive">*</span></Label>
-                <Input type="time" value={appointmentForm.time} onChange={(e) => setAppointmentForm({...appointmentForm, time: e.target.value})} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Meeting Type</Label>
-              <Select value={appointmentForm.type} onValueChange={(value) => setAppointmentForm({...appointmentForm, type: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Zoom">Zoom</SelectItem>
-                  <SelectItem value="Google Meet">Google Meet</SelectItem>
-                  <SelectItem value="Phone Call">Phone Call</SelectItem>
-                  <SelectItem value="In Person">In Person</SelectItem>
-                  <SelectItem value="Teams">Microsoft Teams</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Notes</Label>
-              <Textarea placeholder="Add any notes or agenda..." value={appointmentForm.notes} onChange={(e) => setAppointmentForm({...appointmentForm, notes: e.target.value})} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddAppointmentOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddAppointment} disabled={isSaving || !appointmentForm.leadId || !appointmentForm.title || !appointmentForm.date}>
-              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Schedule
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Appointment Dialog */}
-      <Dialog open={isEditAppointmentOpen} onOpenChange={setIsEditAppointmentOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Appointment</DialogTitle>
-            <DialogDescription>
-              Update appointment details
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Lead</Label>
-              <Input value={appointmentForm.leadName} disabled className="bg-muted" />
-            </div>
-            <div className="space-y-2">
-              <Label>Title <span className="text-destructive">*</span></Label>
-              <Input placeholder="Meeting title" value={appointmentForm.title} onChange={(e) => setAppointmentForm({...appointmentForm, title: e.target.value})} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Date <span className="text-destructive">*</span></Label>
-                <Input type="date" value={appointmentForm.date} onChange={(e) => setAppointmentForm({...appointmentForm, date: e.target.value})} />
-              </div>
-              <div className="space-y-2">
-                <Label>Time <span className="text-destructive">*</span></Label>
-                <Input type="time" value={appointmentForm.time} onChange={(e) => setAppointmentForm({...appointmentForm, time: e.target.value})} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Meeting Type</Label>
-              <Select value={appointmentForm.type} onValueChange={(value) => setAppointmentForm({...appointmentForm, type: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Zoom">Zoom</SelectItem>
-                  <SelectItem value="Google Meet">Google Meet</SelectItem>
-                  <SelectItem value="Phone Call">Phone Call</SelectItem>
-                  <SelectItem value="In Person">In Person</SelectItem>
-                  <SelectItem value="Teams">Microsoft Teams</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Notes</Label>
-              <Textarea placeholder="Add any notes or agenda..." value={appointmentForm.notes} onChange={(e) => setAppointmentForm({...appointmentForm, notes: e.target.value})} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditAppointmentOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdateAppointment} disabled={isSaving || !appointmentForm.title || !appointmentForm.date}>
-              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Log Activity Dialog */}
-      <Dialog open={isLogActivityOpen} onOpenChange={(open) => {
-        setIsLogActivityOpen(open);
-        if (!open) {
-          setActivityLog({ type: "call", note: "", outcome: "No Answer", duration: "0:00" });
-        }
-      }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Log Activity</DialogTitle>
-            <DialogDescription>
-              {selectedLead ? `Record an interaction with ${selectedLead.name}` : "Record an interaction"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Activity Type</Label>
-              <Select value={activityLog.type} onValueChange={(value: "call" | "email" | "note") => setActivityLog({...activityLog, type: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="call">Phone Call</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="note">Note</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {activityLog.type === "call" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Call Outcome</Label>
-                  <Select value={activityLog.outcome} onValueChange={(value) => setActivityLog({...activityLog, outcome: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Answered">Answered</SelectItem>
-                      <SelectItem value="No Answer">No Answer</SelectItem>
-                      <SelectItem value="Voicemail">Voicemail</SelectItem>
-                      <SelectItem value="Busy">Busy</SelectItem>
-                      <SelectItem value="Wrong Number">Wrong Number</SelectItem>
-                      <SelectItem value="Callback Requested">Callback Requested</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Duration</Label>
-                  <Input placeholder="e.g., 5:30" value={activityLog.duration} onChange={(e) => setActivityLog({...activityLog, duration: e.target.value})} />
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label>Notes <span className="text-destructive">*</span></Label>
-              <Textarea 
-                placeholder={activityLog.type === "call" ? "What was discussed during the call?" : activityLog.type === "email" ? "Summary of the email sent/received..." : "Add your notes here..."} 
-                value={activityLog.note} 
-                onChange={(e) => setActivityLog({...activityLog, note: e.target.value})}
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsLogActivityOpen(false)}>Cancel</Button>
-            <Button onClick={handleLogActivity} disabled={isSaving || !activityLog.note.trim()}>
-              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Log Activity
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Call/SMS Confirmation Dialog */}
-      <AlertDialog open={!!callConfirm} onOpenChange={() => setCallConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {callConfirm?.type === "call" ? "Initiate Call" : "Send SMS"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {callConfirm?.type === "call" 
-                ? `Are you sure you want to call ${leads.find(l => l._id === callConfirm?.leadId)?.name}?`
-                : `Are you sure you want to send an SMS to ${leads.find(l => l._id === callConfirm?.leadId)?.name}?`
-              }
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => {
-                const lead = leads.find(l => l._id === callConfirm?.leadId);
-                if (lead) {
-                  toast({
-                    title: callConfirm?.type === "call" ? "Call Initiated" : "SMS Sent",
-                    description: `${callConfirm?.type === "call" ? "Calling" : "Message sent to"} ${lead.name}`
-                  });
-                  // Log activity
-                  const newHistory = {
-                    type: callConfirm?.type === "call" ? "call" : "sms" as "call" | "email" | "note",
-                    date: new Date(),
-                    note: callConfirm?.type === "call" ? "Outbound call" : "SMS message sent",
-                    outcome: "Sent",
-                    duration: "0:00"
-                  };
-                  setLeads(leads.map(l => 
-                    l._id === lead._id 
-                      ? { ...l, history: [...(l.history || []), newHistory], lastContact: new Date() }
-                      : l
-                  ));
-                }
-                setCallConfirm(null);
-              }}
-            >
-              {callConfirm?.type === "call" ? "Call Now" : "Send SMS"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+      {/* Confirmation Dialogs */}
+      <AlertDialog open={deleteConfirm.type !== null} onOpenChange={(open) => !open && setDeleteConfirm({ type: null, id: "", name: "" })}>
+        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete the {deleteConfirm.type} "<strong>{deleteConfirm.name}</strong>". This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => { if (deleteConfirm.type === 'lead') handleDeleteLead(deleteConfirm.id); else if (deleteConfirm.type === 'campaign') campaignsApi.delete(deleteConfirm.id).then(() => setCampaigns(campaigns.filter(c => c._id !== deleteConfirm.id))); else if (deleteConfirm.type === 'appointment') handleDeleteAppointment(deleteConfirm.id); setDeleteConfirm({ type: null, id: "", name: "" }); }}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
       </AlertDialog>
     </div>
   );
