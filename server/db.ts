@@ -29,9 +29,9 @@ const userSchema = new mongoose.Schema({
   companyName: String,
   phone: String,
   subscription: {
-    plan: { type: String, enum: ["Starter", "Pro", "Enterprise"], default: "Pro" },
+    plan: { type: String, default: "Free" },
     status: { type: String, enum: ["Active", "Inactive", "Cancelled"], default: "Active" },
-    monthlyCallCredits: { type: Number, default: 2000 },
+    monthlyCallCredits: { type: Number, default: 0 },
     creditsUsed: { type: Number, default: 0 },
     renewalDate: Date,
     joinedDate: { type: Date, default: Date.now },
@@ -132,6 +132,9 @@ const planSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   duration: { type: String, enum: ["monthly", "yearly", "quarterly", "lifetime"], required: true },
   credits: { type: Number, required: true },
+  callingRate: { type: Number, default: 0 },
+  smsRate: { type: Number, default: 0 },
+  whatsappRate: { type: Number, default: 0 },
   features: [String],
   limitations: [String],
   description: String,
@@ -142,7 +145,6 @@ const planSchema = new mongoose.Schema({
 // Feature Model
 const featureSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  description: String,
 });
 
 export const UserModel = mongoose.model("User", userSchema);

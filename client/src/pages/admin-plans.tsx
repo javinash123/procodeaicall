@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Loader2, List, MoreVertical, Edit2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Loader2, List, Edit2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -57,8 +57,7 @@ export default function AdminPlans() {
   // Derived data
   const filteredPlans = useMemo(() => {
     return plans.filter(plan => {
-      const matchesSearch = plan.name.toLowerCase().includes(search.toLowerCase()) || 
-                           plan.description?.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = plan.name.toLowerCase().includes(search.toLowerCase());
       const matchesDuration = filterDuration === "all" || plan.duration === filterDuration;
       return matchesSearch && matchesDuration;
     });
@@ -113,6 +112,9 @@ export default function AdminPlans() {
       price: 0,
       duration: "monthly" as const,
       credits: 0,
+      callingRate: 0,
+      smsRate: 0,
+      whatsappRate: 0,
       features: [] as string[],
       limitations: [] as string[],
       description: "",
@@ -127,6 +129,9 @@ export default function AdminPlans() {
       price: 0,
       duration: "monthly" as const,
       credits: 0,
+      callingRate: 0,
+      smsRate: 0,
+      whatsappRate: 0,
       features: [] as string[],
       limitations: [] as string[],
       description: "",
@@ -138,7 +143,6 @@ export default function AdminPlans() {
     resolver: zodResolver(insertFeatureSchema),
     defaultValues: {
       name: "",
-      description: "",
     },
   });
 
@@ -149,6 +153,9 @@ export default function AdminPlans() {
       price: plan.price,
       duration: plan.duration as any,
       credits: plan.credits,
+      callingRate: plan.callingRate || 0,
+      smsRate: plan.smsRate || 0,
+      whatsappRate: plan.whatsappRate || 0,
       features: plan.features || [],
       limitations: plan.limitations || [],
       description: plan.description || "",
@@ -193,18 +200,6 @@ export default function AdminPlans() {
                         <FormItem>
                           <FormControl>
                             <Input placeholder="Feature Name (e.g., Bulk SMS)" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={featureForm.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Textarea placeholder="Feature Description (supports HTML)" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -310,6 +305,47 @@ export default function AdminPlans() {
                       </FormItem>
                     )}
                   />
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="callingRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Calling Rate (₹/min)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="smsRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>SMS Rate (₹/msg)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="whatsappRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>WhatsApp Rate (₹/msg)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={form.control}
                     name="description"
@@ -431,6 +467,47 @@ export default function AdminPlans() {
                       </FormItem>
                     )}
                   />
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="callingRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Calling Rate (₹/min)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="smsRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>SMS Rate (₹/msg)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="whatsappRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>WhatsApp Rate (₹/msg)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={editForm.control}
                     name="description"
@@ -516,7 +593,7 @@ export default function AdminPlans() {
                 <TableHead>Price</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Credits</TableHead>
-                <TableHead>Features</TableHead>
+                <TableHead>Rates (Call/SMS/WA)</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -529,12 +606,10 @@ export default function AdminPlans() {
                     <TableCell className="capitalize">{plan.duration}</TableCell>
                     <TableCell>{plan.credits.toLocaleString()}</TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {(plan.features || []).map((f, i) => (
-                          <Badge key={i} variant="outline" className="text-[10px] px-1 py-0 h-4">
-                            {f}
-                          </Badge>
-                        ))}
+                      <div className="text-xs space-y-0.5">
+                        <div>Call: ₹{plan.callingRate}/min</div>
+                        <div>SMS: ₹{plan.smsRate}/msg</div>
+                        <div>WA: ₹{plan.whatsappRate}/msg</div>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -549,15 +624,16 @@ export default function AdminPlans() {
                         <Button 
                           variant="ghost" 
                           size="icon"
+                          className="text-destructive"
                           onClick={async () => {
-                            if (confirm(`Are you sure you want to delete the ${plan.name} plan?`)) {
+                            if (confirm("Are you sure you want to delete this plan?")) {
                               await apiRequest("DELETE", `/api/plans/${plan._id}`);
                               queryClient.invalidateQueries({ queryKey: ["/api/plans"] });
-                              toast({ title: "Deleted", description: "Plan has been removed" });
+                              toast({ title: "Deleted", description: "Plan deleted successfully" });
                             }
                           }}
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -565,7 +641,7 @@ export default function AdminPlans() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No plans found.
                   </TableCell>
                 </TableRow>
@@ -576,27 +652,25 @@ export default function AdminPlans() {
       </Card>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex items-center justify-center gap-4">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
           >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Previous
+            <ChevronLeft className="h-4 w-4 mr-1" /> Previous
           </Button>
-          <div className="text-sm font-medium">
+          <span className="text-sm text-muted-foreground">
             Page {page} of {totalPages}
-          </div>
+          </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
           >
-            Next
-            <ChevronRight className="h-4 w-4 ml-2" />
+            Next <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
       )}

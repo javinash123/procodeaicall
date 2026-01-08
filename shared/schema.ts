@@ -16,6 +16,9 @@ export const insertPlanSchema = z.object({
   price: z.number().min(0),
   duration: z.enum(["monthly", "yearly", "quarterly", "lifetime"]),
   credits: z.number().min(0),
+  callingRate: z.number().min(0).default(0),
+  smsRate: z.number().min(0).default(0),
+  whatsappRate: z.number().min(0).default(0),
   features: z.array(z.string()),
   limitations: z.array(z.string()),
   description: z.string().optional(),
@@ -31,7 +34,6 @@ export type Plan = InsertPlan & {
 // Feature Schema (for dynamic management)
 export const insertFeatureSchema = z.object({
   name: z.string().min(1),
-  description: z.string().optional(),
 });
 
 export type InsertFeature = z.infer<typeof insertFeatureSchema>;
@@ -202,4 +204,3 @@ export type Note = InsertNote & {
   createdAt: Date;
   updatedAt: Date;
 };
-

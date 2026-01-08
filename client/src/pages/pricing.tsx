@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { type Plan, type Feature } from "@shared/schema";
-import { Check, X, Loader2 } from "lucide-react";
+import { Check, X, Loader2, Phone, MessageSquare, MessageCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { 
@@ -67,7 +67,7 @@ export default function Pricing() {
                           <div className="text-sm text-muted-foreground capitalize">{plan.duration}</div>
                           <Button 
                             size="sm" 
-                            className="w-full mt-4" 
+                            className="w-full mt-4 hover-elevate active-elevate-2" 
                             variant={plan.name.toLowerCase().includes('growth') ? 'default' : 'outline'}
                             onClick={() => handleGetStarted(plan._id)}
                           >
@@ -87,16 +87,34 @@ export default function Pricing() {
                       </TableCell>
                     ))}
                   </TableRow>
+                  
+                  {/* Rates Row */}
+                  <TableRow className="bg-muted/30">
+                    <TableCell className="font-semibold py-4">Consumption Rates</TableCell>
+                    {plans.map((plan) => (
+                      <TableCell key={plan._id} className="py-4">
+                        <div className="flex flex-col gap-1 items-center text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <Phone className="h-3 w-3 text-primary" />
+                            <span>₹{plan.callingRate}/min</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <MessageSquare className="h-3 w-3 text-primary" />
+                            <span>₹{plan.smsRate}/msg</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <MessageCircle className="h-3 w-3 text-primary" />
+                            <span>₹{plan.whatsappRate}/msg</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+
                   {features.map((feature) => (
                     <TableRow key={feature._id} className="hover:bg-muted/30 border-b">
                       <TableCell className="py-4">
                         <div className="font-medium">{feature.name}</div>
-                        {feature.description && (
-                          <div 
-                            className="text-xs text-muted-foreground mt-1"
-                            dangerouslySetInnerHTML={{ __html: feature.description }}
-                          />
-                        )}
                       </TableCell>
                       {plans.map((plan) => {
                         const hasFeature = plan.features?.includes(feature.name);

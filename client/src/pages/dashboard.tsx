@@ -103,6 +103,9 @@ export default function Dashboard() {
     price: 0,
     duration: "monthly",
     credits: 0,
+    callingRate: 0,
+    smsRate: 0,
+    whatsappRate: 0,
     features: [""],
     limitations: [""],
     isActive: true
@@ -272,11 +275,11 @@ export default function Dashboard() {
 
   // Stats derived from data
   const stats = [
-    { label: "Total Leads", value: leads.length.toString(), change: "+12.5%", icon: PhoneCall, tab: "crm" },
+    { label: "Leads", value: leads.length.toString(), change: "+12.5%", icon: PhoneCall, tab: "crm" },
+    { label: "Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: "+4.2%", icon: CheckCircle2, tab: "campaigns" },
     { label: "Subscription Plans", value: plans.length.toString(), icon: CreditCard, tab: "plans", href: "/admin/plans" },
-    { label: "Active Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: "+4.2%", icon: CheckCircle2, tab: "campaigns" },
     { label: "Appointments", value: appointments.length.toString(), change: "-1.1%", icon: Clock, tab: "calendar" },
-    { label: "Credit Balance", value: `$${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, icon: Wallet, tab: "settings" },
+    { label: "Credit Balance", value: `₹${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, icon: Wallet, tab: "settings" },
   ];
 
   // Fetch data on mount
@@ -952,9 +955,9 @@ export default function Dashboard() {
             </>
           ) : (
             <>
-              <SidebarItem icon={Users} label="CRM / Leads" id="crm" />
-              <SidebarItem icon={History} label="Call History" id="callhistory" />
+              <SidebarItem icon={Users} label="Leads" id="crm" />
               <SidebarItem icon={Phone} label="Campaigns" id="campaigns" />
+              <SidebarItem icon={History} label="Call History" id="callhistory" />
               <SidebarItem icon={MessageSquare} label="Bulk SMS" id="sms" />
               <SidebarItem icon={MessageCircle} label="Bulk WhatsApp" id="whatsapp" />
               <SidebarItem icon={Calendar} label="Calendar" id="calendar" />
