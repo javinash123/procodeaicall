@@ -48,7 +48,8 @@ import {
   Wallet,
   MessageCircle,
   Eye,
-  Send
+  Send,
+  Smartphone
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, notesApi, plansApi, type UploadedFile } from "@/lib/api";
@@ -273,6 +274,7 @@ export default function Dashboard() {
   ] : [
     { label: "Leads", value: leads.length.toString(), change: "+12.5%", icon: PhoneCall, tab: "crm" },
     { label: "Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: "+4.2%", icon: CheckCircle2, tab: "campaigns" },
+    { label: "Bulk SMS", value: "0", change: "0%", icon: Smartphone, tab: "bulk-sms" },
     { label: "Appointments", value: appointments.length.toString(), change: "-1.1%", icon: Clock, tab: "calendar" },
     { label: "Credit Balance", value: `₹${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, change: "0%", icon: Wallet, tab: "settings" },
   ];
@@ -689,6 +691,14 @@ export default function Dashboard() {
                   Bulk WhatsApp
                 </Button>
                 <Button 
+                  variant={activeTab === "bulk-sms" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("bulk-sms")}
+                >
+                  <Smartphone className="mr-3 h-5 w-5" />
+                  Bulk SMS
+                </Button>
+                <Button 
                   variant={activeTab === "callhistory" ? "secondary" : "ghost"} 
                   className="w-full justify-start hover-elevate h-11"
                   onClick={() => setActiveTab("callhistory")}
@@ -721,14 +731,6 @@ export default function Dashboard() {
               <DropdownMenuItem onClick={() => setActiveTab("profile")}>
                 <User className="mr-2 h-4 w-4" /> Profile
               </DropdownMenuItem>
-              {!isAdmin && (
-                <DropdownMenuItem onClick={() => setActiveTab("settings")}>
-                  <CreditCard className="mr-2 h-4 w-4" /> Billing
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => setActiveTab("settings")}>
-                <Settings className="mr-2 h-4 w-4" /> Settings
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" /> Log out
@@ -756,9 +758,323 @@ export default function Dashboard() {
         </header>
 
         <div className="flex-1 p-6 overflow-auto">
-          {activeTab === "whatsapp" && <BulkWhatsapp />}
-          {activeTab === "plans" && <AdminPlans />}
-          {activeTab === "overview" && (
+          {activeTab === "profile" && (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-8">
+                  <TabsTrigger value="details">Profile Details</TabsTrigger>
+                  <TabsTrigger value="billing">Manage Billing</TabsTrigger>
+                  <TabsTrigger value="usage">Usage & Consumption</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="details" className="space-y-6">
+                  <Card className="border-border/50">
+                    <CardHeader>
+                      <CardTitle>Company Logo</CardTitle>
+                      <CardDescription>Upload your company logo for reports and branding</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex items-center gap-6">
+                      <Avatar className="h-24 w-24 border-2 border-muted">
+                        <AvatarImage src={user?.logoUrl} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+                          {user?.companyName?.charAt(0) || user?.firstName?.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" onClick={() => document.getElementById('logo-upload')?.click()}>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload Logo
+                          </Button>
+                          <input
+                            id="logo-upload"
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file && user) {
+                                try {
+                                  setIsSaving(true);
+                                  await usersApi.uploadLogo(user._id, file);
+                                  toast({ title: "Logo updated successfully" });
+                                  refetchUser();
+                                } catch (error: any) {
+                                  toast({ variant: "destructive", title: "Upload failed", description: error.message });
+                                } finally {
+                                  setIsSaving(false);
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">Recommended: Square image, max 2MB (PNG, JPG)</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-border/50">
+                    <CardHeader>
+                      <CardTitle>Personal Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>First Name</Label>
+                        <Input value={profileForm.firstName} onChange={(e) => setProfileForm({...profileForm, firstName: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Last Name</Label>
+                        <Input value={profileForm.lastName} onChange={(e) => setProfileForm({...profileForm, lastName: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input value={profileForm.email} disabled />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Phone</Label>
+                        <Input value={profileForm.phone} onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})} />
+                      </div>
+                      <div className="col-span-full space-y-2">
+                        <Label>Company Name</Label>
+                        <Input value={profileForm.companyName} onChange={(e) => setProfileForm({...profileForm, companyName: e.target.value})} />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="justify-end border-t p-4">
+                      <Button onClick={async () => {
+                        if (!user) return;
+                        setIsSaving(true);
+                        try {
+                          await usersApi.update(user._id, profileForm);
+                          toast({ title: "Profile updated successfully" });
+                          refetchUser();
+                        } catch (error: any) {
+                          toast({ variant: "destructive", title: "Update failed", description: error.message });
+                        } finally {
+                          setIsSaving(false);
+                        }
+                      }}>Save Profile</Button>
+                    </CardFooter>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="billing" className="space-y-6">
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <Card className="md:col-span-2 border-border/50">
+                      <CardHeader>
+                        <CardTitle>Current Subscription</CardTitle>
+                        <CardDescription>Manage your plan and billing cycles</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Active Plan</p>
+                            <h3 className="text-2xl font-bold text-primary">{user?.subscription?.plan || "Starter"}</h3>
+                          </div>
+                          <Badge variant="outline" className="border-green-500 text-green-600 bg-green-500/10">Active</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Renewal Date</p>
+                            <p className="text-sm font-semibold flex items-center gap-2">
+                              <CalendarIcon className="h-3 w-3" />
+                              {user?.subscription?.renewalDate ? new Date(user?.subscription?.renewalDate).toLocaleDateString() : "Next Month"}
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Joined Date</p>
+                            <p className="text-sm font-semibold">
+                              {user?.subscription?.joinedDate ? new Date(user?.subscription?.joinedDate).toLocaleDateString() : "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="border-t p-4 flex gap-3">
+                        <Button className="flex-1" onClick={() => setLocation("/pricing")}>Upgrade Plan</Button>
+                        <Button variant="outline" className="flex-1" onClick={() => setLocation("/pricing")}>Renew Plan</Button>
+                      </CardFooter>
+                    </Card>
+
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardHeader>
+                        <CardTitle className="text-sm">Quick Status</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <div className="flex justify-between text-xs mb-1.5">
+                            <span>Credits Used</span>
+                            <span>{user?.subscription?.creditsUsed || 0} / {user?.subscription?.monthlyCallCredits || 100}</span>
+                          </div>
+                          <Progress value={((user?.subscription?.creditsUsed || 0) / (user?.subscription?.monthlyCallCredits || 100)) * 100} className="h-1.5" />
+                        </div>
+                        <div className="pt-2 border-t border-primary/10">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-1">Available Credits</p>
+                          <p className="text-xl font-bold">₹{((user?.subscription?.monthlyCallCredits || 0) - (user?.subscription?.creditsUsed || 0)).toLocaleString()}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="usage" className="space-y-6">
+                  <Card className="border-border/50">
+                    <CardHeader>
+                      <CardTitle>Consumption Details</CardTitle>
+                      <CardDescription>Complete usage details and history</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="p-4 rounded-xl border bg-card shadow-sm">
+                            <p className="text-xs text-muted-foreground mb-1">Calls Made</p>
+                            <p className="text-2xl font-bold">{campaigns.reduce((acc, c) => acc + (c.callsMade || 0), 0)}</p>
+                          </div>
+                          <div className="p-4 rounded-xl border bg-card shadow-sm">
+                            <p className="text-xs text-muted-foreground mb-1">WhatsApp Sent</p>
+                            <p className="text-2xl font-bold">{leads.length}</p>
+                          </div>
+                          <div className="p-4 rounded-xl border bg-card shadow-sm">
+                            <p className="text-xs text-muted-foreground mb-1">SMS Used</p>
+                            <p className="text-2xl font-bold">0</p>
+                          </div>
+                          <div className="p-4 rounded-xl border bg-card shadow-sm">
+                            <p className="text-xs text-muted-foreground mb-1">Credit Usage</p>
+                            <p className="text-2xl font-bold text-primary">₹{(user?.subscription?.creditsUsed || 0).toLocaleString()}</p>
+                          </div>
+                        </div>
+
+                        <div className="rounded-lg border overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="bg-muted/50">
+                                <TableHead>Service</TableHead>
+                                <TableHead>Usage Type</TableHead>
+                                <TableHead className="text-right">Amount</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              <TableRow>
+                                <TableCell className="font-medium">AI Voice Calling</TableCell>
+                                <TableCell>Per Minute</TableCell>
+                                <TableCell className="text-right">₹{(campaigns.reduce((acc, c) => acc + (c.callsMade || 0), 0) * (userPlan?.callingRate || 2)).toLocaleString()}</TableCell>
+                              </TableRow>
+                              <TableRow>
+                                <TableCell className="font-medium">Bulk WhatsApp</TableCell>
+                                <TableCell>Per Message</TableCell>
+                                <TableCell className="text-right">₹{(leads.length * (userPlan?.whatsappRate || 0.5)).toLocaleString()}</TableCell>
+                              </TableRow>
+                              <TableRow>
+                                <TableCell className="font-medium">Bulk SMS</TableCell>
+                                <TableCell>Per SMS</TableCell>
+                                <TableCell className="text-right">₹0</TableCell>
+                              </TableRow>
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+
+          {activeTab === "bulk-sms" && (
+            <div className="p-6 space-y-6">
+              <div className="flex flex-col gap-2">
+                <h1 className="text-3xl font-bold flex items-center gap-2">
+                  <Smartphone className="h-8 w-8 text-primary" />
+                  Bulk SMS
+                </h1>
+                <p className="text-muted-foreground">Manage your bulk SMS campaigns and delivery reports.</p>
+              </div>
+              <Card className="border-border/50">
+                <CardHeader>
+                  <CardTitle>SMS Logs</CardTitle>
+                  <CardDescription>No active SMS campaigns found.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[400px] flex items-center justify-center text-muted-foreground">
+                  Bulk SMS service is ready. Start by importing your contacts.
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === "callhistory" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold tracking-tight">Call History</h1>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
+                <div className="relative min-w-[300px]">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search name or phone..." 
+                    className="pl-9 h-9" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Select value={logsCampaignFilter} onValueChange={setLogsCampaignFilter}>
+                  <SelectTrigger className="w-[200px] h-9">
+                    <SelectValue placeholder="All Campaigns" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Campaigns</SelectItem>
+                    {campaigns.map(c => (
+                      <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Card className="border-border/50">
+                <CardHeader>
+                  <CardTitle>History Logs</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Lead Name</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Campaign</TableHead>
+                        <TableHead>Outcome</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead className="text-right">Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leads.flatMap(l => (l.history || []).map(h => ({ ...h, leadName: l.name, leadPhone: l.phone })))
+                        .filter(h => h.type === "call")
+                        .filter(h => {
+                          const matchesSearch = h.leadName.toLowerCase().includes(searchTerm.toLowerCase()) || h.leadPhone.includes(searchTerm);
+                          const matchesCampaign = logsCampaignFilter === "all" || h.campaignId === logsCampaignFilter;
+                          return matchesSearch && matchesCampaign;
+                        })
+                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        .map((log, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium">{log.leadName}</TableCell>
+                          <TableCell>{log.leadPhone}</TableCell>
+                          <TableCell>{log.campaignName || "General"}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={log.outcome === 'Connected' ? 'border-green-500 text-green-600' : ''}>
+                              {log.outcome || "Pending"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{log.duration || "-"}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {new Date(log.date).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
