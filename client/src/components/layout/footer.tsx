@@ -21,6 +21,7 @@ export function Footer() {
           <div>
             <h3 className="font-bold mb-4">Product</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><Link href="/how-it-works" className="hover:text-primary transition-colors">How It Works</Link></li>
               <li><Link href="/features" className="hover:text-primary transition-colors">Voice Agent</Link></li>
               <li><Link href="/features" className="hover:text-primary transition-colors">Bulk SMS</Link></li>
               <li><Link href="/features" className="hover:text-primary transition-colors">CRM Integration</Link></li>

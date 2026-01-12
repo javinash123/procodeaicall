@@ -615,14 +615,11 @@ export default function Dashboard() {
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar */}
       <aside className="w-64 border-r bg-card flex flex-col shrink-0">
-        <div className="p-6 border-b flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-            <BrainCircuit className="h-6 w-6 text-white" />
+        <div className="p-6 border-b flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Phone className="h-4 w-4" />
           </div>
-          <div>
-            <h2 className="font-bold text-xl tracking-tight">NIJVOX</h2>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">AI Platform</p>
-          </div>
+          <h2 className="font-bold text-xl tracking-tighter">NIJVOX</h2>
         </div>
         
         <ScrollArea className="flex-1 px-4 py-6">
@@ -724,9 +721,11 @@ export default function Dashboard() {
               <DropdownMenuItem onClick={() => setActiveTab("profile")}>
                 <User className="mr-2 h-4 w-4" /> Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setActiveTab("settings")}>
-                <CreditCard className="mr-2 h-4 w-4" /> Billing
-              </DropdownMenuItem>
+              {!isAdmin && (
+                <DropdownMenuItem onClick={() => setActiveTab("settings")}>
+                  <CreditCard className="mr-2 h-4 w-4" /> Billing
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => setActiveTab("settings")}>
                 <Settings className="mr-2 h-4 w-4" /> Settings
               </DropdownMenuItem>
@@ -1176,12 +1175,70 @@ export default function Dashboard() {
                 <Button><Plus className="mr-2 h-4 w-4" /> Add User</Button>
               </div>
               <Card>
-                <CardHeader><CardTitle>Platform Users</CardTitle><CardDescription>Total {registeredUsers.length} registered users.</CardDescription></CardHeader>
+                <CardHeader>
+                  <div className="flex flex-col space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Platform Users</CardTitle>
+                        <CardDescription>Total {registeredUsers.length} registered users.</CardDescription>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="relative flex-1 min-w-[200px]">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="Search name, email, company..." 
+                          className="pl-9 h-9" 
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                      
+                      <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+                        <SelectTrigger className="w-[180px] h-9">
+                          <SelectValue placeholder="All Plans" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Plans</SelectItem>
+                          <SelectItem value="Basic">Basic</SelectItem>
+                          <SelectItem value="Advanced">Advanced</SelectItem>
+                          <SelectItem value="Enterprise">Enterprise</SelectItem>
+                          <SelectItem value="Free">Free</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={logsCampaignFilter} onValueChange={setLogsCampaignFilter}>
+                        <SelectTrigger className="w-[150px] h-9">
+                          <SelectValue placeholder="All Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader><TableRow><TableHead>User</TableHead><TableHead>Company</TableHead><TableHead>Plan</TableHead><TableHead>Status</TableHead><TableHead>Joined</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                     <TableBody>
-                      {registeredUsers.map((u) => (
+                      {registeredUsers
+                        .filter(u => {
+                          const searchLower = searchTerm.toLowerCase();
+                          const matchesSearch = !searchTerm || 
+                            `${u.firstName} ${u.lastName}`.toLowerCase().includes(searchLower) ||
+                            u.email.toLowerCase().includes(searchLower) ||
+                            (u.companyName || "").toLowerCase().includes(searchLower);
+                          
+                          const matchesPlan = campaignFilter === "all" || u.subscription?.plan === campaignFilter;
+                          const matchesStatus = (logsCampaignFilter === "all") || (u.subscription?.status === logsCampaignFilter);
+                          
+                          return !!(matchesSearch && matchesPlan && matchesStatus);
+                        })
+                        .map((u) => (
                         <TableRow key={u._id}>
                           <TableCell><div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarFallback>{u.firstName?.charAt(0)}{u.lastName?.charAt(0)}</AvatarFallback></Avatar><div><div className="font-medium">{u.firstName} {u.lastName}</div><div className="text-xs text-muted-foreground">{u.email}</div></div></div></TableCell>
                           <TableCell>{u.companyName || "-"}</TableCell>

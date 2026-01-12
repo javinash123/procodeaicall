@@ -15,6 +15,7 @@ import Features from "@/pages/features";
 import Pricing from "@/pages/pricing";
 import About from "@/pages/about";
 import Contact from "@/pages/contact";
+import HowItWorks from "@/pages/how-it-works";
 import AdminLogin from "@/pages/admin-login";
 import AdminPlans from "@/pages/admin-plans";
 import Notifications from "@/pages/notifications";
@@ -83,6 +84,16 @@ function Router() {
             <Navbar />
             <main className="flex-grow">
               <Contact />
+            </main>
+            <Footer />
+          </div>
+        </Route>
+
+        <Route path="/how-it-works">
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-grow">
+              <HowItWorks />
             </main>
             <Footer />
           </div>

@@ -31,6 +31,7 @@ export function Navbar() {
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
           <NavLink href="/">Home</NavLink>
+          <NavLink href="/how-it-works">How It Works</NavLink>
           <NavLink href="/features">Features</NavLink>
           <NavLink href="/pricing">Pricing</NavLink>
           <NavLink href="/about">About</NavLink>
@@ -75,6 +76,7 @@ export function Navbar() {
             <SheetContent>
               <div className="flex flex-col gap-4 mt-8">
                 <Link href="/" className="text-lg font-medium">Home</Link>
+                <Link href="/how-it-works" className="text-lg font-medium">How It Works</Link>
                 <Link href="/features" className="text-lg font-medium">Features</Link>
                 <Link href="/pricing" className="text-lg font-medium">Pricing</Link>
                 <Link href="/about" className="text-lg font-medium">About</Link>

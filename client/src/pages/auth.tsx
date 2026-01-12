@@ -94,7 +94,7 @@ export default function Auth() {
               <Phone className="h-6 w-6" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome to NIJVOX</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tighter">NIJVOX</CardTitle>
           <CardDescription>
             Sign in to your account or create a new one to get started.
           </CardDescription>

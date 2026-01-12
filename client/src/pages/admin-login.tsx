@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldAlert, ArrowLeft, Loader2 } from "lucide-react";
+import { Phone, ArrowLeft, Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useState } from "react";
@@ -58,11 +58,11 @@ export default function AdminLogin() {
       <Card className="w-full max-w-md border-primary/20 shadow-2xl shadow-primary/5 relative z-10 bg-card/80 backdrop-blur">
         <CardHeader className="text-center space-y-2">
           <div className="flex justify-center mb-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20">
-              <ShieldAlert className="h-8 w-8" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+              <Phone className="h-6 w-6" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">Admin Access</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tighter">NIJVOX ADMIN</CardTitle>
           <CardDescription>
             Restricted area. Authorized personnel only.
           </CardDescription>

@@ -129,6 +129,100 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Industry Solutions Section */}
+      <section className="py-24 bg-background relative overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-10">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500 rounded-full blur-[120px]" />
+        </div>
+        
+        <div className="container relative z-10 mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Fields Where <span className="text-primary">NIJVOX</span> <br/>
+              is a Game Changer
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              From AI Calling to Automated WhatsApp and Bulk SMS, 
+              NIJVOX revolutionizes communication across industries.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                title: "E-Commerce",
+                desc: "Use NIJVOX for product promotions, abandoned cart recovery, and customer feedback.",
+                icon: "🛍️",
+                color: "bg-purple-500/10 text-purple-500"
+              },
+              {
+                title: "Financial Services",
+                desc: "Automate loan processing, KYC verification, and customer reminders with compliant AI.",
+                icon: "💰",
+                color: "bg-emerald-500/10 text-emerald-500"
+              },
+              {
+                title: "Education & EdTech",
+                desc: "Engage students with admission follow-ups, course reminders, and exam notifications.",
+                icon: "🎓",
+                color: "bg-orange-500/10 text-orange-500"
+              },
+              {
+                title: "Health & Medical",
+                desc: "Automate appointment reminders, health check-up follow-ups, and patient feedback.",
+                icon: "🏥",
+                color: "bg-red-500/10 text-red-500"
+              },
+              {
+                title: "Real Estate & Automotive",
+                desc: "Qualify leads instantly, schedule property or car viewings, and follow up on inquiries.",
+                icon: "🏠",
+                color: "bg-blue-500/10 text-blue-500"
+              },
+              {
+                title: "Travel & Hospitality",
+                desc: "Send booking confirmations, travel reminders, and gather customer feedback post-trip.",
+                icon: "✈️",
+                color: "bg-pink-500/10 text-pink-500"
+              },
+              {
+                title: "Lead Generation Agencies",
+                desc: "Automate prospect outreach, score leads, and nurture them effectively with AI.",
+                icon: "🎯",
+                color: "bg-indigo-500/10 text-indigo-500"
+              },
+              {
+                title: "Consumer Services",
+                desc: "Engage customers for maintenance reminders, service feedback and support automation.",
+                icon: "🛠️",
+                color: "bg-amber-500/10 text-amber-500"
+              },
+              {
+                title: "SaaS & Technology",
+                desc: "Automate demo scheduling, trial onboarding, and feature announcement calls.",
+                icon: "💻",
+                color: "bg-cyan-500/10 text-cyan-500"
+              }
+            ].map((industry, i) => (
+              <Card key={i} className="group hover-elevate border-primary/10 bg-card/50 backdrop-blur-sm overflow-hidden">
+                <CardHeader className="flex flex-row items-center gap-4">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-inner ${industry.color}`}>
+                    {industry.icon}
+                  </div>
+                  <CardTitle className="text-xl group-hover:text-primary transition-colors">{industry.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {industry.desc}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section className="py-24 bg-muted/20" id="pricing">
         <div className="container mx-auto px-4">
