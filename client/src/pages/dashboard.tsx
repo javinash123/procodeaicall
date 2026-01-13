@@ -1048,7 +1048,7 @@ export default function Dashboard() {
                       {leads.flatMap(l => (l.history || []).map(h => ({ ...h, leadName: l.name, leadPhone: l.phone })))
                         .filter(h => h.type === "call")
                         .filter(h => {
-                          const matchesSearch = h.leadName.toLowerCase().includes(searchTerm.toLowerCase()) || h.leadPhone.includes(searchTerm);
+                          const matchesSearch = h.leadName.toLowerCase().includes(searchTerm.toLowerCase()) || (h.leadPhone && h.leadPhone.includes(searchTerm));
                           const matchesCampaign = logsCampaignFilter === "all" || h.campaignId === logsCampaignFilter;
                           return matchesSearch && matchesCampaign;
                         })
@@ -1075,6 +1075,8 @@ export default function Dashboard() {
               </Card>
             </div>
           )}
+
+          {activeTab === "overview" && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
