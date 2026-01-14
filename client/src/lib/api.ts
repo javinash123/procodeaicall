@@ -155,6 +155,22 @@ export const leadsApi = {
     const result = await handleResponse<{ lead: Lead }>(response);
     return result.lead;
   },
+
+  initiateCall: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/leads/${id}/call`, {
+      method: "POST",
+      credentials: "include",
+    });
+    await handleResponse(response);
+  },
+
+  sendSms: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/leads/${id}/sms`, {
+      method: "POST",
+      credentials: "include",
+    });
+    await handleResponse(response);
+  },
 };
 
 // Campaigns API

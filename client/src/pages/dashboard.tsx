@@ -585,7 +585,12 @@ export default function Dashboard() {
   };
 
   const handleAddAppointment = async () => {
-    if (!user || !appointmentForm.title || !appointmentForm.date || !appointmentForm.leadId) {
+    if (!user || !appointmentForm.title.trim() || !appointmentForm.date.trim() || !appointmentForm.leadId.trim()) {
+      console.log("Validation failed:", { 
+        title: appointmentForm.title, 
+        date: appointmentForm.date, 
+        leadId: appointmentForm.leadId 
+      });
       toast({ variant: "destructive", title: "Please fill in all required fields" });
       return;
     }
@@ -1078,7 +1083,7 @@ export default function Dashboard() {
                                         <div className="space-y-2"><Label htmlFor="edit-note-title">Title</Label><Input id="edit-note-title" placeholder="Note title" value={noteForm.title} onChange={(e) => setNoteForm({...noteForm, title: e.target.value})} /></div>
                                         <div className="space-y-2"><Label htmlFor="edit-note-content">Content</Label><Textarea id="edit-note-content" placeholder="Note content" className="min-h-32" value={noteForm.content} onChange={(e) => setNoteForm({...noteForm, content: e.target.value})} /></div>
                                       </div>
-                                      <DialogFooter><Button variant="outline" onClick={() => { setIsEditNoteOpen(false); setSelectedNote(null); setNoteForm({title: "", content: ""}); }}>Cancel</Button><Button onClick={async () => { if (selectedNote && noteForm.title.trim() && noteForm.content.trim()) { const updated = await notesApi.update(selectedNote._id, noteForm); setNotes(notes.map(n => n._id === selectedNote._id ? updated : n)); setNoteForm({title: "", content: ""}); setIsEditNoteOpen(false); setSelectedNote(null); toast({title: "Success", description: "Note updated successfully"}); } }}>Update Note</Button></DialogFooter>
+                                    <DialogFooter><Button variant="outline" onClick={() => { setIsEditNoteOpen(false); setSelectedNote(null); setNoteForm({title: "", content: ""}); }}>Cancel</Button><Button onClick={async () => { if (selectedNote && noteForm.title.trim() && noteForm.content.trim()) { const updated = await notesApi.update(selectedNote._id, noteForm); setNotes(notes.map(n => n._id === (selectedNote as any)._id ? updated : n)); setNoteForm({title: "", content: ""}); setIsEditNoteOpen(false); setSelectedNote(null); toast({title: "Success", description: "Note updated successfully"}); } }}>Update Note</Button></DialogFooter>
                                     </DialogContent>
                                   </Dialog>
                                   <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={async () => { if (confirm("Delete this note?")) { await notesApi.delete(note._id); setNotes(notes.filter(n => n._id !== note._id)); toast({title: "Success", description: "Note deleted"}); } }} data-testid={`button-delete-note-${note._id}`}><Trash2 className="h-4 w-4" /></Button>
@@ -1100,6 +1105,47 @@ export default function Dashboard() {
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Call History</h1>
               </div>
+
+              <div className="flex flex-wrap items-center gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
+                <div className="relative min-w-[240px]">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search name or phone..." 
+                    className="pl-9 h-9" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+                  <SelectTrigger className="w-[200px] h-9">
+                    <SelectValue placeholder="All Campaigns" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Campaigns</SelectItem>
+                    {campaigns.map(c => (
+                      <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <div className="flex items-center gap-2 h-9">
+                  <Input 
+                    type="date" 
+                    className="h-9 w-[150px]"
+                    value={dateRange.start} 
+                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                  />
+                  <span className="text-muted-foreground">→</span>
+                  <Input 
+                    type="date" 
+                    className="h-9 w-[150px]"
+                    value={dateRange.end} 
+                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                  />
+                </div>
+              </div>
+
               <Card className="hover-elevate">
                 <CardHeader>
                   <CardTitle>Call Records</CardTitle>
@@ -1120,9 +1166,22 @@ export default function Dashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {leads.flatMap(lead => 
-                        (lead.history || [])
-                          .filter(h => h.type === 'call')
+                      {leads.flatMap(lead => {
+                        const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.phone.includes(searchTerm);
+                        const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
+                        
+                        return (lead.history || [])
+                          .filter(h => {
+                            if (h.type !== 'call') return false;
+                            if (!matchesSearch || !matchesCampaign) return false;
+                            
+                            if (dateRange.start || dateRange.end) {
+                              const contactDate = new Date(h.date);
+                              if (dateRange.start && contactDate < new Date(dateRange.start)) return false;
+                              if (dateRange.end && contactDate > new Date(dateRange.end)) return false;
+                            }
+                            return true;
+                          })
                           .map((history, idx) => (
                             <TableRow key={`${lead._id}-${idx}`}>
                               <TableCell className="font-medium">{lead.name}</TableCell>
@@ -1134,8 +1193,8 @@ export default function Dashboard() {
                               <TableCell className="text-right"><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}><Phone className="h-4 w-4" /></Button></TableCell>
                               <TableCell className="text-right"><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}><MessageSquare className="h-4 w-4" /></Button></TableCell>
                             </TableRow>
-                          ))
-                      )}
+                          ));
+                      })}
                       {leads.flatMap(lead => (lead.history || []).filter(h => h.type === 'call')).length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No call history yet.</TableCell></TableRow>}
                     </TableBody>
                   </Table>
@@ -1189,7 +1248,7 @@ export default function Dashboard() {
                           <TableCell className="font-medium">{lead.name}</TableCell><TableCell>{lead.company || "-"}</TableCell><TableCell>{lead.campaignName ? <Badge variant="secondary">{lead.campaignName}</Badge> : <span className="text-muted-foreground">-</span>}</TableCell><TableCell><Badge variant="outline">{lead.status}</Badge></TableCell><TableCell className="text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
                           <TableCell className="text-right"><Button size="sm" variant="ghost" data-testid={`button-call-${lead._id}`} onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}><Phone className="h-4 w-4" /></Button></TableCell>
                           <TableCell className="text-right"><Button size="sm" variant="ghost" data-testid={`button-sms-${lead._id}`} onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}><MessageSquare className="h-4 w-4" /></Button></TableCell>
-                          <TableCell className="text-right"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" data-testid={`button-actions-${lead._id}`}><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>View Details</DropdownMenuItem><DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditLead(lead); }}>Edit Lead</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onClick={(e) => { e.stopPropagation(); confirmDeleteLead(lead); }} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
+                          <TableCell className="text-right"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" data-testid={`button-actions-${lead._id}`} onClick={(e) => e.stopPropagation()}><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>View Details</DropdownMenuItem><DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditLead(lead); }}>Edit Lead</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onClick={(e) => { e.stopPropagation(); confirmDeleteLead(lead); }} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
                         </TableRow>
                       ))}
                       {leads.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No leads yet. Add your first lead to get started.</TableCell></TableRow>}
@@ -1545,7 +1604,7 @@ export default function Dashboard() {
                   <Card key={campaign._id} className="hover-elevate">
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                       <div className="space-y-1"><CardTitle className="text-xl">{campaign.name}</CardTitle><CardDescription className="flex items-center gap-1"><Badge variant="outline" className="text-[10px] uppercase py-0">{campaign.goal}</Badge></CardDescription></div>
-                      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => { setSelectedCampaign(campaign); setEditCampaignForm({ name: campaign.name, goal: campaign.goal as any, script: campaign.script, voice: campaign.voice, additionalContext: campaign.additionalContext || "", callingHours: campaign.callingHours || { start: "09:00", end: "17:00" }, status: campaign.status as any, knowledgeBaseFiles: campaign.knowledgeBaseFiles || [], startDate: campaign.startDate || "", endDate: campaign.endDate || "" }); setIsEditCampaignOpen(true); }}>Edit Campaign</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => setDeleteConfirm({ type: "campaign", id: campaign._id, name: campaign.name })}>Delete Campaign</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+                      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => { setSelectedCampaign(campaign); setEditCampaignForm({ name: campaign.name, goal: (campaign.goal as "sales" | "support" | "survey" | "appointment") || "sales", script: campaign.script, voice: campaign.voice, additionalContext: campaign.additionalContext || "", callingHours: campaign.callingHours || { start: "09:00", end: "17:00" }, status: (campaign.status as "Active" | "Paused" | "Draft") || "Draft", knowledgeBaseFiles: campaign.knowledgeBaseFiles || [], startDate: campaign.startDate || "", endDate: campaign.endDate || "" }); setIsEditCampaignOpen(true); }}>Edit Campaign</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => setDeleteConfirm({ type: "campaign", id: (campaign as any)._id, name: campaign.name })}>Delete Campaign</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
                     </CardHeader>
                     <CardContent className="pb-2"><p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{campaign.script}</p><div className="flex items-center gap-4 mt-4"><div className="flex flex-col"><span className="text-2xl font-bold">{leads.filter(l => l.campaignId === campaign._id).length}</span><span className="text-[10px] text-muted-foreground uppercase font-bold">Leads</span></div><div className="flex flex-col"><span className="text-2xl font-bold">{leads.filter(l => l.campaignId === campaign._id && l.status === 'Interested').length}</span><span className="text-[10px] text-muted-foreground uppercase font-bold">Interested</span></div></div></CardContent>
                     <CardFooter className="pt-2 border-t flex items-center justify-between bg-muted/5"><Badge variant={campaign.status === "Active" ? "default" : "secondary"}>{campaign.status}</Badge><div className="flex items-center gap-2"><Button variant="ghost" size="icon" className="h-8 w-8">{campaign.status === "Active" ? <X className="h-4 w-4" /> : <Play className="h-4 w-4" />}</Button></div></CardFooter>
@@ -1563,10 +1622,65 @@ export default function Dashboard() {
                 <Button onClick={() => setIsAddAppointmentOpen(true)}><Plus className="mr-2 h-4 w-4" /> Schedule</Button>
               </div>
               <Card className="p-6">
-                <div className="flex items-center justify-between mb-8"><div className="flex items-center gap-4"><Button variant="outline" size="icon" onClick={() => setCalendarDate(new Date(calendarDate.setMonth(calendarDate.getMonth() - 1)))}><ChevronLeft className="h-4 w-4" /></Button><h2 className="text-xl font-bold">{calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h2><Button variant="outline" size="icon" onClick={() => setCalendarDate(new Date(calendarDate.setMonth(calendarDate.getMonth() + 1)))}><ChevronRight className="h-4 w-4" /></Button></div></div>
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <Button variant="outline" size="icon" onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))}><ChevronLeft className="h-4 w-4" /></Button>
+                    <h2 className="text-xl font-bold">{calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h2>
+                    <Button variant="outline" size="icon" onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))}><ChevronRight className="h-4 w-4" /></Button>
+                  </div>
+                </div>
                 <div className="grid grid-cols-7 gap-px bg-muted overflow-hidden rounded-lg border">
                   {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <div key={day} className="bg-muted/50 p-2 text-center text-xs font-bold text-muted-foreground uppercase">{day}</div>)}
-                  {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay() }).map((_, i) => <div key={`empty-${i}`} className="bg-background min-h-[120px] p-2" />)}
+                  {Array.from({ length: 42 }).map((_, i) => {
+                    const firstDayOfMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay();
+                    const day = i - firstDayOfMonth + 1;
+                    const date = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day);
+                    const isCurrentMonth = date.getMonth() === calendarDate.getMonth();
+                    const isToday = date.toDateString() === new Date().toDateString();
+                    const dateAppointments = appointments.filter(app => new Date(app.date).toDateString() === date.toDateString());
+
+                    return (
+                      <div 
+                        key={i} 
+                        className={`h-24 md:h-32 bg-background p-2 transition-colors hover:bg-muted/50 cursor-pointer ${!isCurrentMonth ? 'opacity-30' : ''} ${isToday ? 'bg-primary/5' : ''}`}
+                        onClick={() => {
+                          const formattedDate = date.toISOString().split('T')[0];
+                          setAppointmentForm({
+                            ...appointmentForm,
+                            date: formattedDate,
+                            leadId: "",
+                            leadName: "",
+                            title: ""
+                          });
+                          setIsAddAppointmentOpen(true);
+                        }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <span className={`text-sm font-medium ${isToday ? 'bg-primary text-primary-foreground h-6 w-6 rounded-full flex items-center justify-center' : ''}`}>
+                            {date.getDate()}
+                          </span>
+                        </div>
+                        <div className="mt-1 space-y-1 overflow-y-auto max-h-[calc(100%-1.5rem)]">
+                          {dateAppointments.map((app) => (
+                            <div 
+                              key={app._id} 
+                              className="text-[10px] leading-tight p-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 truncate"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditAppointment(app);
+                              }}
+                            >
+                              {app.time} {app.title}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            </div>
+          )}                  {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay() }).map((_, i) => <div key={`empty-${i}`} className="bg-background min-h-[120px] p-2" />)}
                   {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0).getDate() }).map((_, i) => {
                     const day = i + 1;
                     const dateStr = `${calendarDate.getFullYear()}-${String(calendarDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -1601,6 +1715,141 @@ export default function Dashboard() {
       </main>
 
       {/* Confirmation Dialogs */}
+      <Dialog open={isLogActivityOpen} onOpenChange={setIsLogActivityOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log Activity</DialogTitle>
+            <DialogDescription>Record a manual interaction with this lead.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Activity Type</Label>
+              <Select value={activityLog.type} onValueChange={(v: any) => setActivityLog({...activityLog, type: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="call">Call</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="note">Note</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {activityLog.type === "call" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Outcome</Label>
+                  <Select value={activityLog.outcome} onValueChange={v => setActivityLog({...activityLog, outcome: v})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Answered">Answered</SelectItem>
+                      <SelectItem value="No Answer">No Answer</SelectItem>
+                      <SelectItem value="Busy">Busy</SelectItem>
+                      <SelectItem value="Wrong Number">Wrong Number</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Duration</Label>
+                  <Input placeholder="e.g. 2:30" value={activityLog.duration} onChange={e => setActivityLog({...activityLog, duration: e.target.value})} />
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Notes/Summary</Label>
+              <Textarea placeholder="What happened during this interaction?" value={activityLog.note} onChange={e => setActivityLog({...activityLog, note: e.target.value})} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsLogActivityOpen(false)}>Cancel</Button>
+            <Button onClick={handleLogActivity} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Activity
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddAppointmentOpen} onOpenChange={setIsAddAppointmentOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Meeting</DialogTitle>
+            <DialogDescription>Set up a follow-up appointment with {appointmentForm.leadName}.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Title</Label>
+              <Input value={appointmentForm.title} onChange={e => setAppointmentForm({...appointmentForm, title: e.target.value})} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Date</Label>
+                <Input type="date" value={appointmentForm.date} onChange={e => setAppointmentForm({...appointmentForm, date: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label>Time</Label>
+                <Input type="time" value={appointmentForm.time} onChange={e => setAppointmentForm({...appointmentForm, time: e.target.value})} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Select value={appointmentForm.type} onValueChange={v => setAppointmentForm({...appointmentForm, type: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Zoom">Zoom Meeting</SelectItem>
+                  <SelectItem value="Google Meet">Google Meet</SelectItem>
+                  <SelectItem value="Phone Call">Phone Call</SelectItem>
+                  <SelectItem value="In Person">In Person</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea placeholder="Meeting agenda or details..." value={appointmentForm.notes} onChange={e => setAppointmentForm({...appointmentForm, notes: e.target.value})} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddAppointmentOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddAppointment} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Schedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={callConfirm !== null} onOpenChange={(open) => !open && setCallConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm {callConfirm?.type === "call" ? "AI Call" : "SMS"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to initiate an {callConfirm?.type === "call" ? "AI voice call" : "SMS message"} to this lead? 
+              This will consume credits from your balance.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={async () => {
+                if (!callConfirm) return;
+                try {
+                  if (callConfirm.type === "call") {
+                    await leadsApi.initiateCall(callConfirm.leadId);
+                    toast({ title: "Call initiated", description: "The AI agent is now calling the lead." });
+                  } else {
+                    await leadsApi.sendSms(callConfirm.leadId);
+                    toast({ title: "SMS sent", description: "Message has been queued for delivery." });
+                  }
+                } catch (err: any) {
+                  toast({ variant: "destructive", title: "Error", description: err.message });
+                }
+                setCallConfirm(null);
+              }}
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={deleteConfirm.type !== null} onOpenChange={(open) => !open && setDeleteConfirm({ type: null, id: "", name: "" })}>
         <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete the {deleteConfirm.type} "<strong>{deleteConfirm.name}</strong>". This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => { if (deleteConfirm.type === 'lead') handleDeleteLead(deleteConfirm.id); else if (deleteConfirm.type === 'campaign') campaignsApi.delete(deleteConfirm.id).then(() => setCampaigns(campaigns.filter(c => c._id !== deleteConfirm.id))); else if (deleteConfirm.type === 'appointment') handleDeleteAppointment(deleteConfirm.id); setDeleteConfirm({ type: null, id: "", name: "" }); }}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
       </AlertDialog>
