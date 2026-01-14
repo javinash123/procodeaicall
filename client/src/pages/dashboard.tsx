@@ -1414,14 +1414,14 @@ export default function Dashboard() {
                     </div>
                   </TabsContent>
                 </Tabs>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsCreateCampaignOpen(false)}>Cancel</Button>
+                <DialogFooter className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsCreateCampaignOpen(false)} data-testid="button-cancel-campaign">Cancel</Button>
                   {campaignTab === "basics" ? (
-                    <Button type="button" onClick={() => setCampaignTab("agent")}>Next: Configure Agent</Button>
+                    <Button type="button" onClick={(e) => { e.preventDefault(); setCampaignTab("agent"); }} data-testid="button-next-agent">Next: Configure Agent</Button>
                   ) : campaignTab === "agent" ? (
-                    <Button type="button" onClick={() => setCampaignTab("config")}>Next: Configuration</Button>
+                    <Button type="button" onClick={(e) => { e.preventDefault(); setCampaignTab("config"); }} data-testid="button-next-config">Next: Configuration</Button>
                   ) : (
-                    <Button type="submit" disabled={isSaving}>
+                    <Button type="submit" disabled={isSaving} data-testid="button-submit-campaign">
                       {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
                       Create Campaign
                     </Button>

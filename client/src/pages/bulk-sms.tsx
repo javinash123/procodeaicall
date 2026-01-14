@@ -94,7 +94,16 @@ export default function BulkSms() {
     }
   };
 
-  if (!user) return null;
+  if (!user) return <div className="p-6 text-center">Loading user profile...</div>;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading SMS data...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -106,68 +115,73 @@ export default function BulkSms() {
         <p className="text-muted-foreground">Select leads and send bulk SMS messages.</p>
       </div>
 
+      <div className="flex flex-wrap items-center gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
+        <div className="relative min-w-[240px]">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search name or phone..." 
+            className="pl-9 h-9" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            data-testid="input-search-sms"
+          />
+        </div>
+
+        <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+          <SelectTrigger className="w-[200px] h-9" data-testid="select-campaign-filter">
+            <SelectValue placeholder="All Campaigns" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Campaigns</SelectItem>
+            {campaigns.map(c => (
+              <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="flex items-center gap-2 h-9">
+          <Input 
+            type="date" 
+            className="h-9 w-[150px]"
+            value={dateRange.start} 
+            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+            data-testid="input-date-start"
+          />
+          <span className="text-muted-foreground">→</span>
+          <Input 
+            type="date" 
+            className="h-9 w-[150px]"
+            value={dateRange.end} 
+            onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+            data-testid="input-date-end"
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex flex-wrap items-center gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
-            <div className="relative min-w-[240px]">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search name or phone..." 
-                className="pl-9 h-9" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-              <SelectTrigger className="w-[200px] h-9">
-                <SelectValue placeholder="All Campaigns" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Campaigns</SelectItem>
-                {campaigns.map(c => (
-                  <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <div className="flex items-center gap-2 h-9">
-              <Input 
-                type="date" 
-                className="h-9 w-[150px]"
-                value={dateRange.start} 
-                onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-              />
-              <span className="text-muted-foreground">→</span>
-              <Input 
-                type="date" 
-                className="h-9 w-[150px]"
-                value={dateRange.end} 
-                onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-              />
-            </div>
-          </div>
-
+        <div className="lg:col-span-2">
           <Card className="border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
               <div>
-                <CardTitle>Leads List</CardTitle>
+                <CardTitle>SMS History</CardTitle>
                 <CardDescription>{filteredLeads.length} leads found</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={handleSelectAll}>
+              <Button variant="outline" size="sm" onClick={handleSelectAll} className="h-8" data-testid="button-select-all">
                 {selectedLeads.length === filteredLeads.length ? "Deselect All" : "Select All"}
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border h-[500px] overflow-auto">
+              <div className="rounded-md border h-[600px] overflow-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 sticky top-0 z-10">
                     <tr>
                       <th className="p-3 text-left w-10">
                         <input 
                           type="checkbox" 
+                          className="rounded border-gray-300"
                           checked={selectedLeads.length === filteredLeads.length && filteredLeads.length > 0}
                           onChange={handleSelectAll}
+                          data-testid="checkbox-header-select-all"
                         />
                       </th>
                       <th className="p-3 text-left">Name</th>
@@ -178,12 +192,14 @@ export default function BulkSms() {
                   </thead>
                   <tbody>
                     {filteredLeads.map(lead => (
-                      <tr key={lead._id} className="border-t hover:bg-muted/30 transition-colors">
+                      <tr key={lead._id} className="border-t hover:bg-muted/30 transition-colors" data-testid={`row-lead-${lead._id}`}>
                         <td className="p-3">
                           <input 
                             type="checkbox" 
+                            className="rounded border-gray-300"
                             checked={selectedLeads.includes(lead._id)}
                             onChange={() => handleToggleLead(lead._id)}
+                            data-testid={`checkbox-lead-${lead._id}`}
                           />
                         </td>
                         <td className="p-3 font-medium">{lead.name}</td>
@@ -192,10 +208,17 @@ export default function BulkSms() {
                           {campaigns.find(c => c._id === lead.campaignId)?.name || "-"}
                         </td>
                         <td className="p-3">
-                          <Badge variant="outline">{lead.status}</Badge>
+                          <Badge variant="outline" data-testid={`badge-status-${lead._id}`}>{lead.status}</Badge>
                         </td>
                       </tr>
                     ))}
+                    {filteredLeads.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="p-12 text-center text-muted-foreground" data-testid="text-no-results">
+                          No SMS records found matching your filters.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
