@@ -424,7 +424,7 @@ export default function Dashboard() {
         campaignId: editLead.campaignId && editLead.campaignId !== "none" ? editLead.campaignId : undefined
       });
       
-      const updated = response.lead || response;
+      const updated = response;
       
       // Update selected lead details if it's the one currently viewed
       const updatedLead = { 
@@ -594,11 +594,12 @@ export default function Dashboard() {
   };
 
   const handleAddAppointment = async () => {
+    // Basic validation
     if (!user || !appointmentForm.title?.trim() || !appointmentForm.date?.trim() || !appointmentForm.leadId?.trim()) {
       toast({ 
         variant: "destructive", 
         title: "Validation Error", 
-        description: "Please fill in all required fields (Title, Date, and Lead)." 
+        description: "Please fill in all required fields (Lead, Title, and Date)." 
       });
       return;
     }
@@ -616,7 +617,7 @@ export default function Dashboard() {
         notes: appointmentForm.notes
       });
       
-      const newApt = response.appointment || response;
+      const newApt = response;
       setAppointments([...appointments, newApt]);
       setIsAddAppointmentOpen(false);
       setScheduleFromLead(null);
@@ -1254,6 +1255,41 @@ export default function Dashboard() {
                       </form>
                     </DialogContent>
                   </Dialog>
+
+                  {/* Edit Lead Dialog */}
+                  <Dialog open={isEditLeadOpen} onOpenChange={setIsEditLeadOpen}>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Edit Lead</DialogTitle><DialogDescription>Update the details of the prospect.</DialogDescription></DialogHeader>
+                      <form onSubmit={handleUpdateLead} className="space-y-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2"><Label htmlFor="edit-name">Full Name <span className="text-destructive">*</span></Label><Input id="edit-name" placeholder="John Doe" value={editLead.name} onChange={e => setEditLead({...editLead, name: e.target.value})} className={leadErrors.name ? "border-destructive" : ""} />{leadErrors.name && <p className="text-xs text-destructive">{leadErrors.name}</p>}</div>
+                          <div className="space-y-2"><Label htmlFor="edit-company">Company</Label><Input id="edit-company" placeholder="Acme Inc" value={editLead.company} onChange={e => setEditLead({...editLead, company: e.target.value})} /></div>
+                        </div>
+                        <div className="space-y-2"><Label htmlFor="edit-email">Email</Label><Input id="edit-email" type="email" placeholder="john@example.com" value={editLead.email} onChange={e => setEditLead({...editLead, email: e.target.value})} className={leadErrors.email ? "border-destructive" : ""} />{leadErrors.email && <p className="text-xs text-destructive">{leadErrors.email}</p>}</div>
+                        <div className="space-y-2"><Label htmlFor="edit-phone">Phone Number <span className="text-destructive">*</span></Label><Input id="edit-phone" placeholder="+1 (555) 000-0000" value={editLead.phone} onChange={e => setEditLead({...editLead, phone: e.target.value})} className={leadErrors.phone ? "border-destructive" : ""} />{leadErrors.phone && <p className="text-xs text-destructive">{leadErrors.phone}</p>}</div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-status">Status</Label>
+                          <Select value={editLead.status} onValueChange={(value: any) => setEditLead({...editLead, status: value})}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="New">New</SelectItem>
+                              <SelectItem value="In Progress">In Progress</SelectItem>
+                              <SelectItem value="Interested">Interested</SelectItem>
+                              <SelectItem value="Follow Up">Follow Up</SelectItem>
+                              <SelectItem value="Closed">Closed</SelectItem>
+                              <SelectItem value="Unqualified">Unqualified</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2"><Label htmlFor="edit-notes">Notes</Label><Textarea id="edit-notes" placeholder="Update notes..." value={editLead.notes} onChange={e => setEditLead({...editLead, notes: e.target.value})} /></div>
+                        <div className="space-y-2"><Label htmlFor="edit-campaign">Associated Campaign</Label><Select value={editLead.campaignId} onValueChange={(value) => setEditLead({...editLead, campaignId: value})}><SelectTrigger><SelectValue placeholder="Select a campaign (optional)" /></SelectTrigger><SelectContent><SelectItem value="none">No Campaign</SelectItem>{campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+                        <DialogFooter>
+                          <Button type="button" variant="outline" onClick={() => setIsEditLeadOpen(false)}>Cancel</Button>
+                          <Button type="submit" disabled={isSaving}>{isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Update Lead</Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
               <Card className="hover-elevate">
@@ -1605,7 +1641,7 @@ export default function Dashboard() {
                         })
                         .map((u) => (
                         <TableRow key={u._id}>
-                          <TableCell><div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarFallback>{(u.firstName || "").charAt(0)}{(u.lastName || "").charAt(0)}</AvatarFallback></Avatar><div><div className="font-medium">{u.firstName} {u.lastName}</div><div className="text-xs text-muted-foreground">{u.email}</div></div></div></TableCell>
+                          <TableCell><div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl || undefined} alt={u.firstName} /><AvatarFallback>{(u.firstName || "").charAt(0)}{(u.lastName || "").charAt(0)}</AvatarFallback></Avatar><div><div className="font-medium">{u.firstName} {u.lastName}</div><div className="text-xs text-muted-foreground">{u.email}</div></div></div></TableCell>
                           <TableCell>{u.companyName || "-"}</TableCell>
                           <TableCell><Badge variant="secondary">{u.subscription?.plan || "Free"}</Badge></TableCell>
                           <TableCell><Badge variant={u.subscription?.status === 'Active' ? 'default' : 'outline'} className={u.subscription?.status === 'Active' ? 'bg-green-500/15 text-green-600 border-none' : ''}>{u.subscription?.status || "Inactive"}</Badge></TableCell>
@@ -1672,7 +1708,10 @@ export default function Dashboard() {
                         key={i} 
                         className={`h-24 md:h-32 bg-background p-2 transition-colors hover:bg-muted/50 cursor-pointer ${!isCurrentMonth ? 'opacity-30' : ''} ${isToday ? 'bg-primary/5' : ''}`}
                         onClick={() => {
-                          const formattedDate = date.toISOString().split('T')[0];
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const dayNum = String(date.getDate()).padStart(2, '0');
+                          const formattedDate = `${year}-${month}-${dayNum}`;
                           setAppointmentForm({
                             ...appointmentForm,
                             date: formattedDate,
@@ -1706,6 +1745,59 @@ export default function Dashboard() {
                     );
                   })}
                 </div>
+              </Card>
+
+              {/* Upcoming Appointments List */}
+              <Card className="hover-elevate">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarDays className="h-5 w-5 text-primary" />
+                    Upcoming Appointments
+                  </CardTitle>
+                  <CardDescription>Scheduled follow-ups and meetings.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {appointments.length > 0 ? (
+                      appointments
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                        .map((apt) => (
+                          <div 
+                            key={apt._id} 
+                            className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/30 transition-colors cursor-pointer"
+                            onClick={() => handleEditAppointment(apt)}
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                {new Date(apt.date).getDate()}
+                              </div>
+                              <div>
+                                <div className="font-semibold">{apt.title}</div>
+                                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                  <span>{apt.leadName}</span>
+                                  <span>•</span>
+                                  <span>{new Date(apt.date).toLocaleDateString()} at {apt.time}</span>
+                                  <Badge variant="secondary" className="text-[10px] ml-2">{apt.type}</Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEditAppointment(apt); }}>
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); confirmDeleteAppointment(apt); }}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                        No appointments scheduled.
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
               </Card>
             </div>
           )}
@@ -1794,12 +1886,35 @@ export default function Dashboard() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Title</Label>
+              <Label>Select Lead <span className="text-destructive">*</span></Label>
+              <Select value={appointmentForm.leadId} onValueChange={(val) => {
+                const lead = leads.find(l => l._id === val);
+                if (lead) {
+                  setAppointmentForm({
+                    ...appointmentForm,
+                    leadId: lead._id,
+                    leadName: lead.name,
+                    title: appointmentForm.title || `Meeting with ${lead.name}`
+                  });
+                }
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a lead" />
+                </SelectTrigger>
+                <SelectContent>
+                  {leads.map(lead => (
+                    <SelectItem key={lead._id} value={lead._id}>{lead.name} ({lead.company})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Title <span className="text-destructive">*</span></Label>
               <Input value={appointmentForm.title} onChange={e => setAppointmentForm({...appointmentForm, title: e.target.value})} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Date</Label>
+                <Label>Date <span className="text-destructive">*</span></Label>
                 <Input type="date" value={appointmentForm.date} onChange={e => setAppointmentForm({...appointmentForm, date: e.target.value})} />
               </div>
               <div className="space-y-2">
@@ -1830,6 +1945,59 @@ export default function Dashboard() {
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Schedule
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditAppointmentOpen} onOpenChange={setIsEditAppointmentOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Meeting</DialogTitle>
+            <DialogDescription>Update appointment details for {appointmentForm.leadName}.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Title <span className="text-destructive">*</span></Label>
+              <Input value={appointmentForm.title} onChange={e => setAppointmentForm({...appointmentForm, title: e.target.value})} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Date <span className="text-destructive">*</span></Label>
+                <Input type="date" value={appointmentForm.date} onChange={e => setAppointmentForm({...appointmentForm, date: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label>Time</Label>
+                <Input type="time" value={appointmentForm.time} onChange={e => setAppointmentForm({...appointmentForm, time: e.target.value})} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Select value={appointmentForm.type} onValueChange={v => setAppointmentForm({...appointmentForm, type: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Zoom">Zoom Meeting</SelectItem>
+                  <SelectItem value="Google Meet">Google Meet</SelectItem>
+                  <SelectItem value="Phone Call">Phone Call</SelectItem>
+                  <SelectItem value="In Person">In Person</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea placeholder="Meeting agenda or details..." value={appointmentForm.notes} onChange={e => setAppointmentForm({...appointmentForm, notes: e.target.value})} />
+            </div>
+          </div>
+          <DialogFooter>
+            <div className="flex justify-between w-full">
+              <Button variant="destructive" onClick={() => { if (selectedAppointment) confirmDeleteAppointment(selectedAppointment); setIsEditAppointmentOpen(false); }}>Delete</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setIsEditAppointmentOpen(false)}>Cancel</Button>
+                <Button onClick={handleUpdateAppointment} disabled={isSaving}>
+                  {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Update
+                </Button>
+              </div>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
