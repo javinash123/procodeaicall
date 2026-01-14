@@ -43,8 +43,10 @@ export default function BulkSms() {
   }, []);
 
   const filteredLeads = leads.filter(lead => {
-    const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         lead.phone.includes(searchTerm);
+    const nameStr = lead.name || "";
+    const phoneStr = lead.phone || "";
+    const matchesSearch = nameStr.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         phoneStr.includes(searchTerm);
     const matchesCampaign = campaignFilter === "all" || lead.campaignId === campaignFilter;
     
     let matchesDate = true;
@@ -167,7 +169,7 @@ export default function BulkSms() {
                 <CardDescription>{filteredLeads.length} leads found</CardDescription>
               </div>
               <Button variant="outline" size="sm" onClick={handleSelectAll} className="h-8" data-testid="button-select-all">
-                {selectedLeads.length === filteredLeads.length ? "Deselect All" : "Select All"}
+                {selectedLeads.length === filteredLeads.length && filteredLeads.length > 0 ? "Deselect All" : "Select All"}
               </Button>
             </CardHeader>
             <CardContent>
@@ -188,6 +190,7 @@ export default function BulkSms() {
                       <th className="p-3 text-left">Phone</th>
                       <th className="p-3 text-left">Campaign</th>
                       <th className="p-3 text-left">Status</th>
+                      <th className="p-3 text-left">Last Interaction</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -210,11 +213,14 @@ export default function BulkSms() {
                         <td className="p-3">
                           <Badge variant="outline" data-testid={`badge-status-${lead._id}`}>{lead.status}</Badge>
                         </td>
+                        <td className="p-3 text-muted-foreground">
+                          {lead.lastContact ? new Date(lead.lastContact).toLocaleDateString() : "No contact"}
+                        </td>
                       </tr>
                     ))}
                     {filteredLeads.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="p-12 text-center text-muted-foreground" data-testid="text-no-results">
+                        <td colSpan={6} className="p-12 text-center text-muted-foreground" data-testid="text-no-results">
                           No SMS records found matching your filters.
                         </td>
                       </tr>

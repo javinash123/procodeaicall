@@ -340,6 +340,40 @@ export default function Dashboard() {
   }, [authLoading, user, setLocation]);
 
   // Validation Functions
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append("files", files[i]);
+    }
+
+    try {
+      const response = await uploadApi.upload(formData);
+      const uploadedFiles = response.files || [];
+      
+      if (isEdit) {
+        setEditCampaignForm(prev => ({
+          ...prev,
+          knowledgeBaseFiles: [...(prev.knowledgeBaseFiles || []), ...uploadedFiles]
+        }));
+      } else {
+        setNewCampaign(prev => ({
+          ...prev,
+          knowledgeBaseFiles: [...(prev.knowledgeBaseFiles || []), ...uploadedFiles]
+        }));
+      }
+      toast({ title: "Files uploaded successfully!" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Upload failed", description: error.message });
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = "";
+    }
+  };
+
   const validateLead = (data: { name: string; phone: string; email: string }): boolean => {
     const errors: typeof leadErrors = {};
     if (!data.name.trim()) errors.name = "Name is required";
@@ -1407,10 +1441,43 @@ export default function Dashboard() {
                     </div>
                     <div className="space-y-2">
                       <Label>Knowledge Base Files</Label>
-                      <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                      <div 
+                        className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => document.getElementById('campaign-upload')?.click()}
+                      >
                         <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">Click to upload or drag and drop PDFs, TXT, or DOCX files</p>
+                        <p className="text-sm text-muted-foreground">
+                          {isUploading ? "Uploading..." : "Click to upload or drag and drop PDFs, TXT, or DOCX files"}
+                        </p>
+                        <input 
+                          id="campaign-upload"
+                          type="file" 
+                          multiple 
+                          className="hidden" 
+                          onChange={(e) => handleFileUpload(e, false)}
+                          accept=".pdf,.txt,.docx"
+                        />
                       </div>
+                      {newCampaign.knowledgeBaseFiles.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          {newCampaign.knowledgeBaseFiles.map((file, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-2 bg-muted/30 rounded-md border text-xs">
+                              <span className="truncate max-w-[200px]">{file.originalName}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6" 
+                                onClick={() => setNewCampaign(prev => ({
+                                  ...prev,
+                                  knowledgeBaseFiles: prev.knowledgeBaseFiles.filter((_, i) => i !== idx)
+                                }))}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -1515,6 +1582,46 @@ export default function Dashboard() {
                         <span>to</span>
                         <Input type="time" value={editCampaignForm.callingHours.end} onChange={e => setEditCampaignForm({...editCampaignForm, callingHours: {...editCampaignForm.callingHours, end: e.target.value}})} />
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Knowledge Base Files</Label>
+                      <div 
+                        className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => document.getElementById('edit-campaign-upload')?.click()}
+                      >
+                        <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">
+                          {isUploading ? "Uploading..." : "Click to upload or drag and drop PDFs, TXT, or DOCX files"}
+                        </p>
+                        <input 
+                          id="edit-campaign-upload"
+                          type="file" 
+                          multiple 
+                          className="hidden" 
+                          onChange={(e) => handleFileUpload(e, true)}
+                          accept=".pdf,.txt,.docx"
+                        />
+                      </div>
+                      {editCampaignForm.knowledgeBaseFiles.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          {editCampaignForm.knowledgeBaseFiles.map((file, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-2 bg-muted/30 rounded-md border text-xs">
+                              <span className="truncate max-w-[200px]">{file.originalName}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6" 
+                                onClick={() => setEditCampaignForm(prev => ({
+                                  ...prev,
+                                  knowledgeBaseFiles: prev.knowledgeBaseFiles.filter((_, i) => i !== idx)
+                                }))}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 </Tabs>
