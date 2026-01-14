@@ -71,7 +71,6 @@ export type User = Omit<InsertUser, "password"> & {
     localPresenceDialing: boolean;
   };
   subscription?: SubscriptionInfo;
-  logoUrl?: string;
 };
 
 // Lead Schema

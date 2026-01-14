@@ -218,27 +218,6 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     }
   });
 
-  // Upload user logo
-  app.post("/api/users/:id/logo", requireAuth, upload.single("logo"), async (req, res) => {
-    try {
-      const { id } = req.params;
-      if (id !== req.session.userId) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-
-      const logoUrl = `/uploads/${req.file.filename}`;
-      const user = await storage.updateUser(id, { logoUrl } as any);
-      
-      res.json({ user });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
   // Change password
   app.post("/api/users/:id/password", requireAuth, async (req, res) => {
     try {

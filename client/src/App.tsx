@@ -20,7 +20,6 @@ import AdminLogin from "@/pages/admin-login";
 import AdminPlans from "@/pages/admin-plans";
 import Notifications from "@/pages/notifications";
 import BulkWhatsapp from "@/pages/bulk-whatsapp";
-import BulkSms from "@/pages/bulk-sms";
 
 function Router() {
   // Use /aiagent base only in production (when building for their server)
@@ -33,7 +32,6 @@ function Router() {
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/notifications" component={Notifications} />
         <Route path="/bulk-whatsapp" component={BulkWhatsapp} />
-        <Route path="/bulk-sms" component={BulkSms} />
         <Route path="/admin/dashboard" component={Dashboard} />
         <Route path="/admin/plans" component={AdminPlans} />
         <Route path="/admin" component={AdminLogin} />

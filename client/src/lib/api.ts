@@ -88,18 +88,6 @@ export const usersApi = {
     return result.user;
   },
 
-  uploadLogo: async (id: string, file: File): Promise<User> => {
-    const formData = new FormData();
-    formData.append("logo", file);
-    const response = await fetch(`${API_BASE}/users/${id}/logo`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
-    const result = await handleResponse<{ user: User }>(response);
-    return result.user;
-  },
-
   delete: async (id: string): Promise<void> => {
     const response = await fetch(`${API_BASE}/users/${id}`, {
       method: "DELETE",
