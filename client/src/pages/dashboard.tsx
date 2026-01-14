@@ -273,7 +273,7 @@ export default function Dashboard() {
     { label: "Leads", value: leads.length.toString(), change: "+12.5%", icon: PhoneCall, tab: "crm" },
     { label: "Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: "+4.2%", icon: CheckCircle2, tab: "campaigns" },
     { label: "Bulk SMS", value: "0", change: "0%", icon: Smartphone, tab: "bulk-sms" },
-    { label: "Bulk WhatsApp", value: "0", change: "0%", icon: MessageSquare, tab: "bulk-whatsapp" },
+    { label: "Bulk WhatsApp", value: "0", change: "0%", icon: MessageCircle, tab: "bulk-whatsapp" },
     { label: "Appointments", value: appointments.length.toString(), change: "-1.1%", icon: Clock, tab: "calendar" },
     { label: "Credit Balance", value: `₹${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, change: "0%", icon: Wallet, tab: "profile" },
   ];
@@ -291,10 +291,14 @@ export default function Dashboard() {
     { id: "profile", label: "Profile", icon: UserCog },
   ];
 
-  if (isAdmin) {
-    navItems.splice(1, 0, { id: "admin-users", label: "Users", icon: Users });
-    navItems.push({ id: "plans", label: "Manage Plans", icon: CreditCard });
-  }
+  const adminNavItems = [
+    { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "admin-users", label: "User Management", icon: Users },
+    { id: "plans", label: "Plans", icon: CreditCard },
+    { id: "profile", label: "Profile", icon: UserCog },
+  ];
+
+  const displayNavItems = isAdmin ? adminNavItems : navItems;
 
   // Handle sidebar navigation
   const handleNavClick = (tabId: string) => {
@@ -304,6 +308,62 @@ export default function Dashboard() {
       setActiveTab(tabId);
     }
   };
+
+  // Sidebar Component
+  const Sidebar = () => (
+    <div className="w-64 border-r bg-card flex flex-col h-full overflow-hidden shrink-0">
+      <div className="p-6 border-b">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <Bot className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <span className="font-bold text-xl tracking-tight">AI Agent</span>
+        </div>
+      </div>
+      <ScrollArea className="flex-1 py-4">
+        <div className="px-3 space-y-1">
+          {displayNavItems.map((item) => (
+            <Button
+              key={item.id}
+              variant={activeTab === item.id ? "secondary" : "ghost"}
+              className="w-full justify-start gap-3 h-10 px-3 hover-elevate"
+              onClick={() => handleNavClick(item.id)}
+            >
+              <item.icon className={`w-4 h-4 ${activeTab === item.id ? "text-primary" : "text-muted-foreground"}`} />
+              <span className="font-medium">{item.label}</span>
+            </Button>
+          ))}
+        </div>
+      </ScrollArea>
+      <div className="p-4 border-t mt-auto">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="w-full justify-start gap-3 h-12 hover-elevate px-2">
+              <Avatar className="h-8 w-8 border">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col items-start overflow-hidden">
+                <span className="text-sm font-semibold truncate w-full">{user?.firstName} {user?.lastName}</span>
+                <span className="text-xs text-muted-foreground truncate w-full">{user?.email}</span>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setActiveTab("profile")}>
+              <User className="mr-2 h-4 w-4" /> Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => logout()}>
+              <LogOut className="mr-2 h-4 w-4" /> Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
 
   // Fetch data on mount
   useEffect(() => {
@@ -387,241 +447,6 @@ export default function Dashboard() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleAddLead = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    if (!validateLead(newLead)) return;
-    
-    setIsSaving(true);
-    try {
-      const lead = await leadsApi.create({
-        userId: user._id,
-        name: newLead.name.trim(),
-        company: newLead.company.trim(),
-        email: newLead.email.trim(),
-        phone: newLead.phone.trim(),
-        notes: newLead.notes.trim(),
-        status: "New",
-        outcome: "Pending",
-        campaignId: newLead.campaignId && newLead.campaignId !== "none" ? newLead.campaignId : undefined
-      });
-      const leadWithCampaign = newLead.campaignId && newLead.campaignId !== "none"
-        ? { ...lead, campaignName: campaigns.find(c => c._id === newLead.campaignId)?.name }
-        : lead;
-      setLeads([leadWithCampaign, ...leads]);
-      setIsAddLeadOpen(false);
-      setNewLead({ name: "", company: "", email: "", phone: "", notes: "", status: "New", campaignId: "" });
-      setLeadErrors({});
-      toast({ title: "Lead added successfully!" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error adding lead", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleEditLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    setEditLead({
-      name: lead.name,
-      company: lead.company || "",
-      email: lead.email || "",
-      phone: lead.phone,
-      notes: lead.notes || "",
-      status: lead.status,
-      campaignId: lead.campaignId || ""
-    });
-    setLeadErrors({});
-    setIsEditLeadOpen(true);
-  };
-
-  const handleUpdateLead = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedLead) return;
-    if (!validateLead(editLead)) return;
-    
-    setIsSaving(true);
-    try {
-      const updated = await leadsApi.update(selectedLead._id, {
-        name: editLead.name.trim(),
-        company: editLead.company.trim(),
-        email: editLead.email.trim(),
-        phone: editLead.phone.trim(),
-        notes: editLead.notes.trim(),
-        status: editLead.status,
-        campaignId: editLead.campaignId && editLead.campaignId !== "none" ? editLead.campaignId : undefined
-      });
-      const updatedWithCampaign = editLead.campaignId && editLead.campaignId !== "none"
-        ? { ...updated, campaignName: campaigns.find(c => c._id === editLead.campaignId)?.name }
-        : { ...updated, campaignName: undefined };
-      setLeads(leads.map(l => l._id === selectedLead._id ? updatedWithCampaign : l));
-      setIsEditLeadOpen(false);
-      setIsLeadDetailsOpen(false);
-      setLeadErrors({});
-      toast({ title: "Lead updated successfully!" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error updating lead", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const confirmDeleteLead = (lead: Lead) => {
-    setDeleteConfirm({ type: "lead", id: lead._id, name: lead.name });
-  };
-  
-  const handleDeleteLead = async (id: string) => {
-    try {
-      await leadsApi.delete(id);
-      setLeads(leads.filter(l => l._id !== id));
-      setIsLeadDetailsOpen(false);
-      setDeleteConfirm({ type: null, id: "", name: "" });
-      toast({ title: "Lead deleted" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error deleting lead", description: error.message });
-    }
-  };
-
-  const handleViewLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    setIsLeadDetailsOpen(true);
-  };
-
-  const handleLogActivity = async () => {
-    if (!selectedLead || !activityLog.note.trim()) {
-      toast({ variant: "destructive", title: "Please enter a note" });
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const historyItem = {
-        type: activityLog.type,
-        date: new Date().toISOString(),
-        note: activityLog.note.trim(),
-        outcome: activityLog.type === "call" ? activityLog.outcome : undefined,
-        duration: activityLog.type === "call" ? activityLog.duration : undefined
-      };
-
-      await leadsApi.addHistory(selectedLead._id, historyItem);
-      
-      const updatedLead = {
-        ...selectedLead,
-        history: [...(selectedLead.history || []), historyItem] as any,
-        lastContact: new Date(historyItem.date)
-      };
-      setSelectedLead(updatedLead);
-      setLeads(leads.map(l => l._id === selectedLead._id ? updatedLead : l));
-      
-      setIsLogActivityOpen(false);
-      setActivityLog({ type: "call", note: "", outcome: "No Answer", duration: "0:00" });
-      toast({ title: "Activity logged successfully!" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error logging activity", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleScheduleMeeting = (lead: Lead) => {
-    setScheduleFromLead(lead);
-    setAppointmentForm({
-      leadId: lead._id,
-      leadName: lead.name,
-      title: `Meeting with ${lead.name}`,
-      date: new Date().toISOString().split('T')[0],
-      time: "09:00",
-      type: "Zoom",
-      notes: ""
-    });
-    setIsAddAppointmentOpen(true);
-  };
-
-  const handleAddAppointment = async () => {
-    if (!user || !appointmentForm.title || !appointmentForm.date || !appointmentForm.leadId) {
-      toast({ variant: "destructive", title: "Please fill in all required fields" });
-      return;
-    }
-    
-    setIsSaving(true);
-    try {
-      const appointment = await appointmentsApi.create({
-        userId: user._id,
-        leadId: appointmentForm.leadId,
-        leadName: appointmentForm.leadName,
-        title: appointmentForm.title,
-        date: appointmentForm.date,
-        time: appointmentForm.time,
-        type: appointmentForm.type,
-        notes: appointmentForm.notes
-      });
-      setAppointments([...appointments, appointment]);
-      setIsAddAppointmentOpen(false);
-      setScheduleFromLead(null);
-      setAppointmentForm({ leadId: "", leadName: "", title: "", date: "", time: "09:00", type: "Zoom", notes: "" });
-      toast({ title: "Appointment scheduled!" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error creating appointment", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleEditAppointment = (apt: Appointment) => {
-    setSelectedAppointment(apt);
-    setAppointmentForm({
-      leadId: apt.leadId,
-      leadName: apt.leadName,
-      title: apt.title,
-      date: apt.date,
-      time: apt.time,
-      type: apt.type,
-      notes: apt.notes || ""
-    });
-    setIsEditAppointmentOpen(true);
-  };
-
-  const handleUpdateAppointment = async () => {
-    if (!selectedAppointment || !appointmentForm.title || !appointmentForm.date) {
-      toast({ variant: "destructive", title: "Please fill in all required fields" });
-      return;
-    }
-    
-    setIsSaving(true);
-    try {
-      const updated = await appointmentsApi.update(selectedAppointment._id, {
-        title: appointmentForm.title,
-        date: appointmentForm.date,
-        time: appointmentForm.time,
-        type: appointmentForm.type,
-        notes: appointmentForm.notes
-      });
-      setAppointments(appointments.map(a => a._id === selectedAppointment._id ? updated : a));
-      setIsEditAppointmentOpen(false);
-      setSelectedAppointment(null);
-      toast({ title: "Appointment updated!" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error updating appointment", description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const confirmDeleteAppointment = (apt: Appointment) => {
-    setDeleteConfirm({ type: "appointment", id: apt._id, name: apt.title });
-  };
-
-  const handleDeleteAppointment = async (id: string) => {
-    try {
-      await appointmentsApi.delete(id);
-      setAppointments(appointments.filter(a => a._id !== id));
-      setDeleteConfirm({ type: null, id: "", name: "" });
-      toast({ title: "Appointment deleted" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error deleting appointment", description: error.message });
-    }
-  };
-
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -645,10 +470,7 @@ export default function Dashboard() {
     }
     setIsSaving(true);
     try {
-      await usersApi.changePassword(user._id, {
-        currentPassword: passwordForm.current,
-        newPassword: passwordForm.new
-      });
+      await usersApi.update(user._id, { password: passwordForm.new });
       toast({ title: "Password changed successfully!" });
       setPasswordForm({ current: "", new: "", confirm: "" });
     } catch (error: any) {
@@ -667,7 +489,7 @@ export default function Dashboard() {
 
     setIsUploading(true);
     try {
-      await usersApi.uploadLogo(user._id, formData);
+      await usersApi.uploadLogo(user._id, file);
       toast({ title: "Logo uploaded successfully!" });
       if (refetchUser) await refetchUser();
     } catch (error: any) {
@@ -677,7 +499,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleUpdateSettings = async (updates: Partial<typeof user.settings>) => {
+  const handleUpdateSettings = async (updates: Partial<any>) => {
     if (!user) return;
     try {
       await settingsApi.update(updates);
@@ -697,996 +519,266 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
-      {/* Side Navigation */}
-      <aside className="w-64 border-r bg-card flex flex-col h-full sticky top-0">
-        <div className="p-6 border-b flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <Mic className="h-5 w-5 text-primary-foreground" />
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-16 border-b flex items-center justify-between px-8 shrink-0 bg-card/50 backdrop-blur-sm">
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-semibold capitalize">
+              {activeTab.replace("admin-", "").replace("-", " ")}
+            </h2>
           </div>
-          <span className="font-bold text-xl tracking-tight">Nijvox AI</span>
-        </div>
-        
-        <ScrollArea className="flex-1 py-4 px-4">
-          <nav className="space-y-1">
-            {navItems.map((item) => (
-              <Button
-                key={item.id}
-                variant={activeTab === item.id ? "secondary" : "ghost"}
-                className={`w-full justify-start gap-3 h-10 px-3 hover-elevate transition-all duration-200 ${
-                  activeTab === item.id ? "bg-primary/10 text-primary font-medium border-l-2 border-primary" : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
-                }`}
-                onClick={() => handleNavClick(item.id)}
-              >
-                <item.icon className={`h-4 w-4 ${activeTab === item.id ? "text-primary" : ""}`} />
-                {item.label}
-              </Button>
-            ))}
-          </nav>
-        </ScrollArea>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-1 bg-secondary rounded-full text-xs font-medium">
+              <Shield className="w-3 h-3 text-primary" />
+              <span>{isAdmin ? "Administrator" : user?.subscription?.plan || "Free Plan"}</span>
+            </div>
+            <Button variant="ghost" size="icon" className="relative hover-elevate">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-background"></span>
+            </Button>
+          </div>
+        </header>
 
-        <div className="p-4 border-t mt-auto">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start gap-3 p-2 hover:bg-muted group">
-                <Avatar className="h-8 w-8 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
-                  <AvatarImage src={user?.logoUrl} />
-                  <AvatarFallback className="bg-primary/5 text-primary font-semibold">
-                    {user?.firstName?.[0]}{user?.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col items-start overflow-hidden">
-                  <span className="text-sm font-medium truncate w-full">{user?.firstName} {user?.lastName}</span>
-                  <span className="text-xs text-muted-foreground truncate w-full capitalize">{user?.role}</span>
+        <main className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="p-8 pb-12">
+              {activeTab === "overview" && (
+                <div className="space-y-8">
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {stats.map((stat, i) => (
+                      <Card key={i} className="hover-elevate cursor-pointer transition-all border-none shadow-sm bg-card/50" onClick={() => handleNavClick(stat.tab)}>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                          <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
+                          <stat.icon className="h-4 w-4 text-primary" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{stat.value}</div>
+                          {(stat as any).change && (
+                            <p className={`text-xs mt-1 ${(stat as any).change.startsWith("+") ? "text-green-500" : "text-destructive"}`}>
+                              {(stat as any).change} <span className="text-muted-foreground ml-1">from last month</span>
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Activity Chart */}
+                    <Card className="border-none shadow-sm bg-card/50">
+                      <CardHeader>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <CardTitle>Daily Call Activity</CardTitle>
+                            <CardDescription>Monitor calling performance</CardDescription>
+                          </div>
+                          {isAdmin && (
+                            <Select value={callActivityCampaignFilter} onValueChange={setCallActivityCampaignFilter}>
+                              <SelectTrigger className="w-[180px] h-8 text-xs">
+                                <SelectValue placeholder="All Campaigns" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">All Campaigns</SelectItem>
+                                {campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={[
+                            { day: "Mon", calls: 12 },
+                            { day: "Tue", calls: 19 },
+                            { day: "Wed", calls: 15 },
+                            { day: "Thu", calls: 22 },
+                            { day: "Fri", calls: 30 },
+                            { day: "Sat", calls: 8 },
+                            { day: "Sun", calls: 5 },
+                          ]}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                            <XAxis dataKey="day" axisLine={false} tickLine={false} />
+                            <YAxis axisLine={false} tickLine={false} />
+                            <RechartsTooltip />
+                            <Line type="monotone" dataKey="calls" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    {/* Status Chart */}
+                    <Card className="border-none shadow-sm bg-card/50">
+                      <CardHeader>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <CardTitle>Lead Status</CardTitle>
+                            <CardDescription>Distribution across stages</CardDescription>
+                          </div>
+                          {isAdmin && (
+                            <div className="flex gap-2">
+                              <Select value={selectedAdminPieMonth.toString()} onValueChange={(v) => setSelectedAdminPieMonth(parseInt(v))}>
+                                <SelectTrigger className="w-[100px] h-8 text-xs">
+                                  <SelectValue placeholder="Month" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 12 }, (_, i) => (
+                                    <SelectItem key={i} value={i.toString()}>{new Date(2024, i).toLocaleString('default', { month: 'short' })}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: "New", value: leads.filter(l => l.status === "New").length || 400 },
+                                { name: "Interested", value: leads.filter(l => l.status === "Interested").length || 300 },
+                                { name: "In Progress", value: leads.filter(l => l.status === "In Progress").length || 300 },
+                                { name: "Closed", value: leads.filter(l => l.status === "Closed").length || 200 },
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              <Cell fill="hsl(var(--primary))" />
+                              <Cell fill="#10b981" />
+                              <Cell fill="#f59e0b" />
+                              <Cell fill="#ef4444" />
+                            </Pie>
+                            <RechartsTooltip />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {isAdmin && (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <Card className="border-none shadow-sm bg-card/50 col-span-2">
+                        <CardHeader>
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <CardTitle>Revenue Trends</CardTitle>
+                              <CardDescription>Monthly subscription revenue</CardDescription>
+                            </div>
+                            <Select value={selectedAdminRevenueYear.toString()} onValueChange={(v) => setSelectedAdminRevenueYear(parseInt(v))}>
+                              <SelectTrigger className="w-[100px] h-8 text-xs">
+                                <SelectValue placeholder="Year" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[2024, 2025, 2026].map(y => (
+                                  <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="h-[300px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={[
+                              { month: "Jan", revenue: 45000 },
+                              { month: "Feb", revenue: 52000 },
+                              { month: "Mar", revenue: 48000 },
+                              { month: "Apr", revenue: 61000 },
+                              { month: "May", revenue: 55000 },
+                              { month: "Jun", revenue: 67000 },
+                            ]}>
+                              <defs>
+                                <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                              <XAxis dataKey="month" axisLine={false} tickLine={false} />
+                              <YAxis axisLine={false} tickLine={false} />
+                              <RechartsTooltip />
+                              <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorRev)" />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-none shadow-sm bg-card/50">
+                        <CardHeader>
+                          <CardTitle>Recent Users</CardTitle>
+                          <CardDescription>Newly registered customers</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {registeredUsers.slice(0, 5).map((u, i) => (
+                              <div key={i} className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-bold">
+                                    {u.firstName?.[0]}{u.lastName?.[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 overflow-hidden">
+                                  <p className="text-sm font-medium truncate">{u.firstName} {u.lastName}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{u.subscription?.plan || "No Plan"}</p>
+                                </div>
+                                <Badge variant="outline" className="text-[10px]">{u.subscription?.status}</Badge>
+                              </div>
+                            ))}
+                            <Button variant="ghost" className="w-full text-xs mt-4" onClick={() => setActiveTab("admin-users")}>
+                              View All Users
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
                 </div>
-                <MoreVertical className="h-4 w-4 ml-auto text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setActiveTab("profile")}>
-                <UserCog className="mr-2 h-4 w-4" />
-                Profile Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setActiveTab("billing")}>
-                <Wallet className="mr-2 h-4 w-4" />
-                Billing & Usage
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </aside>
+              )}
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto relative h-screen">
-        <div className="container mx-auto p-4 md:p-8 max-w-7xl animate-in fade-in duration-500">
-          {activeTab === "overview" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-              </div>
+              {activeTab === "profile" && (
+                <div className="space-y-6">
+                  <div className="flex flex-col gap-2">
+                    <h1 className="text-3xl font-bold flex items-center gap-2">
+                      <UserCog className="h-8 w-8 text-primary" />
+                      Profile & Settings
+                    </h1>
+                    <p className="text-muted-foreground">Manage account info and preferences.</p>
+                  </div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat, i) => (
-                  <Card key={i} className="hover-elevate cursor-pointer border-l-4 border-l-primary" onClick={() => setActiveTab(stat.tab)}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
-                      <stat.icon className="h-4 w-4 text-primary" />
+                  <Card className="border-border/50">
+                    <CardHeader>
+                      <CardTitle>Account Information</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{stat.value}</div>
-                      {(stat as any).change && (
-                        <p className={`text-xs ${(stat as any).change?.startsWith('+') ? 'text-green-500' : (stat as any).change === 'Balance' ? 'text-primary' : 'text-red-500'}`}>
-                          {(stat as any).change} {(stat as any).change !== 'Balance' && 'from last week'}
-                        </p>
-                      )}
+                      <form onSubmit={handleUpdateProfile} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>First Name</Label>
+                            <Input value={profileForm.firstName} onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Last Name</Label>
+                            <Input value={profileForm.lastName} onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Email</Label>
+                          <Input value={profileForm.email} disabled className="bg-muted" />
+                        </div>
+                        <Button type="submit" disabled={isSaving}>Update Profile</Button>
+                      </form>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
-              
-              {/* Existing Charts and Sections for Overview */}
-              {/* ... Omitting some parts for brevity ... */}
-            </div>
-          )}
-
-          {activeTab === "crm" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold tracking-tight">Lead CRM</h1>
-                <Button onClick={() => setIsAddLeadOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Lead
-                </Button>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
-                <div className="relative min-w-[300px]">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search name, phone or email..." 
-                    className="pl-9 h-9" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
                 </div>
-                <Select value={leadCampaignFilter} onValueChange={setLeadCampaignFilter}>
-                  <SelectTrigger className="w-[200px] h-9">
-                    <SelectValue placeholder="All Campaigns" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Campaigns</SelectItem>
-                    {campaigns.map(c => (
-                      <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-                  <SelectTrigger className="w-[180px] h-9">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="New">New</SelectItem>
-                    <SelectItem value="Interested">Interested</SelectItem>
-                    <SelectItem value="Follow Up">Follow Up</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Closed">Closed</SelectItem>
-                    <SelectItem value="Unqualified">Unqualified</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle>Leads Directory</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Contact</TableHead>
-                        <TableHead>Campaign</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {leads
-                        .filter(l => {
-                          const matchesSearch = l.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                              l.phone.includes(searchTerm) || 
-                                              (l.email && l.email.toLowerCase().includes(searchTerm.toLowerCase()));
-                          const matchesCampaign = leadCampaignFilter === "all" || l.campaignId === leadCampaignFilter;
-                          const matchesStatus = campaignFilter === "all" || l.status === campaignFilter;
-                          return matchesSearch && matchesCampaign && matchesStatus;
-                        })
-                        .map((lead) => (
-                        <TableRow key={lead._id}>
-                          <TableCell className="font-medium">{lead.name}</TableCell>
-                          <TableCell>
-                            <div className="text-sm">{lead.phone}</div>
-                            <div className="text-xs text-muted-foreground">{lead.email}</div>
-                          </TableCell>
-                          <TableCell>{lead.campaignName || "General"}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{lead.status}</Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => handleViewLead(lead)}><Eye className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleEditLead(lead)}><Edit3 className="h-4 w-4" /></Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+              )}
             </div>
-          )}
-
-          {activeTab === "profile" && (
-            <div className="p-6 space-y-6">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <UserCog className="h-8 w-8 text-primary" />
-                  Profile & Settings
-                </h1>
-                <p className="text-muted-foreground">Manage your account information, security, and platform preferences.</p>
-              </div>
-
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle>Logo & Branding</CardTitle>
-                  <CardDescription>Upload your company logo for white-label reports.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-6">
-                    <Avatar className="h-24 w-24 border">
-                      <AvatarImage src={user?.logoUrl} />
-                      <AvatarFallback><Building className="h-12 w-12" /></AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-2">
-                      <Input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleLogoUpload}
-                        disabled={isUploading}
-                        className="max-w-xs"
-                      />
-                      <p className="text-xs text-muted-foreground">Recommended size: 200x200px. Max 2MB.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Tabs defaultValue="account" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="account">Profile</TabsTrigger>
-                  <TabsTrigger value="settings">Settings</TabsTrigger>
-                  <TabsTrigger value="security">Security</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="account" className="space-y-4 pt-4">
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle>Account Information</CardTitle>
-                      <CardDescription>Update your personal and company details.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleUpdateProfile} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>First Name</Label>
-                            <Input value={profileForm.firstName} onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Last Name</Label>
-                            <Input value={profileForm.lastName} onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Email</Label>
-                          <Input value={profileForm.email} disabled className="bg-muted" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Phone</Label>
-                          <Input value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Company Name</Label>
-                          <Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} />
-                        </div>
-                        <Button type="submit" disabled={isSaving}>
-                          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                          Update Profile
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-border/50 overflow-hidden group">
-                    <CardHeader className="bg-primary/5 border-b border-primary/10">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <CardTitle className="text-xl">Subscription Status</CardTitle>
-                          <CardDescription>Current plan: {user?.subscription?.plan}</CardDescription>
-                        </div>
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
-                          {user?.subscription?.status}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Credits Used</span>
-                            <span className="font-medium">{user?.subscription?.creditsUsed} / {user?.subscription?.monthlyCallCredits}</span>
-                          </div>
-                          <Progress value={(user?.subscription?.creditsUsed || 0) / (user?.subscription?.monthlyCallCredits || 1) * 100} className="h-2" />
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <CalendarDays className="h-4 w-4" />
-                            <span>Renewal Date: {user?.subscription?.renewalDate ? new Date(user?.subscription?.renewalDate).toLocaleDateString() : "Next billing cycle"}</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col justify-center gap-3">
-                          <Button className="w-full" onClick={() => handleNavClick("billing")}>
-                            <CreditCard className="mr-2 h-4 w-4" />
-                            Manage Billing & Usage
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="settings" className="space-y-4 pt-4">
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle>Platform Settings</CardTitle>
-                      <CardDescription>Configure your dialer and notification preferences.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label>Do Not Disturb</Label>
-                          <p className="text-sm text-muted-foreground">Pause all outgoing campaigns temporarily.</p>
-                        </div>
-                        <Switch checked={dndEnabled} onCheckedChange={(val) => { setDndEnabled(val); handleUpdateSettings({ dndEnabled: val }); }} />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label>Local Presence Dialing</Label>
-                          <p className="text-sm text-muted-foreground">Show local area codes to increase answer rates.</p>
-                        </div>
-                        <Switch checked={localPresence} onCheckedChange={(val) => { setLocalPresence(val); handleUpdateSettings({ localPresenceDialing: val }); }} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Daily Call Limit</Label>
-                        <Input type="number" value={callLimit} onChange={(e) => { setCallLimit(parseInt(e.target.value)); handleUpdateSettings({ dailyCallLimit: parseInt(e.target.value) }); }} />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="security" className="space-y-4 pt-4">
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle>Change Password</CardTitle>
-                      <CardDescription>Ensure your account remains secure.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleChangePassword} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Current Password</Label>
-                          <Input type="password" value={passwordForm.current} onChange={e => setPasswordForm({...passwordForm, current: e.target.value})} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>New Password</Label>
-                          <Input type="password" value={passwordForm.new} onChange={e => setPasswordForm({...passwordForm, new: e.target.value})} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Confirm New Password</Label>
-                          <Input type="password" value={passwordForm.confirm} onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})} />
-                        </div>
-                        <Button type="submit" disabled={isSaving}>
-                          {isSaving ? "Updating..." : "Update Password"}
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
-
-          {activeTab === "billing" && (
-            <div className="p-6 space-y-6">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <Wallet className="h-8 w-8 text-primary" />
-                  Billing & Usage
-                </h1>
-                <p className="text-muted-foreground">Manage your subscription, view credits, and track usage.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-border/50 bg-primary/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Available Credits</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">₹{(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Prepaid balance for all services</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/50 bg-orange-500/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Consumption</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">₹{(user?.subscription?.creditsUsed || 0).toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Used in current cycle</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/50 bg-green-500/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Active Plan</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{user?.subscription?.plan}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Status: {user?.subscription?.status}</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle>Available Plans</CardTitle>
-                  <CardDescription>Upgrade or renew your subscription to get more features.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {plans.map((plan) => (
-                      <Card key={plan._id} className={`relative flex flex-col ${user?.subscription?.plan === plan.name ? 'border-primary ring-1 ring-primary' : 'border-border/50 hover-elevate'}`}>
-                        {user?.subscription?.plan === plan.name && (
-                          <div className="absolute top-0 right-0 p-2">
-                            <Badge variant="default">Current</Badge>
-                          </div>
-                        )}
-                        <CardHeader>
-                          <CardTitle>{plan.name}</CardTitle>
-                          <div className="mt-4 flex items-baseline text-3xl font-bold">
-                            ₹{plan.price}
-                            <span className="ml-1 text-sm font-normal text-muted-foreground">/{plan.duration}</span>
-                          </div>
-                          <CardDescription className="mt-2">{plan.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                          <ul className="space-y-2 text-sm">
-                            {plan.features.map((feature, i) => (
-                              <li key={i} className="flex items-center">
-                                <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                        <CardFooter>
-                          <Button 
-                            className="w-full" 
-                            variant={user?.subscription?.plan === plan.name ? "outline" : "default"}
-                          >
-                            {user?.subscription?.plan === plan.name ? "Renew Plan" : "Select Plan"}
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "profile" && (
-            <div className="p-6 space-y-6">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <UserCog className="h-8 w-8 text-primary" />
-                  Profile & Settings
-                </h1>
-                <p className="text-muted-foreground">Manage your account information, security, and platform preferences.</p>
-              </div>
-
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle>Logo & Branding</CardTitle>
-                  <CardDescription>Upload your company logo for white-label reports.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-6">
-                    <Avatar className="h-24 w-24 border">
-                      <AvatarImage src={user?.logoUrl} />
-                      <AvatarFallback><Building className="h-12 w-12" /></AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-2">
-                      <Input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleLogoUpload}
-                        disabled={isUploading}
-                        className="max-w-xs"
-                      />
-                      <p className="text-xs text-muted-foreground">Recommended size: 200x200px. Max 2MB.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Tabs defaultValue="account" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="account">Profile</TabsTrigger>
-                  <TabsTrigger value="settings">Settings</TabsTrigger>
-                  <TabsTrigger value="security">Security</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="account" className="space-y-4 pt-4">
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle>Account Information</CardTitle>
-                      <CardDescription>Update your personal and company details.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleUpdateProfile} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>First Name</Label>
-                            <Input value={profileForm.firstName} onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Last Name</Label>
-                            <Input value={profileForm.lastName} onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Email</Label>
-                          <Input value={profileForm.email} disabled className="bg-muted" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Phone</Label>
-                          <Input value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Company Name</Label>
-                          <Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} />
-                        </div>
-                        <Button type="submit" disabled={isSaving}>
-                          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                          Update Profile
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-border/50 overflow-hidden group">
-                    <CardHeader className="bg-primary/5 border-b border-primary/10">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <CardTitle className="text-xl">Subscription Status</CardTitle>
-                          <CardDescription>Current plan: {user?.subscription?.plan}</CardDescription>
-                        </div>
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
-                          {user?.subscription?.status}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Credits Used</span>
-                            <span className="font-medium">{user?.subscription?.creditsUsed} / {user?.subscription?.monthlyCallCredits}</span>
-                          </div>
-                          <Progress value={(user?.subscription?.creditsUsed || 0) / (user?.subscription?.monthlyCallCredits || 1) * 100} className="h-2" />
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <CalendarDays className="h-4 w-4" />
-                            <span>Renewal Date: {user?.subscription?.renewalDate ? new Date(user?.subscription?.renewalDate).toLocaleDateString() : "Next billing cycle"}</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col justify-center gap-3">
-                          <Button className="w-full" onClick={() => handleNavClick("billing")}>
-                            <CreditCard className="mr-2 h-4 w-4" />
-                            Manage Billing & Usage
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="settings" className="space-y-4 pt-4">
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle>Platform Settings</CardTitle>
-                      <CardDescription>Configure your dialer and notification preferences.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label>Do Not Disturb</Label>
-                          <p className="text-sm text-muted-foreground">Pause all outgoing campaigns temporarily.</p>
-                        </div>
-                        <Switch checked={dndEnabled} onCheckedChange={(val) => { setDndEnabled(val); handleUpdateSettings({ dndEnabled: val }); }} />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label>Local Presence Dialing</Label>
-                          <p className="text-sm text-muted-foreground">Show local area codes to increase answer rates.</p>
-                        </div>
-                        <Switch checked={localPresence} onCheckedChange={(val) => { setLocalPresence(val); handleUpdateSettings({ localPresenceDialing: val }); }} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Daily Call Limit</Label>
-                        <Input type="number" value={callLimit} onChange={(e) => { setCallLimit(parseInt(e.target.value)); handleUpdateSettings({ dailyCallLimit: parseInt(e.target.value) }); }} />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="security" className="space-y-4 pt-4">
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle>Change Password</CardTitle>
-                      <CardDescription>Ensure your account remains secure.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleChangePassword} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Current Password</Label>
-                          <Input type="password" value={passwordForm.current} onChange={e => setPasswordForm({...passwordForm, current: e.target.value})} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>New Password</Label>
-                          <Input type="password" value={passwordForm.new} onChange={e => setPasswordForm({...passwordForm, new: e.target.value})} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Confirm New Password</Label>
-                          <Input type="password" value={passwordForm.confirm} onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})} />
-                        </div>
-                        <Button type="submit" disabled={isSaving}>
-                          {isSaving ? "Updating..." : "Update Password"}
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
-
-          {activeTab === "billing" && (
-            <div className="p-6 space-y-6">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <Wallet className="h-8 w-8 text-primary" />
-                  Billing & Usage
-                </h1>
-                <p className="text-muted-foreground">Manage your subscription, view credits, and track usage.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-border/50 bg-primary/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Available Credits</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">₹{(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Prepaid balance for all services</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/50 bg-orange-500/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Consumption</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">₹{(user?.subscription?.creditsUsed || 0).toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Used in current cycle</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/50 bg-green-500/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Active Plan</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{user?.subscription?.plan}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Status: {user?.subscription?.status}</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle>Available Plans</CardTitle>
-                  <CardDescription>Upgrade or renew your subscription to get more features.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {plans.map((plan) => (
-                      <Card key={plan._id} className={`relative flex flex-col ${user?.subscription?.plan === plan.name ? 'border-primary ring-1 ring-primary' : 'border-border/50 hover-elevate'}`}>
-                        {user?.subscription?.plan === plan.name && (
-                          <div className="absolute top-0 right-0 p-2">
-                            <Badge variant="default">Current</Badge>
-                          </div>
-                        )}
-                        <CardHeader>
-                          <CardTitle>{plan.name}</CardTitle>
-                          <div className="mt-4 flex items-baseline text-3xl font-bold">
-                            ₹{plan.price}
-                            <span className="ml-1 text-sm font-normal text-muted-foreground">/{plan.duration}</span>
-                          </div>
-                          <CardDescription className="mt-2">{plan.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                          <ul className="space-y-2 text-sm">
-                            {plan.features.map((feature, i) => (
-                              <li key={i} className="flex items-center">
-                                <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                        <CardFooter>
-                          <Button 
-                            className="w-full" 
-                            variant={user?.subscription?.plan === plan.name ? "outline" : "default"}
-                          >
-                            {user?.subscription?.plan === plan.name ? "Renew Plan" : "Select Plan"}
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "profile" && (
-            <div className="p-6 space-y-6">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <UserCog className="h-8 w-8 text-primary" />
-                  Profile & Settings
-                </h1>
-                <p className="text-muted-foreground">Manage your account information, security, and platform preferences.</p>
-              </div>
-
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle>Logo & Branding</CardTitle>
-                  <CardDescription>Upload your company logo for white-label reports.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-6">
-                    <Avatar className="h-24 w-24 border">
-                      <AvatarImage src={user?.logoUrl} />
-                      <AvatarFallback><Building className="h-12 w-12" /></AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-2">
-                      <Input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleLogoUpload}
-                        disabled={isUploading}
-                        className="max-w-xs"
-                      />
-                      <p className="text-xs text-muted-foreground">Recommended size: 200x200px. Max 2MB.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Tabs defaultValue="account" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="account">Profile</TabsTrigger>
-                  <TabsTrigger value="settings">Settings</TabsTrigger>
-                  <TabsTrigger value="security">Security</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="account" className="space-y-4 pt-4">
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle>Account Information</CardTitle>
-                      <CardDescription>Update your personal and company details.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleUpdateProfile} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>First Name</Label>
-                            <Input value={profileForm.firstName} onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Last Name</Label>
-                            <Input value={profileForm.lastName} onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Email</Label>
-                          <Input value={profileForm.email} disabled className="bg-muted" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Phone</Label>
-                          <Input value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Company Name</Label>
-                          <Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} />
-                        </div>
-                        <Button type="submit" disabled={isSaving}>
-                          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                          Update Profile
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-border/50 overflow-hidden group">
-                    <CardHeader className="bg-primary/5 border-b border-primary/10">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <CardTitle className="text-xl">Subscription Status</CardTitle>
-                          <CardDescription>Current plan: {user?.subscription?.plan}</CardDescription>
-                        </div>
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
-                          {user?.subscription?.status}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Credits Used</span>
-                            <span className="font-medium">{user?.subscription?.creditsUsed} / {user?.subscription?.monthlyCallCredits}</span>
-                          </div>
-                          <Progress value={(user?.subscription?.creditsUsed || 0) / (user?.subscription?.monthlyCallCredits || 1) * 100} className="h-2" />
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <CalendarIcon className="h-4 w-4" />
-                            <span>Renewal Date: {user?.subscription?.renewalDate ? new Date(user?.subscription?.renewalDate).toLocaleDateString() : "Next billing cycle"}</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col justify-center gap-3">
-                          <Button className="w-full" onClick={() => setActiveTab("billing")}>
-                            <CreditCard className="mr-2 h-4 w-4" />
-                            Manage Billing & Usage
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="settings" className="space-y-4 pt-4">
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle>Platform Settings</CardTitle>
-                      <CardDescription>Configure your dialer and notification preferences.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label>Do Not Disturb</Label>
-                          <p className="text-sm text-muted-foreground">Pause all outgoing campaigns temporarily.</p>
-                        </div>
-                        <Switch checked={dndEnabled} onCheckedChange={(val) => { setDndEnabled(val); handleUpdateSettings({ dndEnabled: val }); }} />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label>Local Presence Dialing</Label>
-                          <p className="text-sm text-muted-foreground">Show local area codes to increase answer rates.</p>
-                        </div>
-                        <Switch checked={localPresence} onCheckedChange={(val) => { setLocalPresence(val); handleUpdateSettings({ localPresenceDialing: val }); }} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Daily Call Limit</Label>
-                        <Input type="number" value={callLimit} onChange={(e) => { setCallLimit(parseInt(e.target.value)); handleUpdateSettings({ dailyCallLimit: parseInt(e.target.value) }); }} />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="security" className="space-y-4 pt-4">
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle>Change Password</CardTitle>
-                      <CardDescription>Ensure your account remains secure.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleChangePassword} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Current Password</Label>
-                          <Input type="password" value={passwordForm.current} onChange={e => setPasswordForm({...passwordForm, current: e.target.value})} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>New Password</Label>
-                          <Input type="password" value={passwordForm.new} onChange={e => setPasswordForm({...passwordForm, new: e.target.value})} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Confirm New Password</Label>
-                          <Input type="password" value={passwordForm.confirm} onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})} />
-                        </div>
-                        <Button type="submit" disabled={isSaving}>
-                          {isSaving ? "Updating..." : "Update Password"}
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
-
-          {activeTab === "billing" && (
-            <div className="p-6 space-y-6">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <Wallet className="h-8 w-8 text-primary" />
-                  Billing & Usage
-                </h1>
-                <p className="text-muted-foreground">Manage your subscription, view credits, and track usage.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-border/50 bg-primary/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Available Credits</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">₹{(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Prepaid balance for all services</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/50 bg-orange-500/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Consumption</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">₹{(user?.subscription?.creditsUsed || 0).toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Used in current cycle</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/50 bg-green-500/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Active Plan</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{user?.subscription?.plan}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Status: {user?.subscription?.status}</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle>Available Plans</CardTitle>
-                  <CardDescription>Upgrade or renew your subscription to get more features.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {plans.map((plan) => (
-                      <Card key={plan._id} className={`relative flex flex-col ${user?.subscription?.plan === plan.name ? 'border-primary ring-1 ring-primary' : 'border-border/50 hover-elevate'}`}>
-                        {user?.subscription?.plan === plan.name && (
-                          <div className="absolute top-0 right-0 p-2">
-                            <Badge variant="default">Current</Badge>
-                          </div>
-                        )}
-                        <CardHeader>
-                          <CardTitle>{plan.name}</CardTitle>
-                          <div className="mt-4 flex items-baseline text-3xl font-bold">
-                            ₹{plan.price}
-                            <span className="ml-1 text-sm font-normal text-muted-foreground">/{plan.duration}</span>
-                          </div>
-                          <CardDescription className="mt-2">{plan.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                          <ul className="space-y-2 text-sm">
-                            {plan.features.map((feature, i) => (
-                              <li key={i} className="flex items-center">
-                                <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                        <CardFooter>
-                          <Button 
-                            className="w-full" 
-                            variant={user?.subscription?.plan === plan.name ? "outline" : "default"}
-                          >
-                            {user?.subscription?.plan === plan.name ? "Renew Plan" : "Select Plan"}
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* ... Remaining components for other tabs (campaigns, knowledge base, etc) ... */}
-        </div>
-      </main>
+          </ScrollArea>
+        </main>
+      </div>
     </div>
   );
 }
