@@ -454,6 +454,81 @@ export default function Dashboard() {
     }
   };
 
+  const handleCreateCampaign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    if (!validateCampaign(newCampaign)) return;
+    
+    setIsSaving(true);
+    try {
+      const campaign = await campaignsApi.create({
+        ...newCampaign,
+        userId: user._id,
+        status: "Draft"
+      });
+      setCampaigns([...campaigns, campaign]);
+      setIsCreateCampaignOpen(false);
+      setNewCampaign({
+        name: "",
+        goal: "sales",
+        script: "",
+        voice: "Rachel (American)",
+        additionalContext: "",
+        callingHours: { start: "09:00", end: "17:00" },
+        knowledgeBaseFiles: [],
+        startDate: "",
+        endDate: ""
+      });
+      setCampaignErrors({});
+      toast({ title: "Campaign created successfully!" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error creating campaign", description: error.message });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUpdateCampaign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCampaign) return;
+    if (!validateCampaign(editCampaignForm)) return;
+
+    setIsSaving(true);
+    try {
+      const updated = await campaignsApi.update(selectedCampaign._id, {
+        name: editCampaignForm.name,
+        goal: editCampaignForm.goal,
+        script: editCampaignForm.script,
+        voice: editCampaignForm.voice,
+        additionalContext: editCampaignForm.additionalContext,
+        callingHours: editCampaignForm.callingHours,
+        status: editCampaignForm.status,
+        knowledgeBaseFiles: editCampaignForm.knowledgeBaseFiles,
+        startDate: editCampaignForm.startDate,
+        endDate: editCampaignForm.endDate
+      });
+      setCampaigns(campaigns.map(c => c._id === selectedCampaign._id ? updated : c));
+      setIsEditCampaignOpen(false);
+      setSelectedCampaign(null);
+      toast({ title: "Campaign updated successfully!" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error updating campaign", description: error.message });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteCampaign = async (id: string) => {
+    try {
+      await campaignsApi.delete(id);
+      setCampaigns(campaigns.filter(c => c._id !== id));
+      setDeleteConfirm({ type: null, id: "", name: "" });
+      toast({ title: "Campaign deleted" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error deleting campaign", description: error.message });
+    }
+  };
+
   const handleViewLead = (lead: Lead) => {
     setSelectedLead(lead);
     setIsLeadDetailsOpen(true);
@@ -1125,6 +1200,209 @@ export default function Dashboard() {
              </div>
           )}
 
+          {/* Campaign Creation Dialog */}
+          <Dialog open={isCreateCampaignOpen} onOpenChange={setIsCreateCampaignOpen}>
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create New Campaign</DialogTitle>
+                <DialogDescription>Set up your AI calling agent with a goal and script.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleCreateCampaign} className="space-y-6 py-4">
+                <Tabs value={campaignTab} onValueChange={setCampaignTab}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="basics">Basics & Goal</TabsTrigger>
+                    <TabsTrigger value="agent">AI Agent & Script</TabsTrigger>
+                    <TabsTrigger value="config">Configuration</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="basics" className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="campaign-name">Campaign Name <span className="text-destructive">*</span></Label>
+                      <Input id="campaign-name" placeholder="Summer Real Estate Leads" value={newCampaign.name} onChange={e => setNewCampaign({...newCampaign, name: e.target.value})} className={campaignErrors.name ? "border-destructive" : ""} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Campaign Goal</Label>
+                        <Select value={newCampaign.goal} onValueChange={(v: any) => setNewCampaign({...newCampaign, goal: v})}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sales">Outbound Sales</SelectItem>
+                            <SelectItem value="support">Customer Support</SelectItem>
+                            <SelectItem value="survey">Market Survey</SelectItem>
+                            <SelectItem value="appointment">Appointment Setting</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Voice Preference</Label>
+                        <Select value={newCampaign.voice} onValueChange={v => setNewCampaign({...newCampaign, voice: v})}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Rachel (American)">Rachel (American)</SelectItem>
+                            <SelectItem value="Drew (Professional)">Drew (Professional)</SelectItem>
+                            <SelectItem value="Clyde (Friendly)">Clyde (Friendly)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Start Date</Label>
+                        <Input type="date" value={newCampaign.startDate} onChange={e => setNewCampaign({...newCampaign, startDate: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>End Date</Label>
+                        <Input type="date" value={newCampaign.endDate} onChange={e => setNewCampaign({...newCampaign, endDate: e.target.value})} />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="agent" className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label>AI Calling Script <span className="text-destructive">*</span></Label>
+                      <Textarea placeholder="Hi, I'm calling from... [Use {name} for personalization]" className="min-h-[150px]" value={newCampaign.script} onChange={e => setNewCampaign({...newCampaign, script: e.target.value})} />
+                      <p className="text-xs text-muted-foreground">Use variables like {'{name}'}, {'{company}'} to personalize the AI conversation.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Additional Context</Label>
+                      <Textarea placeholder="Information the AI should know about your business, common FAQs, etc." value={newCampaign.additionalContext} onChange={e => setNewCampaign({...newCampaign, additionalContext: e.target.value})} />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="config" className="space-y-4 pt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Daily Call Limit</Label>
+                        <Input type="number" placeholder="500" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Calling Hours</Label>
+                        <div className="flex items-center gap-2">
+                          <Input type="time" value={newCampaign.callingHours.start} onChange={e => setNewCampaign({...newCampaign, callingHours: {...newCampaign.callingHours, start: e.target.value}})} />
+                          <span>to</span>
+                          <Input type="time" value={newCampaign.callingHours.end} onChange={e => setNewCampaign({...newCampaign, callingHours: {...newCampaign.callingHours, end: e.target.value}})} />
+                        </div>
+                        {campaignErrors.callingHours && <p className="text-xs text-destructive">{campaignErrors.callingHours}</p>}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Knowledge Base Files</Label>
+                      <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                        <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">Click to upload or drag and drop PDFs, TXT, or DOCX files</p>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsCreateCampaignOpen(false)}>Cancel</Button>
+                  {campaignTab === "basics" ? (
+                    <Button type="button" onClick={() => setCampaignTab("agent")}>Next: Configure Agent</Button>
+                  ) : campaignTab === "agent" ? (
+                    <Button type="button" onClick={() => setCampaignTab("config")}>Next: Configuration</Button>
+                  ) : (
+                    <Button type="submit" disabled={isSaving}>
+                      {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+                      Create Campaign
+                    </Button>
+                  )}
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Campaign Dialog */}
+          <Dialog open={isEditCampaignOpen} onOpenChange={setIsEditCampaignOpen}>
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Campaign</DialogTitle>
+                <DialogDescription>Update your campaign settings and agent script.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleUpdateCampaign} className="space-y-6 py-4">
+                <Tabs defaultValue="basics">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="basics">Basics & Goal</TabsTrigger>
+                    <TabsTrigger value="agent">AI Agent & Script</TabsTrigger>
+                    <TabsTrigger value="config">Configuration</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="basics" className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-campaign-name">Campaign Name</Label>
+                      <Input id="edit-campaign-name" value={editCampaignForm.name} onChange={e => setEditCampaignForm({...editCampaignForm, name: e.target.value})} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Status</Label>
+                        <Select value={editCampaignForm.status} onValueChange={(v: any) => setEditCampaignForm({...editCampaignForm, status: v})}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Active">Active</SelectItem>
+                            <SelectItem value="Paused">Paused</SelectItem>
+                            <SelectItem value="Draft">Draft</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Goal</Label>
+                        <Select value={editCampaignForm.goal} onValueChange={(v: any) => setEditCampaignForm({...editCampaignForm, goal: v})}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sales">Outbound Sales</SelectItem>
+                            <SelectItem value="support">Customer Support</SelectItem>
+                            <SelectItem value="survey">Market Survey</SelectItem>
+                            <SelectItem value="appointment">Appointment Setting</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Start Date</Label>
+                        <Input type="date" value={editCampaignForm.startDate} onChange={e => setEditCampaignForm({...editCampaignForm, startDate: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>End Date</Label>
+                        <Input type="date" value={editCampaignForm.endDate} onChange={e => setEditCampaignForm({...editCampaignForm, endDate: e.target.value})} />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="agent" className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label>Voice Preference</Label>
+                      <Select value={editCampaignForm.voice} onValueChange={v => setEditCampaignForm({...editCampaignForm, voice: v})}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Rachel (American)">Rachel (American)</SelectItem>
+                          <SelectItem value="Drew (Professional)">Drew (Professional)</SelectItem>
+                          <SelectItem value="Clyde (Friendly)">Clyde (Friendly)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Script</Label>
+                      <Textarea className="min-h-[150px]" value={editCampaignForm.script} onChange={e => setEditCampaignForm({...editCampaignForm, script: e.target.value})} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Additional Context</Label>
+                      <Textarea placeholder="Information the AI should know..." value={editCampaignForm.additionalContext} onChange={e => setEditCampaignForm({...editCampaignForm, additionalContext: e.target.value})} />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="config" className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label>Calling Hours</Label>
+                      <div className="flex items-center gap-2">
+                        <Input type="time" value={editCampaignForm.callingHours.start} onChange={e => setEditCampaignForm({...editCampaignForm, callingHours: {...editCampaignForm.callingHours, start: e.target.value}})} />
+                        <span>to</span>
+                        <Input type="time" value={editCampaignForm.callingHours.end} onChange={e => setEditCampaignForm({...editCampaignForm, callingHours: {...editCampaignForm.callingHours, end: e.target.value}})} />
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsEditCampaignOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={isSaving}>Update Campaign</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
           {/* Lead Details Sheet */}
           <Sheet open={isLeadDetailsOpen} onOpenChange={setIsLeadDetailsOpen}>
             <SheetContent className="sm:max-w-xl w-full overflow-y-auto p-0 flex flex-col gap-0">
@@ -1233,14 +1511,14 @@ export default function Dashboard() {
                             u.email.toLowerCase().includes(searchLower) ||
                             (u.companyName || "").toLowerCase().includes(searchLower);
                           
-                          const matchesPlan = campaignFilter === "all" || u.subscription?.plan === campaignFilter;
+                          const matchesPlan = campaignFilter === "all" || (u.subscription?.plan === campaignFilter);
                           const matchesStatus = (logsCampaignFilter === "all") || (u.subscription?.status === logsCampaignFilter);
                           
                           return !!(matchesSearch && matchesPlan && matchesStatus);
                         })
                         .map((u) => (
                         <TableRow key={u._id}>
-                          <TableCell><div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarFallback>{u.firstName?.charAt(0)}{u.lastName?.charAt(0)}</AvatarFallback></Avatar><div><div className="font-medium">{u.firstName} {u.lastName}</div><div className="text-xs text-muted-foreground">{u.email}</div></div></div></TableCell>
+                          <TableCell><div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarFallback>{(u.firstName || "").charAt(0)}{(u.lastName || "").charAt(0)}</AvatarFallback></Avatar><div><div className="font-medium">{u.firstName} {u.lastName}</div><div className="text-xs text-muted-foreground">{u.email}</div></div></div></TableCell>
                           <TableCell>{u.companyName || "-"}</TableCell>
                           <TableCell><Badge variant="secondary">{u.subscription?.plan || "Free"}</Badge></TableCell>
                           <TableCell><Badge variant={u.subscription?.status === 'Active' ? 'default' : 'outline'} className={u.subscription?.status === 'Active' ? 'bg-green-500/15 text-green-600 border-none' : ''}>{u.subscription?.status || "Inactive"}</Badge></TableCell>
