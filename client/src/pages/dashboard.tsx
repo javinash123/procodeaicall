@@ -414,7 +414,7 @@ export default function Dashboard() {
     
     setIsSaving(true);
     try {
-      const updated = await leadsApi.update(selectedLead._id, {
+      const response = await leadsApi.update(selectedLead._id, {
         name: editLead.name.trim(),
         company: editLead.company.trim(),
         email: editLead.email.trim(),
@@ -423,12 +423,21 @@ export default function Dashboard() {
         status: editLead.status,
         campaignId: editLead.campaignId && editLead.campaignId !== "none" ? editLead.campaignId : undefined
       });
-      const updatedWithCampaign = editLead.campaignId && editLead.campaignId !== "none"
-        ? { ...updated, campaignName: campaigns.find(c => c._id === editLead.campaignId)?.name }
-        : { ...updated, campaignName: undefined };
-      setLeads(leads.map(l => l._id === selectedLead._id ? updatedWithCampaign : l));
+      
+      const updated = response.lead || response;
+      
+      // Update selected lead details if it's the one currently viewed
+      const updatedLead = { 
+        ...selectedLead, 
+        ...updated,
+        campaignName: editLead.campaignId && editLead.campaignId !== "none" 
+          ? campaigns.find(c => c._id === editLead.campaignId)?.name 
+          : undefined 
+      };
+      
+      setSelectedLead(updatedLead);
+      setLeads(leads.map(l => l._id === selectedLead._id ? updatedLead : l));
       setIsEditLeadOpen(false);
-      setIsLeadDetailsOpen(false);
       setLeadErrors({});
       toast({ title: "Lead updated successfully!" });
     } catch (error: any) {
@@ -585,19 +594,18 @@ export default function Dashboard() {
   };
 
   const handleAddAppointment = async () => {
-    if (!user || !appointmentForm.title.trim() || !appointmentForm.date.trim() || !appointmentForm.leadId.trim()) {
-      console.log("Validation failed:", { 
-        title: appointmentForm.title, 
-        date: appointmentForm.date, 
-        leadId: appointmentForm.leadId 
+    if (!user || !appointmentForm.title?.trim() || !appointmentForm.date?.trim() || !appointmentForm.leadId?.trim()) {
+      toast({ 
+        variant: "destructive", 
+        title: "Validation Error", 
+        description: "Please fill in all required fields (Title, Date, and Lead)." 
       });
-      toast({ variant: "destructive", title: "Please fill in all required fields" });
       return;
     }
     
     setIsSaving(true);
     try {
-      const appointment = await appointmentsApi.create({
+      const response = await appointmentsApi.create({
         userId: user._id,
         leadId: appointmentForm.leadId,
         leadName: appointmentForm.leadName,
@@ -607,7 +615,9 @@ export default function Dashboard() {
         type: appointmentForm.type,
         notes: appointmentForm.notes
       });
-      setAppointments([...appointments, appointment]);
+      
+      const newApt = response.appointment || response;
+      setAppointments([...appointments, newApt]);
       setIsAddAppointmentOpen(false);
       setScheduleFromLead(null);
       setAppointmentForm({ leadId: "", leadName: "", title: "", date: "", time: "09:00", type: "Zoom", notes: "" });
@@ -769,6 +779,14 @@ export default function Dashboard() {
                   Bulk WhatsApp
                 </Button>
                 <Button 
+                  variant={activeTab === "sms" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("sms")}
+                >
+                  <MessageSquare className="mr-3 h-5 w-5" />
+                  Bulk SMS
+                </Button>
+                <Button 
                   variant={activeTab === "callhistory" ? "secondary" : "ghost"} 
                   className="w-full justify-start hover-elevate h-11"
                   onClick={() => setActiveTab("callhistory")}
@@ -837,6 +855,16 @@ export default function Dashboard() {
 
         <div className="flex-1 p-6 overflow-auto">
           {activeTab === "whatsapp" && <BulkWhatsapp />}
+          {activeTab === "sms" && <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold tracking-tight">Bulk SMS</h1>
+            </div>
+            <Card className="p-12 text-center">
+              <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
+              <h3 className="text-lg font-medium">Bulk SMS Module</h3>
+              <p className="text-muted-foreground max-w-sm mx-auto mt-2">Send high-volume SMS campaigns to your leads. This module is currently under development.</p>
+            </Card>
+          </div>}
           {activeTab === "plans" && <AdminPlans />}
           {activeTab === "overview" && (
             <div className="space-y-6">
@@ -1676,16 +1704,6 @@ export default function Dashboard() {
                         </div>
                       </div>
                     );
-                  })}
-                </div>
-              </Card>
-            </div>
-          )}                  {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay() }).map((_, i) => <div key={`empty-${i}`} className="bg-background min-h-[120px] p-2" />)}
-                  {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0).getDate() }).map((_, i) => {
-                    const day = i + 1;
-                    const dateStr = `${calendarDate.getFullYear()}-${String(calendarDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const dayApts = appointments.filter(a => a.date === dateStr);
-                    return (<div key={day} className={`bg-background min-h-[120px] p-2 border-t hover:bg-muted/5 transition-colors ${new Date().toISOString().split('T')[0] === dateStr ? 'bg-primary/5' : ''}`}><div className={`text-sm font-bold h-6 w-6 flex items-center justify-center rounded-full mb-1 ${new Date().toISOString().split('T')[0] === dateStr ? 'bg-primary text-primary-foreground' : ''}`}>{day}</div><div className="space-y-1">{dayApts.map(apt => (<div key={apt._id} className="text-[10px] p-1 rounded bg-primary/10 text-primary truncate border border-primary/20 cursor-pointer" onClick={() => handleEditAppointment(apt)}>{apt.time} - {apt.leadName}</div>))}</div></div>);
                   })}
                 </div>
               </Card>
