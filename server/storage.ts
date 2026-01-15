@@ -1,4 +1,4 @@
-import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel, PlanModel, FeatureModel } from "./db";
+import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel, PlanModel, FeatureModel, NotificationModel } from "./db";
 import type {
   User,
   InsertUser,
@@ -19,6 +19,8 @@ import type {
   Feature,
   InsertFeature,
   SubscriptionInfo,
+  Notification,
+  InsertNotification,
 } from "@shared/schema";
 import bcryptjs from "bcryptjs";
 
@@ -75,6 +77,11 @@ export interface IStorage {
   // Feature methods
   getFeatures(): Promise<Feature[]>;
   createFeature(feature: InsertFeature): Promise<Feature>;
+
+  // Notification methods
+  getNotifications(): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationRead(id: string, userId: string): Promise<boolean>;
 }
 
 export class MongoStorage implements IStorage {
@@ -362,6 +369,28 @@ export class MongoStorage implements IStorage {
     const newFeature = await FeatureModel.create(feature);
     const obj = newFeature.toObject();
     return { ...(obj as any), _id: obj._id.toString() } as any as Feature;
+  }
+
+  // Notification methods
+  async getNotifications(): Promise<Notification[]> {
+    const notifications = await NotificationModel.find().sort({ createdAt: -1 }).lean();
+    return notifications.map((n: any) => ({ ...n, _id: n._id.toString() })) as any as Notification[];
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const newNotification = await NotificationModel.create({
+      ...notification,
+      readBy: [],
+    });
+    const obj = newNotification.toObject();
+    return { ...(obj as any), _id: obj._id.toString() } as any as Notification;
+  }
+
+  async markNotificationRead(id: string, userId: string): Promise<boolean> {
+    await NotificationModel.findByIdAndUpdate(id, {
+      $addToSet: { readBy: userId }
+    });
+    return true;
   }
 }
 

@@ -110,6 +110,7 @@ export default function Dashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [registeredUsers, setRegisteredUsers] = useState<UserType[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // UI State
@@ -266,6 +267,11 @@ export default function Dashboard() {
   const [overviewCampaignFilter, setOverviewCampaignFilter] = useState<string>("all");
   const [callActivityCampaignFilter, setCallActivityCampaignFilter] = useState<string>("all");
 
+  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>([]);
+
+  const [isAddNotificationOpen, setIsAddNotificationOpen] = useState(false);
+  const [notificationForm, setNotificationForm] = useState({ message: "", type: "notification" as "notification" | "announcement" });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [campaignFilter, setCampaignFilter] = useState("all");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
@@ -293,12 +299,13 @@ export default function Dashboard() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [leadsRes, campaignsRes, appointmentsRes, notesRes, plansRes] = await Promise.all([
+        const [leadsRes, campaignsRes, appointmentsRes, notesRes, plansRes, notificationsRes] = await Promise.all([
           leadsApi.getAll(),
           campaignsApi.getAll(),
           appointmentsApi.getAll(),
           notesApi.getAll(),
-          plansApi.getAll()
+          plansApi.getAll(),
+          apiRequest("GET", "/api/notifications").then(res => res.json())
         ]);
         
         setLeads(Array.isArray(leadsRes) ? leadsRes : (leadsRes as any).leads || []);
@@ -306,6 +313,12 @@ export default function Dashboard() {
         setAppointments(Array.isArray(appointmentsRes) ? appointmentsRes : (appointmentsRes as any).appointments || []);
         setNotes(Array.isArray(notesRes) ? notesRes : (notesRes as any).notes || []);
         setPlans(Array.isArray(plansRes) ? plansRes : (plansRes as any).plans || []);
+        
+        if (notificationsRes && notificationsRes.notifications) {
+          setNotifications(notificationsRes.notifications);
+        } else {
+          setNotifications([]);
+        }
 
         if (isAdmin) {
           const usersRes = await usersApi.getAll();
@@ -442,10 +455,10 @@ export default function Dashboard() {
         outcome: "Pending",
         campaignId: newLead.campaignId && newLead.campaignId !== "none" ? newLead.campaignId : undefined
       });
-      const leadWithCampaign = newLead.campaignId && newLead.campaignId !== "none"
+      const leadWithCampaign = (newLead.campaignId && newLead.campaignId !== "none")
         ? { ...lead, campaignName: campaigns.find(c => c._id === newLead.campaignId)?.name }
         : lead;
-      setLeads([leadWithCampaign, ...leads]);
+      setLeads([leadWithCampaign as Lead, ...leads]);
       setIsAddLeadOpen(false);
       setNewLead({ name: "", company: "", email: "", phone: "", notes: "", status: "New", campaignId: "" });
       setLeadErrors({});
@@ -802,6 +815,14 @@ export default function Dashboard() {
                   User Management
                 </Button>
                 <Button 
+                  variant={activeTab === "admin-notifications" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("admin-notifications")}
+                >
+                  <Bell className="mr-3 h-5 w-5" />
+                  Notifications
+                </Button>
+                <Button 
                   variant={activeTab === "plans" ? "secondary" : "ghost"} 
                   className="w-full justify-start hover-elevate h-11"
                   onClick={() => setActiveTab("plans")}
@@ -913,7 +934,9 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" className="relative" onClick={() => setLocation("/notifications")}>
               <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+              {notifications.filter(n => n.readBy && Array.isArray(n.readBy) && user?._id && !n.readBy.includes(user._id)).length > 0 && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+              )}
             </Button>
           </div>
         </header>
@@ -924,6 +947,36 @@ export default function Dashboard() {
           {activeTab === "plans" && <AdminPlans />}
           {activeTab === "overview" && (
             <div className="space-y-6">
+              {notifications
+                .filter(n => n.type === "announcement" && n.readBy && Array.isArray(n.readBy) && user?._id && !n.readBy.includes(user._id) && !dismissedAnnouncements.includes(n._id))
+                .map((announcement) => (
+                  <Card key={announcement._id} className="bg-primary/10 border-primary/20 relative group overflow-hidden">
+                    <div className="flex items-center gap-4 p-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                        <Megaphone className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium leading-relaxed">{announcement.message}</p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 hover:bg-primary/20" 
+                        onClick={async () => {
+                          try {
+                            await apiRequest("POST", `/api/notifications/${announcement._id}/read`);
+                            setDismissedAnnouncements(prev => [...prev, announcement._id]);
+                          } catch (err) {
+                            console.error("Failed to dismiss announcement:", err);
+                          }
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
               </div>
@@ -1623,7 +1676,7 @@ export default function Dashboard() {
                         <div className="mt-2 space-y-2">
                           {newCampaign.knowledgeBaseFiles.map((file, idx) => (
                             <div key={idx} className="flex items-center justify-between p-2 bg-muted/30 rounded-md border text-xs">
-                              <span className="truncate max-w-[200px]">{file.originalName}</span>
+                              <span className="truncate max-w-[200px]">{file.name}</span>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -1767,7 +1820,7 @@ export default function Dashboard() {
                         <div className="mt-2 space-y-2">
                           {editCampaignForm.knowledgeBaseFiles.map((file, idx) => (
                             <div key={idx} className="flex items-center justify-between p-2 bg-muted/30 rounded-md border text-xs">
-                              <span className="truncate max-w-[200px]">{file.originalName}</span>
+                              <span className="truncate max-w-[200px]">{file.name}</span>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -2008,7 +2061,7 @@ export default function Dashboard() {
                         })
                         .map((u) => (
                         <TableRow key={u._id}>
-                          <TableCell><div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl || undefined} alt={u.firstName} /><AvatarFallback>{(u.firstName || "").charAt(0)}{(u.lastName || "").charAt(0)}</AvatarFallback></Avatar><div><div className="font-medium">{u.firstName} {u.lastName}</div><div className="text-xs text-muted-foreground">{u.email}</div></div></div></TableCell>
+                          <TableCell><div className="flex items-center gap-3"><Avatar className="h-8 w-8"><AvatarImage src={u.companyLogo || undefined} alt={u.firstName} /><AvatarFallback>{(u.firstName || "").charAt(0)}{(u.lastName || "").charAt(0)}</AvatarFallback></Avatar><div><div className="font-medium">{u.firstName} {u.lastName}</div><div className="text-xs text-muted-foreground">{u.email}</div></div></div></TableCell>
                           <TableCell>{u.companyName || "-"}</TableCell>
                           <TableCell><Badge variant="secondary">{u.subscription?.plan || "Free"}</Badge></TableCell>
                           <TableCell><Badge variant={u.subscription?.status === 'Active' ? 'default' : 'outline'} className={u.subscription?.status === 'Active' ? 'bg-green-500/15 text-green-600 border-none' : ''}>{u.subscription?.status || "Inactive"}</Badge></TableCell>
@@ -2016,6 +2069,111 @@ export default function Dashboard() {
                           <TableCell className="text-right"><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></TableCell>
                         </TableRow>
                       ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === "admin-notifications" && isAdmin && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold tracking-tight">Notification Management</h1>
+                <Dialog open={isAddNotificationOpen} onOpenChange={setIsAddNotificationOpen}>
+                  <DialogTrigger asChild>
+                    <Button><Plus className="mr-2 h-4 w-4" /> Add Notification</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Notification or Announcement</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Type</Label>
+                        <Select 
+                          value={notificationForm.type} 
+                          onValueChange={(val: any) => setNotificationForm({ ...notificationForm, type: val })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="notification">Notification</SelectItem>
+                            <SelectItem value="announcement">Announcement</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Message</Label>
+                        <Textarea 
+                          placeholder="Type your message here..." 
+                          value={notificationForm.message}
+                          onChange={(e) => setNotificationForm({ ...notificationForm, message: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddNotificationOpen(false)}>Cancel</Button>
+                      <Button onClick={async () => {
+                        if (!notificationForm.message) return;
+                        setIsSaving(true);
+                        try {
+                          const res = await apiRequest("POST", "/api/notifications", notificationForm);
+                          const data = await res.json();
+                          const newNotif = data.notification;
+                          if (newNotif) {
+                            setNotifications([newNotif, ...notifications]);
+                          }
+                          setIsAddNotificationOpen(false);
+                          setNotificationForm({ message: "", type: "notification" });
+                          toast({ title: "Notification created successfully" });
+                        } catch (err) {
+                          toast({ variant: "destructive", title: "Failed to create notification" });
+                        } finally {
+                          setIsSaving(false);
+                        }
+                      }} disabled={isSaving}>Submit</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sent Notifications & Announcements</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>S.No</TableHead>
+                        <TableHead>Message</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {notifications && notifications.length > 0 ? (
+                        notifications.map((n, idx) => (
+                          <TableRow key={n._id}>
+                            <TableCell>{idx + 1}</TableCell>
+                            <TableCell className="max-w-md truncate">{n.message}</TableCell>
+                            <TableCell>
+                              <Badge variant={n.type === "announcement" ? "default" : "secondary"}>
+                                {n.type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "-"}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                            No notifications sent yet.
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </CardContent>

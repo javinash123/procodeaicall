@@ -118,7 +118,7 @@ const appointmentSchema = new mongoose.Schema({
 });
 
 // Note Model
-const noteSchema = new mongoose.Schema({
+export const noteSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   title: { type: String, required: true },
   content: { type: String, required: true },
@@ -126,8 +126,17 @@ const noteSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+// Notification Model
+export const notificationSchema = new mongoose.Schema({
+  message: { type: String, required: true },
+  type: { type: String, enum: ["notification", "announcement"], required: true },
+  date: String,
+  readBy: [{ type: String }],
+  createdAt: { type: Date, default: Date.now },
+});
+
 // Plan Model
-const planSchema = new mongoose.Schema({
+export const planSchema = new mongoose.Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
   duration: { type: String, enum: ["monthly", "yearly", "quarterly", "lifetime"], required: true },
@@ -152,5 +161,6 @@ export const LeadModel = mongoose.model("Lead", leadSchema);
 export const CampaignModel = mongoose.model("Campaign", campaignSchema);
 export const AppointmentModel = mongoose.model("Appointment", appointmentSchema);
 export const NoteModel = mongoose.model("Note", noteSchema);
+export const NotificationModel = mongoose.model("Notification", notificationSchema);
 export const PlanModel = mongoose.model("Plan", planSchema);
 export const FeatureModel = mongoose.model("Feature", featureSchema);

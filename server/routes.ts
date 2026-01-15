@@ -19,6 +19,7 @@ import {
   updateNoteSchema,
   insertPlanSchema,
   insertFeatureSchema,
+  insertNotificationSchema,
 } from "@shared/schema";
 
 // ... Configure multer for file uploads ...
@@ -87,10 +88,47 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   // Auth middleware
   const requireAuth = (req: Request, res: Response, next: Function) => {
     if (!req.session.userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      if (req.headers.referer?.includes("/admin")) {
+        return res.status(401).json({ message: "Unauthorized", redirectTo: "/admin" });
+      }
+      return res.status(401).json({ message: "Unauthorized", redirectTo: "/login" });
     }
     next();
   };
+
+  // ==================== NOTIFICATION ROUTES ====================
+
+  app.get("/api/notifications", requireAuth, async (req, res) => {
+    try {
+      const notifications = await storage.getNotifications();
+      res.json({ notifications });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/notifications", requireAuth, async (req, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId!);
+      if (currentUser?.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      const data = insertNotificationSchema.parse(req.body);
+      const notification = await storage.createNotification(data);
+      res.status(201).json({ notification });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/notifications/:id/read", requireAuth, async (req, res) => {
+    try {
+      await storage.markNotificationRead(req.params.id, req.session.userId!);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
 
   // ==================== AUTH ROUTES ====================
   

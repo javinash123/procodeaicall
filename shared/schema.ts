@@ -220,3 +220,17 @@ export type Note = InsertNote & {
   createdAt: Date;
   updatedAt: Date;
 };
+
+// Notification Schema
+export const insertNotificationSchema = z.object({
+  message: z.string().min(1),
+  type: z.enum(["notification", "announcement"]),
+  date: z.string().optional(),
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = InsertNotification & {
+  _id: string;
+  createdAt: Date;
+  readBy: string[]; // User IDs who have seen/dismissed it
+};
