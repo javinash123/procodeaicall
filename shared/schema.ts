@@ -51,6 +51,7 @@ export const insertUserSchema = z.object({
   companyName: z.string().optional(),
   phone: z.string().optional(),
   selectedPlanId: z.string().optional(),
+  companyLogo: z.string().optional(),
 });
 
 export const updateUserSchema = insertUserSchema.partial().omit({ password: true });
@@ -71,6 +72,21 @@ export type User = Omit<InsertUser, "password"> & {
     localPresenceDialing: boolean;
   };
   subscription?: SubscriptionInfo;
+};
+
+// Credit Usage Schema
+export const insertCreditUsageSchema = z.object({
+  userId: z.string(),
+  campaignId: z.string().optional(),
+  type: z.enum(["call", "sms", "whatsapp"]),
+  amount: z.number().min(0),
+  date: z.string(), // ISO date string (YYYY-MM-DD)
+});
+
+export type InsertCreditUsage = z.infer<typeof insertCreditUsageSchema>;
+export type CreditUsage = InsertCreditUsage & {
+  _id: string;
+  createdAt: Date;
 };
 
 // Lead Schema

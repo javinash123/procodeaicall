@@ -236,7 +236,8 @@ export default function Dashboard() {
     lastName: user?.lastName || "",
     email: user?.email || "",
     phone: user?.phone || "",
-    companyName: user?.companyName || ""
+    companyName: user?.companyName || "",
+    companyLogo: user?.companyLogo || ""
   });
   const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
 
@@ -249,6 +250,12 @@ export default function Dashboard() {
   const [selectedAdminRevenueYear, setSelectedAdminRevenueYear] = useState<number>(new Date().getFullYear());
   const [selectedAdminCreditMonth, setSelectedAdminCreditMonth] = useState<number>(new Date().getMonth());
   const [selectedAdminCreditYear, setSelectedAdminCreditYear] = useState<number>(new Date().getFullYear());
+
+  // Credit Usage Chart Filter State
+  const [creditUsageCampaignFilter, setCreditUsageCampaignFilter] = useState<string>("all");
+  const [creditUsageMonthFilter, setCreditUsageMonthFilter] = useState<number>(new Date().getMonth());
+  const [creditUsageYearFilter, setCreditUsageYearFilter] = useState<number>(new Date().getFullYear());
+  const [creditUsageData, setCreditUsageData] = useState<any[]>([]);
 
   // Call/SMS Confirmation State
   const [callConfirm, setCallConfirm] = useState<{ leadId: string; type: "call" | "sms" } | null>(null);
@@ -317,6 +324,27 @@ export default function Dashboard() {
     fetchData();
   }, [user, isAdmin]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchCreditUsage = async () => {
+      try {
+        const daysInMonth = new Date(creditUsageYearFilter, creditUsageMonthFilter + 1, 0).getDate();
+        const mockData = Array.from({ length: daysInMonth }, (_, i) => ({
+          date: i + 1,
+          call: Math.floor(Math.random() * 50),
+          sms: Math.floor(Math.random() * 30),
+          whatsapp: Math.floor(Math.random() * 20),
+        }));
+        setCreditUsageData(mockData);
+      } catch (error) {
+        console.error("Error fetching credit usage:", error);
+      }
+    };
+
+    fetchCreditUsage();
+  }, [user, creditUsageMonthFilter, creditUsageYearFilter, creditUsageCampaignFilter]);
+
   // Update profile form when user changes
   useEffect(() => {
     if (user) {
@@ -325,7 +353,8 @@ export default function Dashboard() {
         lastName: user.lastName || "",
         email: user.email || "",
         phone: user.phone || "",
-        companyName: user.companyName || ""
+        companyName: user.companyName || "",
+        companyLogo: user.companyLogo || ""
       });
       setDndEnabled(user.settings?.dndEnabled || false);
       setCallLimit(user.settings?.dailyCallLimit || 500);
@@ -831,8 +860,16 @@ export default function Dashboard() {
                   <History className="mr-3 h-5 w-5" />
                   Call History
                 </Button>
+                <Button 
+                  variant={activeTab === "billing" ? "secondary" : "ghost"} 
+                  className="w-full justify-start hover-elevate h-11"
+                  onClick={() => setActiveTab("billing")}
+                >
+                  <Wallet className="mr-3 h-5 w-5" />
+                  Billing
+                </Button>
               </>
-            )}
+            )
           </nav>
         </ScrollArea>
 
@@ -841,6 +878,7 @@ export default function Dashboard() {
             <DropdownMenuTrigger asChild>
               <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors group">
                 <Avatar className="h-9 w-9 border-2 border-background shadow-sm ring-1 ring-border group-hover:ring-primary/50 transition-all">
+                  <AvatarImage src={user?.companyLogo || undefined} />
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
@@ -857,13 +895,10 @@ export default function Dashboard() {
                 <User className="mr-2 h-4 w-4" /> Profile
               </DropdownMenuItem>
               {!isAdmin && (
-                <DropdownMenuItem onClick={() => setActiveTab("settings")}>
-                  <CreditCard className="mr-2 h-4 w-4" /> Billing
+                <DropdownMenuItem onClick={() => setActiveTab("billing")}>
+                  <Wallet className="mr-2 h-4 w-4" /> Billing
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => setActiveTab("settings")}>
-                <Settings className="mr-2 h-4 w-4" /> Settings
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" /> Log out
@@ -1190,6 +1225,105 @@ export default function Dashboard() {
                           ))
                         ) : <div className="text-center py-6 text-muted-foreground text-sm">No notes found.</div>}
                       </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Credit Usage Daily Chart */}
+                  <Card className="hover-elevate mt-6">
+                    <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
+                      <div>
+                        <CardTitle className="text-base font-semibold">Daily Credit Usage</CardTitle>
+                        <CardDescription>Daily credit consumption for Calls, SMS, and WhatsApp</CardDescription>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Select value={creditUsageCampaignFilter} onValueChange={setCreditUsageCampaignFilter}>
+                          <SelectTrigger className="w-[140px] h-8 text-xs">
+                            <SelectValue placeholder="Campaign" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Campaigns</SelectItem>
+                            {campaigns.map(c => (
+                              <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={creditUsageMonthFilter.toString()} onValueChange={(v) => setCreditUsageMonthFilter(parseInt(v))}>
+                          <SelectTrigger className="w-[110px] h-8 text-xs">
+                            <SelectValue placeholder="Month" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, i) => (
+                              <SelectItem key={m} value={i.toString()}>{m}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={creditUsageYearFilter.toString()} onValueChange={(v) => setCreditUsageYearFilter(parseInt(v))}>
+                          <SelectTrigger className="w-[90px] h-8 text-xs">
+                            <SelectValue placeholder="Year" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[2024, 2025, 2026].map(y => (
+                              <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="h-[300px] mt-2">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={creditUsageData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === "dark" ? "#333" : "#eee"} />
+                          <XAxis 
+                            dataKey="date" 
+                            fontSize={11} 
+                            tickLine={false} 
+                            axisLine={false} 
+                            tick={{ fill: "hsl(var(--muted-foreground))" }}
+                          />
+                          <YAxis 
+                            fontSize={11} 
+                            tickLine={false} 
+                            axisLine={false} 
+                            tick={{ fill: "hsl(var(--muted-foreground))" }}
+                          />
+                          <RechartsTooltip 
+                            contentStyle={{ 
+                              backgroundColor: "hsl(var(--card))", 
+                              borderColor: "hsl(var(--border))",
+                              borderRadius: "8px",
+                              fontSize: "12px"
+                            }}
+                          />
+                          <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                          <Line 
+                            type="monotone" 
+                            dataKey="call" 
+                            name="Calls"
+                            stroke="#f97316" 
+                            strokeWidth={2} 
+                            dot={{ r: 3, fill: "#f97316" }} 
+                            activeDot={{ r: 5 }} 
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="sms" 
+                            name="SMS"
+                            stroke="#3b82f6" 
+                            strokeWidth={2} 
+                            dot={{ r: 3, fill: "#3b82f6" }} 
+                            activeDot={{ r: 5 }} 
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="whatsapp" 
+                            name="WhatsApp"
+                            stroke="#22c55e" 
+                            strokeWidth={2} 
+                            dot={{ r: 3, fill: "#22c55e" }} 
+                            activeDot={{ r: 5 }} 
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </CardContent>
                   </Card>
                 </>
@@ -1683,6 +1817,105 @@ export default function Dashboard() {
                     <div className="px-6 border-b bg-muted/5"><TabsList className="w-full justify-start h-12 bg-transparent p-0 gap-6"><TabsTrigger value="overview" className="rounded-none px-0 h-full">Overview</TabsTrigger><TabsTrigger value="activity" className="rounded-none px-0 h-full">Activity & Logs</TabsTrigger><TabsTrigger value="schedule" className="rounded-none px-0 h-full">Schedule</TabsTrigger></TabsList></div>
                     <ScrollArea className="flex-1"><div className="p-6">
                       <TabsContent value="overview" className="mt-0 space-y-6">
+                        {/* Credit Usage Daily Chart */}
+                        <Card className="hover-elevate">
+                          <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
+                            <div>
+                              <CardTitle className="text-base font-semibold">Daily Credit Usage</CardTitle>
+                              <CardDescription>Daily credit consumption for Calls, SMS, and WhatsApp</CardDescription>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Select value={creditUsageCampaignFilter} onValueChange={setCreditUsageCampaignFilter}>
+                                <SelectTrigger className="w-[140px] h-8 text-xs">
+                                  <SelectValue placeholder="Campaign" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All Campaigns</SelectItem>
+                                  {campaigns.map(c => (
+                                    <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select value={creditUsageMonthFilter.toString()} onValueChange={(v) => setCreditUsageMonthFilter(parseInt(v))}>
+                                <SelectTrigger className="w-[110px] h-8 text-xs">
+                                  <SelectValue placeholder="Month" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, i) => (
+                                    <SelectItem key={m} value={i.toString()}>{m}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select value={creditUsageYearFilter.toString()} onValueChange={(v) => setCreditUsageYearFilter(parseInt(v))}>
+                                <SelectTrigger className="w-[90px] h-8 text-xs">
+                                  <SelectValue placeholder="Year" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {[2024, 2025, 2026].map(y => (
+                                    <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="h-[300px] mt-2">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={creditUsageData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === "dark" ? "#333" : "#eee"} />
+                                <XAxis 
+                                  dataKey="date" 
+                                  fontSize={11} 
+                                  tickLine={false} 
+                                  axisLine={false} 
+                                  tick={{ fill: "hsl(var(--muted-foreground))" }}
+                                />
+                                <YAxis 
+                                  fontSize={11} 
+                                  tickLine={false} 
+                                  axisLine={false} 
+                                  tick={{ fill: "hsl(var(--muted-foreground))" }}
+                                />
+                                <RechartsTooltip 
+                                  contentStyle={{ 
+                                    backgroundColor: "hsl(var(--card))", 
+                                    borderColor: "hsl(var(--border))",
+                                    borderRadius: "8px",
+                                    fontSize: "12px"
+                                  }}
+                                />
+                                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="call" 
+                                  name="Calls"
+                                  stroke="#f97316" 
+                                  strokeWidth={2} 
+                                  dot={{ r: 3, fill: "#f97316" }} 
+                                  activeDot={{ r: 5 }} 
+                                />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="sms" 
+                                  name="SMS"
+                                  stroke="#3b82f6" 
+                                  strokeWidth={2} 
+                                  dot={{ r: 3, fill: "#3b82f6" }} 
+                                  activeDot={{ r: 5 }} 
+                                />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="whatsapp" 
+                                  name="WhatsApp"
+                                  stroke="#22c55e" 
+                                  strokeWidth={2} 
+                                  dot={{ r: 3, fill: "#22c55e" }} 
+                                  activeDot={{ r: 5 }} 
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </CardContent>
+                        </Card>
+
                         <div className="grid grid-cols-2 gap-6">
                           <div className="space-y-1"><Label className="text-xs text-muted-foreground uppercase tracking-wider">Email</Label><div className="flex items-center gap-2 font-medium"><Mail className="h-4 w-4 text-muted-foreground" />{selectedLead.email || "N/A"}</div></div>
                           <div className="space-y-1"><Label className="text-xs text-muted-foreground uppercase tracking-wider">Phone</Label><div className="flex items-center gap-2 font-medium"><Phone className="h-4 w-4 text-muted-foreground" />{selectedLead.phone}</div></div>
@@ -1943,25 +2176,257 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Profile & Settings View */}
-          {(activeTab === "profile" || activeTab === "settings") && (
+          {activeTab === "profile" && (
             <div className="max-w-4xl mx-auto space-y-8">
-              <div><h1 className="text-3xl font-bold tracking-tight">{activeTab === "profile" ? "Profile Settings" : "Account Settings"}</h1><p className="text-muted-foreground">Manage your personal information and platform preferences.</p></div>
+              <div><h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1><p className="text-muted-foreground">Manage your personal information and platform preferences.</p></div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="space-y-6">
-                  <Card className="p-6 text-center"><Avatar className="h-24 w-24 mx-auto mb-4 border-4 border-background shadow-xl ring-1 ring-primary/20"><AvatarFallback className="text-3xl bg-primary/10 text-primary font-bold">{user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}</AvatarFallback></Avatar><h3 className="font-bold text-lg">{user?.firstName} {user?.lastName}</h3><p className="text-sm text-muted-foreground mb-4">{user?.email}</p><Badge variant="secondary" className="uppercase tracking-widest text-[10px]">{user?.role || 'User'}</Badge></Card>
-                  <Card className="p-6"><h4 className="font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2 text-primary"><CreditCard className="h-4 w-4" /> Subscription</h4><div className="space-y-4"><div><p className="text-xs text-muted-foreground">Current Plan</p><p className="font-bold text-lg">{user?.subscription?.plan || "Free"}</p></div><div><p className="text-xs text-muted-foreground">Status</p><Badge variant="outline" className="mt-1 border-green-500 text-green-600 bg-green-500/10">{user?.subscription?.status || "Active"}</Badge></div><Button className="w-full mt-4" variant="outline" size="sm">Manage Billing</Button></div></Card>
+                  <Card className="p-6 text-center">
+                    <Avatar className="h-24 w-24 mx-auto mb-4 border-4 border-background shadow-xl ring-1 ring-primary/20">
+                      <AvatarImage src={user?.companyLogo || ""} />
+                      <AvatarFallback className="text-3xl bg-primary/10 text-primary font-bold">{user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <h3 className="font-bold text-lg">{user?.firstName} {user?.lastName}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">{user?.email}</p>
+                    <Badge variant="secondary" className="uppercase tracking-widest text-[10px]">{user?.role || 'User'}</Badge>
+                  </Card>
+                  <Card className="p-6">
+                    <h4 className="font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2 text-primary">
+                      <Building2 className="h-4 w-4" /> Company Info
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="flex flex-col items-center gap-2">
+                        {user?.companyLogo ? (
+                          <img src={user.companyLogo} alt="Company Logo" className="h-16 w-16 object-contain border rounded-md" />
+                        ) : (
+                          <div className="h-16 w-16 bg-muted flex items-center justify-center rounded-md border border-dashed">
+                            <Building2 className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          className="text-xs"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = async () => {
+                                const base64 = reader.result as string;
+                                setProfileForm({ ...profileForm, companyLogo: base64 });
+                                try {
+                                  await apiRequest("PATCH", "/api/user", { companyLogo: base64 });
+                                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                                  toast({ title: "Success", description: "Logo updated successfully" });
+                                } catch (err) {
+                                  toast({ title: "Error", description: "Failed to upload logo", variant: "destructive" });
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Company Name</p>
+                        <p className="font-bold">{user?.companyName || "Not Set"}</p>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
                 <div className="md:col-span-2 space-y-6">
-                  <Tabs defaultValue={activeTab} className="w-full"><TabsList className="grid w-full grid-cols-3"><TabsTrigger value="profile">Profile</TabsTrigger><TabsTrigger value="settings">Settings</TabsTrigger><TabsTrigger value="security">Security</TabsTrigger></TabsList>
-                    <TabsContent value="profile" className="mt-6"><Card><CardHeader><CardTitle>Basic Information</CardTitle><CardDescription>Update your personal and company details.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>First Name</Label><Input value={profileForm.firstName} onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} /></div><div className="space-y-2"><Label>Last Name</Label><Input value={profileForm.lastName} onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} /></div></div><div className="space-y-2"><Label>Email Address</Label><Input value={profileForm.email} readOnly className="bg-muted" /></div><div className="space-y-2"><Label>Phone Number</Label><Input value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} /></div><div className="space-y-2"><Label>Company Name</Label><Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} /></div><Button className="mt-4">Save Changes</Button></CardContent></Card></TabsContent>
-                    <TabsContent value="settings" className="mt-6"><Card><CardHeader><CardTitle>Platform Preferences</CardTitle><CardDescription>Configure how you want the AI agents to behave.</CardDescription></CardHeader><CardContent className="space-y-6"><div className="flex items-center justify-between"><div><p className="font-medium">Do Not Disturb (DND)</p><p className="text-sm text-muted-foreground">Stop all automated calling activity.</p></div><Switch checked={dndEnabled} onCheckedChange={setDndEnabled} /></div><div className="space-y-2"><Label>Daily Call Limit</Label><Input type="number" value={callLimit} onChange={e => setCallLimit(parseInt(e.target.value))} /><p className="text-xs text-muted-foreground">Maximum calls allowed per 24-hour period.</p></div><div className="flex items-center justify-between"><div><p className="font-medium">Local Presence Dialing</p><p className="text-sm text-muted-foreground">Use local area codes for better answer rates.</p></div><Switch checked={localPresence} onCheckedChange={setLocalPresence} /></div><Button className="mt-4">Update Settings</Button></CardContent></Card></TabsContent>
-                    <TabsContent value="security" className="mt-6"><Card><CardHeader><CardTitle>Change Password</CardTitle><CardDescription>Ensure your account remains secure.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="space-y-2"><Label>Current Password</Label><Input type="password" /></div><div className="space-y-2"><Label>New Password</Label><Input type="password" /></div><div className="space-y-2"><Label>Confirm New Password</Label><Input type="password" /></div><Button className="mt-4">Update Password</Button></CardContent></Card></TabsContent>
+                  <Tabs defaultValue="profile" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="profile">Profile</TabsTrigger>
+                      <TabsTrigger value="security">Security</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="profile" className="mt-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Basic Information</CardTitle>
+                          <CardDescription>Update your personal details.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>First Name</Label>
+                              <Input value={profileForm.firstName} onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Last Name</Label>
+                              <Input value={profileForm.lastName} onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Email Address</Label>
+                            <Input value={profileForm.email} readOnly className="bg-muted" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Phone Number</Label>
+                            <Input value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Company Name</Label>
+                            <Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} />
+                          </div>
+                          <Button className="mt-4" onClick={async () => {
+                            try {
+                              await apiRequest("PATCH", "/api/user", profileForm);
+                              queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                              toast({ title: "Success", description: "Profile updated successfully" });
+                            } catch (err) {
+                              toast({ title: "Error", description: "Failed to update profile", variant: "destructive" });
+                            }
+                          }}>Save Changes</Button>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                    <TabsContent value="security" className="mt-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Change Password</CardTitle>
+                          <CardDescription>Ensure your account remains secure.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Current Password</Label>
+                            <Input type="password" value={passwordForm.current} onChange={e => setPasswordForm({...passwordForm, current: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>New Password</Label>
+                            <Input type="password" value={passwordForm.new} onChange={e => setPasswordForm({...passwordForm, new: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Confirm New Password</Label>
+                            <Input type="password" value={passwordForm.confirm} onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})} />
+                          </div>
+                          <Button className="mt-4" onClick={async () => {
+                            if (passwordForm.new !== passwordForm.confirm) {
+                              return toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+                            }
+                            try {
+                              await apiRequest("POST", "/api/user/change-password", {
+                                currentPassword: passwordForm.current,
+                                newPassword: passwordForm.new
+                              });
+                              setPasswordForm({ current: "", new: "", confirm: "" });
+                              toast({ title: "Success", description: "Password updated successfully" });
+                            } catch (err) {
+                              toast({ title: "Error", description: "Failed to update password", variant: "destructive" });
+                            }
+                          }}>Update Password</Button>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
                   </Tabs>
                 </div>
               </div>
             </div>
           )}
+
+                {/* Billing View */}
+                {activeTab === "billing" && (
+                  <div className="max-w-4xl mx-auto space-y-8">
+                    <div>
+                      <h1 className="text-3xl font-bold tracking-tight">Billing & Subscription</h1>
+                      <p className="text-muted-foreground">Manage your subscription, view usage, and billing history.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <Card className="md:col-span-2">
+                        <CardHeader>
+                          <CardTitle>Current Plan</CardTitle>
+                          <CardDescription>Details about your current active subscription.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg border border-primary/10">
+                            <div>
+                              <h3 className="text-lg font-bold">{user?.subscription?.plan || "Free"} Plan</h3>
+                              <p className="text-sm text-muted-foreground">Next renewal: {user?.subscription?.renewalDate || "N/A"}</p>
+                            </div>
+                            <Badge variant="default" className="bg-green-500 hover:bg-green-600 border-none">
+                              {user?.subscription?.status || "Active"}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 pt-4">
+                            <div className="p-4 border rounded-lg">
+                              <p className="text-xs text-muted-foreground mb-1 uppercase font-bold tracking-wider">Plan Cost</p>
+                              <p className="text-2xl font-bold">₹{user?.subscription?.price || 0}/mo</p>
+                            </div>
+                            <div className="p-4 border rounded-lg">
+                              <p className="text-xs text-muted-foreground mb-1 uppercase font-bold tracking-wider">Payment Method</p>
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-primary" />
+                                <span className="font-semibold">•••• 4242</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                        <CardFooter className="border-t bg-muted/5 flex justify-between gap-4">
+                          <Button variant="outline">View Billing History</Button>
+                          <Button>Upgrade Plan</Button>
+                        </CardFooter>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm">Usage Stats</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground uppercase font-bold">Credits Used</span>
+                              <span className="font-bold">750 / 1000</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-primary" style={{ width: "75%" }} />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground uppercase font-bold">API Calls</span>
+                              <span className="font-bold">45 / 100</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-blue-500" style={{ width: "45%" }} />
+                            </div>
+                          </div>
+                          <div className="pt-4 border-t">
+                            <p className="text-xs text-muted-foreground">Renewal in 12 days</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Usage History</CardTitle>
+                        <CardDescription>Detailed breakdown of your credit consumption.</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="h-[250px] w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={[
+                              { name: 'Jan 10', usage: 120 },
+                              { name: 'Jan 11', usage: 150 },
+                              { name: 'Jan 12', usage: 80 },
+                              { name: 'Jan 13', usage: 210 },
+                              { name: 'Jan 14', usage: 180 },
+                              { name: 'Jan 15', usage: 140 },
+                            ]}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} />
+                              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                              <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px' }} />
+                              <Bar dataKey="usage" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
         </div>
       </main>
 
