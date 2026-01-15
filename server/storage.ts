@@ -113,7 +113,7 @@ export class MongoStorage implements IStorage {
 
   // ... rest of MongoStorage methods ...
   async updateUser(id: string, updates: UpdateUser): Promise<User | null> {
-    const user = await UserModel.findByIdAndUpdate(id, updates, { new: true }).select("-password").lean();
+    const user = await UserModel.findByIdAndUpdate(id, { $set: updates }, { new: true }).select("-password").lean();
     if (!user) return null;
     return { ...(user as any), _id: (user as any)._id.toString() } as any as User;
   }

@@ -26,7 +26,6 @@ import {
   History,
   CalendarDays,
   Mic,
-  BarChart,
   BrainCircuit,
   X,
   Bot,
@@ -44,6 +43,7 @@ import {
   Edit3,
   Pencil,
   Building,
+  Building2,
   Megaphone,
   Wallet,
   MessageCircle,
@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, notesApi, plansApi, type UploadedFile } from "@/lib/api";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead, Campaign, Appointment, User as UserType, KnowledgeBaseFile, Plan, InsertPlan } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from "recharts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import dashboardImage from "@assets/generated_images/futuristic_dashboard_interface_mockup_glowing_in_orange..png";
 import BulkSms from "./bulk-sms";
@@ -365,7 +366,7 @@ export default function Dashboard() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      setLocation("/auth");
+      setLocation("/login");
     }
   }, [authLoading, user, setLocation]);
 
@@ -381,8 +382,8 @@ export default function Dashboard() {
     }
 
     try {
-      const response = await uploadApi.upload(formData);
-      const uploadedFiles = response.files || [];
+      const response = await uploadApi.uploadFiles(Array.from(files));
+      const uploadedFiles = response || [];
       
       if (isEdit) {
         setEditCampaignForm(prev => ({
@@ -753,7 +754,7 @@ export default function Dashboard() {
   const handleLogout = async () => {
     try {
       await logout();
-      setLocation("/auth");
+      setLocation("/login");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Logout failed", description: error.message });
     }
@@ -860,16 +861,8 @@ export default function Dashboard() {
                   <History className="mr-3 h-5 w-5" />
                   Call History
                 </Button>
-                <Button 
-                  variant={activeTab === "billing" ? "secondary" : "ghost"} 
-                  className="w-full justify-start hover-elevate h-11"
-                  onClick={() => setActiveTab("billing")}
-                >
-                  <Wallet className="mr-3 h-5 w-5" />
-                  Billing
-                </Button>
               </>
-            )
+            )}
           </nav>
         </ScrollArea>
 
@@ -2192,41 +2185,49 @@ export default function Dashboard() {
                   </Card>
                   <Card className="p-6">
                     <h4 className="font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2 text-primary">
-                      <Building2 className="h-4 w-4" /> Company Info
+                      <Building className="h-4 w-4" /> Company Info
                     </h4>
                     <div className="space-y-4">
-                      <div className="flex flex-col items-center gap-2">
-                        {user?.companyLogo ? (
-                          <img src={user.companyLogo} alt="Company Logo" className="h-16 w-16 object-contain border rounded-md" />
-                        ) : (
-                          <div className="h-16 w-16 bg-muted flex items-center justify-center rounded-md border border-dashed">
-                            <Building2 className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                        )}
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          className="text-xs"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = async () => {
-                                const base64 = reader.result as string;
-                                setProfileForm({ ...profileForm, companyLogo: base64 });
-                                try {
-                                  await apiRequest("PATCH", "/api/user", { companyLogo: base64 });
-                                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                                  toast({ title: "Success", description: "Logo updated successfully" });
-                                } catch (err) {
-                                  toast({ title: "Error", description: "Failed to upload logo", variant: "destructive" });
+                          <div className="flex flex-col items-center gap-2">
+                            {profileForm.companyLogo || user?.companyLogo ? (
+                              <img src={profileForm.companyLogo || user?.companyLogo} alt="Company Logo" className="h-16 w-16 object-contain border rounded-md" />
+                            ) : (
+                              <div className="h-16 w-16 bg-muted flex items-center justify-center rounded-md border border-dashed">
+                                <Building className="h-8 w-8 text-muted-foreground" />
+                              </div>
+                            )}
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              className="text-xs"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  try {
+                                    const response = await uploadApi.uploadFiles([file]);
+                                    if (response && response.length > 0) {
+                                      const logoUrl = response[0].url;
+                                      console.log("Uploaded logo URL:", logoUrl);
+                                      setProfileForm(prev => ({ ...prev, companyLogo: logoUrl }));
+                                      // Also update the user profile immediately to persist it
+                                      const updateRes = await apiRequest("PATCH", "/api/user", { 
+                                        firstName: profileForm.firstName,
+                                        lastName: profileForm.lastName,
+                                        companyName: profileForm.companyName,
+                                        phone: profileForm.phone,
+                                        companyLogo: logoUrl 
+                                      });
+                                      console.log("Profile update response:", updateRes);
+                                      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                                      toast({ title: "Success", description: "Company logo uploaded and saved" });
+                                    }
+                                  } catch (error: any) {
+                                    toast({ variant: "destructive", title: "Upload failed", description: error.message });
+                                  }
                                 }
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
-                      </div>
+                              }}
+                            />
+                          </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Company Name</p>
                         <p className="font-bold">{user?.companyName || "Not Set"}</p>
@@ -2269,13 +2270,16 @@ export default function Dashboard() {
                             <Label>Company Name</Label>
                             <Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} />
                           </div>
-                          <Button className="mt-4" onClick={async () => {
+                          <Button className="mt-4" disabled={isSaving} onClick={async () => {
+                            setIsSaving(true);
                             try {
                               await apiRequest("PATCH", "/api/user", profileForm);
-                              queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                              await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
                               toast({ title: "Success", description: "Profile updated successfully" });
                             } catch (err) {
                               toast({ title: "Error", description: "Failed to update profile", variant: "destructive" });
+                            } finally {
+                              setIsSaving(false);
                             }
                           }}>Save Changes</Button>
                         </CardContent>
@@ -2342,7 +2346,7 @@ export default function Dashboard() {
                           <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg border border-primary/10">
                             <div>
                               <h3 className="text-lg font-bold">{user?.subscription?.plan || "Free"} Plan</h3>
-                              <p className="text-sm text-muted-foreground">Next renewal: {user?.subscription?.renewalDate || "N/A"}</p>
+                              <p className="text-sm text-muted-foreground">Next renewal: {user?.subscription?.renewalDate ? new Date(user.subscription.renewalDate).toLocaleDateString() : "N/A"}</p>
                             </div>
                             <Badge variant="default" className="bg-green-500 hover:bg-green-600 border-none">
                               {user?.subscription?.status || "Active"}
@@ -2352,7 +2356,7 @@ export default function Dashboard() {
                           <div className="grid grid-cols-2 gap-4 pt-4">
                             <div className="p-4 border rounded-lg">
                               <p className="text-xs text-muted-foreground mb-1 uppercase font-bold tracking-wider">Plan Cost</p>
-                              <p className="text-2xl font-bold">₹{user?.subscription?.price || 0}/mo</p>
+                              <p className="text-2xl font-bold">₹{plans.find(p => p.name === user?.subscription?.plan)?.price || 0}/mo</p>
                             </div>
                             <div className="p-4 border rounded-lg">
                               <p className="text-xs text-muted-foreground mb-1 uppercase font-bold tracking-wider">Payment Method</p>
@@ -2363,9 +2367,110 @@ export default function Dashboard() {
                             </div>
                           </div>
                         </CardContent>
-                        <CardFooter className="border-t bg-muted/5 flex justify-between gap-4">
-                          <Button variant="outline">View Billing History</Button>
-                          <Button>Upgrade Plan</Button>
+                        <CardFooter className="border-t bg-muted/5 flex flex-wrap justify-between gap-4">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline">View Billing History</Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>Billing History</DialogTitle>
+                                <DialogDescription>Your recent invoices and transactions.</DialogDescription>
+                              </DialogHeader>
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead>Amount</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Invoice</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {[
+                                    { date: "Jan 01, 2026", desc: "Starter Plan - Monthly", amount: "₹0", status: "Paid" },
+                                    { date: "Dec 01, 2025", desc: "Starter Plan - Monthly", amount: "₹0", status: "Paid" }
+                                  ].map((inv, i) => (
+                                    <TableRow key={i}>
+                                      <TableCell>{inv.date}</TableCell>
+                                      <TableCell>{inv.desc}</TableCell>
+                                      <TableCell>{inv.amount}</TableCell>
+                                      <TableCell><Badge variant="outline" className="text-green-600 bg-green-50">{inv.status}</Badge></TableCell>
+                                      <TableCell className="text-right">
+                                        <Button variant="ghost" size="sm" className="h-8"><FileText className="h-4 w-4 mr-2" /> PDF</Button>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </DialogContent>
+                          </Dialog>
+                          
+                          <div className="flex gap-2">
+                            <Button variant="outline" className="text-primary border-primary hover:bg-primary/5" onClick={async () => {
+                              try {
+                                await apiRequest("POST", "/api/billing/renew", {});
+                                await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                                toast({ title: "Success", description: "Subscription renewed successfully" });
+                              } catch (err) {
+                                toast({ title: "Error", description: "Renewal failed", variant: "destructive" });
+                              }
+                            }}>Renew Now</Button>
+                            
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button>Upgrade Plan</Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                                <DialogHeader>
+                                  <DialogTitle>Available Plans</DialogTitle>
+                                  <DialogDescription>Choose a plan that fits your business needs.</DialogDescription>
+                                </DialogHeader>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+                                  {plans.map((plan) => (
+                                    <Card key={plan._id} className={`flex flex-col ${user?.subscription?.plan === plan.name ? 'ring-2 ring-primary border-primary' : ''}`}>
+                                      <CardHeader>
+                                        <CardTitle>{plan.name}</CardTitle>
+                                        <CardDescription>{plan.description}</CardDescription>
+                                        <div className="mt-2 text-3xl font-bold">₹{plan.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+                                      </CardHeader>
+                                      <CardContent className="flex-1">
+                                        <ul className="space-y-2 text-sm">
+                                          {plan.features?.map((f, idx) => (
+                                            <li key={idx} className="flex items-center gap-2">
+                                              <CheckCircle2 className="h-4 w-4 text-green-500" /> {f}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </CardContent>
+                                      <CardFooter>
+                                        <Button 
+                                          className="w-full" 
+                                          variant={user?.subscription?.plan === plan.name ? "outline" : "default"}
+                                          disabled={user?.subscription?.plan === plan.name || isSaving}
+                                          onClick={async () => {
+                                            setIsSaving(true);
+                                            try {
+                                              await apiRequest("POST", "/api/billing/upgrade", { planId: plan._id });
+                                              await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                                              toast({ title: "Success", description: `Upgraded to ${plan.name} plan` });
+                                            } catch (err) {
+                                              toast({ title: "Error", description: "Upgrade failed", variant: "destructive" });
+                                            } finally {
+                                              setIsSaving(false);
+                                            }
+                                          }}
+                                        >
+                                          {user?.subscription?.plan === plan.name ? "Current Plan" : "Choose Plan"}
+                                        </Button>
+                                      </CardFooter>
+                                    </Card>
+                                  ))}
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                         </CardFooter>
                       </Card>
 
@@ -2377,10 +2482,10 @@ export default function Dashboard() {
                           <div className="space-y-2">
                             <div className="flex justify-between text-xs">
                               <span className="text-muted-foreground uppercase font-bold">Credits Used</span>
-                              <span className="font-bold">750 / 1000</span>
+                              <span className="font-bold">{user?.subscription?.creditsUsed || 0} / {user?.subscription?.monthlyCallCredits || 1000}</span>
                             </div>
                             <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div className="h-full bg-primary" style={{ width: "75%" }} />
+                              <div className="h-full bg-primary" style={{ width: `${Math.min(100, ((user?.subscription?.creditsUsed || 0) / (user?.subscription?.monthlyCallCredits || 1000)) * 100)}%` }} />
                             </div>
                           </div>
                           <div className="space-y-2">

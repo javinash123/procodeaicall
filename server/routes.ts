@@ -194,7 +194,42 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     }
   });
 
+  // Upload endpoint for various files
+  app.post("/api/upload", requireAuth, upload.array("files"), (req, res) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      const uploadedFiles = files.map(file => ({
+        url: `/uploads/${file.filename}`,
+        name: file.originalname,
+        size: file.size,
+        type: file.mimetype
+      }));
+      res.json(uploadedFiles);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
   // Update user profile
+  app.patch("/api/user", requireAuth, async (req, res) => {
+    try {
+      const id = req.session.userId!;
+      console.log("Updating user profile:", id, req.body);
+      const updates = updateUserSchema.partial().parse(req.body);
+      const user = await storage.updateUser(id, updates);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ user });
+    } catch (error: any) {
+      console.error("Profile update error:", error);
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Update user profile by ID (admin only or self)
   app.patch("/api/users/:id", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
@@ -474,6 +509,49 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       res.json({ message: "File deleted" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Upgrade plan
+  app.post("/api/billing/upgrade", requireAuth, async (req, res) => {
+    try {
+      const { planId } = req.body;
+      const plan = await storage.getPlan(planId);
+      if (!plan) {
+        return res.status(404).json({ message: "Plan not found" });
+      }
+      
+      const user = await storage.updateUserSubscription(req.session.userId!, {
+        plan: plan.name,
+        status: "Active",
+        monthlyCallCredits: plan.credits,
+        creditsUsed: 0,
+        renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        joinedDate: new Date(),
+      });
+      
+      res.json({ user });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Renew subscription
+  app.post("/api/billing/renew", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || !user.subscription) {
+        return res.status(400).json({ message: "No active subscription" });
+      }
+      
+      const updatedUser = await storage.updateUserSubscription(req.session.userId!, {
+        ...user.subscription,
+        renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
+      
+      res.json({ user: updatedUser });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   });
 
