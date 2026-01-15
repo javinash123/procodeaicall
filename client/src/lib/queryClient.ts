@@ -12,7 +12,11 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const isProd = import.meta.env.PROD;
+  const baseUrl = isProd ? "/aiagent" : "";
+  const finalUrl = url.startsWith("/api") ? `${baseUrl}${url}` : url;
+
+  const res = await fetch(finalUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +33,12 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const isProd = import.meta.env.PROD;
+    const baseUrl = isProd ? "/aiagent" : "";
+    const url = queryKey.join("/");
+    const finalUrl = url.startsWith("api") ? `${baseUrl}/${url}` : url;
+
+    const res = await fetch(finalUrl, {
       credentials: "include",
     });
 
@@ -38,6 +47,14 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
+    
+    // Safety check for JSON
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      console.error("Non-JSON response received from", finalUrl);
+      throw new Error("Server returned non-JSON response. Check if /aiagent prefix is missing or incorrect.");
+    }
+
     return await res.json();
   };
 

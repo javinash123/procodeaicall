@@ -22,9 +22,10 @@ import Notifications from "@/pages/notifications";
 import BulkWhatsapp from "@/pages/bulk-whatsapp";
 
 function Router() {
-  // Use /aiagent base only in production (when building for their server)
-  // Otherwise use root / for development in Replit
-  const base = import.meta.env.PROD ? "/aiagent" : "";
+  // Check if we are in production and use /aiagent base
+  // In development (Replit), use root base /
+  const isProd = import.meta.env.PROD;
+  const base = isProd ? "/aiagent" : "";
   
   return (
     <WouterRouter base={base}>
@@ -37,63 +38,17 @@ function Router() {
         <Route path="/admin" component={AdminLogin} />
         <Route path="/login" component={Auth} />
         <Route path="/register" component={Auth} />
+        <Route path="/features" component={Features} />
+        <Route path="/pricing" component={Pricing} />
+        <Route path="/about" component={About} />
+        <Route path="/contact" component={Contact} />
+        <Route path="/how-it-works" component={HowItWorks} />
         
-        {/* Public Pages */}
         <Route path="/">
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-grow">
               <Home />
-            </main>
-            <Footer />
-          </div>
-        </Route>
-
-        <Route path="/features">
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">
-              <Features />
-            </main>
-            <Footer />
-          </div>
-        </Route>
-
-        <Route path="/pricing">
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">
-              <Pricing />
-            </main>
-            <Footer />
-          </div>
-        </Route>
-
-        <Route path="/about">
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">
-              <About />
-            </main>
-            <Footer />
-          </div>
-        </Route>
-
-        <Route path="/contact">
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">
-              <Contact />
-            </main>
-            <Footer />
-          </div>
-        </Route>
-
-        <Route path="/how-it-works">
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">
-              <HowItWorks />
             </main>
             <Footer />
           </div>

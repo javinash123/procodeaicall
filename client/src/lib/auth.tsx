@@ -38,18 +38,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(loggedInUser);
     
     // Redirect based on role
+    // Using explicit full path for subdirectory deployment
+    const base = "/aiagent";
     if (loggedInUser.role === "admin") {
-      setLocation("/admin/dashboard");
+      setLocation(`${base}/admin/dashboard`, { replace: true });
     } else {
-      setLocation("/dashboard");
+      setLocation(`${base}/dashboard`, { replace: true });
     }
   };
 
   const logout = async () => {
     await authApi.logout();
     setUser(null);
-    const homePath = import.meta.env.PROD ? "/aiagent/" : "/";
-    setLocation(homePath);
+    setLocation("/");
   };
 
   const refetchUser = async () => {

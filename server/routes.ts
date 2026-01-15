@@ -71,100 +71,37 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   // Connect to MongoDB
   await connectDB();
 
-  // Session middleware
+  // Session middleware MUST be registered BEFORE routes
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "nijvox-secret-key-change-in-production",
-      resave: false,
-      saveUninitialized: false,
+      resave: true,
+      saveUninitialized: true,
+      name: "aiagent.sid",
+      rolling: true, // Force session cookie to be set on every response
       cookie: {
-        secure: process.env.NODE_ENV === "production",
+        secure: false, // Changed to false for HTTP EC2 instance
         httpOnly: true,
+        path: "/", // Use root path for all environments to ensure cookie is always sent
         maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+        sameSite: "lax"
       },
     })
   );
 
   // Auth middleware
   const requireAuth = (req: Request, res: Response, next: Function) => {
-    if (!req.session.userId) {
+    if (!req.session || !req.session.userId) {
+      const isProduction = process.env.NODE_ENV === "production";
+      const base = isProduction ? "/aiagent" : "";
+      
       if (req.headers.referer?.includes("/admin")) {
-        return res.status(401).json({ message: "Unauthorized", redirectTo: "/admin" });
+        return res.status(401).json({ message: "Unauthorized", redirectTo: `${base}/admin` });
       }
-      return res.status(401).json({ message: "Unauthorized", redirectTo: "/login" });
+      return res.status(401).json({ message: "Unauthorized", redirectTo: `${base}/login` });
     }
     next();
   };
-
-  // ==================== NOTIFICATION ROUTES ====================
-
-  app.get("/api/notifications", requireAuth, async (req, res) => {
-    try {
-      const notifications = await storage.getNotifications();
-      res.json({ notifications });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/notifications", requireAuth, async (req, res) => {
-    try {
-      const currentUser = await storage.getUser(req.session.userId!);
-      if (currentUser?.role !== "admin") {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      const data = insertNotificationSchema.parse(req.body);
-      const notification = await storage.createNotification(data);
-      res.status(201).json({ notification });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/notifications/:id/read", requireAuth, async (req, res) => {
-    try {
-      await storage.markNotificationRead(req.params.id, req.session.userId!);
-      res.json({ success: true });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  // ==================== AUTH ROUTES ====================
-  
-  // Register
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      const data = insertUserSchema.parse(req.body);
-      
-      // Check if user already exists
-      const existing = await storage.getUserByEmail(data.email);
-      if (existing) {
-        return res.status(400).json({ message: "Email already registered" });
-      }
-      
-      const user = await storage.createUser(data);
-      req.session.userId = user._id;
-
-      // Handle subscription if plan is selected
-      if (data.selectedPlanId) {
-        const plan = await storage.getPlan(data.selectedPlanId);
-        if (plan) {
-          await storage.updateUserSubscription(user._id, {
-            plan: plan.name,
-            status: "Active",
-            monthlyCallCredits: plan.credits,
-            creditsUsed: 0,
-            joinedDate: new Date(),
-          });
-        }
-      }
-
-      res.json({ user });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
 
   // Login
   app.post("/api/auth/login", async (req, res) => {
@@ -186,7 +123,13 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       req.session.userId = user._id;
       const { password: _, ...userWithoutPassword } = userWithPassword;
       
-      res.json({ user: userWithoutPassword });
+      // Explicitly save session before responding
+      req.session.save((err) => {
+        if (err) {
+          return res.status(500).json({ message: "Session save failed" });
+        }
+        res.json({ user: userWithoutPassword });
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
