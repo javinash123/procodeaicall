@@ -75,6 +75,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import dashboardImage from "@assets/generated_images/futuristic_dashboard_interface_mockup_glowing_in_orange..png";
+import BulkSms from "./bulk-sms";
 import BulkWhatsapp from "./bulk-whatsapp";
 import AdminPlans from "./admin-plans";
 
@@ -506,8 +507,9 @@ export default function Dashboard() {
     try {
       const campaign = await campaignsApi.create({
         ...newCampaign,
-        userId: user._id,
-        status: "Draft"
+        userId: user?._id || "",
+        status: "Draft",
+        knowledgeBaseFiles: newCampaign.knowledgeBaseFiles || []
       });
       setCampaigns([...campaigns, campaign]);
       setIsCreateCampaignOpen(false);
@@ -890,16 +892,7 @@ export default function Dashboard() {
 
         <div className="flex-1 p-6 overflow-auto">
           {activeTab === "whatsapp" && <BulkWhatsapp />}
-          {activeTab === "sms" && <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold tracking-tight">Bulk SMS</h1>
-            </div>
-            <Card className="p-12 text-center">
-              <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
-              <h3 className="text-lg font-medium">Bulk SMS Module</h3>
-              <p className="text-muted-foreground max-w-sm mx-auto mt-2">Send high-volume SMS campaigns to your leads. This module is currently under development.</p>
-            </Card>
-          </div>}
+          {activeTab === "sms" && <BulkSms />}
           {activeTab === "plans" && <AdminPlans />}
           {activeTab === "overview" && (
             <div className="space-y-6">
@@ -1092,10 +1085,25 @@ export default function Dashboard() {
                     <Card className="hover-elevate shadow-lg border-primary/10 overflow-hidden">
                       <CardHeader className="flex flex-row items-center justify-between gap-4">
                         <div><CardTitle className="flex items-center gap-2"><BarChart className="h-5 w-5 text-primary" />Growth Analytics</CardTitle><CardDescription>Monthly lead acquisition trajectory</CardDescription></div>
-                        <Select value={dailyActivityCampaignFilter} onValueChange={setDailyActivityCampaignFilter}>
-                          <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Filter by Campaign" /></SelectTrigger>
-                          <SelectContent><SelectItem value="all">All Campaigns</SelectItem>{campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-2">
+                          <Select value={dailyActivityCampaignFilter} onValueChange={setDailyActivityCampaignFilter}>
+                            <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Filter by Campaign" /></SelectTrigger>
+                            <SelectContent><SelectItem value="all">All Campaigns</SelectItem>{campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent>
+                          </Select>
+                          <Select 
+                            value={selectedChartYear.toString()} 
+                            onValueChange={(v) => setSelectedChartYear(parseInt(v))}
+                          >
+                            <SelectTrigger className="w-[100px] h-8 text-xs">
+                              <SelectValue placeholder="Year" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[2024, 2025, 2026].map(y => (
+                                <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </CardHeader>
                       <CardContent className="h-80"><ResponsiveContainer width="100%" height="100%"><AreaChart data={[{ name: "Jan", leads: 400 }, { name: "Feb", leads: 300 }, { name: "Mar", leads: 600 }, { name: "Apr", leads: 800 }, { name: "May", leads: 500 }, { name: "Jun", leads: 900 }]}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6}/><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} /><Area type="monotone" dataKey="leads" stroke="hsl(var(--primary))" strokeWidth={5} fillOpacity={1} fill="url(#colorGrowth)" animationDuration={2000} strokeLinecap="round" /></AreaChart></ResponsiveContainer></CardContent>
                     </Card>
@@ -1107,6 +1115,32 @@ export default function Dashboard() {
                       <Select value={callActivityCampaignFilter} onValueChange={setCallActivityCampaignFilter}>
                         <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Filter by Campaign" /></SelectTrigger>
                         <SelectContent><SelectItem value="all">All Campaigns</SelectItem>{campaigns.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <Select 
+                        value={selectedChartMonth.toString()} 
+                        onValueChange={(v) => setSelectedChartMonth(parseInt(v))}
+                      >
+                        <SelectTrigger className="w-[110px] h-8 text-xs">
+                          <SelectValue placeholder="Month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, i) => (
+                            <SelectItem key={m} value={i.toString()}>{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select 
+                        value={selectedChartYear.toString()} 
+                        onValueChange={(v) => setSelectedChartYear(parseInt(v))}
+                      >
+                        <SelectTrigger className="w-[100px] h-8 text-xs">
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[2024, 2025, 2026].map(y => (
+                            <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     </CardHeader>
                     <CardContent className="h-80"><ResponsiveContainer width="100%" height="100%"><LineChart data={[{ name: "Mon", calls: 120 }, { name: "Tue", calls: 150 }, { name: "Wed", calls: 180 }, { name: "Thu", calls: 140 }, { name: "Fri", calls: 160 }, { name: "Sat", calls: 90 }, { name: "Sun", calls: 70 }]}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} /><Line type="monotone" dataKey="calls" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 6, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--background))" }} /></LineChart></ResponsiveContainer></CardContent>

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Smartphone, Calendar as CalendarIcon, Send, Building, Loader2, CreditCard, CheckCircle2 } from "lucide-react";
+import { Search, Smartphone, Calendar as CalendarIcon, Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { campaignsApi, leadsApi, plansApi } from "@/lib/api";
-import type { Campaign, Lead, Plan } from "@shared/schema";
+import { campaignsApi, leadsApi } from "@/lib/api";
+import type { Campaign, Lead } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export default function BulkSms() {
       }
     };
     fetchData();
-  }, []);
+  }, [toast]);
 
   const filteredLeads = leads.filter(lead => {
     const nameStr = lead.name || "";
@@ -60,7 +60,7 @@ export default function BulkSms() {
   });
 
   const handleSelectAll = () => {
-    if (selectedLeads.length === filteredLeads.length) {
+    if (selectedLeads.length === filteredLeads.length && filteredLeads.length > 0) {
       setSelectedLeads([]);
     } else {
       setSelectedLeads(filteredLeads.map(l => l._id));
@@ -96,7 +96,7 @@ export default function BulkSms() {
     }
   };
 
-  if (!user) return <div className="p-6 text-center">Loading user profile...</div>;
+  if (!user) return null;
 
   if (loading) {
     return (
@@ -125,12 +125,11 @@ export default function BulkSms() {
             className="pl-9 h-9" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            data-testid="input-search-sms"
           />
         </div>
 
         <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-          <SelectTrigger className="w-[200px] h-9" data-testid="select-campaign-filter">
+          <SelectTrigger className="w-[200px] h-9">
             <SelectValue placeholder="All Campaigns" />
           </SelectTrigger>
           <SelectContent>
@@ -147,7 +146,6 @@ export default function BulkSms() {
             className="h-9 w-[150px]"
             value={dateRange.start} 
             onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-            data-testid="input-date-start"
           />
           <span className="text-muted-foreground">→</span>
           <Input 
@@ -155,7 +153,6 @@ export default function BulkSms() {
             className="h-9 w-[150px]"
             value={dateRange.end} 
             onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-            data-testid="input-date-end"
           />
         </div>
       </div>
@@ -168,7 +165,7 @@ export default function BulkSms() {
                 <CardTitle>SMS History</CardTitle>
                 <CardDescription>{filteredLeads.length} leads found</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={handleSelectAll} className="h-8" data-testid="button-select-all">
+              <Button variant="outline" size="sm" onClick={handleSelectAll} className="h-8">
                 {selectedLeads.length === filteredLeads.length && filteredLeads.length > 0 ? "Deselect All" : "Select All"}
               </Button>
             </CardHeader>
@@ -183,7 +180,6 @@ export default function BulkSms() {
                           className="rounded border-gray-300"
                           checked={selectedLeads.length === filteredLeads.length && filteredLeads.length > 0}
                           onChange={handleSelectAll}
-                          data-testid="checkbox-header-select-all"
                         />
                       </th>
                       <th className="p-3 text-left">Name</th>
@@ -195,14 +191,13 @@ export default function BulkSms() {
                   </thead>
                   <tbody>
                     {filteredLeads.map(lead => (
-                      <tr key={lead._id} className="border-t hover:bg-muted/30 transition-colors" data-testid={`row-lead-${lead._id}`}>
+                      <tr key={lead._id} className="border-t hover:bg-muted/30 transition-colors">
                         <td className="p-3">
                           <input 
                             type="checkbox" 
                             className="rounded border-gray-300"
                             checked={selectedLeads.includes(lead._id)}
                             onChange={() => handleToggleLead(lead._id)}
-                            data-testid={`checkbox-lead-${lead._id}`}
                           />
                         </td>
                         <td className="p-3 font-medium">{lead.name}</td>
@@ -211,7 +206,7 @@ export default function BulkSms() {
                           {campaigns.find(c => c._id === lead.campaignId)?.name || "-"}
                         </td>
                         <td className="p-3">
-                          <Badge variant="outline" data-testid={`badge-status-${lead._id}`}>{lead.status}</Badge>
+                          <Badge variant="outline">{lead.status}</Badge>
                         </td>
                         <td className="p-3 text-muted-foreground">
                           {lead.lastContact ? new Date(lead.lastContact).toLocaleDateString() : "No contact"}
@@ -220,7 +215,7 @@ export default function BulkSms() {
                     ))}
                     {filteredLeads.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="p-12 text-center text-muted-foreground" data-testid="text-no-results">
+                        <td colSpan={6} className="p-12 text-center text-muted-foreground">
                           No SMS records found matching your filters.
                         </td>
                       </tr>
