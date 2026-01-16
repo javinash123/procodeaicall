@@ -16,15 +16,35 @@ import { useLocation } from "wouter";
 
 export default function Pricing() {
   const [, setLocation] = useLocation();
-  const { data: plansResponse, isLoading: plansLoading } = useQuery<{ plans: Plan[] }>({ 
-    queryKey: ["/api/plans"] 
+  const { data: plansResponse, isLoading: plansLoading } = useQuery<{ plans: Plan[] } | Plan[]>({ 
+    queryKey: ["/api/plans"],
+    queryFn: async () => {
+      const isProduction = import.meta.env.PROD || window.location.hostname === '3.208.52.220';
+      const basePath = isProduction ? '/aiagent' : (import.meta.env.BASE_URL || '/');
+      const base = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+      const url = `${base}/api/plans`;
+      console.log('Fetching plans from:', url);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch plans");
+      return response.json();
+    }
   });
-  const { data: featuresResponse, isLoading: featuresLoading } = useQuery<{ features: Feature[] }>({ 
-    queryKey: ["/api/features"] 
+  const { data: featuresResponse, isLoading: featuresLoading } = useQuery<{ features: Feature[] } | Feature[]>({ 
+    queryKey: ["/api/features"],
+    queryFn: async () => {
+      const isProduction = import.meta.env.PROD || window.location.hostname === '3.208.52.220';
+      const basePath = isProduction ? '/aiagent' : (import.meta.env.BASE_URL || '/');
+      const base = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+      const url = `${base}/api/features`;
+      console.log('Fetching features from:', url);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch features");
+      return response.json();
+    }
   });
 
-  const plans = plansResponse?.plans || [];
-  const features = featuresResponse?.features || [];
+  const plans = Array.isArray(plansResponse) ? plansResponse : (plansResponse && 'plans' in plansResponse ? plansResponse.plans : []);
+  const features = Array.isArray(featuresResponse) ? featuresResponse : (featuresResponse && 'features' in featuresResponse ? featuresResponse.features : []);
 
   const handleGetStarted = (planId: string) => {
     setLocation(`/register?plan=${planId}`);

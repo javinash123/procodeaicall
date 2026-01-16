@@ -38,8 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(loggedInUser);
     
     // Redirect based on role
-    // Using explicit full path for subdirectory deployment
-    const base = "/aiagent";
+    const isProduction = import.meta.env.PROD;
+    const base = isProduction ? "/aiagent" : "";
+    
     if (loggedInUser.role === "admin") {
       setLocation(`${base}/admin/dashboard`, { replace: true });
     } else {

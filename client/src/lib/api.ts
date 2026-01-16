@@ -2,8 +2,11 @@ import type { User, InsertUser, Lead, InsertLead, Campaign, InsertCampaign, Appo
 
 const getApiBase = () => {
   if (typeof window !== 'undefined') {
-    const basePath = import.meta.env.BASE_URL || '/';
-    return basePath.endsWith('/') ? `${basePath}api` : `${basePath}/api`;
+    // In production, always use the /aiagent prefix for API calls
+    const isProduction = import.meta.env.PROD || window.location.hostname === '3.208.52.220';
+    const basePath = isProduction ? '/aiagent' : (import.meta.env.BASE_URL || '/');
+    const base = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+    return `${base}/api`;
   }
   return '/api';
 };
@@ -21,41 +24,77 @@ async function handleResponse<T>(response: Response): Promise<T> {
 // Auth API
 export const authApi = {
   login: async (email: string, password: string): Promise<User> => {
-    const response = await fetch(`${API_BASE}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-      credentials: "include",
-    });
-    const data = await handleResponse<{ user: User }>(response);
-    return data.user;
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: "Login failed" }));
+        throw new Error(error.message || "Invalid credentials");
+      }
+      
+      const result = await response.json();
+      return result.user;
+    } catch (error: any) {
+      console.error("Login error:", error);
+      throw error;
+    }
   },
 
   register: async (data: InsertUser): Promise<User> => {
-    const response = await fetch(`${API_BASE}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      credentials: "include",
-    });
-    const result = await handleResponse<{ user: User }>(response);
-    return result.user;
+    try {
+      const response = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: "Registration failed" }));
+        throw new Error(error.message || "Registration failed");
+      }
+      
+      const result = await response.json();
+      return result.user;
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      throw error;
+    }
   },
 
   logout: async (): Promise<void> => {
-    const response = await fetch(`${API_BASE}/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
-    await handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Logout failed");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   },
 
   getCurrentUser: async (): Promise<User> => {
-    const response = await fetch(`${API_BASE}/auth/me`, {
-      credentials: "include",
-    });
-    const data = await handleResponse<{ user: User }>(response);
-    return data.user;
+    try {
+      const response = await fetch(`${API_BASE}/auth/me`, {
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Not authenticated");
+      }
+      
+      const data = await response.json();
+      return data.user;
+    } catch (error: any) {
+      console.error("GetCurrentUser error:", error);
+      throw error;
+    }
   },
 };
 
@@ -421,11 +460,16 @@ export const plansApi = {
 // Features API
 export const featuresApi = {
   getAll: async (): Promise<Feature[]> => {
-    const response = await fetch(`${API_BASE}/features`, {
-      credentials: "include",
-    });
-    const data = await handleResponse<{ features: Feature[] }>(response);
-    return data.features;
+    try {
+      const response = await fetch(`${API_BASE}/features`, {
+        credentials: "include",
+      });
+      const data = await handleResponse<{ features: Feature[] }>(response);
+      return data.features || [];
+    } catch (error) {
+      console.error("Error fetching features:", error);
+      return [];
+    }
   },
 
   create: async (data: InsertFeature): Promise<Feature> => {
@@ -437,5 +481,21 @@ export const featuresApi = {
     });
     const result = await handleResponse<{ feature: Feature }>(response);
     return result.feature;
+  },
+};
+
+// Notifications API
+export const notificationsApi = {
+  getAll: async (): Promise<any[]> => {
+    try {
+      const response = await fetch(`${API_BASE}/notifications`, {
+        credentials: "include",
+      });
+      const data = await handleResponse<{ notifications: any[] }>(response);
+      return data.notifications || [];
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      return [];
+    }
   },
 };

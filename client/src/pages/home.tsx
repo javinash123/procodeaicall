@@ -30,12 +30,12 @@ export default function Home() {
               Enterprise-Grade Voice Automation
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8">
-              Replace Human Effort <br/>
-              <span className="text-primary">With Voice AI</span>
+              Bulk SMS & AI <br/>
+              <span className="text-primary">Calling Platform</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              Automate product demos, sales calls, and follow-ups with an AI that sounds human. 
-              Book more meetings and close deals while you sleep.
+              The all-in-one platform for Bulk SMS, WhatsApp Messaging, and AI Voice Calling. 
+              Reach thousands of customers instantly and automate your sales outreach.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/register">

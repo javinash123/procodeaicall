@@ -451,6 +451,44 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     }
   });
 
+  // ==================== NOTIFICATION ROUTES ====================
+
+  // Get all notifications
+  app.get("/api/notifications", requireAuth, async (req, res) => {
+    try {
+      const notifications = await storage.getNotifications();
+      res.json({ notifications });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create notification (admin only)
+  app.post("/api/notifications", requireAuth, async (req, res) => {
+    try {
+      const currentUser = await storage.getUser(req.session.userId!);
+      if (currentUser?.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const data = insertNotificationSchema.parse(req.body);
+      const notification = await storage.createNotification(data);
+      res.status(201).json({ notification });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Mark notification as read
+  app.post("/api/notifications/:id/read", requireAuth, async (req, res) => {
+    try {
+      await storage.markNotificationRead(req.params.id, req.session.userId!);
+      res.json({ message: "Notification marked as read" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ==================== FILE UPLOAD ROUTES ====================
 
   // Serve uploaded files

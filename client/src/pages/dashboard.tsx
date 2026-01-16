@@ -51,7 +51,7 @@ import {
   Send
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, notesApi, plansApi, type UploadedFile } from "@/lib/api";
+import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, notesApi, plansApi, notificationsApi, type UploadedFile } from "@/lib/api";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead, Campaign, Appointment, User as UserType, KnowledgeBaseFile, Plan, InsertPlan } from "@shared/schema";
@@ -305,7 +305,7 @@ export default function Dashboard() {
           appointmentsApi.getAll(),
           notesApi.getAll(),
           plansApi.getAll(),
-          apiRequest("GET", "/api/notifications").then(res => res.json())
+          notificationsApi.getAll()
         ]);
         
         setLeads(Array.isArray(leadsRes) ? leadsRes : (leadsRes as any).leads || []);
@@ -314,11 +314,7 @@ export default function Dashboard() {
         setNotes(Array.isArray(notesRes) ? notesRes : (notesRes as any).notes || []);
         setPlans(Array.isArray(plansRes) ? plansRes : (plansRes as any).plans || []);
         
-        if (notificationsRes && notificationsRes.notifications) {
-          setNotifications(notificationsRes.notifications);
-        } else {
-          setNotifications([]);
-        }
+        setNotifications(Array.isArray(notificationsRes) ? notificationsRes : (notificationsRes as any).notifications || []);
 
         if (isAdmin) {
           const usersRes = await usersApi.getAll();

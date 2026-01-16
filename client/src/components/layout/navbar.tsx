@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 export function Navbar() {
   const { setTheme, theme } = useTheme();
   const [location] = useLocation();
-  const isDashboard = location.startsWith("/dashboard") || location.startsWith("/admin");
+  const isDashboard = location.startsWith("/dashboard") || location.startsWith("/admin") || location.startsWith("/aiagent/dashboard") || location.startsWith("/aiagent/admin");
 
   if (isDashboard) return null;
 
