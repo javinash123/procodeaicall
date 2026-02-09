@@ -20,6 +20,7 @@ import AdminLogin from "@/pages/admin-login";
 import AdminPlans from "@/pages/admin-plans";
 import Notifications from "@/pages/notifications";
 import BulkWhatsapp from "@/pages/bulk-whatsapp";
+import Payment from "@/pages/payment";
 
 function Router() {
   const isProduction = import.meta.env.PROD;
@@ -32,6 +33,7 @@ function Router() {
         <main className="flex-grow">
           <Switch>
             <Route path="/dashboard" component={Dashboard} />
+            <Route path="/payment" component={Payment} />
             <Route path="/notifications" component={Notifications} />
             <Route path="/bulk-whatsapp" component={BulkWhatsapp} />
             <Route path="/admin/dashboard" component={Dashboard} />

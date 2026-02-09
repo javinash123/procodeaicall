@@ -74,15 +74,26 @@ export default function Auth() {
       });
       await login(email, password);
       
-      // Redirect to a placeholder payment route or external gateway
-      // Since Razorpay integration isn't set up yet, we'll simulate the redirect
       toast({
         title: "Account created!",
         description: "Redirecting to payment gateway...",
       });
       
       // In a real scenario, you'd redirect to Razorpay here
-      // window.location.href = `https://api.razorpay.com/v1/checkout...`;
+      // We will check for the plan and if it's free, skip payment
+      const response = await fetch(`/api/plans/${selectedPlanId}`);
+      const plan = await response.json();
+
+      if (plan && plan.price === 0) {
+        toast({
+          title: "Free Plan Activated",
+          description: "Welcome to NIJVOX!",
+        });
+        setLocation("/dashboard");
+      } else {
+        // Redirect to a dedicated payment page or trigger Razorpay
+        setLocation(`/payment?plan=${selectedPlanId}`);
+      }
       
     } catch (error: any) {
       toast({

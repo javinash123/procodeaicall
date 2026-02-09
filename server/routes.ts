@@ -531,6 +531,19 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     }
   });
 
+  // Get single plan
+  app.get("/api/plans/:id", async (req, res) => {
+    try {
+      const plan = await storage.getPlan(req.params.id);
+      if (!plan) {
+        return res.status(404).json({ message: "Plan not found" });
+      }
+      res.json(plan);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Upgrade plan
   app.post("/api/billing/upgrade", requireAuth, async (req, res) => {
     try {
