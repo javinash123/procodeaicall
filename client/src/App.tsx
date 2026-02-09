@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -25,6 +25,10 @@ import Payment from "@/pages/payment";
 function Router() {
   const isProduction = import.meta.env.PROD;
   const base = isProduction ? "/aiagent" : "";
+  const [location] = useLocation();
+
+  const hideFooterRoutes = ["/login", "/register", "/admin", "/dashboard", "/admin/dashboard", "/admin/plans", "/payment", "/bulk-whatsapp", "/notifications"];
+  const shouldHideFooter = hideFooterRoutes.includes(location);
 
   return (
     <WouterRouter base={base}>
@@ -50,7 +54,7 @@ function Router() {
             <Route component={NotFound} />
           </Switch>
         </main>
-        <Footer />
+        {!shouldHideFooter && <Footer />}
       </div>
     </WouterRouter>
   );

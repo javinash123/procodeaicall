@@ -36,31 +36,26 @@ export default function Payment() {
     onSuccess: async () => {
       toast({
         title: "Success",
-        description: "Your plan has been activated successfully.",
+        description: "Your payment was successful and your plan has been activated.",
       });
       
-      // Auto-login after successful payment if email is provided
-      if (email) {
-        try {
-          // We need the password too, but we don't have it here.
-          // In a real app, the session would be established during registration
-          // or we'd use a payment token. 
-          // For now, let's redirect to login if not logged in.
+      // Auto-redirect after successful payment
+      setTimeout(() => {
+        if (email) {
+          // If we came from registration, redirect to login with a success message
+          setLocation(`/login?message=Account activated successfully! Please login with your credentials.&email=${encodeURIComponent(email)}`);
+        } else {
+          // Otherwise, try to go to dashboard (for existing users upgrading)
           queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-          setLocation("/login?message=Account activated! Please login.");
-        } catch (e) {
-          setLocation("/login");
+          setLocation("/dashboard");
         }
-      } else {
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-        setLocation("/dashboard");
-      }
+      }, 2000); // Give user a moment to see the success toast
     },
     onError: (error: any) => {
       toast({
         variant: "destructive",
         title: "Upgrade failed",
-        description: error.message || "Something went wrong",
+        description: error.message || "Something went wrong during plan activation",
       });
     },
   });
@@ -125,64 +120,82 @@ export default function Payment() {
     <div className="min-h-screen bg-muted/20 flex items-center justify-center px-4 py-12">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Complete Your Purchase</CardTitle>
+          <CardTitle className="text-3xl font-bold">
+            {upgradeMutation.isSuccess ? "Payment Successful!" : "Complete Your Purchase"}
+          </CardTitle>
           <CardDescription>
-            You're subscribing to the {plan.name} Plan
+            {upgradeMutation.isSuccess 
+              ? "Your account is now active. Redirecting you..." 
+              : `You're subscribing to the ${plan.name} Plan`}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="bg-primary/5 rounded-xl p-6 border border-primary/10">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-medium">Total Amount</span>
-              <span className="text-3xl font-bold text-primary">₹{plan.price}</span>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 mr-2 text-primary" />
-                {plan.credits.toLocaleString()} Credits included
+          {upgradeMutation.isSuccess ? (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <div className="h-20 w-20 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
               </div>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 mr-2 text-primary" />
-                Full access to all {plan.name} features
-              </div>
+              <p className="text-center text-muted-foreground font-medium">
+                Thank you for your purchase. We are setting up your workspace.
+              </p>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="bg-primary/5 rounded-xl p-6 border border-primary/10">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-lg font-medium">Total Amount</span>
+                  <span className="text-3xl font-bold text-primary">₹{plan.price}</span>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <CheckCircle2 className="h-4 w-4 mr-2 text-primary" />
+                    {plan.credits.toLocaleString()} Credits included
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <CheckCircle2 className="h-4 w-4 mr-2 text-primary" />
+                    Full access to all {plan.name} features
+                  </div>
+                </div>
+              </div>
 
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Secure payment processing via Razorpay
-            </p>
-            <Button 
-              size="lg" 
-              className="w-full h-12 text-lg font-semibold"
-              onClick={handlePayment}
-              disabled={upgradeMutation.isPending}
-            >
-              {upgradeMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                `Pay ₹${plan.price} Now`
-              )}
-            </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full"
-              onClick={() => setLocation("/pricing")}
-              disabled={upgradeMutation.isPending}
-            >
-              Change Plan
-            </Button>
-          </div>
+              <div className="text-center space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Secure payment processing via Razorpay
+                </p>
+                <Button 
+                  size="lg" 
+                  className="w-full h-12 text-lg font-semibold"
+                  onClick={handlePayment}
+                  disabled={upgradeMutation.isPending}
+                >
+                  {upgradeMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Pay ₹${plan.price} Now`
+                  )}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full"
+                  onClick={() => setLocation("/pricing")}
+                  disabled={upgradeMutation.isPending}
+                >
+                  Change Plan
+                </Button>
+              </div>
+            </>
+          )}
         </CardContent>
-        <CardFooter className="justify-center border-t p-6">
-          <div className="flex items-center gap-4 grayscale opacity-50">
-            {/* Razorpay and Card Icons */}
-            <span className="text-xs font-medium uppercase tracking-widest">Secure Checkout</span>
-          </div>
-        </CardFooter>
+        {!upgradeMutation.isSuccess && (
+          <CardFooter className="justify-center border-t p-6">
+            <div className="flex items-center gap-4 grayscale opacity-50">
+              <span className="text-xs font-medium uppercase tracking-widest">Secure Checkout</span>
+            </div>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );
