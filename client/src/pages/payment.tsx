@@ -7,12 +7,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/lib/auth";
 
 export default function Payment() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
+  const { login } = useAuth();
   const queryParams = new URLSearchParams(window.location.search);
   const planId = queryParams.get("plan");
+  const email = queryParams.get("email");
 
   const { data: plan, isLoading } = useQuery<Plan>({
     queryKey: ["/api/plans", planId],
@@ -30,13 +33,28 @@ export default function Payment() {
       const res = await apiRequest("POST", "/api/billing/upgrade", { planId });
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Success",
-        description: "Your plan has been upgraded successfully.",
+        description: "Your plan has been activated successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      setLocation("/dashboard");
+      
+      // Auto-login after successful payment if email is provided
+      if (email) {
+        try {
+          // We need the password too, but we don't have it here.
+          // In a real app, the session would be established during registration
+          // or we'd use a payment token. 
+          // For now, let's redirect to login if not logged in.
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+          setLocation("/login?message=Account activated! Please login.");
+        } catch (e) {
+          setLocation("/login");
+        }
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+        setLocation("/dashboard");
+      }
     },
     onError: (error: any) => {
       toast({
@@ -74,7 +92,7 @@ export default function Payment() {
       },
       prefill: {
         name: "", // Will be filled from auth state if needed
-        email: "",
+        email: email || "",
       },
       theme: {
         color: "#f97316", // Primary color

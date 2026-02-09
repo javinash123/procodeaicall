@@ -103,6 +103,21 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     next();
   };
 
+  // Register
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const data = insertUserSchema.parse(req.body);
+      const existingUser = await storage.getUserByEmail(data.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+      const user = await storage.createUser(data);
+      res.status(201).json({ user });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
   // Login
   app.post("/api/auth/login", async (req, res) => {
     try {

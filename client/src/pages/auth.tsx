@@ -72,27 +72,27 @@ export default function Auth() {
         role: "user",
         selectedPlanId: selectedPlanId || undefined,
       });
-      await login(email, password);
+
+      // No login here yet, wait for payment
       
-      toast({
-        title: "Account created!",
-        description: "Redirecting to payment gateway...",
-      });
-      
-      // In a real scenario, you'd redirect to Razorpay here
-      // We will check for the plan and if it's free, skip payment
       const response = await fetch(`/api/plans/${selectedPlanId}`);
       const plan = await response.json();
 
       if (plan && plan.price === 0) {
+        // For free plan, we can login and redirect
+        await login(email, password);
         toast({
-          title: "Free Plan Activated",
-          description: "Welcome to NIJVOX!",
+          title: "Account created!",
+          description: "Free Plan Activated. Welcome to NIJVOX!",
         });
         setLocation("/dashboard");
       } else {
-        // Redirect to a dedicated payment page or trigger Razorpay
-        setLocation(`/payment?plan=${selectedPlanId}`);
+        toast({
+          title: "Account created!",
+          description: "Please complete the payment to activate your account.",
+        });
+        // Redirect to payment page with email for prefill
+        setLocation(`/payment?plan=${selectedPlanId}&email=${encodeURIComponent(email)}`);
       }
       
     } catch (error: any) {

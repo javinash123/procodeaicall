@@ -104,11 +104,10 @@ export class MongoStorage implements IStorage {
       ...insertUser,
       password: hashedPassword,
       subscription: {
-        plan: "Starter",
-        status: "Active",
-        monthlyCallCredits: 100,
+        plan: "Pending",
+        status: "Inactive",
+        monthlyCallCredits: 0,
         creditsUsed: 0,
-        renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         joinedDate: new Date(),
       },
     });
