@@ -41,6 +41,16 @@ const userSchema = new mongoose.Schema({
     dndEnabled: { type: Boolean, default: false },
     localPresenceDialing: { type: Boolean, default: true },
   },
+  exotelConfig: {
+    apiKey: String,
+    apiToken: String,
+    subdomain: String,
+    sid: String,
+  },
+  gupshupConfig: {
+    apiKey: String,
+    userId: String,
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -148,6 +158,7 @@ export const planSchema = new mongoose.Schema({
   limitations: [String],
   description: String,
   isActive: { type: Boolean, default: true },
+  selfBranding: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

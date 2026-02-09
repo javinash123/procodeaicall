@@ -699,7 +699,67 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         return res.status(404).json({ message: "User not found" });
       }
       
-      res.json({ settings: user.settings, subscription: user.subscription });
+      res.json({ settings: user.settings, subscription: user.subscription, exotelConfig: user.exotelConfig, gupshupConfig: user.gupshupConfig });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get Admin Exotel Config
+  app.get("/api/admin/exotel", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (user?.role !== "admin") return res.status(403).json({ message: "Forbidden" });
+      const config = await storage.getAdminSettings();
+      res.json(config);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update Admin Exotel Config
+  app.post("/api/admin/exotel", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (user?.role !== "admin") return res.status(403).json({ message: "Forbidden" });
+      const config = await storage.updateAdminSettings(req.body);
+      res.json(config);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update User Exotel Config
+  app.post("/api/user/exotel", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      
+      const plan = await storage.getPlans().then(plans => plans.find(p => p.name === user.subscription?.plan));
+      if (user.role !== "admin" && !plan?.selfBranding) {
+        return res.status(403).json({ message: "Plan does not support self-branding" });
+      }
+      
+      const updatedUser = await storage.updateExotelConfig(user._id, req.body);
+      res.json({ user: updatedUser });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update User Gupshup Config
+  app.post("/api/user/gupshup", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const plan = await storage.getPlans().then(plans => plans.find(p => p.name === user.subscription?.plan));
+      if (user.role !== "admin" && !plan?.selfBranding) {
+        return res.status(403).json({ message: "Plan does not support self-branding" });
+      }
+
+      const updatedUser = await storage.updateGupshupConfig(user._id, req.body);
+      res.json({ user: updatedUser });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

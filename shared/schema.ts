@@ -77,7 +77,29 @@ export type User = Omit<InsertUser, "password"> & {
   dltPrincipalEntityId?: string;
   dltHeaderId?: string;
   subscription?: SubscriptionInfo;
+  exotelConfig?: {
+    apiKey: string;
+    apiToken: string;
+    subdomain: string;
+    sid: string;
+  };
+  gupshupConfig?: {
+    apiKey: string;
+    userId: string;
+  };
 };
+
+// Admin Settings Schema (Global config)
+export const insertAdminSettingsSchema = z.object({
+  exotelApiKey: z.string().min(1),
+  exotelApiToken: z.string().min(1),
+  exotelSubdomain: z.string().min(1),
+  exotelSid: z.string().min(1),
+  gupshupApiKey: z.string().optional(),
+  gupshupUserId: z.string().optional(),
+});
+
+export type AdminSettings = z.infer<typeof insertAdminSettingsSchema>;
 
 // Credit Usage Schema
 export const insertCreditUsageSchema = z.object({

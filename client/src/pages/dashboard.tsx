@@ -243,6 +243,26 @@ export default function Dashboard() {
     dltPrincipalEntityId: user?.dltPrincipalEntityId || "",
     dltHeaderId: user?.dltHeaderId || ""
   });
+  const [exotelForm, setExotelForm] = useState({
+    apiKey: "",
+    apiToken: "",
+    subdomain: "",
+    sid: ""
+  });
+  const [gupshupForm, setGupshupForm] = useState({
+    apiKey: "",
+    userId: ""
+  });
+
+  useEffect(() => {
+    if (user?.exotelConfig) {
+      setExotelForm(user.exotelConfig);
+    }
+    if (user?.gupshupConfig) {
+      setGupshupForm(user.gupshupConfig);
+    }
+  }, [user]);
+
   const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
 
   // Chart Filter State
@@ -485,6 +505,38 @@ export default function Dashboard() {
     setIsEditLeadOpen(true);
   };
 
+  const handleUpdateExotelConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const endpoint = isAdmin ? "/api/admin/exotel" : "/api/user/exotel";
+      await apiRequest("POST", endpoint, exotelForm);
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      toast({ title: "Exotel configuration updated!" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Update failed", description: error.message });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUpdateGupshupConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const endpoint = isAdmin ? "/api/admin/exotel" : "/api/user/gupshup"; // Reusing admin endpoint if it handles all admin settings, but let's be specific
+      // Actually, admin setting update should probably handle both. 
+      // For now, let's keep it simple for user
+      await apiRequest("POST", isAdmin ? "/api/admin/exotel" : "/api/user/gupshup", gupshupForm);
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      toast({ title: "Gupshup configuration updated!" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Update failed", description: error.message });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleUpdateLead = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedLead) return;
@@ -511,7 +563,7 @@ export default function Dashboard() {
         campaignName: editLead.campaignId && editLead.campaignId !== "none" 
           ? campaigns.find(c => c._id === editLead.campaignId)?.name 
           : undefined 
-      };
+      } as Lead;
       
       setSelectedLead(updatedLead);
       setLeads(leads.map(l => l._id === selectedLead._id ? updatedLead : l));
@@ -2458,6 +2510,84 @@ export default function Dashboard() {
                               setIsSaving(false);
                             }
                           }}>Save Changes</Button>
+
+                          {/* Exotel Configuration Section */}
+                          {(isAdmin || (userPlan?.selfBranding)) && (
+                            <div className="mt-8 pt-8 border-t">
+                              <h3 className="text-lg font-medium mb-4">Exotel API Configuration</h3>
+                              <form onSubmit={handleUpdateExotelConfig} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="exotelApiKey">API Key</Label>
+                                    <Input 
+                                      id="exotelApiKey" 
+                                      value={exotelForm.apiKey} 
+                                      onChange={(e) => setExotelForm({...exotelForm, apiKey: e.target.value})}
+                                      placeholder="Exotel API Key"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="exotelApiToken">API Token</Label>
+                                    <Input 
+                                      id="exotelApiToken" 
+                                      type="password"
+                                      value={exotelForm.apiToken} 
+                                      onChange={(e) => setExotelForm({...exotelForm, apiToken: e.target.value})}
+                                      placeholder="Exotel API Token"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="exotelSubdomain">Subdomain</Label>
+                                    <Input 
+                                      id="exotelSubdomain" 
+                                      value={exotelForm.subdomain} 
+                                      onChange={(e) => setExotelForm({...exotelForm, subdomain: e.target.value})}
+                                      placeholder="e.g. api.exotel.com"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="exotelSid">Account SID</Label>
+                                    <Input 
+                                      id="exotelSid" 
+                                      value={exotelForm.sid} 
+                                      onChange={(e) => setExotelForm({...exotelForm, sid: e.target.value})}
+                                      placeholder="Exotel Account SID"
+                                    />
+                                  </div>
+                                </div>
+                                <Button type="submit" disabled={isSaving}>Save Exotel Config</Button>
+                              </form>
+
+                              {/* Gupshup Configuration Section */}
+                              <div className="mt-8 pt-8 border-t">
+                                <h3 className="text-lg font-medium mb-4">Gupshup SMS Configuration</h3>
+                                <form onSubmit={handleUpdateGupshupConfig} className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                      <Label htmlFor="gupshupApiKey">Gupshup API Key</Label>
+                                      <Input 
+                                        id="gupshupApiKey" 
+                                        type="password"
+                                        value={gupshupForm.apiKey} 
+                                        onChange={(e) => setGupshupForm({...gupshupForm, apiKey: e.target.value})}
+                                        placeholder="Gupshup API Key"
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor="gupshupUserId">Gupshup User ID</Label>
+                                      <Input 
+                                        id="gupshupUserId" 
+                                        value={gupshupForm.userId} 
+                                        onChange={(e) => setGupshupForm({...gupshupForm, userId: e.target.value})}
+                                        placeholder="Gupshup User ID"
+                                      />
+                                    </div>
+                                  </div>
+                                  <Button type="submit" disabled={isSaving}>Save Gupshup Config</Button>
+                                </form>
+                              </div>
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     </TabsContent>

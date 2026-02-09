@@ -59,6 +59,10 @@ export interface IStorage {
   updateSettings(userId: string, settings: UpdateSettings): Promise<User | null>;
   getSettings(userId: string): Promise<User | null>;
   updateUserSubscription(userId: string, subscription: SubscriptionInfo): Promise<User | null>;
+  updateExotelConfig(userId: string, config: any): Promise<User | null>;
+  updateGupshupConfig(userId: string, config: any): Promise<User | null>;
+  getAdminSettings(): Promise<any>;
+  updateAdminSettings(settings: any): Promise<any>;
 
   // Note methods
   getNotes(userId: string): Promise<Note[]>;
@@ -298,6 +302,40 @@ export class MongoStorage implements IStorage {
     ).select("-password").lean();
     if (!user) return null;
     return { ...(user as any), _id: (user as any)._id.toString() } as any as User;
+  }
+
+  async updateExotelConfig(userId: string, config: any): Promise<User | null> {
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      { $set: { exotelConfig: config } },
+      { new: true }
+    ).select("-password").lean();
+    if (!user) return null;
+    return { ...(user as any), _id: (user as any)._id.toString() } as any as User;
+  }
+
+  async updateGupshupConfig(userId: string, config: any): Promise<User | null> {
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      { $set: { gupshupConfig: config } },
+      { new: true }
+    ).select("-password").lean();
+    if (!user) return null;
+    return { ...(user as any), _id: (user as any)._id.toString() } as any as User;
+  }
+
+  async getAdminSettings(): Promise<any> {
+    const admin = await UserModel.findOne({ role: "admin" }).select("exotelConfig").lean();
+    return (admin as any)?.exotelConfig || null;
+  }
+
+  async updateAdminSettings(settings: any): Promise<any> {
+    const admin = await UserModel.findOneAndUpdate(
+      { role: "admin" },
+      { $set: { exotelConfig: settings } },
+      { new: true }
+    ).select("exotelConfig").lean();
+    return (admin as any)?.exotelConfig || null;
   }
 
   // Note methods
