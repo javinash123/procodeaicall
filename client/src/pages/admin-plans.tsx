@@ -119,6 +119,7 @@ export default function AdminPlans() {
       limitations: [] as string[],
       description: "",
       isActive: true,
+      selfBranding: false,
     },
   });
 
@@ -136,6 +137,7 @@ export default function AdminPlans() {
       limitations: [] as string[],
       description: "",
       isActive: true,
+      selfBranding: false,
     },
   });
 
@@ -160,6 +162,7 @@ export default function AdminPlans() {
       limitations: plan.limitations || [],
       description: plan.description || "",
       isActive: plan.isActive,
+      selfBranding: plan.selfBranding ?? false,
     });
     setIsEditOpen(true);
   };
@@ -387,6 +390,28 @@ export default function AdminPlans() {
                       )}
                     </div>
                   </div>
+                  <FormField
+                    control={form.control}
+                    name="selfBranding"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                        <div className="space-y-0.5">
+                          <FormLabel>Self Branding</FormLabel>
+                        </div>
+                        <FormControl>
+                          <Select onValueChange={(val) => field.onChange(val === "yes")} value={field.value ? "yes" : "no"}>
+                            <SelectTrigger className="w-[100px]">
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="yes">Yes</SelectItem>
+                              <SelectItem value="no">No</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                   <Button type="submit" className="w-full mt-4" disabled={createPlanMutation.isPending}>
                     {createPlanMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Plan
@@ -549,6 +574,28 @@ export default function AdminPlans() {
                       )}
                     </div>
                   </div>
+                  <FormField
+                    control={editForm.control}
+                    name="selfBranding"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                        <div className="space-y-0.5">
+                          <FormLabel>Self Branding</FormLabel>
+                        </div>
+                        <FormControl>
+                          <Select onValueChange={(val) => field.onChange(val === "yes")} value={field.value ? "yes" : "no"}>
+                            <SelectTrigger className="w-[100px]">
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="yes">Yes</SelectItem>
+                              <SelectItem value="no">No</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                   <Button type="submit" className="w-full mt-4" disabled={updatePlanMutation.isPending}>
                     {updatePlanMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Update Plan

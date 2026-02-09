@@ -23,6 +23,7 @@ export const insertPlanSchema = z.object({
   limitations: z.array(z.string()),
   description: z.string().optional(),
   isActive: z.boolean().default(true),
+  selfBranding: z.boolean().default(false),
 });
 
 export type InsertPlan = z.infer<typeof insertPlanSchema>;
@@ -52,6 +53,8 @@ export const insertUserSchema = z.object({
   phone: z.string().optional(),
   selectedPlanId: z.string().optional(),
   companyLogo: z.string().optional(),
+  dltPrincipalEntityId: z.string().optional(),
+  dltHeaderId: z.string().optional(),
 });
 
 export const updateUserSchema = insertUserSchema.partial().omit({ password: true });
@@ -71,6 +74,8 @@ export type User = Omit<InsertUser, "password"> & {
     dndEnabled: boolean;
     localPresenceDialing: boolean;
   };
+  dltPrincipalEntityId?: string;
+  dltHeaderId?: string;
   subscription?: SubscriptionInfo;
 };
 

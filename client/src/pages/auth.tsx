@@ -50,12 +50,21 @@ export default function Auth() {
     const email = formData.get("reg-email") as string;
     const password = formData.get("reg-password") as string;
     
-    // Get plan from URL
     const queryParams = new URLSearchParams(window.location.search);
     const selectedPlanId = queryParams.get("plan");
 
+    if (!selectedPlanId) {
+      toast({
+        variant: "destructive",
+        title: "Plan required",
+        description: "Please select a pricing plan before registering.",
+      });
+      setLocation("/pricing");
+      return;
+    }
+
     try {
-      await authApi.register({
+      const user = await authApi.register({
         email,
         password,
         firstName,
@@ -64,10 +73,17 @@ export default function Auth() {
         selectedPlanId: selectedPlanId || undefined,
       });
       await login(email, password);
+      
+      // Redirect to a placeholder payment route or external gateway
+      // Since Razorpay integration isn't set up yet, we'll simulate the redirect
       toast({
         title: "Account created!",
-        description: "Welcome to NIJVOX. Your account has been created successfully.",
+        description: "Redirecting to payment gateway...",
       });
+      
+      // In a real scenario, you'd redirect to Razorpay here
+      // window.location.href = `https://api.razorpay.com/v1/checkout...`;
+      
     } catch (error: any) {
       toast({
         variant: "destructive",

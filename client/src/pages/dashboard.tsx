@@ -239,7 +239,9 @@ export default function Dashboard() {
     email: user?.email || "",
     phone: user?.phone || "",
     companyName: user?.companyName || "",
-    companyLogo: user?.companyLogo || ""
+    companyLogo: user?.companyLogo || "",
+    dltPrincipalEntityId: user?.dltPrincipalEntityId || "",
+    dltHeaderId: user?.dltHeaderId || ""
   });
   const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
 
@@ -364,7 +366,9 @@ export default function Dashboard() {
         email: user.email || "",
         phone: user.phone || "",
         companyName: user.companyName || "",
-        companyLogo: user.companyLogo || ""
+        companyLogo: user.companyLogo || "",
+        dltPrincipalEntityId: user.dltPrincipalEntityId || "",
+        dltHeaderId: user.dltHeaderId || ""
       });
       setDndEnabled(user.settings?.dndEnabled || false);
       setCallLimit(user.settings?.dailyCallLimit || 500);
@@ -2423,6 +2427,24 @@ export default function Dashboard() {
                           <div className="space-y-2">
                             <Label>Company Name</Label>
                             <Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>DLT Principal Entity ID</Label>
+                              <Input 
+                                placeholder="Enter PE ID" 
+                                value={profileForm.dltPrincipalEntityId} 
+                                onChange={(e) => setProfileForm({ ...profileForm, dltPrincipalEntityId: e.target.value })} 
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>DLT Header ID (Sender ID)</Label>
+                              <Input 
+                                placeholder="Enter Header ID" 
+                                value={profileForm.dltHeaderId} 
+                                onChange={(e) => setProfileForm({ ...profileForm, dltHeaderId: e.target.value })} 
+                              />
+                            </div>
                           </div>
                           <Button className="mt-4" disabled={isSaving} onClick={async () => {
                             setIsSaving(true);
