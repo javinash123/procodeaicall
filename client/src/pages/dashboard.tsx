@@ -505,6 +505,46 @@ export default function Dashboard() {
     setIsEditLeadOpen(true);
   };
 
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      console.log("Sending profile update:", profileForm);
+      const response = await apiRequest("PATCH", "/api/user", profileForm);
+      const data = await response.json();
+      console.log("Profile update response:", data);
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      toast({ title: "Profile updated successfully!" });
+    } catch (error: any) {
+      console.error("Profile update error:", error);
+      toast({ variant: "destructive", title: "Update failed", description: error.message });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      const response = await uploadApi.uploadFiles([files[0]]);
+      const uploadedFiles = response || [];
+      if (uploadedFiles.length > 0) {
+        const logoUrl = uploadedFiles[0].url;
+        console.log("Logo uploaded, URL:", logoUrl);
+        setProfileForm(prev => ({ ...prev, companyLogo: logoUrl }));
+        toast({ title: "Logo uploaded! Click 'Save Changes' to update your profile." });
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Upload failed", description: error.message });
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = "";
+    }
+  };
+
   const handleUpdateExotelConfig = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -2445,7 +2485,7 @@ export default function Dashboard() {
                     </div>
                   </Card>
                 </div>
-                <div className="md:col-span-2 space-y-6">
+                <div className="md:col-span-3 space-y-6">
                   <Tabs defaultValue="profile" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -2458,58 +2498,76 @@ export default function Dashboard() {
                           <CardDescription>Update your personal details.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>First Name</Label>
-                              <Input value={profileForm.firstName} onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} />
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                              <Avatar className="h-20 w-20 border-2 border-primary/20">
+                                <AvatarImage src={profileForm.companyLogo || user?.companyLogo || undefined} />
+                                <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
+                                  {profileForm.firstName?.charAt(0)}{profileForm.lastName?.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <Label htmlFor="logo-upload" className="cursor-pointer">
+                                  <div className="flex items-center gap-2 text-sm text-primary hover:underline">
+                                    <Upload className="h-4 w-4" />
+                                    {isUploading ? "Uploading..." : "Upload Company Logo"}
+                                  </div>
+                                </Label>
+                                <Input 
+                                  id="logo-upload" 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept="image/*"
+                                  onChange={handleLogoUpload}
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">Recommended: Square image, max 2MB</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>First Name</Label>
+                                <Input value={profileForm.firstName} onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Last Name</Label>
+                                <Input value={profileForm.lastName} onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} />
+                              </div>
                             </div>
                             <div className="space-y-2">
-                              <Label>Last Name</Label>
-                              <Input value={profileForm.lastName} onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Email Address</Label>
-                            <Input value={profileForm.email} readOnly className="bg-muted" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Phone Number</Label>
-                            <Input value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Company Name</Label>
-                            <Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>DLT Principal Entity ID</Label>
-                              <Input 
-                                placeholder="Enter PE ID" 
-                                value={profileForm.dltPrincipalEntityId} 
-                                onChange={(e) => setProfileForm({ ...profileForm, dltPrincipalEntityId: e.target.value })} 
-                              />
+                              <Label>Email Address</Label>
+                              <Input value={profileForm.email} readOnly className="bg-muted" />
                             </div>
                             <div className="space-y-2">
-                              <Label>DLT Header ID (Sender ID)</Label>
-                              <Input 
-                                placeholder="Enter Header ID" 
-                                value={profileForm.dltHeaderId} 
-                                onChange={(e) => setProfileForm({ ...profileForm, dltHeaderId: e.target.value })} 
-                              />
+                              <Label>Phone Number</Label>
+                              <Input value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Company Name</Label>
+                              <Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>DLT Principal Entity ID</Label>
+                                <Input 
+                                  placeholder="Enter PE ID" 
+                                  value={profileForm.dltPrincipalEntityId} 
+                                  onChange={(e) => setProfileForm({ ...profileForm, dltPrincipalEntityId: e.target.value })} 
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>DLT Header ID (Sender ID)</Label>
+                                <Input 
+                                  placeholder="Enter Header ID" 
+                                  value={profileForm.dltHeaderId} 
+                                  onChange={(e) => setProfileForm({ ...profileForm, dltHeaderId: e.target.value })} 
+                                />
+                              </div>
                             </div>
                           </div>
-                          <Button className="mt-4" disabled={isSaving} onClick={async () => {
-                            setIsSaving(true);
-                            try {
-                              await apiRequest("PATCH", "/api/user", profileForm);
-                              await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                              toast({ title: "Success", description: "Profile updated successfully" });
-                            } catch (err) {
-                              toast({ title: "Error", description: "Failed to update profile", variant: "destructive" });
-                            } finally {
-                              setIsSaving(false);
-                            }
-                          }}>Save Changes</Button>
+                          <Button className="mt-4 w-full" disabled={isSaving} onClick={handleUpdateProfile}>
+                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Save Changes
+                          </Button>
 
                           {/* Exotel Configuration Section */}
                           {(isAdmin || (userPlan?.selfBranding)) && (
@@ -2665,11 +2723,8 @@ export default function Dashboard() {
                               <p className="text-2xl font-bold">₹{plans.find(p => p.name === user?.subscription?.plan)?.price || 0}/mo</p>
                             </div>
                             <div className="p-4 border rounded-lg">
-                              <p className="text-xs text-muted-foreground mb-1 uppercase font-bold tracking-wider">Payment Method</p>
-                              <div className="flex items-center gap-2">
-                                <CreditCard className="h-4 w-4 text-primary" />
-                                <span className="font-semibold">•••• 4242</span>
-                              </div>
+                              <p className="text-xs text-muted-foreground mb-1 uppercase font-bold tracking-wider">Remaining Credits</p>
+                              <p className="text-2xl font-bold">{(user?.subscription?.monthlyCallCredits || 0) - (user?.subscription?.creditsUsed || 0)}</p>
                             </div>
                           </div>
                         </CardContent>
@@ -2694,20 +2749,19 @@ export default function Dashboard() {
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                  {[
-                                    { date: "Jan 01, 2026", desc: "Starter Plan - Monthly", amount: "₹0", status: "Paid" },
-                                    { date: "Dec 01, 2025", desc: "Starter Plan - Monthly", amount: "₹0", status: "Paid" }
-                                  ].map((inv, i) => (
-                                    <TableRow key={i}>
-                                      <TableCell>{inv.date}</TableCell>
-                                      <TableCell>{inv.desc}</TableCell>
-                                      <TableCell>{inv.amount}</TableCell>
-                                      <TableCell><Badge variant="outline" className="text-green-600 bg-green-50">{inv.status}</Badge></TableCell>
+                                  {user?.subscription?.joinedDate ? (
+                                    <TableRow>
+                                      <TableCell>{new Date(user.subscription.joinedDate).toLocaleDateString()}</TableCell>
+                                      <TableCell>{user.subscription.plan} Plan Activation</TableCell>
+                                      <TableCell>₹{plans.find(p => p.name === user.subscription?.plan)?.price || 0}</TableCell>
+                                      <TableCell><Badge variant="outline" className="text-green-600 bg-green-50">Paid</Badge></TableCell>
                                       <TableCell className="text-right">
                                         <Button variant="ghost" size="sm" className="h-8"><FileText className="h-4 w-4 mr-2" /> PDF</Button>
                                       </TableCell>
                                     </TableRow>
-                                  ))}
+                                  ) : (
+                                    <TableRow><TableCell colSpan={5} className="text-center py-4 text-muted-foreground">No billing history found.</TableCell></TableRow>
+                                  )}
                                 </TableBody>
                               </Table>
                             </DialogContent>
@@ -2715,12 +2769,17 @@ export default function Dashboard() {
                           
                           <div className="flex gap-2">
                             <Button variant="outline" className="text-primary border-primary hover:bg-primary/5" onClick={async () => {
-                              try {
-                                await apiRequest("POST", "/api/billing/renew", {});
-                                await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                                toast({ title: "Success", description: "Subscription renewed successfully" });
-                              } catch (err) {
-                                toast({ title: "Error", description: "Renewal failed", variant: "destructive" });
+                              const plan = plans.find(p => p.name === user?.subscription?.plan);
+                              if (!plan) return;
+                              
+                              if (window.confirm(`Renewing your ${plan.name} plan for ₹${plan.price}. Proceed to payment?`)) {
+                                try {
+                                  await apiRequest("POST", "/api/billing/renew", {});
+                                  await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+                                  toast({ title: "Success", description: "Subscription renewed successfully" });
+                                } catch (err) {
+                                  toast({ title: "Error", description: "Renewal failed", variant: "destructive" });
+                                }
                               }
                             }}>Renew Now</Button>
                             
@@ -2756,15 +2815,17 @@ export default function Dashboard() {
                                           variant={user?.subscription?.plan === plan.name ? "outline" : "default"}
                                           disabled={user?.subscription?.plan === plan.name || isSaving}
                                           onClick={async () => {
-                                            setIsSaving(true);
-                                            try {
-                                              await apiRequest("POST", "/api/billing/upgrade", { planId: plan._id });
-                                              await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                                              toast({ title: "Success", description: `Upgraded to ${plan.name} plan` });
-                                            } catch (err) {
-                                              toast({ title: "Error", description: "Upgrade failed", variant: "destructive" });
-                                            } finally {
-                                              setIsSaving(false);
+                                            if (window.confirm(`Upgrading to ${plan.name} plan for ₹${plan.price}. Proceed to payment?`)) {
+                                              setIsSaving(true);
+                                              try {
+                                                await apiRequest("POST", "/api/billing/upgrade", { planId: plan._id });
+                                                await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+                                                toast({ title: "Success", description: `Upgraded to ${plan.name} plan` });
+                                              } catch (err) {
+                                                toast({ title: "Error", description: "Upgrade failed", variant: "destructive" });
+                                              } finally {
+                                                setIsSaving(false);
+                                              }
                                             }
                                           }}
                                         >
