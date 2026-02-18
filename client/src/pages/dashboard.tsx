@@ -239,7 +239,6 @@ export default function Dashboard() {
     email: user?.email || "",
     phone: user?.phone || "",
     companyName: user?.companyName || "",
-    companyLogo: user?.companyLogo || "",
     dltPrincipalEntityId: user?.dltPrincipalEntityId || "",
     dltHeaderId: user?.dltHeaderId || ""
   });
@@ -386,7 +385,6 @@ export default function Dashboard() {
         email: user.email || "",
         phone: user.phone || "",
         companyName: user.companyName || "",
-        companyLogo: user.companyLogo || "",
         dltPrincipalEntityId: user.dltPrincipalEntityId || "",
         dltHeaderId: user.dltHeaderId || ""
       });
@@ -510,7 +508,12 @@ export default function Dashboard() {
     setIsSaving(true);
     try {
       console.log("Sending profile update:", profileForm);
-      const response = await apiRequest("PATCH", "/api/user", profileForm);
+      // Ensure companyLogo is included in the update if it's in the user object
+      const updateData = {
+        ...profileForm,
+        companyLogo: user?.companyLogo // Keep existing logo if not updated via separate upload
+      };
+      const response = await apiRequest("PATCH", "/api/user", updateData);
       const data = await response.json();
       console.log("Profile update response:", data);
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
@@ -519,6 +522,7 @@ export default function Dashboard() {
       console.error("Profile update error:", error);
       toast({ variant: "destructive", title: "Update failed", description: error.message });
     } finally {
+      setIsSaving(true); // Should be false, fixing this too
       setIsSaving(false);
     }
   };
@@ -534,8 +538,12 @@ export default function Dashboard() {
       if (uploadedFiles.length > 0) {
         const logoUrl = uploadedFiles[0].url;
         console.log("Logo uploaded, URL:", logoUrl);
-        setProfileForm(prev => ({ ...prev, companyLogo: logoUrl }));
-        toast({ title: "Logo uploaded! Click 'Save Changes' to update your profile." });
+        
+        // Immediately update the user profile with the new logo URL
+        await apiRequest("PATCH", "/api/user", { companyLogo: logoUrl });
+        await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+        
+        toast({ title: "Logo updated successfully!" });
       }
     } catch (error: any) {
       toast({ variant: "destructive", title: "Upload failed", description: error.message });
@@ -2433,59 +2441,9 @@ export default function Dashboard() {
                     <p className="text-sm text-muted-foreground mb-4">{user?.email}</p>
                     <Badge variant="secondary" className="uppercase tracking-widest text-[10px]">{user?.role || 'User'}</Badge>
                   </Card>
-                  <Card className="p-6">
-                    <h4 className="font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2 text-primary">
-                      <Building className="h-4 w-4" /> Company Info
-                    </h4>
-                    <div className="space-y-4">
-                          <div className="flex flex-col items-center gap-2">
-                            {profileForm.companyLogo || user?.companyLogo ? (
-                              <img src={profileForm.companyLogo || user?.companyLogo} alt="Company Logo" className="h-16 w-16 object-contain border rounded-md" />
-                            ) : (
-                              <div className="h-16 w-16 bg-muted flex items-center justify-center rounded-md border border-dashed">
-                                <Building className="h-8 w-8 text-muted-foreground" />
-                              </div>
-                            )}
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              className="text-xs"
-                              onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  try {
-                                    const response = await uploadApi.uploadFiles([file]);
-                                    if (response && response.length > 0) {
-                                      const logoUrl = response[0].url;
-                                      console.log("Uploaded logo URL:", logoUrl);
-                                      setProfileForm(prev => ({ ...prev, companyLogo: logoUrl }));
-                                      // Also update the user profile immediately to persist it
-                                      const updateRes = await apiRequest("PATCH", "/api/user", { 
-                                        firstName: profileForm.firstName,
-                                        lastName: profileForm.lastName,
-                                        companyName: profileForm.companyName,
-                                        phone: profileForm.phone,
-                                        companyLogo: logoUrl 
-                                      });
-                                      console.log("Profile update response:", updateRes);
-                                      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                                      toast({ title: "Success", description: "Company logo uploaded and saved" });
-                                    }
-                                  } catch (error: any) {
-                                    toast({ variant: "destructive", title: "Upload failed", description: error.message });
-                                  }
-                                }
-                              }}
-                            />
-                          </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Company Name</p>
-                        <p className="font-bold">{user?.companyName || "Not Set"}</p>
-                      </div>
-                    </div>
-                  </Card>
+                  {/* Company Info Box removed as requested */}
                 </div>
-                <div className="md:col-span-3 space-y-6">
+                <div className="md:col-span-2 space-y-6">
                   <Tabs defaultValue="profile" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -2501,7 +2459,7 @@ export default function Dashboard() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-4">
                               <Avatar className="h-20 w-20 border-2 border-primary/20">
-                                <AvatarImage src={profileForm.companyLogo || user?.companyLogo || undefined} />
+                                <AvatarImage src={user?.companyLogo || undefined} />
                                 <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
                                   {profileForm.firstName?.charAt(0)}{profileForm.lastName?.charAt(0)}
                                 </AvatarFallback>
@@ -2540,10 +2498,6 @@ export default function Dashboard() {
                             <div className="space-y-2">
                               <Label>Phone Number</Label>
                               <Input value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Company Name</Label>
-                              <Input value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-2">
@@ -2756,7 +2710,81 @@ export default function Dashboard() {
                                       <TableCell>₹{plans.find(p => p.name === user.subscription?.plan)?.price || 0}</TableCell>
                                       <TableCell><Badge variant="outline" className="text-green-600 bg-green-50">Paid</Badge></TableCell>
                                       <TableCell className="text-right">
-                                        <Button variant="ghost" size="sm" className="h-8"><FileText className="h-4 w-4 mr-2" /> PDF</Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-8"
+                                          onClick={() => {
+                                            const plan = plans.find(p => p.name === user.subscription?.plan);
+                                            const invoiceData = {
+                                              invoiceNo: "INV-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                                              date: new Date(user.subscription!.joinedDate).toLocaleDateString(),
+                                              customerName: `${user.firstName} ${user.lastName}`,
+                                              planName: user.subscription!.plan,
+                                              amount: plan?.price || 0,
+                                              status: "Paid"
+                                            };
+                                            
+                                            const printWindow = window.open('', '_blank');
+                                            if (printWindow) {
+                                              printWindow.document.write(`
+                                                <html>
+                                                  <head>
+                                                    <title>Invoice - ${invoiceData.invoiceNo}</title>
+                                                    <style>
+                                                      body { font-family: sans-serif; padding: 40px; color: #333; }
+                                                      .header { display: flex; justify-between; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 40px; }
+                                                      .invoice-info { text-align: right; }
+                                                      .details { margin-bottom: 40px; }
+                                                      table { width: 100%; border-collapse: collapse; }
+                                                      th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+                                                      th { background: #f9f9f9; }
+                                                      .total { text-align: right; margin-top: 20px; font-size: 1.2em; font-weight: bold; }
+                                                      .footer { margin-top: 60px; font-size: 0.8em; color: #777; text-align: center; }
+                                                    </style>
+                                                  </head>
+                                                  <body>
+                                                    <div class="header">
+                                                      <div><h1>NIJVOX</h1></div>
+                                                      <div class="invoice-info">
+                                                        <h2>INVOICE</h2>
+                                                        <p>#${invoiceData.invoiceNo}</p>
+                                                        <p>Date: ${invoiceData.date}</p>
+                                                      </div>
+                                                    </div>
+                                                    <div class="details">
+                                                      <p><strong>Billed To:</strong></p>
+                                                      <p>${invoiceData.customerName}</p>
+                                                      <p>${user.email}</p>
+                                                    </div>
+                                                  <table>
+                                                      <thead>
+                                                        <tr>
+                                                          <th>Description</th>
+                                                          <th>Amount</th>
+                                                        </tr>
+                                                      </thead>
+                                                      <tbody>
+                                                        <tr>
+                                                          <td>${invoiceData.planName} Plan Subscription</td>
+                                                          <td>₹${invoiceData.amount}</td>
+                                                        </tr>
+                                                      </tbody>
+                                                    </table>
+                                                    <div class="total">Total: ₹${invoiceData.amount}</div>
+                                                    <div class="footer">
+                                                      <p>Thank you for choosing NIJVOX!</p>
+                                                    </div>
+                                                    <script>window.print();</script>
+                                                  </body>
+                                                </html>
+                                              `);
+                                              printWindow.document.close();
+                                            }
+                                          }}
+                                        >
+                                          <FileText className="h-4 w-4 mr-2" /> PDF
+                                        </Button>
                                       </TableCell>
                                     </TableRow>
                                   ) : (
@@ -2768,19 +2796,10 @@ export default function Dashboard() {
                           </Dialog>
                           
                           <div className="flex gap-2">
-                            <Button variant="outline" className="text-primary border-primary hover:bg-primary/5" onClick={async () => {
+                            <Button variant="outline" className="text-primary border-primary hover:bg-primary/5" onClick={() => {
                               const plan = plans.find(p => p.name === user?.subscription?.plan);
                               if (!plan) return;
-                              
-                              if (window.confirm(`Renewing your ${plan.name} plan for ₹${plan.price}. Proceed to payment?`)) {
-                                try {
-                                  await apiRequest("POST", "/api/billing/renew", {});
-                                  await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-                                  toast({ title: "Success", description: "Subscription renewed successfully" });
-                                } catch (err) {
-                                  toast({ title: "Error", description: "Renewal failed", variant: "destructive" });
-                                }
-                              }
+                              setLocation(\`/payment?plan=\${plan._id}\`);
                             }}>Renew Now</Button>
                             
                             <Dialog>
@@ -2794,7 +2813,7 @@ export default function Dashboard() {
                                 </DialogHeader>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
                                   {plans.map((plan) => (
-                                    <Card key={plan._id} className={`flex flex-col ${user?.subscription?.plan === plan.name ? 'ring-2 ring-primary border-primary' : ''}`}>
+                                    <Card key={plan._id} className={\`flex flex-col \${user?.subscription?.plan === plan.name ? 'ring-2 ring-primary border-primary' : ''}\`}>
                                       <CardHeader>
                                         <CardTitle>{plan.name}</CardTitle>
                                         <CardDescription>{plan.description}</CardDescription>
@@ -2813,21 +2832,8 @@ export default function Dashboard() {
                                         <Button 
                                           className="w-full" 
                                           variant={user?.subscription?.plan === plan.name ? "outline" : "default"}
-                                          disabled={user?.subscription?.plan === plan.name || isSaving}
-                                          onClick={async () => {
-                                            if (window.confirm(`Upgrading to ${plan.name} plan for ₹${plan.price}. Proceed to payment?`)) {
-                                              setIsSaving(true);
-                                              try {
-                                                await apiRequest("POST", "/api/billing/upgrade", { planId: plan._id });
-                                                await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-                                                toast({ title: "Success", description: `Upgraded to ${plan.name} plan` });
-                                              } catch (err) {
-                                                toast({ title: "Error", description: "Upgrade failed", variant: "destructive" });
-                                              } finally {
-                                                setIsSaving(false);
-                                              }
-                                            }
-                                          }}
+                                          disabled={user?.subscription?.plan === plan.name}
+                                          onClick={() => setLocation(\`/payment?plan=\${plan._id}\`)}
                                         >
                                           {user?.subscription?.plan === plan.name ? "Current Plan" : "Choose Plan"}
                                         </Button>
