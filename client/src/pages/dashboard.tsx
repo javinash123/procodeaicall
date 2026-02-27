@@ -2799,7 +2799,7 @@ export default function Dashboard() {
                             <Button variant="outline" className="text-primary border-primary hover:bg-primary/5" onClick={() => {
                               const plan = plans.find(p => p.name === user?.subscription?.plan);
                               if (!plan) return;
-                              setLocation(\`/payment?plan=\${plan._id}\`);
+                              setLocation(`/payment?plan=${plan._id}`);
                             }}>Renew Now</Button>
                             
                             <Dialog>
@@ -2813,7 +2813,7 @@ export default function Dashboard() {
                                 </DialogHeader>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
                                   {plans.map((plan) => (
-                                    <Card key={plan._id} className={\`flex flex-col \${user?.subscription?.plan === plan.name ? 'ring-2 ring-primary border-primary' : ''}\`}>
+                                    <Card key={plan._id} className={`flex flex-col ${user?.subscription?.plan === plan.name ? 'ring-2 ring-primary border-primary' : ''}`}>
                                       <CardHeader>
                                         <CardTitle>{plan.name}</CardTitle>
                                         <CardDescription>{plan.description}</CardDescription>
@@ -2833,7 +2833,7 @@ export default function Dashboard() {
                                           className="w-full" 
                                           variant={user?.subscription?.plan === plan.name ? "outline" : "default"}
                                           disabled={user?.subscription?.plan === plan.name}
-                                          onClick={() => setLocation(\`/payment?plan=\${plan._id}\`)}
+                                          onClick={() => setLocation(`/payment?plan=${plan._id}`)}
                                         >
                                           {user?.subscription?.plan === plan.name ? "Current Plan" : "Choose Plan"}
                                         </Button>
