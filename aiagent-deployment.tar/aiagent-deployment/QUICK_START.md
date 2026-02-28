@@ -58,7 +58,7 @@ curl http://localhost:5000/api/auth/me
 # Should return 401 Unauthorized (which is expected)
 
 # Access in browser:
-# http://3.208.52.220/aiagent/
+# https://nijvox.com/
 ```
 
 ---
@@ -91,7 +91,7 @@ sudo tail -f /var/log/apache2/aiagent_error.log
 
 - **Node.js App runs on**: localhost:5000 (internal)
 - **Apache listens on**: 0.0.0.0:80 (public)
-- **Access path**: http://3.208.52.220/aiagent/
+- **Access path**: https://nijvox.com/
 - **MongoDB**: Configure in .env.production
 
 ---

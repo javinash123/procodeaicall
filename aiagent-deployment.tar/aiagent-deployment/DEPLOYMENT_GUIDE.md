@@ -3,7 +3,7 @@
 ## Server Details
 - **Server**: AWS EC2 Instance
 - **IP Address**: 3.208.52.220
-- **URL**: http://3.208.52.220/aiagent/
+- **URL**: https://nijvox.com/
 - **Installation Path**: /home/ubuntu/aiagent/
 - **Web Server**: Apache with mod_proxy
 
@@ -119,7 +119,7 @@ curl http://localhost:5000/api/auth/me
 
 Open your browser and navigate to:
 ```
-http://3.208.52.220/aiagent/
+https://nijvox.com/
 ```
 
 ---
@@ -164,7 +164,7 @@ sleep 2
 sudo apt-get install -y certbot python3-certbot-apache
 
 # Get SSL certificate
-sudo certbot --apache -d 3.208.52.220
+sudo certbot --apache -d nijvox.com
 
 # Auto-renewal is enabled by default
 ```
@@ -330,4 +330,4 @@ find /home/ubuntu/aiagent -name "*.log" -mtime +30 -delete
 
 ---
 
-**Deployment completed! Your AIAgent application is now live at http://3.208.52.220/aiagent/**
+**Deployment completed! Your AIAgent application is now live at https://nijvox.com/**

@@ -92,13 +92,10 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   // Auth middleware
   const requireAuth = (req: Request, res: Response, next: Function) => {
     if (!req.session || !req.session.userId) {
-      const isProduction = process.env.NODE_ENV === "production";
-      const base = isProduction ? "/aiagent" : "";
-      
       if (req.headers.referer?.includes("/admin")) {
-        return res.status(401).json({ message: "Unauthorized", redirectTo: `${base}/admin` });
+        return res.status(401).json({ message: "Unauthorized", redirectTo: `/admin` });
       }
-      return res.status(401).json({ message: "Unauthorized", redirectTo: `${base}/login` });
+      return res.status(401).json({ message: "Unauthorized", redirectTo: `/login` });
     }
     next();
   };

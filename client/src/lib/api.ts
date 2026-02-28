@@ -1,13 +1,6 @@
 import type { User, InsertUser, Lead, InsertLead, Campaign, InsertCampaign, Appointment, InsertAppointment, Plan, Feature, InsertPlan, InsertFeature } from "@shared/schema";
 
 const getApiBase = () => {
-  if (typeof window !== 'undefined') {
-    // In production, always use the /aiagent prefix for API calls
-    const isProduction = import.meta.env.PROD || window.location.hostname === '3.208.52.220';
-    const basePath = isProduction ? '/aiagent' : (import.meta.env.BASE_URL || '/');
-    const base = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
-    return `${base}/api`;
-  }
   return '/api';
 };
 
