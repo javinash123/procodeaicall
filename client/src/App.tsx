@@ -23,15 +23,13 @@ import BulkWhatsapp from "@/pages/bulk-whatsapp";
 import Payment from "@/pages/payment";
 
 function Router() {
-  const isProduction = import.meta.env.PROD;
-  const base = isProduction ? "/aiagent" : "";
   const [location] = useLocation();
 
   const hideFooterRoutes = ["/login", "/register", "/admin", "/dashboard", "/admin/dashboard", "/admin/plans", "/payment", "/bulk-whatsapp", "/notifications"];
   const shouldHideFooter = hideFooterRoutes.includes(location);
 
   return (
-    <WouterRouter base={base}>
+    <WouterRouter>
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow">
