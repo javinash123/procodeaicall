@@ -168,6 +168,7 @@ export const insertCampaignSchema = z.object({
   name: z.string().min(1),
   goal: z.enum(["sales", "support", "survey", "appointment"]),
   script: z.string().optional(),
+  ai_generated_script: z.string().optional(),
   status: z.enum(["Active", "Paused", "Draft"]).default("Draft"),
   voice: z.string().default("Rachel (American)"),
   knowledgeBase: z.array(z.string()).optional(),
@@ -178,7 +179,9 @@ export const insertCampaignSchema = z.object({
     size: z.number(),
     url: z.string(),
     uploadedAt: z.date().or(z.string()),
+    extractedText: z.string().optional(),
   })).optional(),
+  knowledgeBaseTexts: z.array(z.string()).optional(),
   additionalContext: z.string().optional(),
   callingHours: z.object({
     start: z.string(),
@@ -195,6 +198,8 @@ export type Campaign = InsertCampaign & {
   callsMade: number;
   goalsMet: number;
   knowledgeBaseFiles?: KnowledgeBaseFile[];
+  knowledgeBaseTexts?: string[];
+  ai_generated_script?: string;
   startDate?: string;
   endDate?: string;
   createdAt: Date;

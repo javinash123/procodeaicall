@@ -7,6 +7,8 @@ import session from "express-session";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { generateCallScript, testOpenAI, generateAIResponse } from "./openaiService";
+import { extractTextFromFile } from "./textExtractor";
 import {
   insertUserSchema,
   updateUserSchema,
@@ -187,21 +189,6 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     }
   });
 
-  // Upload endpoint for various files
-  app.post("/api/upload", requireAuth, upload.array("files"), (req, res) => {
-    try {
-      const files = req.files as Express.Multer.File[];
-      const uploadedFiles = files.map(file => ({
-        url: `/uploads/${file.filename}`,
-        name: file.originalname,
-        size: file.size,
-        type: file.mimetype
-      }));
-      res.json(uploadedFiles);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
 
   // Update user profile
   app.patch("/api/user", requireAuth, async (req, res) => {
@@ -377,8 +364,107 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     }
   });
 
+  // ==================== OPENAI TEST ROUTE ====================
+
+  // Simple test to verify OpenAI API is connected and working
+  app.get("/api/test-openai", async (req, res) => {
+    try {
+      const message = await testOpenAI();
+      res.json({ success: true, message });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Test AI response with a campaign's context (no auth required for quick testing)
+  app.post("/api/test-ai", async (req, res) => {
+    try {
+      const { userInput, campaignId } = req.body;
+
+      if (!userInput || typeof userInput !== "string") {
+        return res.status(400).json({ message: "userInput is required" });
+      }
+
+      let campaign: any = null;
+      if (campaignId) {
+        campaign = await storage.getCampaign(campaignId);
+        if (!campaign) {
+          return res.status(404).json({ message: `Campaign not found: ${campaignId}` });
+        }
+      } else {
+        // Fall back to any first campaign available
+        const all = await storage.getCampaigns("__any__");
+        campaign = all.length > 0 ? all[0] : null;
+      }
+
+      if (!campaign) {
+        return res.status(404).json({ message: "No campaigns found to use for context" });
+      }
+
+      const campaignData = {
+        name: campaign.name,
+        goal: campaign.goal,
+        script: campaign.script || "",
+        additionalContext: campaign.additionalContext || "",
+        knowledgeBaseText: (campaign.knowledgeBaseFiles || [])
+          .map((f: any) => f.extractedText)
+          .filter(Boolean)
+          .join("\n\n"),
+      };
+
+      const result = await generateAIResponse([], userInput, campaignData);
+      res.json({ reply: result.reply, campaign: { id: campaign._id, name: campaign.name, goal: campaign.goal } });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to generate AI response" });
+    }
+  });
+
   // ==================== CAMPAIGN ROUTES ====================
-  
+
+  // Generate a conversational AI response within a campaign context
+  app.post("/api/campaigns/ai-response", requireAuth, async (req, res) => {
+    try {
+      const { conversationHistory, userInput, campaignData } = req.body;
+
+      if (!userInput || typeof userInput !== "string") {
+        return res.status(400).json({ message: "userInput is required" });
+      }
+      if (!campaignData || !campaignData.goal) {
+        return res.status(400).json({ message: "campaignData with goal is required" });
+      }
+
+      const history = Array.isArray(conversationHistory) ? conversationHistory : [];
+
+      const result = await generateAIResponse(history, userInput, campaignData);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to generate AI response" });
+    }
+  });
+
+  // Generate AI call script using OpenAI
+  app.post("/api/campaigns/generate-script", requireAuth, async (req, res) => {
+    try {
+      const { campaignGoal, existingScript, additionalContext, campaignName, knowledgeBaseText } = req.body;
+
+      if (!campaignGoal) {
+        return res.status(400).json({ message: "campaignGoal is required" });
+      }
+
+      const result = await generateCallScript({
+        campaignGoal,
+        existingScript,
+        additionalContext,
+        campaignName,
+        knowledgeBaseText,
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to generate script" });
+    }
+  });
+
   // Get all campaigns
   app.get("/api/campaigns", requireAuth, async (req, res) => {
     try {
@@ -415,8 +501,34 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         ...req.body,
         userId: req.session.userId,
       });
-      
+
       const campaign = await storage.createCampaign(data);
+
+      // Auto-generate AI script after saving (non-blocking background task)
+      const campaignId = campaign._id;
+      (async () => {
+        try {
+          // Collect extracted text from all knowledge base files
+          const knowledgeBaseText = (data.knowledgeBaseFiles || [])
+            .map((f: any) => f.extractedText)
+            .filter(Boolean)
+            .join("\n\n");
+
+          const { script } = await generateCallScript({
+            campaignGoal: data.goal,
+            existingScript: data.script,
+            additionalContext: data.additionalContext,
+            campaignName: data.name,
+            knowledgeBaseText: knowledgeBaseText || undefined,
+          });
+
+          await storage.updateCampaign(campaignId, { ai_generated_script: script } as any);
+          console.log(`[AI] Generated script saved for campaign ${campaignId}`);
+        } catch (err: any) {
+          console.error(`[AI] Failed to generate script for campaign ${campaignId}:`, err.message);
+        }
+      })();
+
       res.status(201).json({ campaign });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -507,7 +619,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   const express = await import("express");
   app.use("/uploads", express.default.static(uploadDir));
 
-  // Upload files for campaign knowledge base
+  // Upload files for campaign knowledge base (with text extraction for PDF/DOCX/TXT)
   app.post("/api/upload", requireAuth, upload.array("files", 10), async (req, res) => {
     try {
       const files = req.files as Express.Multer.File[];
@@ -515,14 +627,22 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         return res.status(400).json({ message: "No files uploaded" });
       }
 
-      const uploadedFiles = files.map((file) => ({
-        id: file.filename.split("-")[0] + "-" + file.filename.split("-")[1],
-        name: file.originalname,
-        type: file.mimetype,
-        size: file.size,
-        url: `/uploads/${file.filename}`,
-        uploadedAt: new Date(),
-      }));
+      const uploadedFiles = await Promise.all(
+        files.map(async (file) => {
+          const filePath = path.join(uploadDir, file.filename);
+          const extractedText = await extractTextFromFile(filePath, file.mimetype);
+
+          return {
+            id: file.filename.split("-")[0] + "-" + file.filename.split("-")[1],
+            name: file.originalname,
+            type: file.mimetype,
+            size: file.size,
+            url: `/uploads/${file.filename}`,
+            uploadedAt: new Date(),
+            extractedText: extractedText || undefined,
+          };
+        })
+      );
 
       res.json({ files: uploadedFiles });
     } catch (error: any) {

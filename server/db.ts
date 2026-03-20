@@ -84,23 +84,30 @@ const leadSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// KnowledgeBase file sub-schema (must use explicit { type: ... } for field named "type"
+// to avoid Mongoose treating it as a type declaration)
+const knowledgeBaseFileSchema = new mongoose.Schema({
+  id: { type: String },
+  name: { type: String },
+  type: { type: String },
+  size: { type: Number },
+  url: { type: String },
+  uploadedAt: { type: Date },
+  extractedText: { type: String },
+}, { _id: false });
+
 // Campaign Model
 const campaignSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   name: { type: String, required: true },
   goal: { type: String, enum: ["sales", "support", "survey", "appointment"], required: true },
-  script: String,
+  script: { type: String },
+  ai_generated_script: { type: String },
   status: { type: String, enum: ["Active", "Paused", "Draft"], default: "Draft" },
   voice: { type: String, default: "Rachel (American)" },
-  knowledgeBase: [String],
-  knowledgeBaseFiles: [{
-    id: String,
-    name: String,
-    type: String,
-    size: Number,
-    url: String,
-    uploadedAt: Date,
-  }],
+  knowledgeBase: [{ type: String }],
+  knowledgeBaseFiles: [knowledgeBaseFileSchema],
+  knowledgeBaseTexts: [{ type: String }],
   additionalContext: String,
   callingHours: {
     start: String,
@@ -167,11 +174,11 @@ const featureSchema = new mongoose.Schema({
   name: { type: String, required: true },
 });
 
-export const UserModel = mongoose.model("User", userSchema);
-export const LeadModel = mongoose.model("Lead", leadSchema);
-export const CampaignModel = mongoose.model("Campaign", campaignSchema);
-export const AppointmentModel = mongoose.model("Appointment", appointmentSchema);
-export const NoteModel = mongoose.model("Note", noteSchema);
-export const NotificationModel = mongoose.model("Notification", notificationSchema);
-export const PlanModel = mongoose.model("Plan", planSchema);
-export const FeatureModel = mongoose.model("Feature", featureSchema);
+export const UserModel = mongoose.models.User || mongoose.model("User", userSchema);
+export const LeadModel = mongoose.models.Lead || mongoose.model("Lead", leadSchema);
+export const CampaignModel = mongoose.models.Campaign || mongoose.model("Campaign", campaignSchema);
+export const AppointmentModel = mongoose.models.Appointment || mongoose.model("Appointment", appointmentSchema);
+export const NoteModel = mongoose.models.Note || mongoose.model("Note", noteSchema);
+export const NotificationModel = mongoose.models.Notification || mongoose.model("Notification", notificationSchema);
+export const PlanModel = mongoose.models.Plan || mongoose.model("Plan", planSchema);
+export const FeatureModel = mongoose.models.Feature || mongoose.model("Feature", featureSchema);

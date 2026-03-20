@@ -140,6 +140,8 @@ export default function Dashboard() {
   // Validation errors
   const [leadErrors, setLeadErrors] = useState<{name?: string; phone?: string; email?: string}>({});
   const [campaignErrors, setCampaignErrors] = useState<{name?: string; script?: string; callingHours?: string}>({});
+  const [isGeneratingScript, setIsGeneratingScript] = useState(false);
+  const [isGeneratingEditScript, setIsGeneratingEditScript] = useState(false);
 
   // Campaign Form State
   const [newCampaign, setNewCampaign] = useState<{
@@ -453,6 +455,56 @@ export default function Dashboard() {
     if (data.callingHours.start >= data.callingHours.end) errors.callingHours = "End time must be after start time";
     setCampaignErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const handleGenerateScript = async () => {
+    if (!newCampaign.goal) return;
+    setIsGeneratingScript(true);
+    try {
+      const knowledgeBaseText = newCampaign.knowledgeBaseFiles
+        .map((f: any) => f.extractedText)
+        .filter(Boolean)
+        .join("\n\n");
+
+      const result = await campaignsApi.generateScript({
+        campaignGoal: newCampaign.goal,
+        existingScript: newCampaign.script,
+        additionalContext: newCampaign.additionalContext,
+        campaignName: newCampaign.name,
+        knowledgeBaseText: knowledgeBaseText || undefined,
+      });
+      setNewCampaign({ ...newCampaign, script: result.script });
+      toast({ title: "Script generated!", description: "AI-generated script has been added. Feel free to edit it." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Failed to generate script", description: error.message });
+    } finally {
+      setIsGeneratingScript(false);
+    }
+  };
+
+  const handleGenerateEditScript = async () => {
+    if (!editCampaignForm.goal) return;
+    setIsGeneratingEditScript(true);
+    try {
+      const knowledgeBaseText = (editCampaignForm.knowledgeBaseFiles || [])
+        .map((f: any) => f.extractedText)
+        .filter(Boolean)
+        .join("\n\n");
+
+      const result = await campaignsApi.generateScript({
+        campaignGoal: editCampaignForm.goal,
+        existingScript: editCampaignForm.script,
+        additionalContext: editCampaignForm.additionalContext,
+        campaignName: editCampaignForm.name,
+        knowledgeBaseText: knowledgeBaseText || undefined,
+      });
+      setEditCampaignForm({ ...editCampaignForm, script: result.script });
+      toast({ title: "Script generated!", description: "AI-generated script has been added. Feel free to edit it." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Failed to generate script", description: error.message });
+    } finally {
+      setIsGeneratingEditScript(false);
+    }
   };
 
   const handleAddLead = async (e: React.FormEvent) => {
@@ -1728,8 +1780,26 @@ export default function Dashboard() {
                   </TabsContent>
                   <TabsContent value="agent" className="space-y-4 pt-4">
                     <div className="space-y-2">
-                      <Label>AI Calling Script <span className="text-destructive">*</span></Label>
-                      <Textarea placeholder="Hi, I'm calling from... [Use {name} for personalization]" className="min-h-[150px]" value={newCampaign.script} onChange={e => setNewCampaign({...newCampaign, script: e.target.value})} />
+                      <div className="flex items-center justify-between">
+                        <Label>AI Calling Script <span className="text-destructive">*</span></Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleGenerateScript}
+                          disabled={isGeneratingScript}
+                          data-testid="button-generate-script"
+                          className="gap-2 text-xs"
+                        >
+                          {isGeneratingScript ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <BrainCircuit className="h-3 w-3" />
+                          )}
+                          {isGeneratingScript ? "Generating..." : "Generate with AI"}
+                        </Button>
+                      </div>
+                      <Textarea placeholder="Hi, I'm calling from... [Use {name} for personalization]" className="min-h-[150px]" value={newCampaign.script} onChange={e => setNewCampaign({...newCampaign, script: e.target.value})} data-testid="input-campaign-script" />
                       <p className="text-xs text-muted-foreground">Use variables like {'{name}'}, {'{company}'} to personalize the AI conversation.</p>
                     </div>
                     <div className="space-y-2">
@@ -1880,8 +1950,26 @@ export default function Dashboard() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Script</Label>
-                      <Textarea className="min-h-[150px]" value={editCampaignForm.script} onChange={e => setEditCampaignForm({...editCampaignForm, script: e.target.value})} />
+                      <div className="flex items-center justify-between">
+                        <Label>Script</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleGenerateEditScript}
+                          disabled={isGeneratingEditScript}
+                          data-testid="button-generate-edit-script"
+                          className="gap-2 text-xs"
+                        >
+                          {isGeneratingEditScript ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <BrainCircuit className="h-3 w-3" />
+                          )}
+                          {isGeneratingEditScript ? "Generating..." : "Generate with AI"}
+                        </Button>
+                      </div>
+                      <Textarea className="min-h-[150px]" value={editCampaignForm.script} onChange={e => setEditCampaignForm({...editCampaignForm, script: e.target.value})} data-testid="input-edit-campaign-script" />
                     </div>
                     <div className="space-y-2">
                       <Label>Additional Context</Label>

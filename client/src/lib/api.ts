@@ -252,6 +252,22 @@ export const campaignsApi = {
     });
     await handleResponse(response);
   },
+
+  generateScript: async (params: {
+    campaignGoal: string;
+    existingScript?: string;
+    additionalContext?: string;
+    campaignName?: string;
+    knowledgeBaseText?: string;
+  }): Promise<{ script: string }> => {
+    const response = await fetch(`${API_BASE}/campaigns/generate-script`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+      credentials: "include",
+    });
+    return handleResponse<{ script: string }>(response);
+  },
 };
 
 // File Upload API
@@ -262,6 +278,7 @@ export type UploadedFile = {
   size: number;
   url: string;
   uploadedAt: Date;
+  extractedText?: string;
 };
 
 export const uploadApi = {

@@ -3,6 +3,17 @@
 ## Project Overview
 NIJVOX is a complete SaaS platform for AI-powered calling agents with admin functionality, CRM/lead management, AI campaign creation with document-based training, bulk SMS, appointment scheduling, and subscription management.
 
+## Recent Changes (March 20, 2026)
+- ✅ Installed OpenAI SDK and created `server/openaiService.ts`
+- ✅ Added `generateCallScript(input)` function that uses GPT-4o to generate professional AI calling scripts based on campaign goal, name, existing script, and additional context
+- ✅ Added `generateTextResponse(prompt)` utility function for general OpenAI text generation
+- ✅ Added POST `/api/campaigns/generate-script` API endpoint (authenticated)
+- ✅ Added `campaignsApi.generateScript()` in `client/src/lib/api.ts`
+- ✅ Added "Generate with AI" button in new campaign form (Agent tab → AI Calling Script field)
+- ✅ Added "Generate with AI" button in edit campaign form (Agent tab → Script field)
+- ✅ Both buttons show loading spinner while generating and populate the script textarea on success
+- ✅ Uses OPENAI_API_KEY environment variable (already configured)
+
 ## Recent Changes (December 12, 2024)
 - ✅ Successfully connected MongoDB database via MONGODB_URI secret
 - ✅ Implemented full authentication system with session-based login
