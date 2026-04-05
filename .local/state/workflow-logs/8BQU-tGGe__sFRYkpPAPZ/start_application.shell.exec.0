@@ -1,0 +1,12 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0KMongoDB connected successfully
+10:19:24 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Calling number: +919893328298
+[Exotel] Call response: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <Call>\n  <Sid>b03ba15e3e0d49c34d4428ddc36a1a43</Sid>\n  <ParentCallSid/>\n  <DateCreated>2026-04-03 15:49:39</DateCreated>\n  <DateUpdated>2026-04-03 15:49:39</DateUpdated>\n  <AccountSid>nijvox1</AccountSid>\n  <To>09893328298</To>\n  <From>08047359287</From>\n  <PhoneNumberSid>08047359287</PhoneNumberSid>\n  <Status>in-progress</Status>\n  <StartTime>2026-04-03 15:49:39</StartTime>\n  <EndTime/>\n  <Duration/>\n  <Price/>\n  <Direction>outbound-api</Direction>\n  <AnsweredBy/>\n  <ForwardedFrom/>\n  <CallerName/>\n  <Uri>/v1/Accounts/nijvox1/Calls/b03ba15e3e0d49c34d4428ddc36a1a43</Uri>\n  <RecordingUrl/>\n </Call>\n</TwilioResponse>\n"
+10:19:40 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+Calling number: +919501513209
+[Exotel] Call response: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <Call>\n  <Sid>d334202cb87920074111c1a07b1e1a43</Sid>\n  <ParentCallSid/>\n  <DateCreated>2026-04-03 15:52:56</DateCreated>\n  <DateUpdated>2026-04-03 15:52:56</DateUpdated>\n  <AccountSid>nijvox1</AccountSid>\n  <To>09501513209</To>\n  <From>08047359287</From>\n  <PhoneNumberSid>08047359287</PhoneNumberSid>\n  <Status>in-progress</Status>\n  <StartTime>2026-04-03 15:52:56</StartTime>\n  <EndTime/>\n  <Duration/>\n  <Price/>\n  <Direction>outbound-api</Direction>\n  <AnsweredBy/>\n  <ForwardedFrom/>\n  <CallerName/>\n  <Uri>/v1/Accounts/nijvox1/Calls/d334202cb87920074111c1a07b1e1a43</Uri>\n  <RecordingUrl/>\n </Call>\n</TwilioResponse>\n"

@@ -174,6 +174,22 @@ const featureSchema = new mongoose.Schema({
   name: { type: String, required: true },
 });
 
+// CallLog Model — stores Exotel webhook call status updates
+export const callLogSchema = new mongoose.Schema({
+  callSid:      { type: String, required: true, unique: true },
+  status:       { type: String, required: true }, // answered, missed, failed, completed, busy, no-answer
+  from:         { type: String },                 // caller number
+  to:           { type: String },                 // destination number (lead's phone)
+  duration:     { type: Number, default: 0 },     // seconds
+  recordingUrl: { type: String },
+  startTime:    { type: Date },
+  endTime:      { type: Date },
+  leadId:       { type: mongoose.Schema.Types.ObjectId, ref: "Lead" },
+  campaignId:   { type: mongoose.Schema.Types.ObjectId, ref: "Campaign" },
+  rawPayload:   { type: mongoose.Schema.Types.Mixed }, // full webhook payload for debugging
+  createdAt:    { type: Date, default: Date.now },
+});
+
 export const UserModel = mongoose.models.User || mongoose.model("User", userSchema);
 export const LeadModel = mongoose.models.Lead || mongoose.model("Lead", leadSchema);
 export const CampaignModel = mongoose.models.Campaign || mongoose.model("Campaign", campaignSchema);
@@ -182,3 +198,4 @@ export const NoteModel = mongoose.models.Note || mongoose.model("Note", noteSche
 export const NotificationModel = mongoose.models.Notification || mongoose.model("Notification", notificationSchema);
 export const PlanModel = mongoose.models.Plan || mongoose.model("Plan", planSchema);
 export const FeatureModel = mongoose.models.Feature || mongoose.model("Feature", featureSchema);
+export const CallLogModel = mongoose.models.CallLog || mongoose.model("CallLog", callLogSchema);

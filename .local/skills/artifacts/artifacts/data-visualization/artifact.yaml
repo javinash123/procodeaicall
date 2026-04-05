@@ -4,12 +4,18 @@ kind: data-app
 priority: 10
 
 access:
-  type: any_of
+  type: all_of
   conditions:
-    - type: stack
-      name: PNPM_WORKSPACE
-    - type: dot_replit_version
-      version: "2.0.0"
+    - type: any_of
+      conditions:
+        - type: stack
+          name: PNPM_WORKSPACE
+        - type: dot_replit_version
+          version: "2.0.0"
+    - type: not
+      condition:
+        type: deployment_target
+        name: databricks_app
 
 service_configs:
   - name: web
@@ -31,3 +37,11 @@ service_configs:
 initial_open_files:
   - src/App.tsx
   - src/index.css
+  - /lib/api-spec/openapi.yaml
+  - /lib/db/src/index.ts
+  - /lib/db/src/schema/index.ts
+  - /artifacts/api-server/src/index.ts
+  - /artifacts/api-server/package.json
+
+additional_skills:
+  - database

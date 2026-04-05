@@ -8,6 +8,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { generateCallScript, testOpenAI, generateAIResponse } from "./openaiService";
+import { makeExotelCall } from "./exotelService";
 import { extractTextFromFile } from "./textExtractor";
 import {
   insertUserSchema,
@@ -379,7 +380,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   // Test AI response with a campaign's context (no auth required for quick testing)
   app.post("/api/test-ai", async (req, res) => {
     try {
-      const { userInput, campaignId } = req.body;
+      const { userInput, campaignId, leadData } = req.body;
 
       if (!userInput || typeof userInput !== "string") {
         return res.status(400).json({ message: "userInput is required" });
@@ -393,26 +394,32 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         }
       } else {
         // Fall back to any first campaign available
-        const all = await storage.getCampaigns("__any__");
-        campaign = all.length > 0 ? all[0] : null;
+        campaign = await storage.getAnyCampaign();
       }
 
       if (!campaign) {
         return res.status(404).json({ message: "No campaigns found to use for context" });
       }
 
+      const knowledgeBaseText = (campaign.knowledgeBaseFiles || [])
+        .map((f: any) => f.extractedText)
+        .filter(Boolean)
+        .join("\n\n");
+
       const campaignData = {
         name: campaign.name,
         goal: campaign.goal,
         script: campaign.script || "",
         additionalContext: campaign.additionalContext || "",
-        knowledgeBaseText: (campaign.knowledgeBaseFiles || [])
-          .map((f: any) => f.extractedText)
-          .filter(Boolean)
-          .join("\n\n"),
+        ai_generated_script: campaign.ai_generated_script || campaign.script || "",
+        knowledge_base: (campaign.knowledgeBaseTexts || []).join("\n\n") || knowledgeBaseText,
+        knowledgeBaseText,
       };
 
-      const result = await generateAIResponse([], userInput, campaignData);
+      const result = await generateAIResponse([], userInput, {
+        ...campaignData,
+        leadData: leadData || undefined,
+      });
       res.json({ reply: result.reply, campaign: { id: campaign._id, name: campaign.name, goal: campaign.goal } });
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to generate AI response" });
@@ -424,7 +431,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   // Generate a conversational AI response within a campaign context
   app.post("/api/campaigns/ai-response", requireAuth, async (req, res) => {
     try {
-      const { conversationHistory, userInput, campaignData } = req.body;
+      const { conversationHistory, userInput, campaignData, leadData } = req.body;
 
       if (!userInput || typeof userInput !== "string") {
         return res.status(400).json({ message: "userInput is required" });
@@ -435,10 +442,124 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
 
       const history = Array.isArray(conversationHistory) ? conversationHistory : [];
 
-      const result = await generateAIResponse(history, userInput, campaignData);
+      const result = await generateAIResponse(history, userInput, {
+        ...campaignData,
+        leadData: leadData || undefined,
+      });
       res.json(result);
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to generate AI response" });
+    }
+  });
+
+  // Quick test to trigger an Exotel call to a hardcoded number
+  app.get("/test-call", async (req, res) => {
+    const phone = (req.query.phone as string) || "+917828288001";
+    const result = await makeExotelCall(phone);
+    if (result.success) {
+      res.send(`Call triggered to ${phone}. Check your phone!`);
+    } else {
+      res.status(500).send(`Failed to trigger call: ${result.error}`);
+    }
+  });
+
+  app.get("/exotel/voice", (req, res) => {
+    res.set("Content-Type", "text/xml");
+
+    res.send(`
+      <Response>
+        <Play>https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg</Play>
+        <Hangup/>
+      </Response>
+    `);
+  });
+
+  // ==================== EXOTEL WEBHOOK ====================
+
+  // Receive call status updates from Exotel (answered, missed, failed, completed, etc.)
+  app.post("/webhook/exotel", async (req, res) => {
+    try {
+      const payload = req.body as Record<string, any>;
+
+      const callSid     = payload.CallSid || payload.call_sid || payload.sid || "";
+      const rawStatus   = (payload.Status || payload.CallStatus || payload.call_status || "unknown").toLowerCase();
+      const to          = payload.To || payload.to || payload.DialTo || "";
+      const from        = payload.From || payload.from || payload.CallFrom || "";
+      const duration    = parseInt(payload.Duration || payload.RecordingDuration || "0", 10);
+      const recordingUrl = payload.RecordingUrl || payload.recording_url || undefined;
+      const startTime   = payload.StartTime ? new Date(payload.StartTime) : undefined;
+      const endTime     = payload.EndTime   ? new Date(payload.EndTime)   : undefined;
+
+      if (!callSid) {
+        return res.status(400).json({ message: "CallSid is required" });
+      }
+
+      // Normalise Exotel statuses to our vocabulary
+      const statusMap: Record<string, string> = {
+        completed:   "answered",
+        answered:    "answered",
+        "in-progress": "answered",
+        busy:        "missed",
+        "no-answer": "missed",
+        failed:      "failed",
+        canceled:    "failed",
+      };
+      const status = statusMap[rawStatus] || rawStatus;
+
+      // Try to find matching lead by phone number (strip non-digits for comparison)
+      const digits = (num: string) => num.replace(/\D/g, "");
+      let leadId: string | undefined;
+      if (to) {
+        const { LeadModel } = await import("./db");
+        const lead = await LeadModel.findOne({ phone: { $regex: digits(to).slice(-10) } }).lean();
+        if (lead) leadId = (lead as any)._id.toString();
+      }
+
+      const logEntry = {
+        callSid,
+        status,
+        from,
+        to,
+        duration,
+        recordingUrl,
+        startTime,
+        endTime,
+        leadId,
+        rawPayload: payload,
+      };
+
+      const callLog = await storage.upsertCallLog(callSid, logEntry);
+
+      // If we found a lead, add a history entry so the timeline updates
+      if (leadId) {
+        const outcomeLabel = status === "answered"
+          ? `Call answered (${duration}s)`
+          : status === "missed" ? "Call missed" : "Call failed";
+
+        await storage.addLeadHistory(leadId, {
+          type: "call",
+          date: startTime || new Date(),
+          duration: duration ? `${duration}s` : undefined,
+          outcome: status,
+          note: outcomeLabel,
+        });
+      }
+
+      res.json({ received: true, callSid, status, leadId: leadId || null });
+    } catch (error: any) {
+      console.error("Exotel webhook error:", error);
+      res.status(500).json({ message: error.message || "Webhook processing failed" });
+    }
+  });
+
+  // Get stored call logs (authenticated)
+  app.get("/api/call-logs", requireAuth, async (req, res) => {
+    try {
+      const { leadId, campaignId } = req.query as { leadId?: string; campaignId?: string };
+      const logs = await storage.getCallLogs({ leadId, campaignId });
+      res.json(logs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
     }
   });
 

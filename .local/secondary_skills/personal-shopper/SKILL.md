@@ -15,7 +15,7 @@ Research products, validate prices/reviews, and generate gift ideas that aren't 
 
 ## When NOT to Use
 
-- Market research (deep-research), budgeting (budget-planner), used cars (used-car-advisor)
+- Market research (deep-research), budgeting (budget-planner)
 
 ## Research Sources — Where to Actually Look
 

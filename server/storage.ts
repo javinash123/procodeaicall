@@ -1,4 +1,4 @@
-import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel, PlanModel, FeatureModel, NotificationModel } from "./db";
+import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel, PlanModel, FeatureModel, NotificationModel, CallLogModel } from "./db";
 import type {
   User,
   InsertUser,
@@ -21,6 +21,8 @@ import type {
   SubscriptionInfo,
   Notification,
   InsertNotification,
+  CallLog,
+  InsertCallLog,
 } from "@shared/schema";
 import bcryptjs from "bcryptjs";
 
@@ -44,6 +46,7 @@ export interface IStorage {
   // Campaign methods
   getCampaigns(userId: string): Promise<Campaign[]>;
   getCampaign(id: string): Promise<Campaign | null>;
+  getAnyCampaign(): Promise<Campaign | null>;
   createCampaign(campaign: InsertCampaign): Promise<Campaign>;
   updateCampaign(id: string, updates: Partial<InsertCampaign>): Promise<Campaign | null>;
   deleteCampaign(id: string): Promise<boolean>;
@@ -86,6 +89,12 @@ export interface IStorage {
   getNotifications(): Promise<Notification[]>;
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationRead(id: string, userId: string): Promise<boolean>;
+
+  // CallLog methods
+  createCallLog(log: InsertCallLog): Promise<CallLog>;
+  upsertCallLog(callSid: string, log: Partial<InsertCallLog>): Promise<CallLog>;
+  getCallLogs(filter?: { leadId?: string; campaignId?: string }): Promise<CallLog[]>;
+  getCallLogByCallSid(callSid: string): Promise<CallLog | null>;
 }
 
 export class MongoStorage implements IStorage {
@@ -213,6 +222,12 @@ export class MongoStorage implements IStorage {
 
   async getCampaign(id: string): Promise<Campaign | null> {
     const campaign = await CampaignModel.findById(id).lean();
+    if (!campaign) return null;
+    return { ...(campaign as any), _id: (campaign as any)._id.toString(), userId: (campaign as any).userId.toString() } as any as Campaign;
+  }
+
+  async getAnyCampaign(): Promise<Campaign | null> {
+    const campaign = await CampaignModel.findOne({}).lean();
     if (!campaign) return null;
     return { ...(campaign as any), _id: (campaign as any)._id.toString(), userId: (campaign as any).userId.toString() } as any as Campaign;
   }
@@ -428,6 +443,36 @@ export class MongoStorage implements IStorage {
       $addToSet: { readBy: userId }
     });
     return true;
+  }
+
+  // CallLog methods
+  async createCallLog(log: InsertCallLog): Promise<CallLog> {
+    const created = await CallLogModel.create(log);
+    const obj = created.toObject();
+    return { ...obj, _id: obj._id.toString() } as any as CallLog;
+  }
+
+  async upsertCallLog(callSid: string, log: Partial<InsertCallLog>): Promise<CallLog> {
+    const doc = await CallLogModel.findOneAndUpdate(
+      { callSid },
+      { $set: log },
+      { upsert: true, new: true }
+    ).lean();
+    return { ...(doc as any), _id: (doc as any)._id.toString() } as any as CallLog;
+  }
+
+  async getCallLogs(filter?: { leadId?: string; campaignId?: string }): Promise<CallLog[]> {
+    const query: Record<string, any> = {};
+    if (filter?.leadId) query.leadId = filter.leadId;
+    if (filter?.campaignId) query.campaignId = filter.campaignId;
+    const logs = await CallLogModel.find(query).sort({ createdAt: -1 }).lean();
+    return logs.map((l: any) => ({ ...l, _id: l._id.toString() })) as any as CallLog[];
+  }
+
+  async getCallLogByCallSid(callSid: string): Promise<CallLog | null> {
+    const log = await CallLogModel.findOne({ callSid }).lean();
+    if (!log) return null;
+    return { ...(log as any), _id: (log as any)._id.toString() } as any as CallLog;
   }
 }
 

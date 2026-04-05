@@ -1,20 +1,23 @@
 ---
 name: legal-contract
-description: Draft and review legal documents like NDAs, contracts, and lease agreements with plain-language explanations.
+description: Draft and review legal documents like NDAs, contracts, LOIs, asset purchase agreements, and lease agreements with plain-language explanations.
 ---
 
 # Legal Contract Assistant
 
-Draft and review common legal documents including NDAs, service agreements, freelancer contracts, and lease reviews. Provide plain-language explanations and flag potential issues.
+Draft and review common legal documents including NDAs, service agreements, freelancer contracts, lease reviews, Letters of Intent, and M&A transaction documents. Provide plain-language explanations and flag potential issues.
 
 **IMPORTANT DISCLAIMER: This provides general information and templates only. It does NOT constitute legal advice. Always consult a qualified attorney for legal matters.**
 
 ## When to Use
 
 - User needs a basic NDA, service agreement, or freelancer contract
+- User needs a Letter of Intent (LOI), term sheet, or asset/stock purchase agreement
 - User wants a plain-language review of a contract they received
 - User needs to understand specific legal terms or clauses
 - User wants a lease or rental agreement reviewed for red flags
+- User needs multiple related transaction documents (e.g., LOI + NDA for an acquisition)
+- User needs a Privacy Policy or Terms of Service for a web app or SaaS product
 
 ## When NOT to Use
 
@@ -35,6 +38,163 @@ Draft and review common legal documents including NDAs, service agreements, free
 | **oneNDA** | NDA (777 words), oneDPA | UK/EU; strict variable-only edits | `onenda.org` |
 
 **Workflow:** `webFetch("https://bonterms.com/forms/mutual-nda/")` → extract the standard terms → build a cover page with the user's deal-specific variables (parties, effective date, term, governing law, jurisdiction). Don't modify the body; that's the whole point of standards.
+
+**Note:** These libraries cover NDAs and SaaS/service agreements well, but do not include M&A documents (LOIs, term sheets, purchase agreements). For those document types, draft using the standard clause structures in the "M&A / Transaction Documents" section below.
+
+## M&A / Transaction Documents
+
+When a user needs documents for buying/selling a business, these are the common document types and their standard clause structures:
+
+### Letter of Intent (LOI)
+
+Standard sections for an LOI:
+
+1. **Transaction Structure** — asset purchase vs. stock/equity purchase
+2. **Purchase Price** — total price, payment structure (cash at closing, earnout, seller financing, escrow holdback)
+3. **Earnout provisions** — if applicable: percentage, performance milestones, measurement period, payment schedule
+4. **Due Diligence** — period length (typically 30-60 days), scope, access to records, extension rights
+5. **Exclusivity / No-Shop** — period length (typically 60-90 days), binding on seller
+6. **Closing Timeline** — target closing date
+7. **Conditions to Closing** — due diligence completion, definitive agreement, reps & warranties accuracy, third-party consents, no MAE, ancillary agreements
+8. **Representations and Warranties** — reference to customary reps in definitive agreement
+9. **Confidentiality** — binding obligation
+10. **Expenses** — each party bears own costs; binding
+11. **Non-Binding Nature** — clearly state which sections ARE binding (typically: exclusivity, confidentiality, expenses, non-binding clause itself) and which are non-binding
+12. **Governing Law** — leave as fill-in-the-blank for jurisdiction
+13. **Expiration** — LOI expires if not signed within X days (typically 10-15)
+
+**Key variables to collect from user:** buyer name, seller/target name, purchase price, deal structure (asset vs. stock), due diligence period, exclusivity period, closing timeline, earnout terms (if any).
+
+### Mutual NDA (Transaction-Specific)
+
+When drafting an NDA for a specific transaction (vs. a general-purpose NDA), include these additional elements:
+
+- **WHEREAS clauses** that reference the specific transaction and any related LOI
+- **Permitted Purpose** scoped specifically to evaluating/negotiating the transaction
+- **Non-Solicitation** of the other party's employees (typically 12 months)
+- **No Obligation to Proceed** — neither party is obligated to complete the transaction
+- Cross-reference the LOI or term sheet by name in the recitals
+
+Standard NDA sections: definition of confidential information, exclusions, receiving party obligations, no license/warranty, return/destruction, term (typically 2 years), remedies (injunctive relief), governing law, miscellaneous (entire agreement, amendments, assignment, severability, waiver, counterparts, notices).
+
+### Multi-Document Transactions
+
+When a transaction requires multiple related documents (e.g., LOI + NDA):
+
+1. **Maintain consistent definitions** — party names, defined terms ("Transaction," "Business," "Purchased Assets"), and entity references must match across all documents
+2. **Cross-reference between documents** — the NDA should reference the LOI in its recitals; the LOI's confidentiality section should note that a separate NDA governs
+3. **Align timelines** — the NDA's term should cover at least the LOI's exclusivity + due diligence + closing periods
+4. **Use the same governing law** placeholder in all documents
+5. **Draft and present together** — generate all documents in a single session so the user has a complete package
+
+## Privacy Policy & Terms of Service (Web Apps / SaaS)
+
+Privacy Policies and Terms of Service are among the most common legal documents a web app needs. They are not contracts between two parties — they are public-facing declarations. Treat them as a separate document type from the contract/NDA/LOI workflow.
+
+### Key questions to ask before drafting
+
+1. **Legal entity name** — Always ask for the exact registered legal name separately from the brand name. The brand is what users see ("NiDO"); the legal entity is what appears in formal documents ("NiDO Finanzas S.A.S."). Never assume they are the same.
+2. **Country of incorporation** — Determines which data protection law applies (GDPR for EU, LGPD for Brazil, Ley 172-13 for Dominican Republic, CCPA for California, etc.).
+3. **What data is collected** — Account info (name, email), financial/transactional data, uploaded files, usage/analytics?
+4. **Third-party data processors** — Ask the user to enumerate every service that touches user data: auth provider, database host, AI/ML services, payment processor, analytics, email provider, CDN. Each must be disclosed in the Privacy Policy.
+5. **Are there paid plans?** — If yes, the Terms must cover payment terms, auto-renewal, cancellation, and refund policy.
+6. **Minimum age** — Typically 18 for financial apps, 13 for general consumer apps.
+7. **Contact email for privacy/legal** — Often different from the support email. Ask explicitly.
+
+### Third-party processor disclosure pattern
+
+For every integration the app uses, include a line in the Privacy Policy. Format:
+
+```text
+- **[Provider] ([function]):** [What they receive and why]. [Link to their privacy policy if possible.]
+```
+
+Example:
+
+```text
+- **Neon (base de datos):** almacenamiento seguro de sus datos financieros en servidores PostgreSQL.
+- **Google Gemini (IA):** genera categorías y análisis. Solo recibe descripciones de transacciones; nunca datos personales identificables.
+- **Stripe (pagos):** procesa pagos con tarjeta. NiDO no almacena datos de tarjetas.
+- **Replit Auth (autenticación):** gestiona el inicio de sesión vía Google/GitHub.
+```
+
+If the app uses analytics, advertising pixels, or session recording (Hotjar, FullStory, etc.), these MUST be disclosed and typically require explicit consent in GDPR jurisdictions.
+
+### Privacy Policy required sections
+
+1. Who we are (legal entity name, contact email for privacy)
+2. What data we collect (account info, user-generated data, uploaded files, usage logs)
+3. How we use it (provide service, personalization, legal compliance)
+4. Third-party processors (enumerate all — see above)
+5. Data storage and security (encryption at rest/in transit, access controls)
+6. User rights (access, correction, deletion, export)
+7. Cookies (session-only vs. tracking; consent requirements if in GDPR territory)
+8. Minors (minimum age, what happens if a minor's data is discovered)
+9. Changes to the policy (notice method and timing — typically 15–30 days)
+10. Governing law (jurisdiction's data protection statute)
+
+### Terms of Service required sections
+
+1. Acceptance (clicking/using = agreement)
+2. Service description (what it does and does NOT do)
+3. Account registration (age requirement, accurate info, responsibility for activity)
+4. Acceptable use (prohibited behaviors: fraud, scraping, reverse engineering, illegal activity)
+5. **Financial/medical disclaimer** — if the app gives any advice-like output (budget suggestions, AI analysis), include an explicit "not financial/legal/medical advice" clause
+6. User data ownership (user owns their data; limited license to operator to run the service)
+7. Payments (if applicable: billing cycle, auto-renewal, cancellation, refunds, payment processor)
+8. Service availability (no uptime guarantee unless SLA offered)
+9. Limitation of liability (cap at fees paid in last 12 months or a fixed floor like $100)
+10. IP ownership (brand, code, design belong to the operator)
+11. Termination (user can delete account; operator can suspend for violations; data deletion timeline)
+12. Changes to terms (notice period — typically 15 days for material changes)
+13. Governing law and jurisdiction
+
+### Delivery format for web apps — routed pages, not PDFs
+
+For web apps, the best delivery format for Privacy Policy and Terms of Service is **routed pages within the app itself**, not PDFs or DOCX files. This is the standard for all modern SaaS products.
+
+**Pattern:**
+
+- Create `client/src/pages/Privacy.tsx` and `client/src/pages/Terms.tsx`
+- Register them as **public routes** — accessible without authentication. Place the route check **before** the auth loading state in `AppContent`:
+
+```tsx
+function AppContent() {
+  const { isLoading, isAuthenticated } = useAuth();
+  const [location] = useLocation();
+
+  // Public legal pages — always accessible, no auth required
+  if (location === "/privacidad") return <Privacy />;
+  if (location === "/terminos") return <Terms />;
+
+  // Auth guard below
+  if (isLoading) return <LoadingScreen />;
+  return isAuthenticated ? <AuthenticatedLayout /> : <Landing />;
+}
+```
+
+**Page layout pattern:**
+
+- Minimal header: logo + "Back to home" link
+- Amber disclaimer banner at the top: *"Este documento es una plantilla informativa y no constituye asesoramiento legal."*
+- Clean `max-w-3xl mx-auto` prose layout, `text-sm leading-relaxed`
+- Footer with cross-links: Privacy ↔ Terms ↔ Contact ↔ Home
+- No sidebar, no app navigation — these are public documents
+
+**After creating the pages, always update the footer links** in the landing page or marketing page. Footer links that point to `href="#"` are broken. Replace with `href="/privacidad"` and `href="/terminos"`, and change the "Contact" link to `mailto:` rather than another dead hash.
+
+**Consistency check after any company name change:** If the user changes the legal entity name, search ALL files — not just the legal pages. Invoice templates, billing pages, and email footers often also contain the company name and will need updating too.
+
+### Disclaimer banner (always include on the rendered page)
+
+Every rendered legal page should display a visible disclaimer. Do not only warn the user in chat — put it on the page itself:
+
+```tsx
+<div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-4 py-3 mb-10 text-sm text-amber-800 dark:text-amber-300">
+  Este documento es una plantilla informativa y no constituye asesoramiento legal.
+  Consulte un abogado calificado para asuntos legales específicos.
+</div>
+```
 
 ## Red-Flag Language to Grep For
 
@@ -66,6 +226,17 @@ AI contract tools run a fixed checklist per document type. For a **Service Agree
 6. Payment terms: Net 30 or better? Late fee specified?
 7. Can the client terminate for convenience? If so, is there a kill fee?
 8. Governing law + venue: neutral, or the other party's home court?
+
+For a **Letter of Intent** run these checks:
+
+1. Are binding vs. non-binding sections clearly identified?
+2. Is there an exclusivity/no-shop clause? Is it binding?
+3. Is the purchase price clearly stated with payment structure?
+4. Is the due diligence period defined with access rights?
+5. Are conditions to closing enumerated?
+6. Is there a confidentiality obligation (binding)?
+7. Does the LOI have an expiration date?
+8. If there's an earnout, are the metrics and measurement methodology specified (or deferred to the definitive agreement)?
 
 ## Review Output Format
 
@@ -104,14 +275,17 @@ Build the contract as a React web artifact first (source of truth for layout), t
 
 **PDF via Puppeteer:**
 
+Install `puppeteer-core` in the `scripts` package: `pnpm --filter @workspace/scripts add puppeteer-core`
+
 ```typescript
-// generate-contract.ts
+// scripts/src/generate-contract.ts
 import puppeteer from 'puppeteer-core';
 
-// Find Chromium: ls /nix/store/*chromium*/bin/chromium
-const CHROMIUM_PATH = "/nix/store/FIND_YOUR_PATH/bin/chromium";
+// Find Chromium — pick the latest version from the list:
+// ls /nix/store/*chromium*/bin/chromium | sort -V | tail -1
+const CHROMIUM_PATH = "/nix/store/FIND_LATEST_PATH/bin/chromium";
 // Use the artifact's actual URL, not localhost
-const CONTRACT_URL = `https://${process.env.REPLIT_DEV_DOMAIN}/ARTIFACT-SLUG`;
+const CONTRACT_URL = `https://${process.env.REPLIT_DEV_DOMAIN}/ARTIFACT-ROUTE`;
 
 const browser = await puppeteer.launch({
   executablePath: CHROMIUM_PATH,
@@ -119,21 +293,41 @@ const browser = await puppeteer.launch({
   args: ['--no-sandbox', '--disable-setuid-sandbox'],
 });
 const page = await browser.newPage();
+await page.setViewport({ width: 816, height: 1056 }); // Match page container dimensions
 await page.goto(CONTRACT_URL, { waitUntil: 'networkidle0' });
+
+// IMPORTANT: Set document.title for correct PDF metadata title.
+// Without this, the PDF viewer title bar shows the HTML <title> from index.html,
+// which may be wrong when generating multiple documents from the same app.
+await page.evaluate(() => { document.title = "Your Document Title Here"; });
+
 await page.pdf({
   path: 'contract.pdf',
   format: 'Letter',
   printBackground: true,
-  margin: { top: '1in', bottom: '1in', left: '1.25in', right: '1.25in' },
+  // IMPORTANT: Use zero margins — the page containers already include internal padding.
+  // Non-zero Puppeteer margins + fixed-height containers = blank overflow pages.
+  margin: { top: '0', bottom: '0', left: '0', right: '0' },
 });
 await browser.close();
 ```
 
+Add a script entry in `scripts/package.json`: `"generate-contract": "tsx ./src/generate-contract.ts"`
+
+Run via: `pnpm --filter @workspace/scripts run generate-contract`
+
 **DOCX via python-docx:**
 
+Python may not be available via `pip` in the Replit environment. Use `nix-shell` to get `python-docx`:
+
+```bash
+nix-shell -p python3Packages.python-docx --run "python3 scripts/src/generate-contract.py"
+```
+
 ```python
+# scripts/src/generate-contract.py
 from docx import Document
-from docx.shared import Pt, Inches
+from docx.shared import Pt, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 doc = Document()
@@ -152,28 +346,32 @@ for section in doc.sections:
     section.right_margin = Inches(1.25)
 
 # Title
-title = doc.add_heading('MUTUAL NON-DISCLOSURE AGREEMENT', level=0)
+title = doc.add_paragraph()
 title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+run = title.add_run('DOCUMENT TITLE')
+run.bold = True
+run.font.size = Pt(18)
 
 # Preamble
 doc.add_paragraph(
-    'This Mutual Non-Disclosure Agreement ("Agreement") is entered into '
-    'as of [DATE] by and between:'
+    'This Agreement is entered into as of [DATE] by and between:'
 )
 
 # Parties table
-table = doc.add_table(rows=2, cols=2)
+table = doc.add_table(rows=1, cols=2)
 table.style = 'Table Grid'
 # ... populate with party details
 
 # Sections with numbered clauses
-doc.add_heading('1. Definition of Confidential Information', level=1)
-doc.add_paragraph('...')
+heading = doc.add_paragraph()
+run = heading.add_run('1. Section Title')
+run.bold = True
+doc.add_paragraph('Section body text...')
 
 # Signature block
-doc.add_paragraph('\n\n')
-sig_table = doc.add_table(rows=4, cols=2)
-# ... signature lines with name, title, date
+sig_table = doc.add_table(rows=5, cols=2)
+# Row 0: labels (BUYER / SELLER)
+# Rows 1-4: Signature, Printed Name, Title, Date lines
 
 doc.save('contract.docx')
 ```
@@ -188,17 +386,94 @@ doc.save('contract.docx')
 - **Headers**: Document title and date on each page
 - **Signature blocks**: Two-column layout with lines for signature, printed name, title, date
 
+### Page-Aware Layout (Preventing Blank PDF Pages)
+
+Use fixed-height page containers that map 1:1 to physical letter pages. This ensures content stays within page boundaries on screen and in PDF output.
+
+**Page container constants (letter size at 96 DPI):**
+
+- `PAGE_W = "816px"` (8.5 inches)
+- `PAGE_H = "1056px"` (11 inches)
+- Internal padding: `48px` top/bottom, `72px` left/right
+
+**Page container component pattern:**
+
+```tsx
+<div
+  className="page-container mx-auto bg-white shadow-lg print:shadow-none mb-8 print:mb-0 flex flex-col overflow-hidden"
+  style={{
+    width: PAGE_W,
+    height: PAGE_H,
+    pageBreakAfter: pageNum < TOTAL_PAGES ? "always" : undefined,
+    breakAfter: pageNum < TOTAL_PAGES ? "page" : undefined,
+  }}
+>
+  {/* Page header with "Page X of Y" */}
+  {/* Content area with internal padding */}
+</div>
+```
+
+**Critical CSS for print/PDF — add to your global stylesheet:**
+
+```css
+@page {
+  size: letter;
+  margin: 0;
+}
+
+@media print {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  .page-container {
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+}
+```
+
+**Why blank pages happen:** If Puppeteer adds its own margins (e.g., `margin: { top: "0.5in" }`) on top of 1056px containers, each container exceeds the physical page height. The overflow creates a blank page before the next `breakAfter: "page"` fires. The fix: always use `margin: { top: "0", bottom: "0", left: "0", right: "0" }` in Puppeteer and `@page { margin: 0 }` in CSS, since the page containers already include their own internal padding.
+
+**Do NOT override `height: auto` in print media** — removing the fixed height lets containers expand beyond one page, defeating the 1:1 page mapping. Keep the fixed height; the CSS page breaks handle pagination.
+
+**Outer wrapper must neutralize screen-only styles for print:**
+
+```tsx
+<div className="min-h-screen bg-gray-100 py-8 px-4 print:bg-white print:py-0 print:px-0 print:min-h-0">
+```
+
+**Viewport must match page width** in Puppeteer: `page.setViewport({ width: 816, height: 1056 })` so content renders at the correct scale.
+
+**Content balancing:** Use `breakInside: "avoid"` on sections and distribute content across pages so no page overflows. Check the rendered layout in the browser at 816px width before generating PDFs.
+
 ### Contract Review Output
 
 For **reviews** (not drafting), output the review analysis directly as text using the Review Output Format above. Do not generate PDF/DOCX for reviews — the review is commentary, not a document.
 
+### Multi-Document Routing
+
+When generating multiple documents for the same transaction (e.g., LOI + NDA), use a single React artifact with separate routes for each document:
+
+```tsx
+// App.tsx
+<Route path="/" component={LOIDocument} />
+<Route path="/nda" component={NDADocument} />
+```
+
+Then generate separate PDF/DOCX files for each document by pointing Puppeteer at each route and running a separate python-docx script per document. Present all files together so the user receives the complete package.
+
+**IMPORTANT:** Since all routes share the same `index.html`, the HTML `<title>` tag applies to every document. Each PDF generation script must call `page.evaluate(() => { document.title = "Correct Document Title"; })` before `page.pdf()` to set the correct PDF metadata title. Otherwise the PDF viewer's title bar will show the wrong document name.
+
 ## Drafting Rules
 
 1. **Always include the disclaimer** at the top of every output — this is not legal advice
-2. Start from Bonterms/Common Paper, don't invent clause language
+2. Start from Bonterms/Common Paper for NDAs and service agreements; use the clause structures in "M&A / Transaction Documents" for LOIs and purchase agreements
 3. Quote exact problem text with section numbers, then give replacement language
 4. Flag jurisdiction dependencies — non-compete enforceability, anti-indemnity statutes, and consumer protection vary wildly by state/country
 5. When stakes are high (>$50K, equity, exclusivity, personal guarantees) → recommend attorney review explicitly
+6. For multi-document transactions, ensure consistent terminology and cross-references across all documents
 
 ## Limitations
 

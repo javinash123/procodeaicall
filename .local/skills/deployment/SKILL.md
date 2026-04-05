@@ -1,11 +1,11 @@
 ---
 name: deployment
-description: Configure and publish your project. Use to set deployment settings and suggest publishing when the app is ready.
+description: Use when the user asks to publish, deploy, or configure deployment settings, or when the user reports their deployed app is broken, asks about production errors, or wants to check server logs.
 ---
 
 # Deployment Skill
 
-Configure deployment settings and publish your project to make it live and accessible.
+Configure deployment settings, publish your project, and debug deployment issues.
 
 ## When to Use
 
@@ -16,13 +16,22 @@ Use this skill when:
 - The user explicitly asks to publish or deploy the project
 - You've completed implementing a feature and verified it works
 - Setting up deployment for different project types (websites, bots, scheduled jobs)
+- The user reports their deployed application is not working correctly
+- The user wants to see what errors are occurring in production
+- The user needs to debug a runtime issue with their deployed app
+- The user asks to check deployment or server logs
 
 ## When NOT to Use
 
 - Project has known errors or incomplete features
 - You haven't validated that the project works
 - The user is just testing or prototyping
-- **You are a task agent running in a subrepl context and want to suggest publishing** — only the main repl can trigger a publish. However, `deployConfig()` is allowed because it only modifies `.replit` configuration. If you call `deployConfig()` from a task agent, remind the user that they will need to publish from the main version of the project after the current task is merged
+
+## Reference Documents
+
+This skill has additional reference documents for specific deployment scenarios. Read them as needed:
+
+- `references/deployment-logs.md` — How to fetch and analyze runtime deployment logs. Read this when the user's deployed app is misbehaving, the live site is down, or they want to check production logs.
 
 ## Available Functions
 
@@ -61,6 +70,14 @@ const result3 = await deployConfig({
     run: ["python", "bot.py"]
 });
 ```
+
+### suggestDeploy()
+
+Prompt the user to click the Publish button after the app is ready. **Only works in the main repl context** — in task-agent/subrepl sessions this callback returns `success: false`. If you are in a task agent, skip this call and instead remind the user to publish from the main version after merging.
+
+### fetchDeploymentLogs({ afterTimestamp, beforeTimestamp, message, messageContext })
+
+Fetch and analyze deployment logs. See `references/deployment-logs.md` for full documentation.
 
 ## Deployment Targets
 
@@ -174,6 +191,7 @@ build=["cargo", "build", "--release"]
 1. **User-initiated publishing**: The user must click the Publish button to actually deploy
 2. **Automatic handling**: Publishing handles building, hosting, TLS, and health checks automatically
 3. **Domain**: Published apps are available at a `.replit.app` domain or custom domain if configured
+4. **Production config lives in `.replit`**: Deployment settings (run command, build command, deployment target) are in the `.replit` file's `[deployment]` section.
 
 ## Example Workflow
 
@@ -185,4 +203,5 @@ await deployConfig({
 });
 
 // 2. After verifying the app works, suggest publishing to the user
+await suggestDeploy();
 ```

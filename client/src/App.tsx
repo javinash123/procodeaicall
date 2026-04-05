@@ -21,11 +21,12 @@ import AdminPlans from "@/pages/admin-plans";
 import Notifications from "@/pages/notifications";
 import BulkWhatsapp from "@/pages/bulk-whatsapp";
 import Payment from "@/pages/payment";
+import TestAI from "@/pages/test-ai";
 
 function Router() {
   const [location] = useLocation();
 
-  const hideFooterRoutes = ["/login", "/register", "/admin", "/dashboard", "/admin/dashboard", "/admin/plans", "/payment", "/bulk-whatsapp", "/notifications"];
+  const hideFooterRoutes = ["/login", "/register", "/admin", "/dashboard", "/admin/dashboard", "/admin/plans", "/payment", "/bulk-whatsapp", "/notifications", "/test-ai"];
   const shouldHideFooter = hideFooterRoutes.includes(location);
 
   return (
@@ -34,6 +35,7 @@ function Router() {
         <Navbar />
         <main className="flex-grow">
           <Switch>
+            <Route path="/test-ai" component={TestAI} />
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/payment" component={Payment} />
             <Route path="/notifications" component={Notifications} />

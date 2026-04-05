@@ -61,16 +61,34 @@ export interface ConversationMessage {
   content: string;
 }
 
+export interface LeadData {
+  name?: string;
+  company?: string;
+  phone?: string;
+  email?: string;
+  [key: string]: string | undefined;
+}
+
 export interface CampaignData {
   name?: string;
   goal: string;
   script?: string;
   additionalContext?: string;
   knowledgeBaseText?: string;
+  ai_generated_script?: string;
+  knowledge_base?: string;
+  leadData?: LeadData;
 }
 
 export interface AIResponse {
   reply: string;
+}
+
+function replaceScriptVariables(text: string, lead: LeadData): string {
+  return text.replace(/\{(\w+)\}/g, (match, key) => {
+    const value = lead[key as keyof LeadData];
+    return value !== undefined && value !== "" ? value : match;
+  });
 }
 
 export async function generateAIResponse(
@@ -78,46 +96,52 @@ export async function generateAIResponse(
   userInput: string,
   campaignData: CampaignData
 ): Promise<AIResponse> {
-  const { name, goal, script, additionalContext, knowledgeBaseText } = campaignData;
+  const { goal, additionalContext, ai_generated_script, knowledge_base, knowledgeBaseText, leadData } = campaignData;
 
-  const goalDescriptions: Record<string, string> = {
-    sales: "close sales and generate revenue by understanding the prospect's needs and presenting value",
-    support: "resolve customer issues efficiently and empathetically, ensuring satisfaction",
-    survey: "gather honest feedback by asking clear, neutral questions and listening carefully",
-    appointment: "schedule appointments by finding suitable times and confirming availability",
-  };
+  const resolvedScript = ai_generated_script && leadData
+    ? replaceScriptVariables(ai_generated_script, leadData)
+    : (ai_generated_script || "");
 
-  const goalDescription = goalDescriptions[goal] || goal;
+  const knowledgeBaseContent = knowledge_base || knowledgeBaseText || "";
 
-  const systemPrompt = `You are an AI calling agent for the campaign "${name || "Unnamed Campaign"}".
+  const prompt = `
+You are a professional AI ${goal === "Customer Support" ? "support" : "sales"} agent.
 
-Your primary goal: ${goalDescription}.
+Business Context:
+${additionalContext || ""}
 
-${script ? `Opening script to follow (adapt naturally as the conversation evolves):\n${script}\n` : ""}
-${additionalContext ? `Business context:\n${additionalContext}\n` : ""}
-${knowledgeBaseText ? `Knowledge base (use for accurate answers):\n${knowledgeBaseText.slice(0, 3000)}\n` : ""}
+Campaign Goal:
+${goal}
 
-Conversation guidelines:
-- Stay strictly in character as a professional, helpful calling agent
-- Keep responses concise and conversational (2-4 sentences max)
-- Use the conversation history to maintain context and avoid repeating yourself
-- Acknowledge what the user said before responding
-- Steer the conversation toward the campaign goal naturally
-- If asked something outside your knowledge base, politely say you'll follow up
-- Never break character or mention that you are an AI unless directly asked`;
+IMPORTANT RULES:
+- Do NOT repeat introduction again if conversation has started
+- Do NOT repeat the same question again
+- Avoid asking identical questions multiple times
+- Keep responses short (1–2 lines max)
+- Be natural and conversational
+- Always move conversation forward
+- Handle objections smartly
+- If unsure, give a helpful answer without saying "not in knowledge base"
+- Your goal is to qualify the lead and move towards booking a call/demo/visit
 
-  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    { role: "system", content: systemPrompt },
-    ...conversationHistory.map((msg) => ({
-      role: msg.role as "user" | "assistant",
-      content: msg.content,
-    })),
-    { role: "user", content: userInput },
-  ];
+Script:
+${resolvedScript}
+
+Knowledge Base:
+${knowledgeBaseContent.slice(0, 3000)}
+
+Conversation so far:
+${JSON.stringify(conversationHistory)}
+
+User said:
+"${userInput}"
+
+Respond like a real human agent.
+`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
-    messages,
+    messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
     max_tokens: 300,
   });

@@ -31,3 +31,7 @@ initial_open_files:
   - src/lib/video/index.ts
   - src/lib/video/animations.ts
   - src/index.css
+
+additional_skills:
+  - media-generation
+  - references/first_build.md

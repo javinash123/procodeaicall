@@ -10,9 +10,9 @@ Never be idle — maximize parallelism by filling every wait window with product
 
 ### Phase 1 — Foundation
 
-1. Write the OpenAPI spec covering ALL planned artifacts upfront — this is the single source of truth for every artifact's API contract.
+1. Write the OpenAPI spec covering ALL planned artifacts upfront — this is the single source of truth for every artifact's API contract. Include both core CRUD and safe wow endpoints — lightweight read-only endpoints that make the app feel polished (dashboard summaries, recent activity, grouped counts) — so the design subagent has real hooks for both the core app and the wow surfaces.
 2. Run codegen, then create the first artifact — `createArtifact()` will guide you to the artifact's skill with build instructions.
-3. Some artifact types (like react-vite) launch an async frontend build that creates an idle window. If you have an idle window, use it to build the shared backend for ALL planned artifacts in one pass. If the artifact is built synchronously by the main loop (like expo or slides), build it completely — frontend and backend together — then move on.
+3. Some artifact types (like react-vite) launch an async frontend build that creates an idle window. If you have an idle window, use it to build the shared backend for ALL planned artifacts in one pass. Other artifact types are built synchronously — expo can be delegated to a general subagent (`startAsyncSubagent`) or built directly in the main loop, then you move on.
 4. If you know upcoming artifacts will need generated images (slide images, app icons, etc.), kick off that async generation now rather than waiting until you start building those artifacts. Image generation runs in the background and should overlap with other work.
 
 ### Phase 2 — Next artifact
@@ -32,7 +32,7 @@ Never be idle — maximize parallelism by filling every wait window with product
 
 ## Ordering Rule
 
-When choosing which artifact to create first, prefer the one with an async frontend build — this maximizes the idle window available for building other artifacts and the shared backend. Currently, `react-vite` is the only artifact type with an async frontend build (`generateFrontend()`). All other types (expo, slides, video-js) are built synchronously.
+When choosing which artifact to create first, prefer the one with an async frontend build — this maximizes the idle window available for building other artifacts and the shared backend. Currently, `react-vite` and `data-visualization` are the artifact types with an async frontend build (async design subagent). All other types (expo, slides, video-js) are built synchronously.
 
 ## Batching
 
@@ -43,21 +43,22 @@ Batch independent operations **within the same artifact** into parallel tool cal
 - Restart all workflows in parallel, not one at a time.
 - Batch image generation calls together when you need multiple images.
 
-**Do NOT build two artifacts simultaneously.** Build one artifact completely, then move to the next. The only reason to start the next artifact before finishing the current one is if you are idle waiting for an async build (like generateFrontend) to complete.
+**Do NOT build two artifacts simultaneously.** Build one artifact completely, then move to the next. The only reason to start the next artifact before finishing the current one is if you are idle waiting for an async build (like the async design subagent) to complete.
 
 ## Visual Consistency
 
 When building subsequent artifacts, carry over brand context from earlier artifacts — colors, fonts, theme, branding — so all artifacts feel visually cohesive. For example, if delegating a video to a design subagent, pass the website's theme/colors so the video matches.
 
+**Mobile (Expo) artifacts specifically:** After the web artifact's frontend is built, read its `src/index.css` to extract the design tokens (colors, fonts, radius), then sync them into the expo artifact's `constants/colors.ts`, `app.json`, and font setup before building the mobile UI. The expo skill's `design_and_aesthetics.md` reference has the full process.
+
 ## Design Subagent Limitations
 
-The design subagent is useful for media generation (images, videos) and design iterations after an initial build. However, it cannot produce good results for:
+The design subagent is effective for react-vite frontends, mockup sandboxes, and media generation (images, videos), and is useful for design iterations after an initial build. However, it cannot produce good results for:
 
-- **React Native / Expo UI** — build mobile app frontends directly in the main loop
+- **React Native / Expo UI** — do not use the design subagent for Expo. Build Expo frontends via `startAsyncSubagent` (general subagent) or directly in the main loop.
 - **Slides** — build slide content directly in the main loop
-- **react-vite initial builds** — use `generateFrontend()` instead (the react-vite skill covers this)
 
-Only delegate to the design subagent for artifact types where it is effective (check the artifact's skill for guidance).
+Only delegate to the **design** subagent for artifact types where it is effective (check the artifact's skill for guidance). Note: `startAsyncSubagent` (used in artifact examples) is a general-purpose subagent, not the design subagent — it is fine for Expo builds.
 
 ## Avoiding Wasted Work
 
@@ -67,10 +68,11 @@ Only delegate to the design subagent for artifact types where it is effective (c
 
 ## Example — Web App + Mobile App
 
-1. Create react-vite artifact first (its skill uses generateFrontend, creating an idle window) → OpenAPI (covering BOTH web + mobile) → codegen → launch generateFrontend
-2. While generateFrontend runs: build all shared backend routes for both artifacts
-3. Backend done, generateFrontend still running → create expo artifact → build it completely (expo is built synchronously by the main loop)
-4. generateFrontend finishes → fix issues → restart all workflows in parallel → check logs → present both
+1. Create react-vite artifact first (its skill uses an async frontend build, creating an idle window) → OpenAPI (covering BOTH web + mobile) → codegen → launch the async frontend build
+2. While the async frontend build runs: build all shared backend routes for both artifacts → create expo artifact (scaffolding only, not UI)
+3. Async frontend build finishes → extract design tokens from the generated `src/index.css` (colors, fonts, radius) → sync tokens into the expo artifact's `constants/colors.ts`, `app.json`, and fonts
+4. Build the expo frontend using the synced tokens
+5. Fix any integration issues → restart all workflows in parallel → check logs → present both
 
 ## Critical Rules
 

@@ -1,0 +1,12 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0KMongoDB connected successfully
+2:51:32 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+2:51:46 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+[Exotel] Call response: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <Call>\n  <Sid>1fa5a644ab51fbe8a74112d00d721a42</Sid>\n  <ParentCallSid/>\n  <DateCreated>2026-04-02 20:22:23</DateCreated>\n  <DateUpdated>2026-04-02 20:22:24</DateUpdated>\n  <AccountSid>nijvox1</AccountSid>\n  <To>09893328298</To>\n  <From>08047359287</From>\n  <PhoneNumberSid>08047359287</PhoneNumberSid>\n  <Status>in-progress</Status>\n  <StartTime>2026-04-02 20:22:24</StartTime>\n  <EndTime/>\n  <Duration/>\n  <Price/>\n  <Direction>outbound-api</Direction>\n  <AnsweredBy/>\n  <ForwardedFrom/>\n  <CallerName/>\n  <Uri>/v1/Accounts/nijvox1/Calls/1fa5a644ab51fbe8a74112d00d721a42</Uri>\n  <RecordingUrl/>\n </Call>\n</TwilioResponse>\n"
+[Exotel] Call failed: getaddrinfo EAI_AGAIN api.exotel.com
+[Exotel] Call failed: getaddrinfo EAI_AGAIN api.exotel.com
+[Exotel] Call failed: getaddrinfo EAI_AGAIN api.exotel.com

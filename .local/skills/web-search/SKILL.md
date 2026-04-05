@@ -24,15 +24,15 @@ Use this skill when:
 
 ## Available Functions
 
-### webSearch(query)
+### Single web search — webSearch(query)
 
-Search the web for current information.
+Search the web for a single query.
 
 **Parameters:**
 
 - `query` (str, required): Natural language search query phrased as a complete question
 
-**Returns:** Dict with `searchAnswer` and `resultPages` (list of title/url dicts)
+**Returns:** Dict with `searchAnswer` and `resultPages` (list of title/url/snippet dicts)
 
 **Example:**
 
@@ -41,6 +41,30 @@ const results = await webSearch({ query: "OpenAI API rate limits 2026" });
 console.log(results.searchAnswer);
 for (const page of results.resultPages) {
     console.log(`${page.title}: ${page.url}`);
+}
+```
+
+### Multiple web searches — webSearch({ queries })
+
+Run multiple searches concurrently (max 10).
+
+**Parameters:**
+
+- `queries` (list[str]): List of natural language search queries phrased as complete questions
+
+**Returns:** List of result dicts, each with `searchAnswer` and `resultPages` (list of title/url/snippet dicts)
+
+**Example:**
+
+```javascript
+const results = await webSearch({
+    queries: [
+        "OpenAI API rate limits 2026",
+        "Anthropic API rate limits 2026",
+    ]
+});
+for (const result of results) {
+    console.log(result.searchAnswer);
 }
 ```
 
@@ -72,11 +96,11 @@ console.log(content.markdown.slice(0, 1000));
 
 ```javascript
 // Find information about a topic
-const searchResults = await webSearch({ query: "FastAPI dependency injection tutorial 2026" });
+const searchResult = await webSearch({ query: "FastAPI dependency injection tutorial 2026" });
 
 // Get full content from the most relevant result
-if (searchResults.resultPages.length > 0) {
-    const bestUrl = searchResults.resultPages[0].url;
+if (searchResult.resultPages.length > 0) {
+    const bestUrl = searchResult.resultPages[0].url;
     const fullContent = await webFetch({ url: bestUrl });
     console.log(fullContent.markdown);
 }

@@ -28,7 +28,7 @@ If the user asks to inspect, fetch, or modify RevenueCat data (e.g., "list my pr
 
         ```ts
         import { getUncachableRevenueCatClient } from "./revenueCatClient";
-        import { listProducts } from "replit-revenuecat-v2";
+        import { listProducts } from "@replit/revenuecat-sdk";
 
         async function getProducts() {
         const client = await getUncachableRevenueCatClient();
@@ -50,7 +50,7 @@ If the user asks to inspect, fetch, or modify RevenueCat data (e.g., "list my pr
     - Display names for products must be unique -- ensure this when creating new products.
     - Each package allows only one product per app store
     - Access tokens expire, so always call `getUncachableRevenueCatClient()` to get a fresh client for each operation. Never cache the client.
-    - Reference the documentation for the replit-revenuecat-v2 SDK to use the RevenueCat REST API if necessary
+    - Reference the documentation for the @replit/revenuecat-sdk SDK to use the RevenueCat REST API if necessary
 
 If asked to update the price:
 

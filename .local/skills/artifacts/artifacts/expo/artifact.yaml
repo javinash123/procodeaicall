@@ -38,10 +38,10 @@ initial_open_files:
   - app/_layout.tsx
   - app/(tabs)/_layout.tsx
   - app/(tabs)/index.tsx
-  - components/ErrorBoundary.tsx
-  - components/ErrorFallback.tsx
+  - /lib/api-spec/openapi.yaml
+  - /artifacts/api-server/src/index.ts
+  - /artifacts/api-server/package.json
 
-first_user_message:
-  template: agent_modes/initial_setup_node/build/expo/first_user_message_v4.jinja2
-  static_params:
-    stack_version: "4"
+additional_skills:
+  - media-generation
+  - references/first_build.md

@@ -6,7 +6,7 @@ Ensure prerequisites are met. Do not proceed until you have done so.
 
 Follow these steps in order when implementing RevenueCat integration for the user. Create a task list to track implementation progress.
 
-Do not reference the replit-revenuecat-v2 SDK docs during initial setup unless absolutely necessary. The instructions below should be sufficient.
+Do not reference the @replit/revenuecat-sdk SDK docs during initial setup unless absolutely necessary. The instructions below should be sufficient.
 
 1. Create a seed script, using the generated `getUncachableRevenueCatClient()` function in the scripts directory to get an authenticated client, to set up RevenueCat entities (project, app, products, entitlements, offerings, etc.).
     - This seed script should be a new file that runs as a standalone script.
@@ -38,9 +38,20 @@ Do not reference the replit-revenuecat-v2 SDK docs during initial setup unless a
 
 5a. Implement the code for `lib/revenuecat.tsx` in the client app directory using the provided code snippet.
 
-5b. Modify App.tsx as such:
+5b. Modify App.tsx (or the root layout file) as such:
 
-  1. Import and call the `initializeRevenueCat` function at the top-level of the file.
+  1. Import `initializeRevenueCat` and call it at the top-level of the file with a try-catch block.
+
+     ```ts
+     import { Alert } from "react-native"
+
+     try {
+      initializeRevenueCat();
+     } catch (err: any) {
+      Alert.alert("RevenueCat Unavailable", err?.message ?? "Unknown error");
+     }
+     ```
+
   2. Wrap the app in the `SubscriptionProvider` provider.
 
 5c. Use the `useSubscription` hook whenever RevenueCat functionality is required.
@@ -85,7 +96,7 @@ import {
   type Offering,
   type Package,
   type CreateProductData,
-} from "replit-revenuecat-v2";
+} from "@replit/revenuecat-sdk";
 
 const PROJECT_NAME = "My Example App"; // REPLIT AGENT: Use the app's name as the project name
 

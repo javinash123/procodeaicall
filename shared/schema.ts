@@ -253,6 +253,25 @@ export type Note = InsertNote & {
   updatedAt: Date;
 };
 
+// CallLog Schema — stores Exotel webhook call status events
+export type CallLog = {
+  _id: string;
+  callSid: string;
+  status: string; // answered, missed, failed, completed, busy, no-answer
+  from?: string;
+  to?: string;
+  duration: number; // seconds
+  recordingUrl?: string;
+  startTime?: Date;
+  endTime?: Date;
+  leadId?: string;
+  campaignId?: string;
+  rawPayload?: Record<string, any>;
+  createdAt: Date;
+};
+
+export type InsertCallLog = Omit<CallLog, "_id" | "createdAt">;
+
 // Notification Schema
 export const insertNotificationSchema = z.object({
   message: z.string().min(1),

@@ -17,7 +17,6 @@ Analyze properties, neighborhoods, and real estate investment opportunities for 
 
 ## When NOT to Use
 
-- Apartment rental hunting (use apartment-finder skill)
 - Mortgage or loan calculations only (use budget-planner skill)
 - Legal review of purchase agreements (use legal-contract skill)
 

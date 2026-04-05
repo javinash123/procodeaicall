@@ -27,7 +27,7 @@ Use this skill when the user asks you a **question in chat** that requires data 
 - **The user asks to "build", "create", or "make" a dashboard/app with data** - use the `data-visualization` skill
 - The user needs to add an integration to their app (use the `integrations` skill)
 - Production database operations (use the database pane directly)
-- Asks to check deployment or server logs (use the `fetch-deployment-logs` skill)
+- Asks to check deployment or server logs (use the `deployment` skill)
 
 ## File Structure
 

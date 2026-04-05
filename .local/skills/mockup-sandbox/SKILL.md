@@ -130,6 +130,10 @@ If an iframe is created while the workflow is still booting, rely on the canvas 
 
 **Never share dev domain URLs in chat.** Dev URLs (`*.replit.dev`, `$REPLIT_DEV_DOMAIN`) are internal — use them only in tool calls (iframe shapes, subagent tasks), never in user-facing messages.
 
+# Step 5: Verification and Presentation
+
+**Check system logs.** Always check the system logs to ensure no iframe previews are broken, since broken iframes cause an error overlay across the canvas. If you see iframe-related errors, fix them before proceeding and restart the workflow.
+
 **Present the artifact.** After all mockups are embedded and the workflow is running, look up the artifact and present it so the user can see it in the preview pane:
 
 ```javascript
@@ -364,9 +368,10 @@ Every mockup request -- whether handled directly or via subagents -- should show
 
 1. Read the canvas state to find empty space
 2. Immediately place iframe(s) with `state: "building"` and `componentName` at the expected sizes
-3. Proceed with component development (direct or via subagents)
-4. Once a component is ready, update the iframe with `url`, `componentPath`, and `state: "live"`
-5. Restart the workflow once all components are created
+3. Proceed with component development.
+   - For direct builds, set the iframe `state: "live"` once the component is ready and the URL/component metadata can be filled in.
+   - For subagent builds, ask the subagent to set the iframe `state: "live"` in its request so the preview updates as quickly as possible.
+4. Check the system logs for iframe-related issues, fix any problems, and restart the workflow once all components are created.
 
 **Flow for modifying existing components:**
 
@@ -447,10 +452,10 @@ Use when the user wants multiple visual options for the same component or page.
 ```text
 Parent: Place iframes with state: "building" on canvas (one per variant, in a row)
 Parent: Establish requirements, seed each variant direction
-    ├──→ DESIGN subagent: "Minimal" variant → set iframe URL + state: "live"
-    ├──→ DESIGN subagent: "Bold" variant → set iframe URL + state: "live"
-    └──→ DESIGN subagent: "Gradient" variant → set iframe URL + state: "live"
-Parent: Restart workflow once all subagents complete
+    ├──→ DESIGN subagent: "Minimal" variant
+    ├──→ DESIGN subagent: "Bold" variant
+    └──→ DESIGN subagent: "Gradient" variant
+Parent: Check system logs, fix issues and restart workflow once all subagents complete
 ```
 
 **Parent responsibilities:**
@@ -540,10 +545,11 @@ Each variant gets its own folder with its own `_shared/` components. One DESIGN 
 ```text
 Parent: Place iframes with state: "building" in a variant × page grid on canvas
 Parent: Define page list, seed each variant direction
-    ├──→ DESIGN subagent: Build entire crm-minimal/ → set iframe URLs + state: "live"
-    ├──→ DESIGN subagent: Build entire crm-bold/ → set iframe URLs + state: "live"
-    └──→ DESIGN subagent: Build entire crm-playful/ → set iframe URLs + state: "live"
-Parent: Restart workflow once all subagents complete
+    ├──→ DESIGN subagent: Build entire crm-minimal/
+    ├──→ DESIGN subagent: Build entire crm-bold/ 
+    └──→ DESIGN subagent: Build entire crm-playful/ 
+Parent: Checked the system logs and restart the workflow once all components are created 
+
 ```
 
 ```text

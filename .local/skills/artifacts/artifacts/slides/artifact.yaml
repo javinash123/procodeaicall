@@ -24,7 +24,10 @@ service_configs:
           to: /index.html
 
 initial_open_files:
-  - src/App.tsx
-  - src/pages/slides/TitleSlide.tsx
+  - index.html
+  - src/slideLoader.ts
   - src/data/slides-manifest.json
   - src/index.css
+
+additional_skills:
+  - media-generation

@@ -24,7 +24,7 @@ Use this skill when:
 
 ## Available Functions
 
-### subagent(task, fromPlan, relevantFiles)
+### subagent(task, fromPlan, relevantFiles, relevantSkills)
 
 Launch a subagent to handle a task synchronously. Blocks until the subagent completes and returns the result.
 
@@ -32,7 +32,8 @@ Launch a subagent to handle a task synchronously. Blocks until the subagent comp
 
 - `task` (str, required): Task ID from session plan (e.g., "T003") OR brief task description
 - `fromPlan` (bool, default False): If True, subagent reads full task context from .local/session_plan.md
-- `relevantFiles` (list[str], optional): File paths the subagent should access. Include skill paths if subagent needs skills
+- `relevantFiles` (list[str], optional): File paths the subagent should access
+- `relevantSkills` (list[str], optional): Paths to all implementation skills you've read. Use the full path from the skills view. Pass every skill with integration details (auth, storage, payments) — not orchestration skills meant for you (design, delegation, react-vite).
 - `specialization` (str, default "GENERAL"): "GENERAL" or "SMALL_TASK" for quick tasks
 
 **Returns:** Dict with task results
@@ -61,12 +62,13 @@ console.log(result);  // Always print the result
 ```javascript
 const result = await subagent({
     task: "Fix the auth bug in src/auth.ts",
-    relevantFiles: ["src/auth.ts"]
+    relevantFiles: ["src/auth.ts"],
+    relevantSkills: [".local/skills/clerk-auth/SKILL.md", ".local/skills/database/SKILL.md"]
 });
 console.log(result);  // Always print the result
 ```
 
-### startAsyncSubagent(task, fromPlan, relevantFiles)
+### startAsyncSubagent(task, fromPlan, relevantFiles, relevantSkills)
 
 Launch a subagent to handle a task asynchronously in the background. Returns immediately without waiting for completion. Use `waitForBackgroundTasks` to collect results later.
 
@@ -74,7 +76,8 @@ Launch a subagent to handle a task asynchronously in the background. Returns imm
 
 - `task` (str, required): Task ID from session plan (e.g., "T003") OR brief task description
 - `fromPlan` (bool, default False): If True, subagent reads full task context from .local/session_plan.md
-- `relevantFiles` (list[str], optional): File paths the subagent should access. Include skill paths if subagent needs skills
+- `relevantFiles` (list[str], optional): File paths the subagent should access
+- `relevantSkills` (list[str], optional): Paths to all implementation skills you've read. Use the full path from the skills view. Pass every skill with integration details (auth, storage, payments) — not orchestration skills meant for you (design, delegation, react-vite).
 - `specialization` (str, default "GENERAL"): "GENERAL" or "SMALL_TASK" for quick tasks
 
 **Returns:** Immediately with acknowledgment. Results come via `waitForBackgroundTasks`.
@@ -93,7 +96,8 @@ await startAsyncSubagent({ task: "T003", fromPlan: true });
 ```javascript
 await startAsyncSubagent({
     task: "Fix the auth bug in src/auth.ts",
-    relevantFiles: ["src/auth.ts"]
+    relevantFiles: ["src/auth.ts"],
+    relevantSkills: [".local/skills/clerk-auth/SKILL.md", ".local/skills/database/SKILL.md"]
 });
 ```
 
@@ -109,11 +113,11 @@ console.log(await startAsyncSubagent({ task: "T004", fromPlan: true }));
 **Giving Subagents Access to Skills:**
 
 ```javascript
-// Include skill documentation in relevantFiles if subagent needs it
+// Pass skill paths from the skills view
 await startAsyncSubagent({
     task: "T005",
     fromPlan: true,
-    relevantFiles: [".local/skills/database/SKILL.md"]
+    relevantSkills: [".local/skills/database/SKILL.md", ".local/skills/clerk-auth/SKILL.md"]
 });
 ```
 
@@ -179,7 +183,7 @@ console.log(result.result);
 5. **Use `messageSubagent()` for async follow-ups**: Message running subagents without blocking and collect results with `waitForBackgroundTasks`
 6. **Use `messageSubagentAndGetResponse()` for sync follow-ups**: Use this when you need the subagent's output before continuing
 7. **Trust the results**: Subagent outputs should generally be trusted
-8. **Pass skills via relevantFiles**: If a subagent needs skills, include the skill's SKILL.md path
+8. **Pass all implementation skills via relevantSkills**: Include every implementation skill you've read — use the full path from the skills view for each one
 
 ## Subagent Capabilities
 
@@ -188,10 +192,10 @@ The subagent has access to:
 - File operations (read, write, edit, glob, grep)
 - Bash commands
 - LSP diagnostics
-- Skills (via code_execution, if you include skill docs in relevantFiles)
+- Depending on specialization, additional tools like media generation or canvas tools may be available
+- Skills (loaded via `relevantSkills` parameter)
 
 The subagent does **NOT**:
 
 - Run or restart workflows
-- Check workflow/console logs
 - Preview/test the app (that's your job as main agent)
