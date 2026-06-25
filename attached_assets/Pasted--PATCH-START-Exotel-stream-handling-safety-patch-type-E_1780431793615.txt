@@ -1,0 +1,207 @@
+// --- PATCH START: Exotel stream handling safety patch ---
+
+type ExotelMediaFormat = {
+  encoding?: string;
+  sampleRate?: number | string;
+  sample_rate?: number | string;
+  channels?: number | string;
+};
+
+type ExotelSessionState = {
+  campaignId?: string;
+  mediaFormat: {
+    encoding: string;
+    sampleRate: number;
+    channels: number;
+  };
+  transcriptBuffer: string[];
+  audioChunks: Buffer[];
+  lastMediaAt: number;
+  isProcessing: boolean;
+};
+
+function safeJsonParse(input: string): any | null {
+  try {
+    return JSON.parse(input);
+  } catch {
+    return null;
+  }
+}
+
+function getEventName(payload: any): string {
+  return (
+    payload?.event ??
+    payload?.type ??
+    payload?.message_type ??
+    payload?.action ??
+    ""
+  )
+    .toString()
+    .trim();
+}
+
+function normalizeMediaFormat(raw: any): {
+  encoding: string;
+  sampleRate: number;
+  channels: number;
+} {
+  const mediaFormat: ExotelMediaFormat =
+    raw?.mediaFormat ??
+    raw?.media_format ??
+    raw?.start?.mediaFormat ??
+    raw?.start?.media_format ??
+    {};
+
+  const encoding = String(mediaFormat.encoding ?? "pcm");
+  const sampleRate = Number(
+    mediaFormat.sampleRate ?? mediaFormat.sample_rate ?? 8000
+  );
+  const channels = Number(mediaFormat.channels ?? 1);
+
+  return { encoding, sampleRate, channels };
+}
+
+function getMediaPayload(payload: any): string | null {
+  return (
+    payload?.media?.payload ??
+    payload?.media?.data ??
+    payload?.payload ??
+    payload?.data ??
+    null
+  );
+}
+
+export async function handleExotelStream(
+  ws: any,
+  initialCampaignId?: string
+): Promise<void> {
+  const session: ExotelSessionState = {
+    campaignId: initialCampaignId,
+    mediaFormat: {
+      encoding: "pcm",
+      sampleRate: 8000,
+      channels: 1,
+    },
+    transcriptBuffer: [],
+    audioChunks: [],
+    lastMediaAt: Date.now(),
+    isProcessing: false,
+  };
+
+  console.log(
+    `[exotel] session started campaignId=${session.campaignId ?? "none"}`
+  );
+
+  ws.on("message", async (raw: Buffer | string) => {
+    const rawText = Buffer.isBuffer(raw) ? raw.toString("utf8") : String(raw);
+
+    // IMPORTANT: always log the raw payload first
+    console.log("[exotel] raw message:", rawText);
+
+    const payload = safeJsonParse(rawText);
+
+    // If Exotel ever sends plain text, do not crash
+    if (!payload) {
+      console.log("[exotel] non-JSON message ignored");
+      return;
+    }
+
+    const eventName = getEventName(payload).toLowerCase();
+
+    try {
+      // Connected / Start can come in different shapes. Handle safely.
+      if (eventName === "connected") {
+        console.log(
+          "[exotel] Connected — payload:",
+          JSON.stringify(payload, null, 2)
+        );
+        return;
+      }
+
+      if (eventName === "start") {
+        console.log(
+          "[exotel] Start payload:",
+          JSON.stringify(payload, null, 2)
+        );
+
+        // campaignId may appear in different places
+        session.campaignId =
+          payload?.campaignId ??
+          payload?.start?.campaignId ??
+          payload?.params?.campaignId ??
+          session.campaignId;
+
+        const mediaFormat = normalizeMediaFormat(payload);
+
+        session.mediaFormat = mediaFormat;
+
+        console.log(
+          `[exotel] Start — encoding=${mediaFormat.encoding} sampleRate=${mediaFormat.sampleRate} channels=${mediaFormat.channels}`
+        );
+
+        return;
+      }
+
+      if (eventName === "media") {
+        const encoded = getMediaPayload(payload);
+
+        if (!encoded) {
+          console.log("[exotel] Media event had no payload");
+          return;
+        }
+
+        console.log(
+          `[exotel] Media received — base64 length=${encoded.length}`
+        );
+
+        // Store raw audio chunk for later transcription/processing
+        try {
+          const audioBuf = Buffer.from(encoded, "base64");
+          session.audioChunks.push(audioBuf);
+          session.lastMediaAt = Date.now();
+        } catch (e) {
+          console.error("[exotel] Failed to decode media payload:", e);
+        }
+
+        return;
+      }
+
+      if (eventName === "dtmf") {
+        console.log("[exotel] DTMF:", JSON.stringify(payload, null, 2));
+        return;
+      }
+
+      if (eventName === "stop") {
+        console.log("[exotel] Stop:", JSON.stringify(payload, null, 2));
+        return;
+      }
+
+      if (eventName === "clear") {
+        console.log("[exotel] Clear:", JSON.stringify(payload, null, 2));
+        session.audioChunks = [];
+        return;
+      }
+
+      // Fallback for unknown events
+      console.log(
+        `[exotel] Unhandled event "${eventName || "unknown"}":`,
+        JSON.stringify(payload, null, 2)
+      );
+    } catch (err) {
+      console.error("[exotel] handler error:", err);
+      // do not crash the websocket
+    }
+  });
+
+  ws.on("close", () => {
+    console.log(
+      `[exotel] session closed campaignId=${session.campaignId ?? "none"}`
+    );
+  });
+
+  ws.on("error", (err: any) => {
+    console.error("[exotel] websocket error:", err?.message || err);
+  });
+}
+
+// --- PATCH END: Exotel stream handling safety patch ---

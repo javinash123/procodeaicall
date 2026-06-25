@@ -66,6 +66,18 @@ What NOT to include:
 
 </design_subagent_guidance>
 
+## Ground the Brief with Real Site Inputs
+
+If the user provides a real company/site URL, or asks you to create a site for an existing company, gather a little context before delegating:
+
+- Use `extractBranding` to capture colors, fonts, and other brand cues from the official site. When passing brand context, include colors, typography, and images.
+- If `extractBranding` gave you images, download each usable image into the workspace before launching the subagent. Pass the local file paths via `relevantFiles` and include a `Brand assets` block in the task that labels each file (logo, favicon, OG image, etc.), where it came from, and what it should be used for.
+- If `extractBranding` does not give you a usable logo, use `imageSearch` via the `image-search` skill to look for `"<company> logo png"` or `"<company> logo transparent"`, preferring official domains and press or brand asset pages. Download the best logo candidate into the workspace, pass the local file path via `relevantFiles`, and label it as the logo in the `Brand assets` block.
+- Use `webFetch` on the homepage, about page, or key product pages to pull real messaging, product language, and positioning.
+- If the visual feel of the source site matters, use external-URL `screenshot` for quick visual reference.
+
+Pass only the distilled brand and copy context into the brief. Do this before delegating — the DESIGN subagent cannot call these callbacks itself. Do not paste raw tool output or turn this into layout instructions — the DESIGN subagent still decides structure and visual execution. Never pass image URLs or vague references as the only handoff; if an image is not downloaded to a workspace file and identified in the task, treat it as unavailable.
+
 ## Writing the Creative Brief
 
 Write a creative brief directly in the `task` field. This is the most important part — the design subagent builds its entire visual direction from your brief. A lazy brief produces a generic UI, but an over-specified brief produces a constrained, predictable one.

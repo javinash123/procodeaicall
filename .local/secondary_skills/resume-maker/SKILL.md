@@ -1,6 +1,6 @@
 ---
 name: resume-maker
-description: Build a professional resume web app with viewable HTML page and downloadable PDF/DOCX files. Use when the user asks to create, generate, or build a resume, CV, or curriculum vitae with web preview and file exports.
+description: Build professional resumes with viewable HTML and downloadable PDF/DOCX export.
 ---
 
 # Resume Maker
@@ -36,8 +36,10 @@ Parse the pasted text to extract the same fields. LinkedIn profile text typicall
 
 - Name and headline at the top
 - "Experience" section with role titles, company names, date ranges, and descriptions
+
 - "Education" section with degrees, schools, and dates
 - "Skills" section with a list of skills
+
 - Optional sections like "Certifications", "Publications", "Volunteer Experience"
 
 Map each section into the resume data model. After parsing, confirm what you extracted and ask if anything needs correction.
@@ -48,8 +50,10 @@ Ask clarifying questions before writing any code. Ask about:
 
 - **Target role** — What job or type of role are they applying for? (This shapes the entire resume's framing)
 - **Work experience** — For each role: job title, company name, dates, location, and what they accomplished (not just responsibilities — ask for specific achievements, numbers, outcomes)
+
 - **Education** — Degree(s), school(s), graduation year(s), honors/GPA if notable
 - **Skills** — Technical skills, tools, languages, frameworks, certifications
+
 - **Contact info** — Full name, email, phone, LinkedIn, location, portfolio/website
 - **Optional extras** — Publications, talks, awards, volunteer work, projects
 
@@ -63,6 +67,7 @@ If going the manual route, don't dump all questions at once. Start with the most
 
 - What's your full name and contact info (email, phone, LinkedIn, location)?
 - What type of role are you targeting?
+
 - Walk me through your work history — for each job, give me the title, company, dates, and your biggest accomplishments with specific numbers if possible."
 
 Then follow up for education, skills, and anything else based on what they share. If they give vague bullets like "managed a team," push back and ask for specifics: "How large was the team? What did you deliver? Any measurable outcomes?"
@@ -73,6 +78,7 @@ Whether imported from PDF or pasted text, LinkedIn data often needs improvement 
 
 - **Bullets are often weak** — LinkedIn descriptions tend to list responsibilities, not achievements. After importing, rewrite bullets to emphasize measurable outcomes and impact. Ask the user for specific numbers if the LinkedIn content is vague.
 - **Skills may be bloated** — LinkedIn lets users add dozens of skills. Curate the list down to the most relevant ones for the target role.
+
 - **Summary may be missing or generic** — LinkedIn summaries are often written in first person or as a pitch. Adapt it to resume conventions (third-person implied, concise, role-targeted).
 - **Dates and locations may need cleanup** — LinkedIn sometimes uses inconsistent formats. Normalize them.
 
@@ -90,6 +96,7 @@ Follow this exact order so the user gets fast, tangible results:
 
 - **Write the generation script** (generate-resume-files.ts) with all resume content and run it to produce the PDF, DOCX, and resume-data.json
 - **Present the PDF to the user in chat** — show the generated PDF file immediately so they can see their resume right away
+
 - **Present the DOCX file to the user in chat** — make the DOCX available for download so they can grab it
 - **Build the web app last** — set up the React artifact and API routes that serve the resume page and download endpoints
 
@@ -97,17 +104,17 @@ The user cares most about seeing their resume quickly. The PDF and DOCX are the 
 
 ## Architecture
 
-scripts/src/generate-resume-files.ts   `← single source of truth for content + layout
+scripts/src/generate-resume-files.ts `← single source of truth for content + layout
 
- └─ output/
+└─ output/
 
-      `├─ resume-data.json             ← consumed by the web frontend
+`├─ resume-data.json ← consumed by the web frontend
 
-      `├─ <name>-resume.pdf            ← downloadable PDF
+`├─ <name>-resume.pdf ← downloadable PDF
 
-      `└─ <name>-resume.docx           ← downloadable DOCX
+`└─ <name>-resume.docx ← downloadable DOCX
 
-artifacts/<name>/src/pages/resume.tsx   `← React page, reads resume-data.json via API
+artifacts/<name>/src/pages/resume.tsx `← React page, reads resume-data.json via API
 
 artifacts/api-server/src/routes/download.ts ← serves PDF, DOCX, and JSON
 
@@ -115,6 +122,7 @@ Data flow
 
 - generate-resume-files.ts holds all resume content in a getResumeData() function.
 - The script renders the PDF with jsPDF, measures content height, and auto-adjusts spacing to fill exactly one US Letter page (612×792pt, 36pt margins).
+
 - It writes the computed spacing values into resume-data.json alongside the content.
 - The React page fetches resume-data.json at runtime and uses the spacing values (converted pt→px via 96/72) to render a matching HTML preview.
 
@@ -131,6 +139,7 @@ If you had to guess or infer any details — dates, job titles, specific contrib
 
 - I estimated your dates at Company X as 2021–2023 — are those right?
 - I wrote that you 'reduced API latency by 40%' based on your mention of performance work — is that accurate, or should I adjust the number/framing?
+
 - I guessed TypeScript and Python for your skills — anything to add or remove?"
 
 Do NOT silently present fabricated details as fact. The user trusts you to be honest about what you know vs. what you inferred.
@@ -141,6 +150,7 @@ When the user requests changes (rewording bullets, adding/removing sections, reo
 
 - Make the requested changes in generate-resume-files.ts
 - **Re-run the generation script** to produce updated PDF, DOCX, and JSON
+
 - **Verify the output still fits on one page** — if the changes pushed content past the page boundary, the auto-fit algorithm should handle it, but visually confirm. If content is getting clipped or the scale factor is too aggressive (text becoming unreadably small), trim lower-priority bullets or reduce spacing before delivering.
 - **Re-present the updated PDF and DOCX** to the user in chat
 
@@ -152,14 +162,14 @@ DOCX (docx npm package)
 
 The docx package uses two different unit systems — mixing them up causes 10× sizing bugs:
 
-- **TextRun.size**` = **half-points**: `ptToHalfPt = pt * 2 (e.g., 11pt → 22)
-- **Spacing, margins, page dimensions** = **twips**: ptToTwip = pt * 20 (e.g., 36pt → 720)
+- **TextRun.size**`= **half-points**:`ptToHalfPt = pt * 2 (e.g., 11pt → 22)
+- **Spacing, margins, page dimensions**=**twips**: ptToTwip = pt \* 20 (e.g., 36pt → 720)
 
 Always define separate converter functions:
 
-const ptToHalfPt = (pt: number) => Math.round(pt * 2);
+const ptToHalfPt = (pt: number) => Math.round(pt \* 2);
 
-const ptToTwip = (pt: number) => Math.round(pt * 20);
+const ptToTwip = (pt: number) => Math.round(pt \* 20);
 
 jsPDF baseline rule
 
@@ -170,7 +180,7 @@ doc.text(text, x, y) draws text with y as the **baseline** — the text body ext
 
 doc.line(MARGIN, y, PAGE_W - MARGIN, y);
 
-y += lineHeight;  `// NOT y += 4`
+y += lineHeight; `// NOT y += 4`
 
 Web CSS alignment
 
@@ -178,6 +188,7 @@ When using borderBottom as a section divider:
 
 - Put the border directly on the element (e.g., h2) rather than a separate <div>
 - Use paddingBottom to separate text from the line
+
 - Use marginBottom with at least lineHeight to separate the line from content below
 
 ## One-Page Auto-Fit Algorithm
@@ -187,7 +198,6 @@ The generation script measures content height, then adjusts spacing to fill the 
 `1.` Render with BASE_SPACING → measure finalY
 
 1. If finalY > TARGET_Y: shorten bullets until it fits
-
 2. If finalY < TARGET_Y: distribute slack across sectionGap, roleGap, bulletGap, lineHeight
 
 `4.` Re-render with adjusted spacing → write final files
@@ -200,173 +210,173 @@ import { jsPDF } from "jspdf";
 
 import`{`
 
- Document, Packer, Paragraph, TextRun, BorderStyle,
+Document, Packer, Paragraph, TextRun, BorderStyle,
 
- TabStopPosition, TabStopType, AlignmentType,
+TabStopPosition, TabStopType, AlignmentType,
 
 `}`from` `"docx"`;`
 
-import` fs `from` `"fs"`;`
+import`fs`from` `"fs"`;`
 
-import` path `from` `"path"`;`
+import`path`from` `"path"`;`
 
 // --- Interfaces ---
 
 interface` `ResumeRole`{`
 
-` `title`:`string`;`
+` `title`:`string`;`
 
-` `company`:`string`;`
+` `company`:`string`;`
 
-` `location`:`string`;`
+` `location`:`string`;`
 
-` `startDate`:`string`;`
+` `startDate`:`string`;`
 
-` `endDate`:`string`;`
+` `endDate`:`string`;`
 
-` `bullets`:`string`[];`
+` `bullets`:`string`[];`
 
 }
 
 interface` `Spacing`{`
 
-` `sectionGap`:`number`;`
+` `sectionGap`:`number`;`
 
-` `roleGap`:`number`;`
+` `roleGap`:`number`;`
 
-` `bulletGap`:`number`;`
+` `bulletGap`:`number`;`
 
-` `lineHeight`:`number`;`
+` `lineHeight`:`number`;`
 
-` `bodyFontSize`:`number`;`
+` `bodyFontSize`:`number`;`
 
-` `headlineFontSize`:`number`;`
+` `headlineFontSize`:`number`;`
 
 }
 
 interface` `ResumeData`{`
 
-` `name`:`string`;`
+` `name`:`string`;`
 
-` `headline`:`string`;`
+` `headline`:`string`;`
 
-` `contact`: {`email`:`string`;`phone`:`string`;`location`:`string`;`linkedin`:`string`;`website`:`string`};`
+` `contact`: {`email`:`string`;`phone`:`string`;`location`:`string`;`linkedin`:`string`;`website`:`string`};`
 
-` `summary`:`string`;`
+` `summary`:`string`;`
 
-` `roles`:`ResumeRole`[];`
+` `roles`:`ResumeRole`[];`
 
-` `skills`: {`category`:`string`;`items`:`string`}[];`
+` `skills`: {`category`:`string`;`items`:`string`}[];`
 
-` `education`: {`degree`:`string`;`school`:`string`;`location`:`string`;`dates`:`string`}[];`
+` `education`: {`degree`:`string`;`school`:`string`;`location`:`string`;`dates`:`string`}[];`
 
-` `spacing`:`Spacing`;`
+` `spacing`:`Spacing`;`
 
 }
 
 // --- Constants ---
 
-const` PAGE_W `=` `612`;`// US Letter width in points
+const`PAGE_W`=` `612`;`// US Letter width in points
 
-const` PAGE_H `=` `792`;`// US Letter height in points
+const`PAGE_H`=` `792`;`// US Letter height in points
 
-const` MARGIN `=` `36`;`// 0.5 inch margins
+const`MARGIN`=` `36`;`// 0.5 inch margins
 
-const CONTENT_W = PAGE_W - 2 * MARGIN;
+const CONTENT*W = PAGE*W - 2 \* MARGIN;
 
-const TARGET_Y = PAGE_H - MARGIN;
+const TARGET*Y = PAGE*H - MARGIN;
 
 const BASE_SPACING: Spacing = {
 
-` `sectionGap`:`8`,`
+` `sectionGap`:`8`,`
 
-` `roleGap`:`4`,`
+` `roleGap`:`4`,`
 
-` `bulletGap`:`1`,`
+` `bulletGap`:`1`,`
 
-` `lineHeight`:`14`,`
+` `lineHeight`:`14`,`
 
-` `bodyFontSize`:`11`,`
+` `bodyFontSize`:`11`,`
 
-` `headlineFontSize`:`11`,`
+` `headlineFontSize`:`11`,`
 
 };
 
 // --- Unit converters (DOCX) ---
 
-const ptToHalfPt = (pt: number) => Math.round(pt * 2);   `// TextRun.size`
+const ptToHalfPt = (pt: number) => Math.round(pt \* 2); `// TextRun.size`
 
-const ptToTwip = (pt: number) => Math.round(pt * 20);     `// spacing/margins`
+const ptToTwip = (pt: number) => Math.round(pt \* 20); `// spacing/margins`
 
 // --- Resume data ---
 
 function` `getResumeData`():`Omit`<`ResumeData`,`"spacing"`> {`
 
-` `return`{`
+` `return`{`
 
-`   `name`:`"FULL NAME"`,`
+` `name`:`"FULL NAME"`,`
 
-`   `headline`:`"Title | Specialty"`,`
+` `headline`:`"Title | Specialty"`,`
 
-`   `contact`: {`
+` `contact`: {`
 
-`     `email`:`"<email@example.com>"`,`
+` `email`:`"<email@example.com>"`,`
 
-     phone: "",
+phone: "",
 
-`     `location`:`"City, State"`,`
+` `location`:`"City, State"`,`
 
-`     `linkedin`:`"linkedin.com/in/handle"`,`
+` `linkedin`:`"linkedin.com/in/handle"`,`
 
-`     `website`:`"example.com"`,`
+` `website`:`"example.com"`,`
 
-   },
+},
 
-`   `summary`:`"Professional summary paragraph."`,`
+` `summary`:`"Professional summary paragraph."`,`
 
-   roles: [
+roles: [
 
-     {
+{
 
-`       `title`:`"Job Title"`,`
+` `title`:`"Job Title"`,`
 
-       company: "Company",
+company: "Company",
 
-`       `location`:`"City, State"`,`
+` `location`:`"City, State"`,`
 
-       startDate: "MM/YYYY",
+startDate: "MM/YYYY",
 
-       endDate: "Present",
+endDate: "Present",
 
-`       `bullets`: [`"Achievement or responsibility"`],`
+` `bullets`: [`"Achievement or responsibility"`],`
 
-     },
+},
 
-   ],
+],
 
-   skills: [
+skills: [
 
-`     `{ category`:`"Category"`,`items`:`"Skill1, Skill2, Skill3"`},`
+` `{ category`:`"Category"`,`items`:`"Skill1, Skill2, Skill3"`},`
 
-   ],
+],
 
-`   `education`: [`
+` `education`: [`
 
-     {
+{
 
-       degree: "Degree",
+degree: "Degree",
 
-`       `school`:`"University"`,`
+` `school`:`"University"`,`
 
-`       `location`:`"City, Country"`,`
+` `location`:`"City, Country"`,`
 
-`       `dates`:`"YYYY - YYYY"`,`
+` `dates`:`"YYYY - YYYY"`,`
 
-     },
+},
 
-   ],
+],
 
- };
+};
 
 }
 
@@ -374,91 +384,91 @@ function` `getResumeData`():`Omit`<`ResumeData`,`"spacing"`> {`
 
 function` `renderPDF`(doc:`jsPDF`, data:`Omit`<`ResumeData`,`"spacing"`>, spacing:`Spacing`):`number`{`
 
- let y = MARGIN;
+let y = MARGIN;
 
-` `const` { `bodyFontSize`,`headlineFontSize`,`lineHeight`,`sectionGap`,`roleGap`,`bulletGap` } `=`spacing;`
+` `const`{`bodyFontSize`,`headlineFontSize`,`lineHeight`,`sectionGap`,`roleGap`,`bulletGap`}`=`spacing;`
 
-` `// Header
+` `// Header
 
-` `doc.setFont`(`"helvetica"`,`"bold"`);`
+` `doc.setFont`(`"helvetica"`,`"bold"`);`
 
-` `doc.setFontSize`(`20`);`
+` `doc.setFontSize`(`20`);`
 
- doc.text(data.name, PAGE_W / 2, y, { align: "center" });
+doc.text(data.name, PAGE_W / 2, y, { align: "center" });
 
- y += 16;
+y += 16;
 
-` `doc.setFont`(`"helvetica"`,`"normal"`);`
+` `doc.setFont`(`"helvetica"`,`"normal"`);`
 
- doc.setFontSize(headlineFontSize);
+doc.setFontSize(headlineFontSize);
 
- doc.text(data.headline, PAGE_W / 2, y, { align: "center" });
+doc.text(data.headline, PAGE_W / 2, y, { align: "center" });
 
- y += lineHeight;
+y += lineHeight;
 
-` `// Contact line
+` `// Contact line
 
-` `const` contactParts `=`[data`.contact.location`, data`.contact.email`, data`.contact.linkedin`, data`.contact.website`]`.filter`(Boolean);`
+` `const`contactParts`=`[data`.contact.location`, data`.contact.email`, data`.contact.linkedin`, data`.contact.website`]`.filter`(Boolean);`
 
-` `doc.setFontSize`(`9`);`
+` `doc.setFontSize`(`9`);`
 
- doc.text(contactParts.join("  |  "), PAGE_W / 2, y, { align: "center" });
+doc.text(contactParts.join(" | "), PAGE_W / 2, y, { align: "center" });
 
- y += lineHeight + 2;
+y += lineHeight + 2;
 
-` `// Divider — use lineHeight gap after rule, NOT a small constant
+` `// Divider — use lineHeight gap after rule, NOT a small constant
 
-` `doc.setDrawColor`(`0`);`
+` `doc.setDrawColor`(`0`);`
 
-` `doc.setLineWidth`(`0.5`);`
+` `doc.setLineWidth`(`0.5`);`
 
- doc.line(MARGIN, y, PAGE_W - MARGIN, y);
+doc.line(MARGIN, y, PAGE_W - MARGIN, y);
 
- y += lineHeight;
+y += lineHeight;
 
-` `// Summary
+` `// Summary
 
-` `doc.setFont`(`"helvetica"`,`"normal"`);`
+` `doc.setFont`(`"helvetica"`,`"normal"`);`
 
- doc.setFontSize(bodyFontSize);
+doc.setFontSize(bodyFontSize);
 
- const summaryLines = doc.splitTextToSize(data.summary, CONTENT_W) as string[];
+const summaryLines = doc.splitTextToSize(data.summary, CONTENT_W) as string[];
 
- for (const line of summaryLines) {
+for (const line of summaryLines) {
 
-   doc.text(line, MARGIN, y);
+doc.text(line, MARGIN, y);
 
-   y += lineHeight;
+y += lineHeight;
 
- }
+}
 
-` `// Section header helper
+` `// Section header helper
 
-` `function` `renderSectionHeader`(title:`string`) {`
+` `function` `renderSectionHeader`(title:`string`) {`
 
-   y += sectionGap;
+y += sectionGap;
 
-`   `doc.setFont`(`"helvetica"`,`"bold"`);`
+` `doc.setFont`(`"helvetica"`,`"bold"`);`
 
-`   `doc.setFontSize`(`11`);`
+` `doc.setFontSize`(`11`);`
 
-   doc.text(title.toUpperCase(), MARGIN, y);
+doc.text(title.toUpperCase(), MARGIN, y);
 
-   y += 3;
+y += 3;
 
-`   `doc.setLineWidth`(`0.3`);`
+` `doc.setLineWidth`(`0.3`);`
 
-   doc.line(MARGIN, y, PAGE_W - MARGIN, y);
+doc.line(MARGIN, y, PAGE_W - MARGIN, y);
 
-`   `y +=` lineHeight; `// full lineHeight after rule
+` `y +=`lineHeight;`// full lineHeight after rule
 
- }
+}
 
-` `// Experience, Skills, Education sections...
+` `// Experience, Skills, Education sections...
 
-` `// (render each section using the spacing values)
+` `// (render each section using the spacing values)
 
-` `return`y;`
+` `return`y;`
 
 }
 
@@ -466,49 +476,49 @@ function` `renderPDF`(doc:`jsPDF`, data:`Omit`<`ResumeData`,`"spacing"`>, spacin
 
 function` `buildDocx`(data:`Omit`<`ResumeData`,`"spacing"`>, spacing:`Spacing`):`Document`{`
 
-` `const` { `bodyFontSize`,`headlineFontSize`,`lineHeight`,`sectionGap`,`roleGap`,`bulletGap` } `=`spacing;`
+` `const`{`bodyFontSize`,`headlineFontSize`,`lineHeight`,`sectionGap`,`roleGap`,`bulletGap`}`=`spacing;`
 
-` `// Use ptToHalfPt() for ALL TextRun.size values
+` `// Use ptToHalfPt() for ALL TextRun.size values
 
-` `// Use ptToTwip() for ALL spacing.before, spacing.after, margins, page dimensions
+` `// Use ptToTwip() for ALL spacing.before, spacing.after, margins, page dimensions
 
- const doc = new Document({
+const doc = new Document({
 
-`   `sections`: [{`
+` `sections`: [{`
 
-`     `properties`: {`
+` `properties`: {`
 
-       page: {
+page: {
 
-         size: { width: ptToTwip(PAGE_W), height: ptToTwip(PAGE_H) },
+size: { width: ptToTwip(PAGE*W), height: ptToTwip(PAGE*H) },
 
-         margin: {
+margin: {
 
-           top: ptToTwip(MARGIN),
+top: ptToTwip(MARGIN),
 
-           bottom: ptToTwip(MARGIN),
+bottom: ptToTwip(MARGIN),
 
-           left: ptToTwip(MARGIN),
+left: ptToTwip(MARGIN),
 
-           right: ptToTwip(MARGIN),
+right: ptToTwip(MARGIN),
 
-         },
+},
 
-       },
+},
 
-     },
+},
 
-     children: [
+children: [
 
-`       `// Build paragraphs here using the data
+` `// Build paragraphs here using the data
 
-     ],
+],
 
-   }],
+}],
 
- });
+});
 
- return doc;
+return doc;
 
 }
 
@@ -516,59 +526,59 @@ function` `buildDocx`(data:`Omit`<`ResumeData`,`"spacing"`>, spacing:`Spacing`):
 
 async` `function` `main`() {`
 
-` `const` data `=` `getResumeData`();`
+` `const`data`=` `getResumeData`();`
 
- const outputDir = path.resolve(import.meta.dirname, "..", "output");
+const outputDir = path.resolve(import.meta.dirname, "..", "output");
 
- if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
-` `// Measure with base spacing
+` `// Measure with base spacing
 
- let spacing = { ...BASE_SPACING };
+let spacing = { ...BASE_SPACING };
 
- let doc = new jsPDF({ unit: "pt", format: "letter" });
+let doc = new jsPDF({ unit: "pt", format: "letter" });
 
- let finalY = renderPDF(doc, data, spacing);
+let finalY = renderPDF(doc, data, spacing);
 
-` `// Auto-fit: distribute slack
+` `// Auto-fit: distribute slack
 
- const slack = TARGET_Y - finalY;
+const slack = TARGET_Y - finalY;
 
- if (slack > 0) {
+if (slack > 0) {
 
-`   `const` weights `=` { `sectionGap`:`3`,`roleGap`:`2`,`bulletGap`:`1`,`lineHeight`:`0.5`};`
+` `const`weights`=`{`sectionGap`:`3`,`roleGap`:`2`,`bulletGap`:`1`,`lineHeight`:`0.5`};`
 
-   const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
 
-`   `// Count occurrences of each spacing type to distribute evenly
+` `// Count occurrences of each spacing type to distribute evenly
 
-`   `// Adjust spacing values proportionally
+` `// Adjust spacing values proportionally
 
- }
+}
 
-` `// Final render
+` `// Final render
 
- doc = new jsPDF({ unit: "pt", format: "letter" });
+doc = new jsPDF({ unit: "pt", format: "letter" });
 
- finalY = renderPDF(doc, data, spacing);
+finalY = renderPDF(doc, data, spacing);
 
-` `// Write files
+` `// Write files
 
- const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
+const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
 
- fs.writeFileSync(path.join(outputDir, "person-name-resume.pdf"), pdfBuffer);
+fs.writeFileSync(path.join(outputDir, "person-name-resume.pdf"), pdfBuffer);
 
- const docxDoc = buildDocx(data, spacing);
+const docxDoc = buildDocx(data, spacing);
 
- const docxBuffer = await Packer.toBuffer(docxDoc);
+const docxBuffer = await Packer.toBuffer(docxDoc);
 
- fs.writeFileSync(path.join(outputDir, "person-name-resume.docx"), docxBuffer);
+fs.writeFileSync(path.join(outputDir, "person-name-resume.docx"), docxBuffer);
 
- const jsonData: ResumeData = { ...data, publications: [], spacing };
+const jsonData: ResumeData = { ...data, publications: [], spacing };
 
- fs.writeFileSync(path.join(outputDir, "resume-data.json"), JSON.stringify(jsonData, null, 2));
+fs.writeFileSync(path.join(outputDir, "resume-data.json"), JSON.stringify(jsonData, null, 2));
 
-` `console.log`(`"All files generated successfully!"`);`
+` `console.log`(`"All files generated successfully!"`);`
 
 }
 
@@ -578,111 +588,111 @@ main().catch(console.error);
 
 import { useState, useEffect } from "react";
 
-const PT_TO_PX = 96 / 72;
+const PT*TO*PX = 96 / 72;
 
-interface` `ResumeData` { `/*same interfaces as generation script*/`}`
+interface` `ResumeData`{`/*same interfaces as generation script*/`}`
 
-function` `SectionHeader`({`title`,`lineHeightPx` }: { `title`:`string`;`lineHeightPx`:`number`}) {`
+function` `SectionHeader`({`title`,`lineHeightPx`}: {`title`:`string`;`lineHeightPx`:`number`}) {`
 
-` `return`(`
+` `return`(`
 
-   `<`h2 style={{
+`<`h2 style={{
 
-     fontSize: "11pt",
+fontSize: "11pt",
 
-`     `fontWeight`:`700`,`
+` `fontWeight`:`700`,`
 
-`     `textTransform`:`"uppercase"`,`
+` `textTransform`:`"uppercase"`,`
 
-`     `letterSpacing`:`"0.5px"`,`
+` `letterSpacing`:`"0.5px"`,`
 
-     margin: 0,
+margin: 0,
 
-     padding: 0,
+padding: 0,
 
-`     `paddingBottom`:`"4px"`,`
+` `paddingBottom`:`"4px"`,`
 
-     marginBottom: `${lineHeightPx}px`,
+marginBottom: `${lineHeightPx}px`,
 
-`     `borderBottom`:`"1px solid #1a1a2e"`,`
+` `borderBottom`:`"1px solid \#1a1a2e"`,`
 
-`     `color`:`"#1a1a2e"`,`
+` `color`:`"#1a1a2e"`,`
 
-   }}`>`
+}}`>`
 
-     {title}
+{title}
 
-`   `</h2>
+` `</h2>
 
- );
+);
 
 }
 
 export` `default` `function` `ResumePage`() {`
 
- const [data, setData] = useState<ResumeData | null>(null);
+const [data, setData] = useState<ResumeData | null>(null);
 
- useEffect(() => {
+useEffect(() => {
 
-`   `const` basePath `=` `import.meta.env.BASE_URL`;`
+` `const`basePath`=` `import.meta.env.BASE_URL`;`
 
-`   `fetch`(```${basePath}`api/resume-data``)`
+` `fetch`(```${basePath}`api/resume-data``)`
 
-     .then((r) => r.json())
+.then((r) => r.json())
 
-     .then(setData);
+.then(setData);
 
- }, []);
+}, []);
 
- if (!data) return `<`p`>`Loading...`</`p`>`;
+if (!data) return `<`p`>`Loading...`</`p`>`;
 
- const sp = data.spacing;
+const sp = data.spacing;
 
- const sectionGapPx = sp.sectionGap * PT_TO_PX;
+const sectionGapPx = sp.sectionGap \* PT*TO*PX;
 
- const roleGapPx = sp.roleGap * PT_TO_PX;
+const roleGapPx = sp.roleGap \* PT*TO*PX;
 
- const bulletGapPx = sp.bulletGap * PT_TO_PX;
+const bulletGapPx = sp.bulletGap \* PT*TO*PX;
 
- const lineHeightPx = sp.lineHeight * PT_TO_PX;
+const lineHeightPx = sp.lineHeight \* PT*TO*PX;
 
- const bodyFontPx = sp.bodyFontSize * PT_TO_PX;
+const bodyFontPx = sp.bodyFontSize \* PT*TO*PX;
 
-` `return`(`
+` `return`(`
 
 ` ``<`div` `style=`{{`background`:`"#f0f0f0"`,`minHeight`:`"100vh"`}}``>`
 
-     `<`div style={{
+`<`div style={{
 
-`       `width`:`"816px"`,`// 8.5in at 96dpi
+` `width`:`"816px"`,`// 8.5in at 96dpi
 
-`       `minHeight`:`"1056px"`,`// 11in at 96dpi
+` `minHeight`:`"1056px"`,`// 11in at 96dpi
 
-       margin: "0 auto",
+margin: "0 auto",
 
-       background: "#fff",
+background: "#fff",
 
-`       `padding`:`"48px"`,`// 0.5in margins at 96dpi
+` `padding`:`"48px"`,`// 0.5in margins at 96dpi
 
-`       `fontFamily`:`"'Calibri', 'Arial', sans-serif"`,`
+` `fontFamily`:`"'Calibri', 'Arial', sans-serif"`,`
 
-       fontSize: `${bodyFontPx}px`,
+fontSize: `${bodyFontPx}px`,
 
-       lineHeight: `${lineHeightPx}px`,
+lineHeight: `${lineHeightPx}px`,
 
-     }}`>`
+}}`>`
 
-`       `{/*Header, summary, experience, skills, education*/`}`
+` `{/*Header, summary, experience, skills, education*/`}`
 
-`       `{/*Use SectionHeader with lineHeightPx for each section*/`}`
+` `{/*Use SectionHeader with lineHeightPx for each section*/`}`
 
-`       `{/*Use spacing values from sp for all gaps*/`}`
+` `{/*Use spacing values from sp for all gaps*/`}`
 
-     `</`div`>`
+`</`div`>`
 
-`   `</div>
+` `</div>
 
- );
+);
 
 }
 
@@ -690,9 +700,9 @@ export` `default` `function` `ResumePage`() {`
 
 import { Router } from "express";
 
-import` path `from` `"path"`;`
+import`path`from` `"path"`;`
 
-import` fs `from` `"fs"`;`
+import`fs`from` `"fs"`;`
 
 const router = Router();
 
@@ -700,57 +710,57 @@ const outputDir = path.resolve(import.meta.dirname, "..", "..", "..", "..", "out
 
 router.get("/download/pdf", (_req, res) => {
 
- const filePath = path.join(outputDir, "person-name-resume.pdf");
+const filePath = path.join(outputDir, "person-name-resume.pdf");
 
- if (!fs.existsSync(filePath)) {
+if (!fs.existsSync(filePath)) {
 
-`   `res.status`(`404`)`.json`({`error`:`"PDF not found. Run the generation script first."`});`
+` `res.status`(`404`)`.json`({`error`:`"PDF not found. Run the generation script first."`});`
 
-`   `return`;`
+` `return`;`
 
- }
+}
 
-` `res.setHeader`(`"Content-Disposition"`,`"attachment; filename=person-name-resume.pdf"`);`
+` `res.setHeader`(`"Content-Disposition"`,`"attachment; filename=person-name-resume.pdf"`);`
 
-` `res.setHeader`(`"Content-Type"`,`"application/pdf"`);`
+` `res.setHeader`(`"Content-Type"`,`"application/pdf"`);`
 
- res.sendFile(filePath);
+res.sendFile(filePath);
 
 });
 
 router.get("/download/docx", (_req, res) => {
 
- const filePath = path.join(outputDir, "person-name-resume.docx");
+const filePath = path.join(outputDir, "person-name-resume.docx");
 
- if (!fs.existsSync(filePath)) {
+if (!fs.existsSync(filePath)) {
 
-`   `res.status`(`404`)`.json`({`error`:`"DOCX not found. Run the generation script first."`});`
+` `res.status`(`404`)`.json`({`error`:`"DOCX not found. Run the generation script first."`});`
 
-`   `return`;`
+` `return`;`
 
- }
+}
 
-` `res.setHeader`(`"Content-Disposition"`,`"attachment; filename=person-name-resume.docx"`);`
+` `res.setHeader`(`"Content-Disposition"`,`"attachment; filename=person-name-resume.docx"`);`
 
-` `res.setHeader`(`"Content-Type"`,`"application/vnd.openxmlformats-officedocument.wordprocessingml.document"`);`
+` `res.setHeader`(`"Content-Type"`,`"application/vnd.openxmlformats-officedocument.wordprocessingml.document"`);`
 
- res.sendFile(filePath);
+res.sendFile(filePath);
 
 });
 
 router.get("/resume-data", (_req, res) => {
 
- const filePath = path.join(outputDir, "resume-data.json");
+const filePath = path.join(outputDir, "resume-data.json");
 
- if (!fs.existsSync(filePath)) {
+if (!fs.existsSync(filePath)) {
 
-`   `res.status`(`404`)`.json`({`error`:`"Resume data not found. Run the generation script first."`});`
+` `res.status`(`404`)`.json`({`error`:`"Resume data not found. Run the generation script first."`});`
 
-`   `return`;`
+` `return`;`
 
- }
+}
 
- res.json(JSON.parse(fs.readFileSync(filePath, "utf-8")));
+res.json(JSON.parse(fs.readFileSync(filePath, "utf-8")));
 
 });
 
@@ -758,8 +768,23 @@ export` `default`router;`
 
 ## Common Pitfalls
 
+| Problem | Cause | Fix |
+
+|---|---|---|
+
+| DOCX text is 10× too large | Used ptToTwip (×20) for TextRun.size | Use ptToHalfPt (×2) for font sizes |
+
+| PDF text overlaps horizontal rule | Used y += 4 after doc.line() | Use y += lineHeight after any rule |
+
+| Web section header line cuts through text | Border on a sibling `<div>`instead of the`<h2>`| Put borderBottom on the`<h2>` with paddingBottom |
+
+| Downloads fail in Replit preview iframe | Proxy blocks file downloads in iframe | Use target="_blank" on download links, or present files directly |
+
+| Web spacing doesn't match PDF | Hardcoded px values in CSS | Convert all pt values via PT_TO_PX = 96/72 |
+
 ## Dependencies
 
 - jspdf — PDF generation
 - docx — DOCX generation
+
 - tsx — TypeScript script runner (dev dependency)

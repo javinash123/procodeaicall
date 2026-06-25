@@ -8,7 +8,7 @@ Use `externalApi__brave` in `code_execution`.
 
 ## Allowed operations
 
-- `GET` `/res/v1/images/search` - Brave Image Search
+- `GET` `/res/v1/images/search/*?` - Brave Image Search
 
 Authorization is handled automatically by Replit. Do not pass an `Authorization` header.
 
@@ -103,7 +103,7 @@ for (const [index, item] of items.entries()) {
 
 ```javascript
 const result = await externalApi__brave({
-  path: '/res/v1/images/search',
+  path: '/res/v1/images/search/*?',
   method: 'GET',
   query: {},
 })

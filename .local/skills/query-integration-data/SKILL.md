@@ -211,9 +211,36 @@ const issue = await client.createIssue({
 console.log(`Created ${issue.issue?.identifier}: New feature request`);
 ```
 
+## Databricks
+
+When the user wants to connect to Databricks, use the `databricks-m2m` connector (not the plain `databricks` connector).
+
 ## Warehouse Data Exploration
 
 When querying data warehouses (BigQuery, Snowflake, Databricks), large schemas can make serial exploration slow (7-10s per query round-trip). Use the parallel subagent pattern to explore schemas faster.
+
+### CRITICAL: Warehouse queries are billed per byte scanned
+
+Warehouse targets (`bigquery`, `databricks`, `snowflake`) cost real money per query — a
+careless `SELECT *` over a fact table can cost tens of dollars and a dashboard that
+re-runs queries every few seconds can burn thousands of dollars per day. Before writing
+any warehouse query (via `executeSql` or `executeSql({target: "bigquery"})`) follow
+these rules:
+
+- **Project exact columns** — never `SELECT *` on wide tables.
+- **Always `LIMIT`** when exploring; `LIMIT 5`–`LIMIT 100` is plenty for a sample.
+- **Scope by partition / cluster** — add `WHERE event_date >= ...` (or the table's
+  clustering column) so the warehouse prunes data and you are billed for a tiny slice.
+- **Prefer pre-aggregated tables** (e.g. `_daily`, `_summary`) over raw event tables.
+- **Diff-only reads** for anything incremental — `WHERE updated_at > :last_seen` and
+  persist `last_seen` so subsequent queries only scan the delta.
+- **Cache repeated results locally** — if you run the same exploration query twice in
+  the same session, store the first result in a variable or `.agents/outputs/*.csv`
+  and reuse it instead of re-running the query.
+- **Don't power a data app from this skill** — if the user is building a dashboard,
+  report, or explorer, hand off to the `data-visualization` skill so the app's API
+  server can cache results (15-min TTL). The `query-integration-data` skill is for
+  answering questions in chat, not for powering a live UI.
 
 ### When to Use Parallel Exploration
 
@@ -240,6 +267,9 @@ const tables = await executeSql({ sqlQuery: `SELECT TABLE_SCHEMA, TABLE_NAME, RO
 const tables = await executeSql({ sqlQuery: `SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema NOT IN ('information_schema') ORDER BY table_schema, table_name`, target: "databricks" });
 ```
 
+`INFORMATION_SCHEMA.TABLES` is a metadata read and is essentially free. Sampling rows
+from the tables it returns is **not** free — see the next step.
+
 **Step 2: Group Tables** — Partition the table list into 2-4 clusters:
 
 - By schema/dataset name (e.g., `analytics.*`, `sales.*`, `marketing.*`)
@@ -261,8 +291,15 @@ Tables to explore:
 - analytics.conversions
 
 For each table:
-1. Run: SELECT column_name, data_type FROM \`project.dataset\`.INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'TABLE_NAME'
-2. Run: SELECT * FROM \`project.dataset.TABLE_NAME\` LIMIT 5
+1. Run: SELECT column_name, data_type, is_partitioning_column FROM \`project.dataset\`.INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'TABLE_NAME'
+2. Identify the partition / cluster column from step 1 (e.g. event_date, _PARTITIONTIME).
+3. Sample rows — project exact columns, scope by partition, and LIMIT.
+   NEVER \`SELECT *\` on a fact table on a billed warehouse — \`LIMIT 5\` does not
+   undo the bytes scanned by selecting every column.
+   Pattern: SELECT <subset of columns from step 1>
+            FROM \`project.dataset.TABLE_NAME\`
+            WHERE <partition_col> >= CURRENT_DATE() - 7
+            LIMIT 5
 
 Return your findings in this exact format:
 
@@ -289,20 +326,18 @@ Return your findings in this exact format:
 const group2 = await startAsyncSubagent({ /* same pattern, different tables */ });
 ```
 
-**Step 4: Synthesize and Query** — Wait for all subagents, then write the final query:
-
-```javascript
-await waitForBackgroundTasks();
-// Read subagent outputs, combine relevant tables/columns, write the final SQL query
-```
+**Step 4: Synthesize and Query** — Use the `wait_for_background_tasks` tool to wait for the schema-discovery subagents. Once they complete, read their outputs, combine the relevant tables/columns, and write the final SQL query.
 
 ### Dialect-Specific Notes
 
-| Dialect | Table Quoting | INFORMATION_SCHEMA Path | Sample Query |
-|---------|--------------|------------------------|--------------|
-| BigQuery | `` `project.dataset.table` `` | `` `project.dataset`.INFORMATION_SCHEMA.COLUMNS `` | `SELECT * FROM \`p.d.t\` LIMIT 5` |
-| Snowflake | `"DATABASE"."SCHEMA"."TABLE"` | `DATABASE.INFORMATION_SCHEMA.COLUMNS` | `SELECT * FROM "DB"."SCH"."TBL" LIMIT 5` |
-| Databricks | `` `catalog.schema.table` `` | `catalog.information_schema.columns` | `SELECT * FROM \`c.s.t\` LIMIT 5` |
+| Dialect | Table Quoting | INFORMATION_SCHEMA Path | Sample Query (project columns + partition + LIMIT) |
+|---------|--------------|------------------------|------------------------------------------------------|
+| BigQuery | `` `project.dataset.table` `` | `` `project.dataset`.INFORMATION_SCHEMA.COLUMNS `` | `` SELECT col_a, col_b FROM `p.d.t` WHERE event_date >= CURRENT_DATE() - 7 LIMIT 5 `` |
+| Snowflake | `"DATABASE"."SCHEMA"."TABLE"` | `DATABASE.INFORMATION_SCHEMA.COLUMNS` | `SELECT col_a, col_b FROM "DB"."SCH"."TBL" WHERE event_date >= DATEADD(day, -7, CURRENT_DATE) LIMIT 5` |
+| Databricks | `` `catalog.schema.table` `` | `catalog.information_schema.columns` | `` SELECT col_a, col_b FROM `c.s.t` WHERE event_date >= current_date() - INTERVAL 7 DAY LIMIT 5 `` |
+
+**Do NOT** use `SELECT *` in the sample query column above. `LIMIT 5` does not undo
+the cost of reading every column for the matched rows on a billed warehouse.
 
 ### Tips
 

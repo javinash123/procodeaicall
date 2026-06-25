@@ -9,7 +9,7 @@ async function seed() {
     const adminExists = await UserModel.findOne({ email: "admin@nijvox.com" });
     
     if (!adminExists) {
-      const hashedPassword = await bcryptjs.hash("admin123", 10);
+      const hashedPassword = await bcryptjs.hash("Admin@123#", 10);
       const admin = await UserModel.create({
         email: "admin@nijvox.com",
         password: hashedPassword,
@@ -29,9 +29,11 @@ async function seed() {
           localPresenceDialing: true,
         },
       });
-      console.log("✓ Admin user created: admin@nijvox.com / admin123");
+      console.log("✓ Admin user created: admin@nijvox.com / Admin@123#");
     } else {
-      console.log("✓ Admin user already exists");
+      const hashedPassword = await bcryptjs.hash("Admin@123#", 10);
+      await UserModel.updateOne({ email: "admin@nijvox.com" }, { $set: { password: hashedPassword } });
+      console.log("✓ Admin password updated: admin@nijvox.com / Admin@123#");
     }
 
     const testUserExists = await UserModel.findOne({ email: "test@example.com" });

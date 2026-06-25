@@ -91,12 +91,62 @@ function replaceScriptVariables(text: string, lead: LeadData): string {
   });
 }
 
+/**
+ * Generate a short opening greeting for when the call connects.
+ * Extracts the first sentence of the campaign script, or generates one.
+ * Keeps it to a single natural sentence — no monologue.
+ */
+export async function generateGreeting(campaignData: CampaignData): Promise<string> {
+  const { name, goal, ai_generated_script, additionalContext } = campaignData;
+
+  // Try to use the first sentence of the campaign script as the greeting
+  const script = (ai_generated_script || "").trim();
+  if (script) {
+    // Take text up to the first sentence-ending punctuation
+    const match = script.match(/^(.{20,150}?[.!?])/);
+    if (match) {
+      // Replace {name}/{company} placeholders with neutral alternatives
+      return match[1]
+        .replace(/\{name\}/gi, "there")
+        .replace(/\{company\}/gi, "your company")
+        .trim();
+    }
+  }
+
+  // Fallback: generate a greeting via GPT
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content: "You are an AI phone agent. Write ONE short, natural opening sentence to greet the person who just answered the phone. Maximum 15 words. No placeholders. Just the greeting text, nothing else.",
+      },
+      {
+        role: "user",
+        content: `Campaign: ${name || "Sales"}\nGoal: ${goal}\nContext: ${additionalContext || ""}`,
+      },
+    ],
+    max_tokens: 50,
+    temperature: 0.6,
+  });
+
+  return (
+    response.choices[0]?.message?.content?.trim() ||
+    `Hello! I'm calling about an exciting opportunity. Is this a good time?`
+  );
+}
+
+/**
+ * Generate a conversational AI reply during a live phone call.
+ * Uses proper system/user/assistant chat format.
+ * Strictly 1–2 sentences — no monologues.
+ */
 export async function generateAIResponse(
   conversationHistory: ConversationMessage[],
   userInput: string,
   campaignData: CampaignData
 ): Promise<AIResponse> {
-  const { goal, additionalContext, ai_generated_script, knowledge_base, knowledgeBaseText, leadData } = campaignData;
+  const { name, goal, additionalContext, ai_generated_script, knowledge_base, knowledgeBaseText, leadData } = campaignData;
 
   const resolvedScript = ai_generated_script && leadData
     ? replaceScriptVariables(ai_generated_script, leadData)
@@ -104,50 +154,41 @@ export async function generateAIResponse(
 
   const knowledgeBaseContent = knowledge_base || knowledgeBaseText || "";
 
-  const prompt = `
-You are a professional AI ${goal === "Customer Support" ? "support" : "sales"} agent.
+  const systemPrompt = `You are a professional AI ${goal === "Customer Support" ? "support" : "sales"} agent on a LIVE phone call.
 
-Business Context:
-${additionalContext || ""}
+${name ? `Campaign: ${name}` : ""}
+Goal: ${goal}
+${additionalContext ? `About us: ${additionalContext}` : ""}
+${resolvedScript ? `Call script (use as a guide, not word-for-word):\n${resolvedScript}` : ""}
+${knowledgeBaseContent ? `Knowledge base:\n${knowledgeBaseContent.slice(0, 2000)}` : ""}
 
-Campaign Goal:
-${goal}
+STRICT PHONE CALL RULES — follow these exactly:
+1. This is a LIVE PHONE CALL. Reply like a real human agent speaking out loud.
+2. Maximum 2 SHORT sentences per reply. Never write more.
+3. End every reply with ONE natural question to keep the conversation going.
+4. Never read out the full script — have a real back-and-forth conversation.
+5. Never repeat something you already said earlier in the conversation.
+6. No bullet points, lists, bold text, or formatting — only natural spoken words.
+7. If they say they're busy, politely ask when you can call back.
+8. If they ask something outside the script, answer helpfully and briefly.`;
 
-IMPORTANT RULES:
-- Do NOT repeat introduction again if conversation has started
-- Do NOT repeat the same question again
-- Avoid asking identical questions multiple times
-- Keep responses short (1–2 lines max)
-- Be natural and conversational
-- Always move conversation forward
-- Handle objections smartly
-- If unsure, give a helpful answer without saying "not in knowledge base"
-- Your goal is to qualify the lead and move towards booking a call/demo/visit
-
-Script:
-${resolvedScript}
-
-Knowledge Base:
-${knowledgeBaseContent.slice(0, 3000)}
-
-Conversation so far:
-${JSON.stringify(conversationHistory)}
-
-User said:
-"${userInput}"
-
-Respond like a real human agent.
-`;
+  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+    { role: "system", content: systemPrompt },
+    ...conversationHistory.map(m => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    })),
+    { role: "user", content: userInput },
+  ];
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [{ role: "user", content: prompt }],
+    model: "gpt-4o-mini", // 3-5x faster than gpt-4o, ideal for short conversational replies
+    messages,
     temperature: 0.7,
-    max_tokens: 300,
+    max_tokens: 80, // ~1–2 short spoken sentences
   });
 
   const reply = response.choices[0]?.message?.content?.trim() || "";
-
   return { reply };
 }
 

@@ -110,8 +110,8 @@ Always follow these guidelines when building a full-stack JavaScript application
 
 Before writing code, identify whether any reference below applies to the task. If it does, read it first.
 
-- `references/hover_and_elevation.md` - Use this reference when adding or changing hover/active/toggle interaction behavior, elevation effects, or overflow-sensitive interactive styling.
-- `references/shadcn_component_rules.md` - Use this reference when building or modifying UI with Shadcn components (especially Button, Card, Badge, Avatar, and Textarea).
-- `references/layout_and_spacing.md` - Use this reference when structuring page layouts, sections, spacing rhythm, and component alignment.
-- `references/sidebar_rules.md` - Use this reference when building or modifying a sidebar.
-- `references/visual_style_and_contrast.md` - Use this reference when choosing contrast, borders, shadows, pane/panel treatment, and hero image presentation.
+- `.local/skills/fullstack-js/references/hover_and_elevation.md` - Use this reference when adding or changing hover/active/toggle interaction behavior, elevation effects, or overflow-sensitive interactive styling.
+- `.local/skills/fullstack-js/references/shadcn_component_rules.md` - Use this reference when building or modifying UI with Shadcn components (especially Button, Card, Badge, Avatar, and Textarea).
+- `.local/skills/fullstack-js/references/layout_and_spacing.md` - Use this reference when structuring page layouts, sections, spacing rhythm, and component alignment.
+- `.local/skills/fullstack-js/references/sidebar_rules.md` - Use this reference when building or modifying a sidebar.
+- `.local/skills/fullstack-js/references/visual_style_and_contrast.md` - Use this reference when choosing contrast, borders, shadows, pane/panel treatment, and hero image presentation.

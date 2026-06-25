@@ -35,6 +35,7 @@ service_configs:
           to: /index.html
 
 initial_open_files:
+  - src/main.tsx
   - src/App.tsx
   - src/index.css
   - /lib/api-spec/openapi.yaml

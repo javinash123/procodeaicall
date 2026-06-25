@@ -24,6 +24,7 @@ service_configs:
           to: /index.html
 
 initial_open_files:
+  - src/main.tsx
   - src/App.tsx
   - src/index.css
   - package.json
@@ -37,3 +38,4 @@ initial_open_files:
 
 additional_skills:
   - database
+  - /pnpm-workspace/references/openapi.md

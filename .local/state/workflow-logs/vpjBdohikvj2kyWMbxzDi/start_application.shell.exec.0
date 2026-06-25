@@ -1,0 +1,10 @@
+[1G[0K⠙[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K⠙[1G[0KMongoDB connected successfully
+9:12:03 AM [ws] WebSocket server ready on path /stream
+9:12:03 AM [ws] Exotel voicebot stream ready on path /exotel-stream
+9:12:04 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+9:12:39 AM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}

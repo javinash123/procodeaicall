@@ -3,7 +3,10 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
     "noEmit": true,
+    "lib": ["es2022", "dom", "dom.iterable"],
     "jsx": "preserve",
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,

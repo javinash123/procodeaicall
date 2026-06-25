@@ -35,8 +35,8 @@ There are three types of integrations, and they represent different stages of a 
 connector (not_setup)
     → user completes OAuth via proposeIntegration
     → connection (not_added)
-        → addIntegration        ← wires the connection to this project, adds dependencies
-        → proposeIntegration    ← establishes the OAuth token for this Repl
+        → addIntegration        ← code-side wiring (npm packages, scaffolds, project registration)
+        → proposeIntegration    ← platform-side binding (registers this Repl with connectors so the credential proxy will serve secrets)
         → now it is a functioning connection (added + authorized, ready to use)
 
 blueprint (not_installed)
@@ -53,10 +53,11 @@ blueprint (not_installed)
 
 ### Connections
 
-- A connector that has **already been authorized** (OAuth completed) on the user's Replit account, by them or a teammate
-- Status: `not_added` (authorized but not wired to this project) or `added` (active in this project)
-- Use `addIntegration` first to wire the connection to this project, then call `proposeIntegration` to establish the OAuth token for this Repl. Both steps are required on first setup. The token may also expire later — see Common Pitfalls.
-- When `searchIntegrations` returns a `connection` for a service, it means the user has already completed OAuth at the account level — but you still need `addIntegration` to wire the project, then `proposeIntegration` to establish the OAuth token for this Repl
+- A connector that has **already been authorized** at the account level
+- Status: `not_added` (authorized at account level but not bound to this Repl) or `added` (active in this Repl)
+- Both `addIntegration` AND `proposeIntegration` are required on first setup — they do orthogonal things:
+  - `addIntegration` does code-side wiring (npm install, scaffolds, project registration). It does NOT touch the platform's connection-state backend.
+  - `proposeIntegration` does platform-side binding (registers this Repl with connectors-v2 as a permitted consumer). Without it the credential proxy at `connectors.replit.com/api/v2/connection` returns nothing for this Repl, even though the underlying credentials exist at the account level.
 - Example ID: `connection:conn_linear_01MG99PAJR6MQ5...`
 
 NOTE: You must not delay calling proposeIntegration even if it waits for the user. You will be blocked and not have access to test the feature you build because you don't have access to real data, real APIs, etc, which is even more inefficient than reaching out to the user as soon as you know you need the integration to get accepted.
@@ -127,7 +128,7 @@ Add a blueprint or connection to the current project. **Do not use for connector
 
 - `success`: boolean
 - `requiresConfirmation`: boolean — if True, call `proposeIntegration` instead
-- `connectionAlreadyAdded`: boolean — if True, the connection is already wired to this project; skip addIntegration but still call proposeIntegration to ensure the OAuth token is valid
+- `connectionAlreadyAdded`: boolean — if True, the connection is already wired to this project; skip addIntegration but still call proposeIntegration to ensure the platform binding is current (tokens expire, bindings can be stale)
 - `renderedContent`: same XML blob as `viewIntegration`
 - `observations`: list of stringified observation objects (verbose; contains npm install output)
 
@@ -160,7 +161,9 @@ Propose a connector to the user. This is a **control-flow operation** — it exi
 
 **Use for:**
 
-- Connectors with `status: not_setup` (user needs to go through OAuth)
+- Connectors with `status: not_setup` (drives OAuth + binding)
+- Connections with `status: not_added` after calling `addIntegration` (drives the binding only)
+- Connections with `status: added` if runtime fails with "not connected" (re-binds / refreshes)
 - Blueprints where `addIntegration` returns `requiresConfirmation: True`
 
 ```javascript
@@ -188,11 +191,15 @@ After `addIntegration` or `viewIntegration`, the `renderedContent` contains a co
 
 ---
 
+## Databricks
+
+When the user wants to connect to Databricks, use the `databricks-m2m` connector (not the plain `databricks` connector). The `databricks-m2m` connector provides machine-to-machine access and works in all contexts. Inside a Databricks App, prefer the `databricks` (U2M) connector when available — see the `databricks-app` skill for details.
+
 ## Common Pitfalls
 
 - **Not logging results:** `searchIntegrations` and all other functions return silently unless you `console.log()` the output
 - **Calling addIntegration on a connector:** Will fail or behave unexpectedly. Check `integrationType` first
-- **Asking for API keys when a connection exists:** If `searchIntegrations` returns a `connection`, the user is already authenticated at the account level — use `addIntegration` to wire the project, then `proposeIntegration` to establish the OAuth token for this Repl. Both steps are always required
+- **Asking for API keys when a connection exists:** If `searchIntegrations` returns a `connection`, the user is already authenticated at the account level — use `addIntegration` to wire the project, then `proposeIntegration` to bind this Repl to the connection. Both steps are always required.
 - **Caching the client:** The boilerplate snippet is explicit about this. Tokens expire. Always call `getUncachable___Client()` fresh
 - **Package install side effects:** `addIntegration` runs package installation (e.g. npm, uv), which can crash a running dev server. Restart the workflow after adding integrations
 - **Connection added but runtime still fails:** If `addIntegration` succeeds for a `connection` but the app throws "not connected" at runtime, the token may be expired or missing. Call `proposeIntegration` with the same connection ID to trigger re-authorization, then restart the workflow

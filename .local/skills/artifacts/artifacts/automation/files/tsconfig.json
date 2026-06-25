@@ -11,6 +11,8 @@
     "**/*.test.ts"
   ],
   "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",

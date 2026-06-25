@@ -30,6 +30,8 @@ const hounddog =
 
 Do not fail the whole scan because one scanner errors.
 
+If a package install fails with HTTP 403 from `package-firewall.replit.local`, treat it as a likely security block and do not retry the same install.
+
 ## Minimal Response Shape
 
 - `runDependencyAudit()`
@@ -39,37 +41,6 @@ Do not fail the whole scan because one scanner errors.
   - `results[]`: `checkId`, `message`, `severity`, `fingerprint`, `location`
 - `runHoundDogScan()`
   - `vulnerabilities[]`: `hash`, `ruleIds`, `message`, `severity`, `location`, `privacyViolations`, `remediation*`
-
-## Reporting Findings
-
-After analysis is complete, call `reportVulnerabilities` with the file paths of all
-vulnerability files in `.local/potential_vulnerabilities/`. Each file **must** use YAML
-front-matter with `title`, `level`, and optionally `file_ranges`:
-
-```yaml
----
-title: "Hardcoded database credentials"
-level: critical
-file_ranges:
-  - filepath: "config/database.py"
-    range_start: 1
-    range_end: 2
----
-Description of the vulnerability.
-```
-
-Call the callback via code execution:
-
-```javascript
-await reportVulnerabilities([
-  { filePath: ".local/potential_vulnerabilities/hardcoded-secrets-database.md" },
-  { filePath: ".local/potential_vulnerabilities/sql-injection-login.md" },
-]);
-```
-
-This emits a `ProposedVulnerabilitiesEventData` event for the UI. **Call this after
-writing vulnerability files** — writing the files alone is not sufficient to surface
-findings to the user. If the scan finds no vulnerabilities, skip this callback.
 
 ## Output Expectations
 

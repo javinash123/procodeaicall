@@ -32,6 +32,7 @@ Read the codebase, `replit.md`, and any existing `threat_model.md`. Identify:
 - What the application does and who its users are
 - The tech stack (language, framework, database, hosting)
 - External services and integrations (payment providers, auth providers, APIs, object storage)
+- A small amount of reusable scan context: likely production entry points, highest-risk code areas, major public/authenticated/admin boundaries, and whether major directories are production, shared, or dev-only
 
 ### Step 2: Enumerate Assets
 
@@ -147,6 +148,18 @@ What is worth protecting in this project. Describe each asset category and why i
 
 Where data crosses between different trust levels. Describe each boundary and what it separates.
 
+## Scan Anchors
+
+A short list of reusable pointers for future security analysis:
+- Production entry points, preferably with concrete file or directory paths when known
+- Highest-risk code areas, preferably with concrete packages, route files, or service directories when known
+- Public vs authenticated vs admin surfaces
+- Dev-only areas that should usually be ignored unless proven reachable in production
+
+Keep this section brief. It should store just enough concrete context to speed up future security scans without turning the threat model into a full repo inventory.
+
+If project context already exists in `replit.md` (project README) or `.agents/memory/` (agent memory), don't repeat the same information.
+
 ## Threat Categories
 
 For each STRIDE category that is relevant to this project, write a short narrative:
@@ -203,7 +216,7 @@ Stripe's webhook signature mechanism.
 
 Product prices and order totals must be calculated server-side. The client sends a cart
 (product IDs and quantities) but the server must look up current prices from the database.
-Accepting client-supplied prices would allow purchasing items for arbitrary amounts.
+Accepting client-supplied prices would allow purchasing items for arbitrary amount(s).
 
 ### Information Disclosure
 
@@ -224,3 +237,4 @@ injection. File upload endpoints (product images) must validate file type and si
 - Write declaratively. Describe what the system is, what its threats are, and what guarantees it requires.
 - Omit irrelevant categories. If the project has no file uploads, do not write about file upload threats.
 - Keep it concise. This is a reference document, not an essay. A smart agent will reason from it.
+- Keep `## Scan Anchors` brief. It should speed up future security scans without turning the threat model into a repo inventory.

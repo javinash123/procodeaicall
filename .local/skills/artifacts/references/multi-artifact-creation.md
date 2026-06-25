@@ -49,7 +49,19 @@ Batch independent operations **within the same artifact** into parallel tool cal
 
 When building subsequent artifacts, carry over brand context from earlier artifacts — colors, fonts, theme, branding — so all artifacts feel visually cohesive. For example, if delegating a video to a design subagent, pass the website's theme/colors so the video matches.
 
-**Mobile (Expo) artifacts specifically:** After the web artifact's frontend is built, read its `src/index.css` to extract the design tokens (colors, fonts, radius), then sync them into the expo artifact's `constants/colors.ts`, `app.json`, and font setup before building the mobile UI. The expo skill's `design_and_aesthetics.md` reference has the full process.
+**Design tokens:** After the first artifact's frontend is built, read its `src/index.css` (or `constants/colors.ts` for Expo) to extract colors, fonts, and radius, then sync them into the new artifact's equivalent config files before building its UI. The expo skill's `design_and_aesthetics.md` reference has the full process.
+
+**Image assets:** Before building a new artifact that represents the same product, copy brand and product images from the existing artifact. Do not let the new artifact use generated placeholders when real images already exist:
+
+```sh
+# From web → mobile
+cp -r artifacts/<web-name>/src/assets/* artifacts/<mobile-name>/assets/images/
+
+# From mobile → web
+cp -r artifacts/<mobile-name>/assets/* artifacts/<web-name>/src/assets/
+```
+
+Each artifact owns its own asset directory because Metro (Expo's bundler) cannot resolve files outside the artifact root without extra `watchFolders` config — so copying is required rather than sharing. Reference copied images in each artifact using its own `@/` alias.
 
 ## Design Subagent Limitations
 

@@ -1,5 +1,19 @@
+/**
+ * Platform contract file — do not restructure.
+ *
+ * This file is part of the contract between the slides artifact and
+ * the surrounding workspace tooling (preview, thumbnails, exports).
+ * Reorganizing it, swapping the router, or changing the structure
+ * of `AllSlides` can quietly break that tooling even when the page
+ * still looks correct in the preview.
+ *
+ * Agents: see the slides skill `<workspace_contract>` for the full
+ * rules, and `references/visual_qa.md` → "Platform contract sanity
+ * check" if this file has been hand-edited and needs repair.
+ */
+
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 
 import { slides } from "@/slideLoader";
 
@@ -11,15 +25,15 @@ function getSlideIndex(pathname: string): number {
 }
 
 function SlideEditor() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const currentIndex = getSlideIndex(location.pathname);
+  const [location, navigate] = useLocation();
+  const currentIndex = getSlideIndex(location);
 
   // In the workspace, the slide iframe is nested inside another iframe,
   // so window.parent !== window.parent.parent. In the deployed SlideViewer,
   // the parent is the top-level window, so they're equal. Disable local
   // navigation only in the workspace — the parent owns it there.
   const navigationDisabledRef = useRef(window.parent !== window.parent.parent);
+  const touchHandledRefStable = useRef(false);
 
   useEffect(() => {
     if (currentIndex === -1) return;
@@ -40,20 +54,24 @@ function SlideEditor() {
       }
     };
 
-    // HTML spec "interactive content" — clicks on these elements (or their
-    // descendants) should be handled by the element itself, not advance.
     const INTERACTIVE =
-      "a,button,video,audio,input,select,textarea,details,summary,iframe," +
+      "a,button,video,audio,input,select,textarea,details,summary,iframe,svg,canvas," +
       '[role="button"],[contenteditable="true"]';
 
+    const isInteractive = (target: EventTarget | null) =>
+      (target as HTMLElement | null)?.closest?.(INTERACTIVE);
+
+    const touchHandledRef = touchHandledRefStable;
+
     const onClick = (event: MouseEvent) => {
+      if (touchHandledRef.current) {
+        touchHandledRef.current = false;
+        return;
+      }
       if (event.button !== 0 || event.metaKey || event.ctrlKey) return;
-      const target = event.target as HTMLElement | null;
-      if (target?.closest?.(INTERACTIVE)) return;
+      if (isInteractive(event.target)) return;
 
       if (navigationDisabledRef.current) {
-        // In the workspace the parent presenter owns navigation, so
-        // notify it via postMessage instead of navigating locally.
         window.parent.postMessage({ type: "advanceSlide" }, "*");
         return;
       }
@@ -63,11 +81,46 @@ function SlideEditor() {
       }
     };
 
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchTarget: EventTarget | null = null;
+
+    const onTouchStart = (event: TouchEvent) => {
+      touchHandledRef.current = false;
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+      touchTarget = event.target;
+    };
+
+    const onTouchEnd = (event: TouchEvent) => {
+      const dx = event.changedTouches[0].clientX - touchStartX;
+      const dy = event.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) >= 10 || Math.abs(dy) >= 10) return;
+      if (isInteractive(touchTarget)) return;
+      touchHandledRef.current = true;
+
+      if (navigationDisabledRef.current) {
+        window.parent.postMessage({ type: "advanceSlide" }, "*");
+        return;
+      }
+
+      const fraction = touchStartX / window.innerWidth;
+      if (fraction < 0.4 && currentIndex > 0) {
+        navigate(`/slide${slides[currentIndex - 1].position}`);
+      } else if (fraction >= 0.4 && currentIndex < slides.length - 1) {
+        navigate(`/slide${slides[currentIndex + 1].position}`);
+      }
+    };
+
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("click", onClick);
+    window.addEventListener("touchstart", onTouchStart);
+    window.addEventListener("touchend", onTouchEnd);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("click", onClick);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
     };
   }, [currentIndex, navigate]);
 
@@ -85,6 +138,10 @@ function SlideEditor() {
   );
 }
 
+// Do not rewrite this component. Each slide must remain wrapped in
+// `<div className="slide">` sized 1920×1080 — the class name and
+// dimensions are part of the platform contract. See the file-level
+// banner above for context.
 function AllSlides() {
   return (
     <div className="bg-black">
@@ -154,22 +211,21 @@ function SlideViewer() {
 }
 
 export default function App() {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [location, navigate] = useLocation();
 
   // DO NOT edit this useEffect - redirects unknown routes to the first slide.
   // The "/" and "/allslides" routes are handled separately below.
   useEffect(() => {
     if (
-      location.pathname !== "/" &&
-      location.pathname !== "/allslides" &&
-      getSlideIndex(location.pathname) === -1
+      location !== "/" &&
+      location !== "/allslides" &&
+      getSlideIndex(location) === -1
     ) {
       if (slides.length > 0) {
         navigate(`/slide${slides[0].position}`, { replace: true });
       }
     }
-  }, [location.pathname, navigate]);
+  }, [location, navigate]);
 
   // DO NOT edit this useEffect - allows the parent frame to navigate
   // between slides via postMessage so it can avoid changing the iframe
@@ -189,7 +245,7 @@ export default function App() {
     return () => window.removeEventListener("message", onMessage);
   }, [navigate]);
 
-  if (location.pathname === "/") return <SlideViewer />;
-  if (location.pathname === "/allslides") return <AllSlides />;
+  if (location === "/") return <SlideViewer />;
+  if (location === "/allslides") return <AllSlides />;
   return <SlideEditor />;
 }

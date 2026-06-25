@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "g8-36E2z0lTphZilngh0T"
+uri = "file://nijvox-production.zip"
+type = "unspecified"
+title = "nijvox-production.zip — Latest Build (5.3 MB)"

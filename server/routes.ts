@@ -9,6 +9,7 @@ import path from "path";
 import fs from "fs";
 import { generateCallScript, testOpenAI, generateAIResponse } from "./openaiService";
 import { makeExotelCall } from "./exotelService";
+import { phoneCallMap, callSidMap, normalizePhone } from "./callMap";
 import { extractTextFromFile } from "./textExtractor";
 import {
   insertUserSchema,
@@ -73,6 +74,11 @@ declare module "express-session" {
 export async function registerRoutes(server: Server, app: Express): Promise<void> {
   // Connect to MongoDB
   await connectDB();
+
+  // Health check — used by load balancers and uptime monitors
+  app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
 
   // Session middleware MUST be registered BEFORE routes
   app.use(
@@ -452,26 +458,54 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     }
   });
 
-  // Quick test to trigger an Exotel call to a hardcoded number
+  // Quick test to trigger an Exotel call — accepts ?phone=xxx&campaignId=yyy
   app.get("/test-call", async (req, res) => {
-    const phone = (req.query.phone as string) || "+917828288001";
+    const phone      = (req.query.phone      as string) || "+917828288001";
+    const campaignId = (req.query.campaignId as string) || undefined;
+
     const result = await makeExotelCall(phone);
+
+    if (result.success && campaignId) {
+      const TTL = 10 * 60 * 1000; // 10 min auto-cleanup
+
+      // Primary: callSid → campaignId (exact match, most reliable)
+      if (result.callSid) {
+        callSidMap.set(result.callSid, campaignId);
+        setTimeout(() => callSidMap.delete(result.callSid!), TTL);
+        console.log(`[test-call] callSidMap: ${result.callSid} → ${campaignId}`);
+      }
+
+      // Fallback: phone → campaignId
+      const phoneKey = normalizePhone(phone);
+      phoneCallMap.set(phoneKey, campaignId);
+      setTimeout(() => phoneCallMap.delete(phoneKey), TTL);
+      console.log(`[test-call] phoneCallMap: ${phoneKey} → ${campaignId}`);
+    }
+
     if (result.success) {
-      res.send(`Call triggered to ${phone}. Check your phone!`);
+      res.send(`Call triggered to ${phone} with campaign=${campaignId || "default"}. Check your phone!`);
     } else {
       res.status(500).send(`Failed to trigger call: ${result.error}`);
     }
   });
 
+  // Exotel fetches this when the customer answers (via the Exotel ExoML app 1213707).
+  // Returns a bidirectional Stream to our voicebot WebSocket.
   app.get("/exotel/voice", (req, res) => {
     res.set("Content-Type", "text/xml");
 
-    res.send(`
-      <Response>
-        <Play>https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg</Play>
-        <Hangup/>
-      </Response>
-    `);
+    const publicWss = (process.env.PUBLIC_URL || "https://nijvox.com")
+      .replace(/^https?:\/\//, "wss://");
+
+    const streamUrl = `${publicWss}/exotel-stream`;
+    console.log(`[exotel/voice] returning Stream → ${streamUrl}`);
+
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Connect>
+    <Stream url="${streamUrl}" bidirectional="true" />
+  </Connect>
+</Response>`);
   });
 
   // ==================== EXOTEL WEBHOOK ====================

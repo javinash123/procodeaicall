@@ -3,6 +3,11 @@ name: stripe
 description: Guidelines for using Stripe to integrate payments in mobile apps and any subsequent CRUD operations related to any Stripe entities
 ---
 
+## Read the monetization skill first
+
+Before using anything in this skill, read the `monetization` skill and follow its routing instructions. It is the single source of truth for choosing a payment provider on Replit. Only continue with this Stripe skill once the monetization skill has confirmed that Stripe is the right provider (either because the user explicitly named Stripe, the project already has Stripe wired up, or the routing question resolved to Stripe).
+
+
 ## Introduction
 
 Replit offers a native integration with Stripe that allows users to implement payments in their applications

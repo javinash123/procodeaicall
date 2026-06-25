@@ -35,6 +35,8 @@ Use this skill when you need to:
 
 If confused about package installation in Nix or language package managers, use web search.
 
+If a package install fails with HTTP 403 from `package-firewall.replit.local`, treat it as a likely security block and do not retry the same install.
+
 **After installing a module:**
 
 - Update `.gitignore` with the language's standard ignore patterns
