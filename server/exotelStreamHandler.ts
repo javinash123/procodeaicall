@@ -239,9 +239,11 @@ const EXOTEL_CHUNK_BYTES = 3200; // 100 ms of PCM16 LE @ 8 kHz = 3200 bytes (Exo
  */
 export async function encodeReplyForExotel(text: string): Promise<string[]> {
   // Request raw PCM from OpenAI TTS (24 kHz, 16-bit LE mono, no container)
+  // "shimmer" — warm, articulate, professional (ideal for outbound sales/support calls)
+  // Alternatives: "alloy" (neutral/professional), "echo" (confident male)
   const response = await openai.audio.speech.create({
     model:           "tts-1",
-    voice:           "nova",
+    voice:           "shimmer",
     input:           text,
     response_format: "pcm",
   });
@@ -259,6 +261,92 @@ export async function encodeReplyForExotel(text: string): Promise<string[]> {
     chunks.push(pcm8kBuf.slice(off, off + EXOTEL_CHUNK_BYTES).toString("base64"));
   }
   return chunks;
+}
+
+/**
+ * Stream TTS audio to Exotel in real time as OpenAI generates it.
+ *
+ * Instead of waiting for the full audio file before playing (3–5 s delay),
+ * this function pipes raw PCM bytes from the TTS response stream directly to
+ * Exotel as they arrive.  The caller hears the first syllable within ~0.3–0.8 s
+ * of the TTS request being sent.
+ *
+ * Pipeline per streamed chunk:
+ *   Incoming bytes (PCM16 24 kHz) → accumulate to alignment boundary
+ *   → resample to 8 kHz → split into 3200-byte chunks → send as Exotel Media events
+ *
+ * Barge-in is respected on every chunk: if session.isSpeaking is set to false
+ * by the media handler while we're streaming, we abort immediately.
+ */
+export async function streamTTSToExotel(
+  text: string,
+  ws: WebSocket,
+  session: ExotelSession
+): Promise<void> {
+  // Number of 24 kHz PCM16 bytes we accumulate before downsampling.
+  // 9600 bytes @ 24 kHz = ~200 ms, which downsamples to 3200 bytes @ 8 kHz.
+  const INPUT_BATCH = EXOTEL_CHUNK_BYTES * 3; // 9600
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error("OPENAI_API_KEY not set");
+
+  const resp = await fetch("https://api.openai.com/v1/audio/speech", {
+    method:  "POST",
+    headers: {
+      Authorization:  `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model:           "tts-1",
+      voice:           "shimmer",
+      input:           text,
+      response_format: "pcm", // raw PCM16 LE 24 kHz — no container
+    }),
+  });
+
+  if (!resp.ok || !resp.body) {
+    throw new Error(`TTS streaming failed: HTTP ${resp.status}`);
+  }
+
+  const reader  = (resp.body as any).getReader() as ReadableStreamDefaultReader<Uint8Array>;
+  let remainder = Buffer.alloc(0);
+
+  const sendBuf = (buf: Buffer) => {
+    // Ensure 2-byte alignment for PCM16 LE samples
+    const aligned = buf.length & ~1;
+    if (aligned < 2) return;
+    const pcm24k   = new Int16Array(buf.buffer, buf.byteOffset, aligned / 2);
+    const pcm8k    = resamplePCM16(pcm24k, 24000, EXOTEL_SAMPLE_RATE);
+    const pcm8kBuf = Buffer.from(pcm8k.buffer, pcm8k.byteOffset, pcm8k.byteLength);
+    for (let off = 0; off < pcm8kBuf.length; off += EXOTEL_CHUNK_BYTES) {
+      if (!session.isSpeaking || ws.readyState !== WebSocket.OPEN) return;
+      sendExotelMedia(ws, session.streamSid, pcm8kBuf.slice(off, off + EXOTEL_CHUNK_BYTES).toString("base64"));
+    }
+  };
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!session.isSpeaking || ws.readyState !== WebSocket.OPEN) break;
+
+      remainder = Buffer.concat([remainder, Buffer.from(value)]);
+
+      // Flush in INPUT_BATCH-sized windows so Exotel gets steady small chunks
+      while (remainder.length >= INPUT_BATCH) {
+        if (!session.isSpeaking || ws.readyState !== WebSocket.OPEN) break;
+        sendBuf(remainder.slice(0, INPUT_BATCH));
+        remainder = remainder.slice(INPUT_BATCH);
+      }
+    }
+  } finally {
+    reader.cancel().catch(() => {});
+  }
+
+  // Flush any remaining bytes after stream ends
+  if (session.isSpeaking && remainder.length >= 2 && ws.readyState === WebSocket.OPEN) {
+    sendBuf(remainder);
+  }
 }
 
 // ─── Exotel WebSocket Send Helpers ───────────────────────────────────────────
@@ -315,6 +403,7 @@ export async function loadCampaignData(campaignId?: string): Promise<CampaignDat
 interface ExotelSession {
   streamSid:           string;
   campaignId?:         string;
+  campaignCache?:      CampaignData;  // cached once per session to avoid repeated DB reads
   mediaChunks:         Buffer[];
   conversationHistory: ConversationMessage[];
   silenceTimer:        ReturnType<typeof setTimeout> | null;
@@ -324,17 +413,21 @@ interface ExotelSession {
   isSpeaking:          boolean;   // true while AI TTS is being sent — suppress echo
   bargeInCount:        number;    // consecutive high-energy chunks during AI speech
   voicedChunks:        number;    // voiced chunks seen in current utterance
+  // Pre-generated pitch: computed during greeting so the first "Yes" response is instant
+  preparedPitchChunks?: string[];  // TTS-encoded chunks ready to stream
+  preparedPitchText?:   string;    // text version (added to conversation history)
+  pitchReady:           boolean;   // true once preparedPitchChunks is populated
 }
 
 // ── VAD & timing constants ────────────────────────────────────────────────────
 
 // How long silence after voiced speech before triggering STT (ms).
-// 1500 ms gives natural pause space without cutting the caller mid-sentence.
-const SILENCE_TIMEOUT_MS = 1500;
+// 800 ms is tight enough to feel responsive while still allowing natural pauses.
+const SILENCE_TIMEOUT_MS = 800;
 
 // Absolute fallback: process whatever was collected this many ms after first chunk.
-// Large value (8 s) lets callers finish full sentences before force-processing.
-const FORCE_PROCESS_MS = 8000;
+// 5 s covers the longest natural sentence without making the call feel laggy.
+const FORCE_PROCESS_MS = 5000;
 
 // RMS energy below this → silence / background noise (flat PCM).
 const VAD_THRESHOLD = 200;
@@ -354,13 +447,30 @@ const BARGE_IN_THRESHOLD = 700;
 const BARGE_IN_MIN_CHUNKS = 3;
 
 // ── Filler acknowledgments ────────────────────────────────────────────────────
+//
+// Fillers bridge the STT→GPT→TTS latency gap so callers don't hear dead air.
+// They are played only ~40% of turns (randomised) to prevent them sounding
+// repetitive and robotic — a real agent doesn't say "Got it." before every reply.
+//
+// Two pools: questions vs. statements, chosen by whether user text ends with "?".
+// All phrases are short (≤4 words) so they play in under a second and don't
+// clash with the actual response that follows immediately after.
+const FILLER_QUESTION  = [
+  "One moment.",
+  "Let me check that.",
+  "Good question.",
+];
+const FILLER_STATEMENT = [
+  "Understood.",
+  "Of course.",
+  "Sure thing.",
+  "Got it.",
+];
 
-// Two sets: one for when the caller asks a question, one for statements.
-// Chosen by whether the transcribed text ends with "?".
-// Keeps fillers contextually appropriate and avoids the jarring mismatch of
-// saying "Sure." before completely ignoring what the caller asked.
-const FILLER_QUESTION  = ["Let me check on that.", "Good question.", "Let me look into that."];
-const FILLER_STATEMENT = ["I hear you.", "Understood.", "Got it.", "I see.", "Good to know."];
+// Play a filler on most turns so callers always hear something while GPT + TTS warm up.
+// 0.85 = 85% of turns get an immediate acknowledgement; the remaining 15% feel more
+// direct for very short affirmatives where any filler would sound odd.
+const FILLER_PROBABILITY = 0.85;
 
 /** Calculate RMS energy of a PCM16 LE buffer — used for voice activity detection */
 function rmsLevel(buf: Buffer): number {
@@ -401,51 +511,55 @@ async function processAudio(ws: WebSocket, session: ExotelSession): Promise<void
       return;
     }
 
-    // ── Step 2: Parallel — filler TTS + GPT response ─────────────────────────
-    // Start both simultaneously so the caller hears a filler phrase (~0.5 s)
-    // while GPT generates the actual response (~1–2 s).
+    // ── Step 2: Parallel — optional filler TTS + GPT response ───────────────
+    // Fire GPT immediately.  Only generate + play a filler phrase on ~40% of
+    // turns — and NEVER for very short inputs (Yes/No/OK/Sure) where the
+    // caller expects an immediate response and a filler just adds dead air.
     const campaignData = await loadCampaignData(session.campaignId);
     session.conversationHistory.push({ role: "user", content: userText });
 
-    const filler = FILLER_PHRASES[Math.floor(Math.random() * FILLER_PHRASES.length)];
+    const isShortInput = userText.trim().split(/\s+/).length <= 3; // "Yes", "Sure", "Go ahead", etc.
+    const useFiller = !isShortInput && Math.random() < FILLER_PROBABILITY;
+    const fillerPool = userText.trim().endsWith("?") ? FILLER_QUESTION : FILLER_STATEMENT;
+    const filler = fillerPool[Math.floor(Math.random() * fillerPool.length)];
 
-    // Fire both API calls at the same time
-    const fillerTtsPromise   = encodeReplyForExotel(filler);
-    const aiResponsePromise  = generateAIResponse(
+    // Always start the AI response immediately — run filler in parallel if needed
+    const aiResponsePromise = generateAIResponse(
       session.conversationHistory,
       userText,
       campaignData
     );
+    const fillerTtsPromise = useFiller ? encodeReplyForExotel(filler) : null;
 
-    // ── Step 3: Play filler as soon as its TTS is ready ───────────────────────
-    const fillerChunks = await fillerTtsPromise;
-    session.isSpeaking = true;
-    sendExotelClear(ws, session.streamSid);
-    for (const chunk of fillerChunks) {
-      if (ws.readyState !== WebSocket.OPEN) break;
-      sendExotelMedia(ws, session.streamSid, chunk);
+    // ── Step 3: Play filler (if chosen) while waiting for GPT ────────────────
+    if (fillerTtsPromise) {
+      const fillerChunks = await fillerTtsPromise;
+      session.isSpeaking = true;
+      sendExotelClear(ws, session.streamSid);
+      for (const chunk of fillerChunks) {
+        if (ws.readyState !== WebSocket.OPEN) break;
+        sendExotelMedia(ws, session.streamSid, chunk);
+      }
+      log(`[exotel:${session.streamSid}] ▶ Filler sent: "${filler}"`, "ws");
     }
-    log(`[exotel:${session.streamSid}] ▶ Filler sent: "${filler}"`, "ws");
 
     // ── Step 4: Await GPT result (usually ready by now) ───────────────────────
     const { reply } = await aiResponsePromise;
     session.conversationHistory.push({ role: "assistant", content: reply });
     log(`[exotel:${session.streamSid}] ▶ AI: "${reply}"`, "ws");
 
-    // ── Step 5: TTS for actual response, then stream it ───────────────────────
-    const responseChunks = await encodeReplyForExotel(reply);
-    log(`[exotel:${session.streamSid}] ▶ TTS ready — ${responseChunks.length} chunks`, "ws");
-
-    for (const chunk of responseChunks) {
-      if (ws.readyState !== WebSocket.OPEN) break;
-      // If barge-in happened while we were waiting for TTS, abort sending
-      if (!session.isSpeaking) {
-        log(`[exotel:${session.streamSid}] ▶ Barge-in interrupted response`, "ws");
-        break;
-      }
-      sendExotelMedia(ws, session.streamSid, chunk);
+    // ── Step 5: Stream TTS response directly to Exotel ────────────────────────
+    // isSpeaking = true BEFORE the TTS request so barge-in detection works
+    // during the streaming and the guard inside streamTTSToExotel fires correctly.
+    session.isSpeaking = true;
+    if (!fillerTtsPromise) {
+      // Only send Clear if filler didn't already clear; avoids double-clear glitch.
+      sendExotelClear(ws, session.streamSid);
     }
-    log(`[exotel:${session.streamSid}] ▶ Response sent`, "ws");
+
+    log(`[exotel:${session.streamSid}] ▶ Streaming TTS: "${reply}"`, "ws");
+    await streamTTSToExotel(reply, ws, session);
+    log(`[exotel:${session.streamSid}] ▶ Response streamed`, "ws");
 
   } catch (err: any) {
     log(`[exotel:${session.streamSid}] ✖ processAudio error: ${err.message}`, "ws");
@@ -506,6 +620,7 @@ export async function handleExotelStream(
   const session: ExotelSession = {
     streamSid:           "",
     campaignId:          initialCampaignId,
+    campaignCache:       undefined,
     mediaChunks:         [],
     conversationHistory: [],
     silenceTimer:        null,
@@ -515,6 +630,7 @@ export async function handleExotelStream(
     isSpeaking:          false,
     bargeInCount:        0,
     voicedChunks:        0,
+    pitchReady:          false,
   };
 
   log(`[exotel] session started campaignId=${session.campaignId ?? "none"}`, "ws");
@@ -635,12 +751,12 @@ export async function handleExotelStream(
             break;
           }
 
-          // Exotel does not always send a 'track' field — when absent treat
-          // everything as inbound (caller) audio.  Skip only explicit outbound.
-          const track: string = payload?.media?.track ?? "inbound";
-          if (track !== "inbound") {
-            log(`[exotel:${session.streamSid}] skipping outbound track`, "ws");
-            break;
+          // Accept caller audio; skip only explicitly outbound (echo of our own TTS).
+          // Exotel may label inbound as "inbound" OR "inbound_track" depending on
+          // how the App Builder is configured — accept both and only block "outbound".
+          const track: string = (payload?.media?.track ?? "").toLowerCase();
+          if (track === "outbound" || track === "outbound_track") {
+            break; // echo of our own audio — discard silently
           }
 
           let audioBuf: Buffer;

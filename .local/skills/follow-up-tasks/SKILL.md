@@ -16,6 +16,23 @@ Categorize each follow-up task using one of these categories:
 
 Write titles for non-technical users — lead with impact, not implementation - especially for tech debt and test gaps.
 
+Users decide from the title, so make each title name the concrete value or risk. Avoid generic implementation phrasing.
+
+Prefer titles like:
+
+- "Catch [specific regression] before it ships"
+- "Confirm [critical behavior] still works after [change]"
+- "Make sure [user-visible flow] cannot silently fail"
+- "Fix [broken type/build/check] blocking [reliability outcome]"
+- "Prevent [bad user outcome] when [edge case happens]"
+
+Avoid titles like:
+
+- "Add automated tests for [feature]"
+- "Improve coverage for [area]"
+- "Refactor [component] better"
+- "Add a dashboard/report/export"
+
 Before submitting, review each title by asking: "Would a non-technical user understand what this means and why they'd want it?" If not, rewrite it. Examples:
 
 - "Store recipes in a database with full CRUD support" -> "Let users add, edit, and delete their own recipes"

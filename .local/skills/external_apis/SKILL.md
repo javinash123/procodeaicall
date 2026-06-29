@@ -20,14 +20,13 @@ managed credentials.
 
 - [Brave](references/brave.md) - Search real web image results through Brave passthrough billing.
 - [Browserbase](references/browserbase.md)
-- [ElevenLabs](references/elevenlabs.md)
-- [Exa](references/exa.md)
-- [fal.ai](references/falai.md)
-- [Firecrawl](references/firecrawl.md)
+- [ElevenLabs](references/elevenlabs.md) - Text-to-speech, music, and audio tools through ElevenLabs passthrough billing.
+- [Exa](references/exa.md) - Semantic web search through Exa passthrough billing.
+- [fal.ai](references/falai.md) - Bria RMBG background removal through fal.ai passthrough billing.
+- [Firecrawl](references/firecrawl.md) - Scrape, crawl, and search the web through Firecrawl passthrough billing.
 - [LlamaIndex](references/llamaindex.md)
 - [Mindee](references/mindee.md)
-- [Nano Banana](references/nano_banana.md)
 - [Quiver AI](references/quiver_ai.md)
 - [Shotstack](references/shotstack.md)
 - [Tripo3D](references/tripo3d.md)
-- [X (Twitter)](references/x.md)
+- [X (Twitter)](references/x.md) - Read-only X API v2 access through passthrough billing.

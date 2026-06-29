@@ -221,16 +221,26 @@ export function setupWebSocketServer(httpServer: Server): void {
       pathname = new URL(req.url ?? "", `ws://${req.headers.host}`).pathname;
     } catch { /* ignore */ }
 
+    const clientIp = (req.socket as any)?.remoteAddress ?? "unknown";
+    log(`[upgrade] path=${pathname} from=${clientIp} origin=${req.headers.origin ?? "none"} host=${req.headers.host ?? "none"}`, "ws");
+
     if (pathname === "/stream") {
       streamWss.handleUpgrade(req, socket as any, head, (ws) => {
         streamWss.emit("connection", ws, req);
       });
     } else if (pathname === "/exotel-stream") {
+      log(`[upgrade] routing /exotel-stream to exotel handler`, "ws");
       exotelWss.handleUpgrade(req, socket as any, head, (ws) => {
         exotelWss.emit("connection", ws, req);
       });
+    } else {
+      log(`[upgrade] unhandled path ${pathname} — leaving for other listeners`, "ws");
     }
-    // All other paths (e.g. Vite HMR) are left untouched
+
+    // Socket error handler to catch rejected handshakes
+    socket.on("error", (err) => {
+      log(`[upgrade] socket error on ${pathname}: ${err.message}`, "ws");
+    });
   });
 
   log("WebSocket server ready on path /stream", "ws");

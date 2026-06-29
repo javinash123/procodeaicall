@@ -62,12 +62,9 @@ For chat panel rendering, use the `media-generation` skill flow:
 
 1. Select up to 4 relevant results
 2. Download each URL to `attached_assets/brave_images/`
-3. Call `presentAsset({awaitUserInput: false})` for each saved file
+3. Call `presentAsset({filePath, title})` for each saved file
 
 ```javascript
-const fs = await import('node:fs/promises')
-const path = await import('node:path')
-
 const result = await externalApi__brave({
   path: '/res/v1/images/search',
   method: 'GET',
@@ -75,26 +72,33 @@ const result = await externalApi__brave({
 })
 
 const items = (result.body?.results ?? []).slice(0, 4)
-await fs.mkdir('attached_assets/brave_images', {recursive: true})
 
 for (const [index, item] of items.entries()) {
   const imageUrl = item.properties?.url
   if (!imageUrl) continue
 
-  const response = await fetch(imageUrl)
-  if (!response.ok) continue
+  const filePath =
+    'attached_assets/brave_images/result_' + String(index + 1) + '.jpg'
 
-  const filePath = path.join(
-    'attached_assets/brave_images',
-    'result_' + String(index + 1) + '.jpg',
-  )
+  // Imports, fetch, and file writes are impure — keep them inside the
+  // "use impure" boundary. externalApi__brave and presentAsset are
+  // callbacks and must stay in durable scope.
+  const saved = await (async function (url, out) {
+    "use impure";
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+    const response = await fetch(url)
+    if (!response.ok) return false
+    await fs.mkdir(path.dirname(out), {recursive: true})
+    await fs.writeFile(out, Buffer.from(await response.arrayBuffer()))
+    return true
+  })(imageUrl, filePath)
 
-  await fs.writeFile(filePath, Buffer.from(await response.arrayBuffer()))
+  if (!saved) continue
 
   await presentAsset({
     filePath,
     title: item.title ?? 'Brave image',
-    awaitUserInput: false,
   })
 }
 ```

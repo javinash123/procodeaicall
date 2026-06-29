@@ -1,0 +1,28 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0KMongoDB connected successfully
+3:15:48 PM [ws] WebSocket server ready on path /stream
+3:15:48 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+3:15:49 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+3:15:56 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev host=b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev
+3:15:56 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+3:15:58 PM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}
+Calling number: +919893328298
+[Exotel] Updating app (1213707) stream URL → wss://b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev/exotel-stream
+[Exotel] PUT Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] POST Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] ⚠️  Could not auto-update Exotel app stream URL.
+  → Open Exotel dashboard → App Builder → app ID 1213707
+  → Set the Stream / WebSocket URL to:
+      wss://b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev/exotel-stream
+CUSTOMER = +919893328298
+CALLERID = +918047359287
+[Exotel] Voice hook URL: https://b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev/exotel/voice
+[Exotel] Expected WSS  : wss://b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev/exotel-stream
+[Exotel] Call response: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <Call>\n  <Sid>81e80451b740617f11782f7bffc81a6r</Sid>\n  <ParentCallSid/>\n  <DateCreated>2026-06-27 20:46:10</DateCreated>\n  <DateUpdated>2026-06-27 20:46:10</DateUpdated>\n  <AccountSid>nijvox1</AccountSid>\n  <To>08047359287</To>\n  <From>09893328298</From>\n  <PhoneNumberSid>08047359287</PhoneNumberSid>\n  <Status>in-progress</Status>\n  <StartTime>2026-06-27 20:46:10</StartTime>\n  <EndTime/>\n  <Duration/>\n  <Price/>\n  <Direction>outbound-api</Direction>\n  <AnsweredBy/>\n  <ForwardedFrom/>\n  <CallerName/>\n  <Uri>/v1/Accounts/nijvox1/Calls/81e80451b740617f11782f7bffc81a6r</Uri>\n  <RecordingUrl/>\n </Call>\n</TwilioResponse>\n"
+[Exotel] CallSid: 81e80451b740617f11782f7bffc81a6r
+[test-call] callSidMap: 81e80451b740617f11782f7bffc81a6r → 6a3bae7f345e7a120528bd08
+[test-call] phoneCallMap: 9893328298 → 6a3bae7f345e7a120528bd08

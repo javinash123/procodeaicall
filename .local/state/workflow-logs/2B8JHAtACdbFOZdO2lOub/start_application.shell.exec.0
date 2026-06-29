@@ -1,0 +1,22 @@
+[1G[0K⠙[1G[0K⠹[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K⠹[1G[0KMongoDB connected successfully
+5:34:48 PM [ws] WebSocket server ready on path /stream
+5:34:49 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+5:34:50 PM [express] serving on port 5000
+5:40:29 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev host=b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev
+5:40:29 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+5:40:34 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev host=b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev
+5:40:34 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+5:40:41 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+5:41:06 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev host=b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev
+5:41:06 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+5:41:21 PM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}
+6:07:41 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev host=b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev
+6:07:41 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+6:07:42 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev host=b6338b1f-773c-4c2c-87aa-36a5a38b6606-00-39d8vuqguefdc.riker.replit.dev
+6:07:42 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+6:07:54 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}

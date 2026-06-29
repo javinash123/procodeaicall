@@ -8,7 +8,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { generateCallScript, testOpenAI, generateAIResponse } from "./openaiService";
-import { makeExotelCall } from "./exotelService";
+import { makeExotelCall, getWssUrl } from "./exotelService";
 import { phoneCallMap, callSidMap, normalizePhone } from "./callMap";
 import { extractTextFromFile } from "./textExtractor";
 import {
@@ -482,20 +482,36 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       console.log(`[test-call] phoneCallMap: ${phoneKey} → ${campaignId}`);
     }
 
+    const wssUrl = result.wssUrl || getWssUrl();
     if (result.success) {
-      res.send(`Call triggered to ${phone} with campaign=${campaignId || "default"}. Check your phone!`);
+      res.send(
+        `Call triggered to ${phone} with campaign=${campaignId || "default"}. Check your phone!\n\n` +
+        `Active stream URL: ${wssUrl}\n` +
+        `If AI is silent, update your Exotel app to use this WebSocket URL.`
+      );
     } else {
-      res.status(500).send(`Failed to trigger call: ${result.error}`);
+      res.status(500).send(`Failed to trigger call: ${result.error}\n\nExpected WSS URL: ${wssUrl}`);
     }
   });
 
-  // Exotel fetches this when the customer answers (via the Exotel ExoML app 1213707).
+  // Returns the current WebSocket stream URL — use this to configure the Exotel app
+  app.get("/api/config/stream-url", (req, res) => {
+    const wssUrl = getWssUrl();
+    console.log(`[config] stream URL requested: ${wssUrl}`);
+    res.json({ wssUrl, hint: "Configure your Exotel app to use this WebSocket URL for bidirectional streaming." });
+  });
+
+  // Exotel fetches this when the customer answers.
   // Returns a bidirectional Stream to our voicebot WebSocket.
   app.get("/exotel/voice", (req, res) => {
     res.set("Content-Type", "text/xml");
 
-    const publicWss = (process.env.PUBLIC_URL || "https://nijvox.com")
-      .replace(/^https?:\/\//, "wss://");
+    const publicBase =
+      process.env.PUBLIC_URL ||
+      (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null) ||
+      "https://nijvox.com";
+
+    const publicWss = publicBase.replace(/^https?:\/\//, "wss://");
 
     const streamUrl = `${publicWss}/exotel-stream`;
     console.log(`[exotel/voice] returning Stream → ${streamUrl}`);
@@ -503,7 +519,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Connect>
-    <Stream url="${streamUrl}" bidirectional="true" />
+    <Stream url="${streamUrl}" bidirectional="true" audioTrack="inbound_track" contentType="audio/x-mulaw;rate=8000" />
   </Connect>
 </Response>`);
   });
