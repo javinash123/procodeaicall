@@ -10,6 +10,7 @@ import fs from "fs";
 import { generateCallScript, testOpenAI, generateAIResponse } from "./openaiService";
 import { makeExotelCall, getWssUrl } from "./exotelService";
 import { phoneCallMap, callSidMap, normalizePhone } from "./callMap";
+import { getV2Coordinator } from "./voice-engine/migration/CoordinatorBootstrap";
 import { extractTextFromFile } from "./textExtractor";
 import {
   insertUserSchema,
@@ -463,6 +464,19 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     const phone      = (req.query.phone      as string) || "+917828288001";
     const campaignId = (req.query.campaignId as string) || undefined;
 
+    // ── V2: Register session before placing the call ──────────────────────────
+    let v2SessionId: string | undefined;
+    if (campaignId) {
+      try {
+        const session = await getV2Coordinator().createSession({ campaignId, phone });
+        v2SessionId = session.sessionId;
+        console.log(`[test-call] V2 session created: ${v2SessionId}`);
+      } catch (err: any) {
+        console.error(`[test-call] V2 session creation failed: ${err.message}`);
+      }
+    }
+
+    // ── V1: Place the outbound call (unchanged) ───────────────────────────────
     const result = await makeExotelCall(phone);
 
     if (result.success && campaignId) {
@@ -480,6 +494,26 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       phoneCallMap.set(phoneKey, campaignId);
       setTimeout(() => phoneCallMap.delete(phoneKey), TTL);
       console.log(`[test-call] phoneCallMap: ${phoneKey} → ${campaignId}`);
+
+      // ── V2: Attach telephony identifiers to the registered session ──────────
+      if (v2SessionId) {
+        try {
+          const coordinator = getV2Coordinator();
+          if (result.callSid) coordinator.attachCallSid(v2SessionId, result.callSid);
+          coordinator.attachPhone(v2SessionId, phone);
+          console.log(`[test-call] V2 session ${v2SessionId} — callSid+phone attached`);
+        } catch (err: any) {
+          console.error(`[test-call] V2 attach failed: ${err.message}`);
+        }
+      }
+    } else if (!result.success && v2SessionId) {
+      // ── V2: Call failed — destroy the session, no leaked sessions ───────────
+      try {
+        getV2Coordinator().destroySession(v2SessionId);
+        console.log(`[test-call] V2 session ${v2SessionId} destroyed (call failed)`);
+      } catch (err: any) {
+        console.error(`[test-call] V2 session destroy failed: ${err.message}`);
+      }
     }
 
     const wssUrl = result.wssUrl || getWssUrl();
@@ -491,6 +525,89 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       );
     } else {
       res.status(500).send(`Failed to trigger call: ${result.error}\n\nExpected WSS URL: ${wssUrl}`);
+    }
+  });
+
+  // Initiate an outbound call to a specific lead (CRM → Exotel)
+  // Called by: client/src/lib/api.ts → leadsApi.initiateCall()
+  app.post("/api/leads/:id/call", requireAuth, async (req, res) => {
+    try {
+      const lead = await storage.getLead(req.params.id);
+
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      if (lead.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      if (!lead.phone) {
+        return res.status(400).json({ message: "Lead has no phone number" });
+      }
+
+      const phone      = lead.phone as string;
+      const campaignId = lead.campaignId ? String(lead.campaignId) : undefined;
+
+      // ── V2: Register session before placing the call ────────────────────────
+      let v2SessionId: string | undefined;
+      if (campaignId) {
+        try {
+          const v2Session = await getV2Coordinator().createSession({ campaignId, phone });
+          v2SessionId = v2Session.sessionId;
+          console.log(`[leads/call] V2 session created: ${v2SessionId} for lead ${lead._id}`);
+        } catch (err: any) {
+          console.error(`[leads/call] V2 session creation failed: ${err.message}`);
+        }
+      }
+
+      // ── V1: Place the outbound call (unchanged) ─────────────────────────────
+      const result = await makeExotelCall(phone);
+
+      if (result.success) {
+        const TTL = 10 * 60 * 1000; // 10 min auto-cleanup
+
+        if (campaignId) {
+          if (result.callSid) {
+            callSidMap.set(result.callSid, campaignId);
+            setTimeout(() => callSidMap.delete(result.callSid!), TTL);
+          }
+          const phoneKey = normalizePhone(phone);
+          phoneCallMap.set(phoneKey, campaignId);
+          setTimeout(() => phoneCallMap.delete(phoneKey), TTL);
+        }
+
+        // ── V2: Attach telephony identifiers ───────────────────────────────────
+        if (v2SessionId) {
+          try {
+            const coordinator = getV2Coordinator();
+            if (result.callSid) coordinator.attachCallSid(v2SessionId, result.callSid);
+            coordinator.attachPhone(v2SessionId, phone);
+            console.log(`[leads/call] V2 session ${v2SessionId} — callSid+phone attached`);
+          } catch (err: any) {
+            console.error(`[leads/call] V2 attach failed: ${err.message}`);
+          }
+        }
+
+        res.json({
+          success:   true,
+          callSid:   result.callSid,
+          wssUrl:    result.wssUrl || getWssUrl(),
+          v2Session: v2SessionId ?? null,
+        });
+      } else {
+        // ── V2: Call failed — no leaked sessions ───────────────────────────────
+        if (v2SessionId) {
+          try {
+            getV2Coordinator().destroySession(v2SessionId);
+            console.log(`[leads/call] V2 session ${v2SessionId} destroyed (call failed)`);
+          } catch (err: any) {
+            console.error(`[leads/call] V2 session destroy failed: ${err.message}`);
+          }
+        }
+
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to initiate call" });
     }
   });
 

@@ -1,0 +1,172 @@
+You are the Lead Migration Engineer for NIJVOX Voice Engine V2.
+
+IMPORTANT
+
+Architecture is frozen.
+
+Voice Engine V2 is complete.
+
+We are now integrating it into the existing application.
+
+This is NOT a refactor.
+
+This is a controlled migration.
+
+====================================================
+
+GOAL
+
+Wire the existing outbound call flow to V2SessionCoordinator.
+
+DO NOT change WebSocket handling yet.
+
+DO NOT route audio yet.
+
+Only create and register V2 sessions before placing outbound calls.
+
+====================================================
+
+FILES ALLOWED TO MODIFY
+
+server/routes.ts
+
+ONLY the outbound call routes.
+
+Create ONLY if needed
+
+server/voice-engine/migration/CoordinatorBootstrap.ts
+
+====================================================
+
+DO NOT MODIFY
+
+server/exotelStreamHandler.ts
+
+server/wsServer.ts
+
+server/openaiService.ts
+
+server/ttsService.ts
+
+Existing Voice Engine modules
+
+====================================================
+
+IMPLEMENT
+
+At server startup
+
+Create exactly ONE singleton V2SessionCoordinator using the existing
+MigrationFactory.
+
+Inject
+
+VoiceEngineFactory
+
+TransportFactory
+
+Logger
+
+Configuration
+
+Store it using dependency injection.
+
+----------------------------------------------------
+
+Locate EVERY outbound call entry point.
+
+Examples include
+
+GET /test-call
+
+POST /api/leads/:id/call
+
+or any route that invokes makeExotelCall().
+
+Before makeExotelCall()
+
+Execute
+
+const session =
+await coordinator.createSession({
+    campaignId,
+    phone
+});
+
+----------------------------------------------------
+
+After makeExotelCall()
+
+Attach
+
+callSid
+
+phone
+
+campaignId
+
+to the existing session.
+
+DO NOT modify makeExotelCall().
+
+DO NOT change Exotel REST parameters.
+
+----------------------------------------------------
+
+If makeExotelCall() fails
+
+Destroy the created V2 session.
+
+No leaked sessions.
+
+----------------------------------------------------
+
+Leave all existing V1 logic intact.
+
+====================================================
+
+RULES
+
+No WebSocket changes.
+
+No Exotel protocol changes.
+
+No OpenAI changes.
+
+No Audio Engine changes.
+
+No Conversation Orchestrator changes.
+
+No MediaSession changes.
+
+Backward compatible.
+
+Rollback must require changing only one import.
+
+====================================================
+
+SELF CHECK
+
+Verify
+
+✓ Existing call flow unchanged
+
+✓ V2 session created before outbound call
+
+✓ Session destroyed on failure
+
+✓ CallSid attached after success
+
+✓ V1 untouched
+
+✓ No WebSocket modifications
+
+Output
+
+Files modified
+
+Code path
+
+Migration readiness
+
+STOP.

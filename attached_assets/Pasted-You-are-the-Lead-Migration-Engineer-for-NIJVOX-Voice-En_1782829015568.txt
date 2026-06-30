@@ -1,0 +1,253 @@
+You are the Lead Migration Engineer for NIJVOX Voice Engine V2.
+
+IMPORTANT
+
+This is a migration task.
+
+DO NOT redesign architecture.
+
+DO NOT replace V1.
+
+DO NOT delete any code.
+
+We are introducing V2 alongside the existing implementation.
+
+====================================================
+
+GOAL
+
+Create a V2 Session Coordinator.
+
+This becomes the ONLY entry point for creating a Voice Engine V2 call session.
+
+It does NOT replace V1 yet.
+
+====================================================
+
+DO NOT MODIFY
+
+server/exotelStreamHandler.ts
+
+server/openaiService.ts
+
+server/ttsService.ts
+
+server/wsServer.ts
+
+server/routes.ts
+
+Existing SaaS code
+
+Voice Engine modules
+
+====================================================
+
+CREATE ONLY
+
+server/voice-engine/migration/
+
+V2SessionCoordinator.ts
+
+SessionRegistry.ts
+
+SessionContext.ts
+
+SessionFactory.ts
+
+MigrationFactory.ts
+
+index.ts
+
+====================================================
+
+IMPLEMENT
+
+1.
+
+SessionRegistry
+
+Executable.
+
+Maintain active Voice Engine sessions.
+
+Support
+
+register(sessionId)
+
+unregister(sessionId)
+
+get(sessionId)
+
+getByCallSid(callSid)
+
+getByPhone(phone)
+
+updateCallSid()
+
+updatePhone()
+
+list()
+
+count()
+
+cleanup()
+
+Thread-safe.
+
+No globals.
+
+Dependency injected.
+
+----------------------------------------------------
+
+2.
+
+SessionContext
+
+Immutable object.
+
+Contains
+
+sessionId
+
+callSid
+
+phone
+
+campaignId
+
+createdAt
+
+runtime
+
+voiceEngine
+
+transportGateway
+
+mediaSession
+
+metadata
+
+No business logic.
+
+----------------------------------------------------
+
+3.
+
+V2SessionCoordinator
+
+Executable production class.
+
+Responsibilities
+
+createSession()
+
+attachCallSid()
+
+attachPhone()
+
+getSession()
+
+destroySession()
+
+cleanupExpiredSessions()
+
+Own ONLY SessionRegistry.
+
+No transport logic.
+
+No OpenAI logic.
+
+No Exotel logic.
+
+----------------------------------------------------
+
+4.
+
+SessionFactory
+
+Uses existing
+
+VoiceEngineFactory
+
+Creates
+
+VoiceEngine
+
+MediaSession
+
+TransportGateway
+
+Returns SessionContext.
+
+----------------------------------------------------
+
+5.
+
+MigrationFactory
+
+DI entry point.
+
+Creates V2SessionCoordinator.
+
+====================================================
+
+RULES
+
+Do NOT modify existing routes.
+
+Do NOT modify websocket handling.
+
+Do NOT modify Exotel.
+
+Do NOT modify OpenAI.
+
+Do NOT instantiate anything outside factories.
+
+Everything via dependency injection.
+
+====================================================
+
+QUALITY
+
+Strict TypeScript
+
+No any
+
+Professional JSDoc
+
+Fail-fast validation
+
+Immutable models
+
+====================================================
+
+SELF CHECK
+
+Verify
+
+✓ Compiles
+
+✓ Existing project untouched
+
+✓ V1 untouched
+
+✓ No OpenAI imports
+
+✓ No Exotel imports
+
+✓ No transport logic
+
+✓ No websocket logic
+
+Output
+
+Files created
+
+Compilation status
+
+Public API
+
+Migration readiness
+
+STOP.

@@ -1,0 +1,227 @@
+You are the Lead Migration Engineer for NIJVOX Voice Engine V2.
+
+Architecture is frozen.
+
+Voice Engine V2 is complete.
+
+We are now migrating the WebSocket entry point.
+
+THIS IS THE FIRST LIVE TRAFFIC MIGRATION.
+
+Proceed carefully.
+
+=====================================================
+
+GOAL
+
+Modify ONLY the Exotel WebSocket entry point.
+
+If a V2 session exists
+
+route the socket into Voice Engine V2.
+
+Otherwise
+
+fall back automatically to V1.
+
+=====================================================
+
+FILES ALLOWED TO MODIFY
+
+server/wsServer.ts
+
+ONLY
+
+=====================================================
+
+DO NOT MODIFY
+
+server/exotelStreamHandler.ts
+
+server/routes.ts
+
+server/openaiService.ts
+
+server/ttsService.ts
+
+Any Voice Engine module
+
+=====================================================
+
+IMPLEMENT
+
+Locate
+
+/exotel-stream
+
+connection handler.
+
+Current flow
+
+WebSocket
+
+↓
+
+handleExotelStream()
+
+Replace with
+
+--------------------------------------------
+
+Resolve
+
+callSid
+
+campaignId
+
+phone
+
+from
+
+start event
+
+or
+
+query parameters
+
+using existing mappings.
+
+--------------------------------------------
+
+Lookup
+
+V2SessionCoordinator.
+
+--------------------------------------------
+
+IF
+
+matching V2 session exists
+
+THEN
+
+Call
+
+TransportGateway.acceptConnection(
+
+ws,
+
+sessionContext,
+
+metadata
+
+)
+
+Do NOT process Exotel messages inside wsServer.
+
+The socket must become owned by TransportGateway.
+
+--------------------------------------------
+
+ELSE
+
+Call
+
+handleExotelStream()
+
+unchanged.
+
+=====================================================
+
+RULES
+
+Do NOT modify
+
+handleExotelStream()
+
+Do NOT modify
+
+TransportGateway
+
+Do NOT modify
+
+MediaSession
+
+Do NOT modify
+
+Conversation Orchestrator
+
+Do NOT modify
+
+Audio Engine
+
+Do NOT modify
+
+OpenAI Provider
+
+No duplicate websocket handling.
+
+No duplicate message parsing.
+
+wsServer becomes routing only.
+
+=====================================================
+
+ROLLBACK
+
+One boolean
+
+USE_VOICE_ENGINE_V2
+
+must exist.
+
+If false
+
+always call
+
+handleExotelStream()
+
+This allows instant rollback.
+
+=====================================================
+
+LOGGING
+
+Log
+
+[V2 ROUTER]
+
+Session found
+
+Session missing
+
+Routing to V2
+
+Fallback to V1
+
+Connection closed
+
+=====================================================
+
+SELF CHECK
+
+Verify
+
+✓ Existing V1 still works
+
+✓ V2 routing only if session exists
+
+✓ Rollback boolean works
+
+✓ No transport logic added
+
+✓ No OpenAI imports
+
+✓ No Exotel protocol added
+
+✓ wsServer only routes
+
+Output
+
+Files modified
+
+Routing diagram
+
+Rollback plan
+
+STOP

@@ -1,0 +1,251 @@
+You are the Lead Real-Time Systems Engineer for NIJVOX Voice Engine V2.
+
+Architecture is COMPLETELY FROZEN.
+
+Read every Voice Engine module before writing code.
+
+======================================================
+
+GOAL
+
+Implement the Runtime Integration Layer.
+
+This is the final executable integration.
+
+After this implementation
+
+Voice Engine V2 should be capable of running one realtime phone conversation.
+
+======================================================
+
+DO NOT TOUCH
+
+Foundation
+
+Runtime
+
+Bootstrap
+
+Audio Engine
+
+Conversation Orchestrator
+
+Media Session
+
+Transport Gateway
+
+OpenAI Provider
+
+Exotel Adapter
+
+Voice Engine Assembly
+
+Existing SaaS
+
+Voice Engine V1
+
+======================================================
+
+CREATE ONLY
+
+server/voice-engine/integration/
+
+RuntimeIntegration.ts
+
+RealtimeBridge.ts
+
+InboundAudioFlow.ts
+
+OutboundAudioFlow.ts
+
+SessionSupervisor.ts
+
+IntegrationFactory.ts
+
+index.ts
+
+======================================================
+
+RESPONSIBILITIES
+
+RealtimeBridge
+
+Connect
+
+MediaSession
+
+↓
+
+Realtime Provider Session
+
+Own
+
+audio streaming
+
+interrupt forwarding
+
+session events
+
+No OpenAI SDK imports.
+
+------------------------------------------------------
+
+InboundAudioFlow
+
+Pipeline
+
+Transport
+
+↓
+
+MediaSession
+
+↓
+
+Audio Engine
+
+↓
+
+RealtimeBridge
+
+No transport protocol.
+
+------------------------------------------------------
+
+OutboundAudioFlow
+
+Pipeline
+
+RealtimeBridge
+
+↓
+
+Audio Engine
+
+↓
+
+MediaSession
+
+↓
+
+Transport
+
+------------------------------------------------------
+
+SessionSupervisor
+
+Monitor
+
+timeouts
+
+disconnects
+
+provider failures
+
+heartbeat
+
+graceful recovery
+
+No business logic.
+
+------------------------------------------------------
+
+RuntimeIntegration
+
+Own
+
+Bridge
+
+Inbound
+
+Outbound
+
+Supervisor
+
+Provide
+
+start()
+
+stop()
+
+shutdown()
+
+======================================================
+
+RULES
+
+No OpenAI SDK import.
+
+No Exotel protocol import.
+
+Use ONLY public interfaces.
+
+No business logic.
+
+No CRM.
+
+No Campaign queries.
+
+No MongoDB.
+
+Dependency Injection only.
+
+======================================================
+
+PERFORMANCE TARGETS
+
+Support
+
+<300 ms average response latency target
+
+Streaming only
+
+No polling
+
+No busy waiting
+
+No blocking loops
+
+======================================================
+
+QUALITY
+
+Strict TypeScript
+
+No any
+
+Professional JSDoc
+
+Fail-fast
+
+Immutable
+
+======================================================
+
+SELF CHECK
+
+Verify
+
+✓ Compiles
+
+✓ Existing modules unchanged
+
+✓ No OpenAI SDK imports
+
+✓ No Exotel protocol imports
+
+✓ Integration only through public interfaces
+
+✓ Dependency graph preserved
+
+Output
+
+Files created
+
+Compilation
+
+Call sequence diagram
+
+Latency flow diagram
+
+STOP

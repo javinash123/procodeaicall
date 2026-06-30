@@ -6,6 +6,16 @@ import { generateAIResponse, type ConversationMessage, type CampaignData } from 
 import { storage } from "./storage";
 import { textToSpeech } from "./ttsService";
 import { handleExotelStream } from "./exotelStreamHandler";
+import { getV2Coordinator } from "./voice-engine/migration/CoordinatorBootstrap";
+import type { SessionContext } from "./voice-engine/migration/SessionContext";
+
+// ─── V2 Rollback Flag ─────────────────────────────────────────────────────────
+//
+// Set to false for an instant rollback to V1 with zero further code changes.
+// When false, ALL Exotel WebSocket connections are forwarded directly to
+// handleExotelStream() and the V2 coordinator is never consulted.
+//
+const USE_VOICE_ENGINE_V2 = true;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -211,7 +221,170 @@ export function setupWebSocketServer(httpServer: Server): void {
     } catch { /* ignore */ }
 
     log(`[/exotel-stream] Connection from [${clientIp}] campaignId=${campaignId ?? "none"}  total=${exotelWss.clients.size}`, "ws");
-    handleExotelStream(ws, campaignId);
+
+    // ── V2 Router ──────────────────────────────────────────────────────────────
+    //
+    // When USE_VOICE_ENGINE_V2 is true (default), we inspect the Exotel `start`
+    // event to resolve the callSid/phone, look up a registered V2 session, and
+    // route the socket to Voice Engine V2's TransportGateway if one is found
+    // AND its MediaSession is ready.
+    //
+    // In all other cases (no V2 session, MediaSession not yet wired, parse
+    // failure, or USE_VOICE_ENGINE_V2=false) we fall back transparently to
+    // handleExotelStream() (V1) — call behaviour is completely unchanged.
+    //
+    // Rollback: set USE_VOICE_ENGINE_V2 = false to bypass this block entirely.
+
+    if (!USE_VOICE_ENGINE_V2) {
+      log(`[V2 ROUTER] USE_VOICE_ENGINE_V2=false — routing directly to V1`, "ws");
+      handleExotelStream(ws, campaignId);
+      return;
+    }
+
+    log(`[V2 ROUTER] Awaiting Exotel 'start' event to resolve session`, "ws");
+
+    // Messages buffered while we wait for the Exotel `start` event.
+    // Both 'connected' and 'start' are buffered and replayed to the chosen
+    // handler so it sees the full Exotel event sequence.
+    const buffered: Array<{ data: Buffer; isBinary: boolean }> = [];
+    let decided = false;
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
+
+    /** Hand the socket to V1 and replay all buffered messages. */
+    const fallbackToV1 = (): void => {
+      log(`[V2 ROUTER] Fallback to V1 — campaignId=${campaignId ?? "none"}`, "ws");
+      ws.off("message", onMessage);
+      handleExotelStream(ws, campaignId);
+      // Replay buffered messages after V1 registers its own listener.
+      for (let i = 0; i < buffered.length; i++) {
+        const msg = buffered[i];
+        process.nextTick(() => ws.emit("message", msg.data, msg.isBinary));
+      }
+    };
+
+    /** Hand the socket to V2 TransportGateway and replay buffered messages. */
+    const routeToV2 = (ctx: SessionContext): void => {
+      if (!ctx.mediaSession) {
+        log(`[V2 ROUTER] Session ${ctx.sessionId} has no MediaSession yet — fallback to V1`, "ws");
+        fallbackToV1();
+        return;
+      }
+
+      log(`[V2 ROUTER] Routing to V2 — sessionId=${ctx.sessionId} campaignId=${ctx.campaignId}`, "ws");
+      ws.off("message", onMessage);
+
+      try {
+        ctx.transportGateway.accept(
+          ws as any,          // ITransportGateway uses WsWebSocket (same underlying type)
+          ctx.sessionId,
+          ctx.callSid ?? "",
+          ctx.campaignId,
+          "exotel",
+          ctx.mediaSession,   // non-null confirmed above
+          clientIp
+        );
+        log(`[V2 ROUTER] Socket owned by TransportGateway — sessionId=${ctx.sessionId}`, "ws");
+        for (let i = 0; i < buffered.length; i++) {
+          const msg = buffered[i];
+          process.nextTick(() => ws.emit("message", msg.data, msg.isBinary));
+        }
+      } catch (err: any) {
+        log(`[V2 ROUTER] TransportGateway.accept() failed (${err.message}) — fallback to V1`, "ws");
+        handleExotelStream(ws, campaignId);
+        for (let i = 0; i < buffered.length; i++) {
+          const msg = buffered[i];
+          process.nextTick(() => ws.emit("message", msg.data, msg.isBinary));
+        }
+      }
+    };
+
+    // ── Routing listener ───────────────────────────────────────────────────────
+
+    const onMessage = (data: Buffer, isBinary: boolean): void => {
+      if (decided) return;
+
+      buffered.push({ data, isBinary });
+
+      const raw = data.toString();
+
+      let parsed: Record<string, any>;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        // Unparseable frame — can't determine event type; fall back to V1.
+        decided = true;
+        log(`[V2 ROUTER] Unparseable message — fallback to V1`, "ws");
+        fallbackToV1();
+        return;
+      }
+
+      const event: string = parsed.event ?? "";
+
+      if (event === "connected") {
+        // Exotel sends 'connected' first; wait for 'start' to get callSid.
+        log(`[V2 ROUTER] 'connected' received — waiting for 'start'`, "ws");
+        return; // keep listener active, continue buffering
+      }
+
+      if (event === "start") {
+        decided = true;
+
+        // Exotel embeds call identifiers inside start.customParameters and
+        // the top-level start object depending on the API version.
+        const startBlock = parsed.start ?? {};
+        const callSid: string =
+          startBlock.callSid    ||
+          startBlock.callSID    ||
+          parsed.callSid        ||
+          "";
+        const phone: string =
+          startBlock.from                             ||
+          startBlock.customParameters?.phone          ||
+          startBlock.customParameters?.From           ||
+          startBlock.customParameters?.callerPhone    ||
+          "";
+
+        log(`[V2 ROUTER] 'start' received — callSid=${callSid || "(none)"} phone=${phone || "(none)"}`, "ws");
+
+        const coordinator = getV2Coordinator();
+        let v2Session: ReturnType<typeof coordinator.getSession> = null;
+
+        if (callSid) {
+          v2Session = coordinator.getSession({ callSid });
+          if (v2Session) {
+            log(`[V2 ROUTER] Session found by callSid=${callSid}`, "ws");
+          }
+        }
+        if (!v2Session && phone) {
+          v2Session = coordinator.getSession({ phone });
+          if (v2Session) {
+            log(`[V2 ROUTER] Session found by phone=${phone}`, "ws");
+          }
+        }
+
+        if (v2Session) {
+          routeToV2(v2Session as SessionContext);
+        } else {
+          log(`[V2 ROUTER] Session missing (callSid=${callSid || "(none)"}, phone=${phone || "(none)"}) — fallback to V1`, "ws");
+          fallbackToV1();
+        }
+        return;
+      }
+
+      // Any unrecognised event before 'start' — safe to fall back to V1.
+      decided = true;
+      log(`[V2 ROUTER] Unrecognised event '${event}' before 'start' — fallback to V1`, "ws");
+      fallbackToV1();
+    };
+
+    ws.on("message", onMessage);
+
+    ws.on("close", (code) => {
+      if (!decided) {
+        log(`[V2 ROUTER] Connection closed before routing decision — code=${code}`, "ws");
+      }
+    });
   });
 
   // Single upgrade router — routes by pathname, passes unknown paths through
