@@ -1,13 +1,13 @@
 ---
 name: query-integration-data
-description: Query and modify data in any connected integration (Linear, GitHub, HubSpot, Slack, Google services, etc.) or connected data warehouse (Databricks, Snowflake, BigQuery). Use listConnections() in the codeExecution sandbox to get credentials, then call APIs directly. Supports read operations (queries, counts, exports) and write operations (create, update, delete).
+description: Query and modify data in any connected integration (Linear, GitHub, HubSpot, Slack, Google services, etc.) or connected data warehouse (Databricks, Snowflake, BigQuery). Use listConnections() in the code_execution sandbox to get credentials, then call APIs directly. Supports read operations (queries, counts, exports) and write operations (create, update, delete).
 ---
 
 # Query Integration Data Skill
 
-Connect to any Replit-supported integration to read or write data -- query issues, create tickets, send messages, update contacts, manage files, etc. This also includes querying supported data warehouse integrations like Databricks, Snowflake, and BigQuery.
+Connect to any Replit-supported integration to read or write data — query issues, create tickets, send messages, update contacts, manage files, etc. This also includes querying supported data warehouse integrations like Databricks, Snowflake, and BigQuery.
 
-All code runs inline in the `codeExecution` sandbox -- no script files needed.
+All code runs inline in the `code_execution` sandbox — no script files needed.
 
 ## When to Use
 
@@ -33,105 +33,56 @@ Use this skill when the user asks you a **question in chat** that requires data 
 
 ```text
 .agents/
--- outputs/         # Generated artifacts (CSV, JSON, etc.)
+└── outputs/         # Generated artifacts (CSV, JSON, etc.)
 ```
 
-Code runs inline in the `codeExecution` sandbox -- no script files are needed.
+Code runs inline in the `code_execution` sandbox — no script files are needed.
 
 ## Workflow
 
 ```text
-1. SEARCH     -- searchIntegrations({ query }) to find the integration and read its status
-   -- status added     -- EXECUTE -- OUTPUT
-   -- status not_added
-      or not_setup     -- CONNECT (via `integrations` skill) -- EXECUTE -- OUTPUT
-2. EXECUTE    -- listConnections(connectorName) inside "use impure" for credentials, then call the API
+1. CHECK      → listConnections(connectorName) to get existing credentials
+   ├─ connections exist → EXECUTE → OUTPUT
+   └─ empty array      → SEARCH → LEARN → CLARIFY → setup via `integrations` skill → EXECUTE → OUTPUT
 ```
 
-- **SEARCH**: Call `searchIntegrations({ query })` (see "Calling `searchIntegrations`" below for the exact params and result shape). Its `status` field is the source of truth for whether a connection needs setup -- do NOT use `listConnections().length` to decide this (see "Deciding whether setup is needed" below).
-  - `added` -- a connection is already bound to this Repl. Skip straight to EXECUTE.
-  - `not_added` -- authorized at the account level but not bound to this Repl. Bind it via the `integrations` skill, then EXECUTE.
-  - `not_setup` -- not authorized yet. Set it up via the `integrations` skill (`ProposeIntegration` drives OAuth), then EXECUTE.
-- **CONNECT** (only when status is `not_setup` or `not_added`): Use `searchIntegrations`, `ProposeIntegration`, and `addIntegration` to set up the connection. See the `integrations` skill for the full lifecycle details.
-- **EXECUTE**: This is the **only** step that calls `listConnections`, and only call it because you are about to use the credentials. Call `listConnections(connectorName)` inside a `"use impure"` function to fetch the `settings`, build your client, and run the API call in the same `codeExecution` block. Never call `listConnections` to "check" or "probe" a connection -- if you are not about to use the credentials, do not call it.
+- **CHECK**: Call `listConnections(connectorName)` in the `code_execution` sandbox. If it returns connections, you already have credentials — skip straight to EXECUTE.
+- **SEARCH → CONNECT** (only when no connections exist): Use `searchIntegrations`, `proposeIntegration`, and `addIntegration` to set up a new connection. See the `integrations` skill for the full lifecycle details.
+- **EXECUTE**: Write and run code in the `code_execution` sandbox.
 - **OUTPUT**: Return the answer or confirmation to the user.
-
-> **Call `listConnections` only when you need the credentials.** It is a credential-fetch call, not a status check. The connect/no-connect decision belongs to `searchIntegrations` `status`; `listConnections` is for the EXECUTE step alone, when you are about to make the API call.
-
-## Deciding whether setup is needed
-
-Use `searchIntegrations({ query }).integrations[].status`, NOT `listConnections`, to decide whether a connection needs to be set up:
-
-- `status: 'added'` -- bound to this Repl, ready to use. Go to EXECUTE.
-- `status: 'not_added'` -- authorized at the account level but not bound here. Bind via the `integrations` skill.
-- `status: 'not_setup'` -- not authorized. Drive OAuth via the `integrations` skill.
-
-Do **not** branch on `listConnections(connectorName).length === 0` for this decision. `listConnections` exists to hand credentials to your sandbox code, and it drops any connection whose credentials are withheld (e.g. credential-blocked account contexts) -- so it can return an empty array even when an account-level connection genuinely exists. That makes it an unreliable presence check and would push you into a needless re-connect prompt. `searchIntegrations`'s `status` does not have that blind spot.
-
-## Calling `searchIntegrations`
-
-`searchIntegrations` takes exactly one argument -- an object with a single `query` field -- and takes no other params:
-
-```ts
-searchIntegrations({ query: string }): Promise<{
-  integrations: Array<{
-    id: string;            // "connector:<id>" or "connection:<id>"
-    integrationType: 'connector' | 'connection';
-    displayName: string;   // human-readable, e.g. "Google Sheets"
-    description: string;
-    status: 'added' | 'not_added' | 'not_setup';
-  }>;
-  askForBlueprintConfirmation: boolean;
-}>
-```
-
-How to build the `query` so a match is found reliably:
-
-- `query` is a **natural-language description of what you need**. The callback fetches the available connectors and connections, then uses an LLM classifier to pick the ones that semantically match your `query` -- it is **not** a literal substring or slug match, so `"spreadsheet"` can match `Google Sheets` and `"issue tracker"` can match `Linear`.
-- Describe the capability or product in plain terms (`"Google Sheets"`, `"payments"`, `"issue tracker"`). You do not need the exact `displayName` or the connector slug.
-- `query: ''` (empty string) skips the classifier and returns **every** available connector and connection (capped at 50). Use this to enumerate what is available when you are unsure what to ask for, then pick the right entry from `integrations` by `displayName`.
-- If a specific `query` returns no matching entry, retry with `query: ''` and scan the full list rather than assuming the integration does not exist.
-
-Read `status` (not array length) to decide setup, and read `id` to feed the other integration callbacks (`viewIntegration`, `addIntegration`) and the `ProposeIntegration` model tool.
-
-**The result does not contain the connector slug** that `listConnections` needs. `searchIntegrations` exposes only `id` / `displayName` / `description` / `status` -- not the connector `name`/slug. Obtain the slug separately (see "Resolving the connector slug" below); do not assume `displayName` lowercased is the slug.
 
 ## Getting Connection Credentials
 
-### `listConnections(connectorName)` -- call only when you need the credentials
+### Primary: `listConnections(connectorName)`
 
-`listConnections` is a credential-fetch call, not a status check. Call it **only** inside a `"use impure"` function when `searchIntegrations` already reports the connection as `added` **and** you are about to use the credentials in the same `codeExecution` block. Do not call it to test whether a connection exists, to "check" status, or speculatively before you actually need to hit the API -- that decision is `searchIntegrations`'s job. The credentials stay inside the sandbox and never enter the model context.
-
-Fetch the credentials and use them in the same block -- never as a standalone "is it connected?" probe:
+This is the main way to get credentials. It's a pre-registered function in the `code_execution` sandbox.
 
 ```javascript
-const result = await (async function() {
-  "use impure";
-  const conns = await listConnections('linear');
-  const client = await conns[0].getClient();   // initialized SDK client — no import, no raw token handling
-  return { connectionId: conns[0].id, clientReady: Boolean(client) };
-})();
-console.log(result);
+const conns = await listConnections('linear');
+console.log(conns.map(c => ({ id: c.id, displayName: c.displayName, status: c.status })));
 ```
 
 Each connection object has:
 
 - `id`, `connectorConfigId`, `status`, `displayName`, `metadata`, `environment`
-- `settings` -- credentials dict (access tokens, API keys, etc.)
-- `getClient()` -- returns an initialized SDK client for supported connectors
+- `settings` — credentials dict (access tokens, API keys, etc.)
+- `getClient()` — returns the `settings` object for constructing SDK clients
 
-Credential fields are available by direct property access, e.g. `conn.settings.access_token` or `conn.settings.api_key`. You may inspect `Object.keys(conn.settings)` to see which credential fields exist, but do **not** log, return, spread, or serialize the whole `settings` object. Use the credential value only to construct the API client or request headers, and return safe metadata/results instead.
+Returns an empty array when no connections are configured.
 
-#### Resolving the connector slug
+```javascript
+const conns = await listConnections('linear');
+if (conns.length > 0) {
+  const token = conns[0].settings.access_token;
+  const { LinearClient } = await import('@linear/sdk');
+  const client = new LinearClient({ accessToken: token });
+  // Ready to query
+}
+```
 
-`listConnections(connectorName)` is keyed on the **exact connector slug** (e.g. `google-sheet`, `linear`, `stripe`), filtered server-side. The slug is lowercase and often hyphenated, and it is **not** the `displayName` from `searchIntegrations` (`Google Sheets`) nor a reliable lowercasing of it. Passing the wrong slug returns `[]` -- the same shape as "no connection" -- so resolve the slug before concluding anything from an empty result:
+### Fallback: Setting Up a New Connection
 
-- `viewIntegration` is the source of truth for the slug. Call `viewIntegration({ integrationId })` with the `id` from `searchIntegrations`; its rendered markdown spells out the slug as **Name:** `<slug>` (for a connector) or **Connector:** `<slug>` (for an existing connection). `addIntegration` binds that same connector name. Pass that exact value to `listConnections` -- do not guess it by lowercasing the `displayName`.
-
-If `listConnections` returns `[]`, work through these in order before giving up:
-
-1. **Wrong slug** -- the most common cause. Confirm the slug against `viewIntegration`/`addIntegration` output and retry with the correct value.
-2. **Withheld credentials** -- only after the slug is confirmed correct and `searchIntegrations` reported the integration as `added`. A persistent empty result then means the credentials are being withheld for this context (e.g. a credential-blocked account) rather than missing. Surface that to the user instead of looping back into a connect proposal.
+If `listConnections` returns an empty array, the user hasn't connected the service yet. Use `searchIntegrations` to find the connector, then follow the `integrations` skill to walk the user through setup (`addIntegration` and `proposeIntegration` — order depends on integration type). After the connection is established, `listConnections` will return it.
 
 ### Browse the Documentation
 
@@ -163,24 +114,19 @@ For write operations, often run a read query first to get valid options:
 // User says: "Create a Linear ticket assigned to John"
 // Problem: Need John's user ID, not just name
 
-const result = await (async function() {
-  "use impure";
-  const conns = await listConnections('linear');
-  const client = await conns[0].getClient();   // returns an initialized LinearClient — no import needed
-  // Step 1: List users to find John's ID
-  const users = await client.users();
-  const matches = users.nodes
-    .filter(u => u.name.includes('John'))
-    .map(u => ({ id: u.id, name: u.name }));
-  return { matches };
-})();
-console.log(result);
+const conns = await listConnections('linear');
+const { LinearClient } = await import('@linear/sdk');
+const client = new LinearClient({ accessToken: conns[0].settings.access_token });
+
+// Step 1: List users to find John's ID
+const users = await client.users();
+const john = users.nodes.find(u => u.name.includes('John'));
 
 // Step 2: If ambiguous, ASK the user
 // "I found John Smith and John Doe. Which one?"
 
-// Step 3: After the user chooses, pass the selected JSON ID into a new
-// "use impure" function that creates the issue.
+// Step 3: Create with correct ID
+await client.createIssue({ assigneeId: john.id, ... });
 ```
 
 ### Common Multi-Step Patterns
@@ -195,26 +141,22 @@ console.log(result);
 
 ## Running Code in the Sandbox
 
-All connector credential work runs inside `"use impure"` functions in the `codeExecution` sandbox. Keep clients and credentials inside that function, and return only JSON-serializable results.
+All code runs in the `code_execution` sandbox. State persists across calls (notebook-style), so variables from one call are available in subsequent calls.
 
 ### Read Operations
 
 Query data and return results:
 
 ```javascript
-const result = await (async function() {
-  "use impure";
-  const conns = await listConnections('linear');
-  const client = await conns[0].getClient();
+const conns = await listConnections('linear');
+const { LinearClient } = await import('@linear/sdk');
+const client = new LinearClient({ accessToken: conns[0].settings.access_token });
 
-  const issues = await client.issues({ first: 10 });
-  return issues.nodes.map(issue => ({
-    identifier: issue.identifier,
-    title: issue.title,
-    state: issue.state?.name ?? null,
-  }));
-})();
-console.log(result);
+const issues = await client.issues({ first: 10 });
+console.log(`Found ${issues.nodes.length} issues`);
+for (const issue of issues.nodes) {
+  console.log(`${issue.identifier}: ${issue.title} [${issue.state?.name}]`);
+}
 ```
 
 ### Write Operations
@@ -222,64 +164,51 @@ console.log(result);
 Create, update, or delete data:
 
 ```javascript
-const result = await (async function(teamId, issueId, doneStateId) {
-  "use impure";
-  const conns = await listConnections('linear');
-  const client = await conns[0].getClient();
+const conns = await listConnections('linear');
+const { LinearClient } = await import('@linear/sdk');
+const client = new LinearClient({ accessToken: conns[0].settings.access_token });
 
-  const created = await client.createIssue({ teamId, title: "Fix login bug" });
-  await client.updateIssue(issueId, { stateId: doneStateId });
-  await client.deleteIssue(issueId);
+// Create
+const created = await client.createIssue({ teamId: team.id, title: "Fix login bug" });
+console.log(`Created: ${created.issue?.identifier}`);
 
-  return { created: created.issue?.identifier ?? null, updated: issueId, deleted: issueId };
-})(team.id, issueId, doneState.id);
-console.log(result);
+// Update
+await client.updateIssue(issueId, { stateId: doneState.id });
+console.log(`Updated: ${issueId}`);
+
+// Delete
+await client.deleteIssue(issueId);
+console.log(`Deleted: ${issueId}`);
 ```
 
 ### Multi-Step Operations
 
-Keep clients and credentials inside `"use impure"` calls. Return JSON IDs or summaries, then pass those JSON values into the next impure function when another API call is needed:
+Variables persist across `code_execution` calls, enabling multi-step workflows:
 
 ```javascript
 // Call 1: Get credentials and list teams
-const result = await (async function() {
-  "use impure";
-  const conns = await listConnections('linear');
-  const client = await conns[0].getClient();
+const conns = await listConnections('linear');
+const { LinearClient } = await import('@linear/sdk');
+const client = new LinearClient({ accessToken: conns[0].settings.access_token });
 
-  const teams = await client.teams();
-  const team = teams.nodes[0];
-  const users = await client.users();
-  const assignee = users.nodes.find(u => u.name === 'John');
+const teams = await client.teams();
+const team = teams.nodes[0];
+console.log(`Using team: ${team.name}`);
 
-  return {
-    team: { id: team.id, name: team.name },
-    assignee: assignee ? { id: assignee.id, name: assignee.name } : null,
-  };
-})();
-console.log(result);
+const users = await client.users();
+const assignee = users.nodes.find(u => u.name === 'John');
+console.log(`Found assignee: ${assignee?.name}`);
 ```
 
 ```javascript
-// Call 2: copy literal IDs from Call 1's output into a new impure function
-const selectedTeamId = 'team-id-from-call-1-output';
-const selectedAssigneeId = 'assignee-id-from-call-1-output';
-
-const created = await (async function(teamId, assigneeId) {
-  "use impure";
-  const conns = await listConnections('linear');
-  const client = await conns[0].getClient();
-
-  const issue = await client.createIssue({
-    teamId,
-    ...(assigneeId === null ? {} : { assigneeId }),
-    title: 'New feature request',
-    description: 'Details here...',
-  });
-
-  return { identifier: issue.issue?.identifier ?? null, title: 'New feature request' };
-})(selectedTeamId, selectedAssigneeId);
-console.log(created);
+// Call 2: Variables from Call 1 are still available
+const issue = await client.createIssue({
+  teamId: team.id,
+  assigneeId: assignee?.id,
+  title: 'New feature request',
+  description: 'Details here...',
+});
+console.log(`Created ${issue.issue?.identifier}: New feature request`);
 ```
 
 ## Databricks
@@ -292,23 +221,23 @@ When querying data warehouses (BigQuery, Snowflake, Databricks), large schemas c
 
 ### CRITICAL: Warehouse queries are billed per byte scanned
 
-Warehouse targets (`bigquery`, `databricks`, `snowflake`) cost real money per query -- a
+Warehouse targets (`bigquery`, `databricks`, `snowflake`) cost real money per query — a
 careless `SELECT *` over a fact table can cost tens of dollars and a dashboard that
 re-runs queries every few seconds can burn thousands of dollars per day. Before writing
 any warehouse query (via `executeSql` or `executeSql({target: "bigquery"})`) follow
 these rules:
 
-- **Project exact columns** -- never `SELECT *` on wide tables.
-- **Always `LIMIT`** when exploring; `LIMIT 5`--`LIMIT 100` is plenty for a sample.
-- **Scope by partition / cluster** -- add `WHERE event_date >= ...` (or the table's
+- **Project exact columns** — never `SELECT *` on wide tables.
+- **Always `LIMIT`** when exploring; `LIMIT 5`–`LIMIT 100` is plenty for a sample.
+- **Scope by partition / cluster** — add `WHERE event_date >= ...` (or the table's
   clustering column) so the warehouse prunes data and you are billed for a tiny slice.
 - **Prefer pre-aggregated tables** (e.g. `_daily`, `_summary`) over raw event tables.
-- **Diff-only reads** for anything incremental -- `WHERE updated_at > :last_seen` and
+- **Diff-only reads** for anything incremental — `WHERE updated_at > :last_seen` and
   persist `last_seen` so subsequent queries only scan the delta.
-- **Cache repeated results locally** -- if you run the same exploration query twice in
+- **Cache repeated results locally** — if you run the same exploration query twice in
   the same session, store the first result in a variable or `.agents/outputs/*.csv`
   and reuse it instead of re-running the query.
-- **Don't power a data app from this skill** -- if the user is building a dashboard,
+- **Don't power a data app from this skill** — if the user is building a dashboard,
   report, or explorer, hand off to the `data-visualization` skill so the app's API
   server can cache results (15-min TTL). The `query-integration-data` skill is for
   answering questions in chat, not for powering a live UI.
@@ -321,11 +250,11 @@ Use this pattern when ALL of the following are true:
 - The initial INFORMATION_SCHEMA query returns **15+ tables**
 - The user's question is **not about a specific known table** (e.g., they're asking a broad question like "what's our revenue trend?" or "show me customer data")
 
-If the schema has fewer than 15 tables, serial exploration is fast enough -- just query tables one-by-one.
+If the schema has fewer than 15 tables, serial exploration is fast enough — just query tables one-by-one.
 
 ### 4-Step Parallel Workflow
 
-**Step 1: Schema Discovery** -- Run a single `executeSql` call to get the full table list.
+**Step 1: Schema Discovery** — Run a single `executeSql` call to get the full table list.
 
 ```javascript
 // BigQuery
@@ -339,20 +268,21 @@ const tables = await executeSql({ sqlQuery: `SELECT table_schema, table_name FRO
 ```
 
 `INFORMATION_SCHEMA.TABLES` is a metadata read and is essentially free. Sampling rows
-from the tables it returns is **not** free -- see the next step.
+from the tables it returns is **not** free — see the next step.
 
-**Step 2: Group Tables** -- Partition the table list into 2-4 clusters:
+**Step 2: Group Tables** — Partition the table list into 2-4 clusters:
 
 - By schema/dataset name (e.g., `analytics.*`, `sales.*`, `marketing.*`)
 - By name prefix (e.g., `dim_*`, `fact_*`, `stg_*`)
 - By estimated relevance to the user's question (most-likely-relevant tables first)
 
-**Step 3: Launch Parallel Subagents** -- Start one general subagent per group: (see delegation skill)
+**Step 3: Launch Parallel Subagents** — Start one `SMALL_TASK` subagent per group:
 
 ```javascript
-const exploreWarehouseTask = `Explore these warehouse tables to answer: "${userQuestion}"
+const group1 = await startAsyncSubagent({
+  task: `Explore these warehouse tables to answer: "${userQuestion}"
 
-Connection: Use executeSql({ sqlQuery: "...", target: "bigquery" }) -- always pass target.
+Connection: Use executeSql({ sqlQuery: "...", target: "bigquery" }) — always pass target.
 Dialect: BigQuery (use backtick quoting for project.dataset.table)
 
 Tables to explore:
@@ -363,8 +293,8 @@ Tables to explore:
 For each table:
 1. Run: SELECT column_name, data_type, is_partitioning_column FROM \`project.dataset\`.INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'TABLE_NAME'
 2. Identify the partition / cluster column from step 1 (e.g. event_date, _PARTITIONTIME).
-3. Sample rows -- project exact columns, scope by partition, and LIMIT.
-   NEVER \`SELECT *\` on a fact table on a billed warehouse -- \`LIMIT 5\` does not
+3. Sample rows — project exact columns, scope by partition, and LIMIT.
+   NEVER \`SELECT *\` on a fact table on a billed warehouse — \`LIMIT 5\` does not
    undo the bytes scanned by selecting every column.
    Pattern: SELECT <subset of columns from step 1>
             FROM \`project.dataset.TABLE_NAME\`
@@ -387,22 +317,16 @@ Return your findings in this exact format:
 - table_a.id = table_b.a_id (describe relationship)
 
 ## Key Findings
-- Bullet points about data patterns, date ranges, notable values`;
-const group1 = subagent({
-  name: "explore-warehouse",
-  task: exploreWarehouseTask,
-  config: { $kind: "general", relevantFiles: ['.local/skills/database/SKILL.md'] },
+- Bullet points about data patterns, date ranges, notable values`,
+  specialization: 'SMALL_TASK',
+  relevantFiles: ['.local/skills/database/SKILL.md']
 });
 
 // Launch additional subagents for other groups (2-4 total)
-const group2 = subagent({ /* same pattern, different tables, config: { $kind: "general" } */ });
-const groupResults = await Promise.all([group1, group2]);
-for (const groupResult of groupResults) {
-  console.log(groupResult.text);
-}
+const group2 = await startAsyncSubagent({ /* same pattern, different tables */ });
 ```
 
-**Step 4: Synthesize and Query** -- Await the schema-discovery subagents. Once they complete, read their outputs, combine the relevant tables/columns, and write the final SQL query.
+**Step 4: Synthesize and Query** — Use the `wait_for_background_tasks` tool to wait for the schema-discovery subagents. Once they complete, read their outputs, combine the relevant tables/columns, and write the final SQL query.
 
 ### Dialect-Specific Notes
 
@@ -418,7 +342,7 @@ the cost of reading every column for the matched rows on a billed warehouse.
 ### Tips
 
 - Each subagent should run 3-6 SQL queries (column metadata + sample data per table)
-- Keep subagent count to 2-4 -- more than 4 has diminishing returns
+- Keep subagent count to 2-4 — more than 4 has diminishing returns
 - The structured markdown output format ensures consistent, scannable results
 - After synthesis, write a single well-commented SQL query that answers the user's question
 
@@ -430,7 +354,7 @@ the cost of reading every column for the matched rows on a billed warehouse.
 - **Errors**: Print clear error messages
 
 ```javascript
-const fs = await import('node:fs');   // Node built-in — always available, no install needed
+const fs = await import('fs');
 
 // Simple
 console.log(`Answer: 42 issues created this week`);
@@ -448,15 +372,14 @@ console.log(`Deleted message ID abc123`);
 
 ## Key Points
 
-- **Decide setup via `searchIntegrations` `status`** (`added` / `not_added` / `not_setup`), not `listConnections().length`
-- **Call `listConnections(connectorName)` only inside `"use impure"` when you need the credentials** -- it is a credential fetch for the EXECUTE step, never a status check or probe
-- **Search -- propose -- add** when status is `not_setup` or `not_added` (see `integrations` skill)
-- **All code runs in the `codeExecution` sandbox** -- no script files needed
-- **Use `console.log()`** to see output -- functions execute silently without it (but never log credentials)
-- **Prefer `conn.getClient()`** over importing an SDK — it returns an initialized client with no `await import` and no raw token handling.
-- **State persists** across `codeExecution` calls -- reuse `conns`, clients, and extracted credentials instead of re-fetching (unless expired).
+- **Use `listConnections(connectorName)`** as the primary way to get credentials
+- **Fall back to search → propose → add** when no connections exist (see `integrations` skill)
+- **All code runs in the `code_execution` sandbox** — no script files needed
+- **Use `console.log()`** to see output — functions execute silently without it (but never log credentials)
+- **Use `await import(...)`** for packages (dynamic imports only)
+- **State persists** across `code_execution` calls — reuse `conns`, clients, and extracted credentials instead of re-fetching (unless expired).
 - **Browse `public_documentation_link`** to understand the API before coding
 - **Ask clarifying questions** before write operations that need specific IDs or values
 - **Fetch options first** when the user references something by name (users, projects, etc.)
-- **Don't cache clients** -- access tokens expire; re-create clients from `listConnections` when needed
+- **Don't cache clients** — access tokens expire; re-create clients from `listConnections` when needed
 - **Write large outputs to `.agents/outputs/`** as CSV or JSON

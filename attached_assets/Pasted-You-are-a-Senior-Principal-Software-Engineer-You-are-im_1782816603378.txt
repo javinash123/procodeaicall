@@ -1,0 +1,267 @@
+You are a Senior Principal Software Engineer.
+
+You are implementing NIJVOX Voice Engine V2.
+
+Architecture is frozen.
+
+Read the existing Voice Engine foundation, runtime and bootstrap before writing code.
+
+==========================================================
+GOAL
+==========================================================
+
+Implement ONLY the OpenAI Realtime Provider.
+
+This provider must encapsulate ALL OpenAI-specific logic.
+
+Nothing outside this module may import the OpenAI SDK directly.
+
+This provider will become the default AI engine for Voice Engine V2.
+
+==========================================================
+DO NOT TOUCH
+==========================================================
+
+Do not modify:
+
+Existing SaaS
+
+Voice Engine V1
+
+Bootstrap
+
+Runtime
+
+Foundation
+
+Existing routes
+
+Existing Exotel code
+
+==========================================================
+CREATE ONLY
+==========================================================
+
+server/voice-engine/providers/openai/
+
+Create ONLY:
+
+index.ts
+
+OpenAIRealtimeProvider.ts
+
+OpenAIRealtimeSession.ts
+
+OpenAIRealtimeEvents.ts
+
+OpenAIRealtimeTypes.ts
+
+OpenAIRealtimeConfig.ts
+
+OpenAIRealtimeFactory.ts
+
+==========================================================
+IMPLEMENT
+==========================================================
+
+1.
+
+OpenAIRealtimeProvider
+
+Production implementation.
+
+Implements the existing LLM provider interface.
+
+Owns OpenAI client creation.
+
+No globals.
+
+Lazy initialization.
+
+Supports ping().
+
+Supports graceful shutdown.
+
+----------------------------------------------------------
+
+2.
+
+OpenAIRealtimeSession
+
+Represents ONE realtime conversation.
+
+Responsibilities:
+
+connect()
+
+disconnect()
+
+sendAudio()
+
+sendText()
+
+interrupt()
+
+updateInstructions()
+
+updateTools()
+
+close()
+
+No transport.
+
+No Exotel.
+
+Only OpenAI.
+
+----------------------------------------------------------
+
+3.
+
+Realtime Events
+
+Create strongly typed event models.
+
+Connected
+
+Disconnected
+
+AudioReceived
+
+AudioSent
+
+TranscriptDelta
+
+TranscriptCompleted
+
+ResponseStarted
+
+ResponseDelta
+
+ResponseCompleted
+
+Error
+
+RateLimit
+
+ToolCall
+
+ToolResult
+
+SessionUpdated
+
+----------------------------------------------------------
+
+4.
+
+Realtime Config
+
+Configuration schema.
+
+Model
+
+Voice
+
+Temperature
+
+Max Tokens
+
+Audio Format
+
+Turn Detection
+
+Silence Detection
+
+VAD
+
+Retry Policy
+
+Timeouts
+
+Use existing Zod validation.
+
+----------------------------------------------------------
+
+5.
+
+Factory
+
+CreateOpenAIRealtimeProvider()
+
+Dependency injected.
+
+Receives Logger
+
+Metrics
+
+Configuration
+
+No process.env
+
+----------------------------------------------------------
+
+6.
+
+Rules
+
+No references to Exotel.
+
+No references to CRM.
+
+No references to Campaigns.
+
+No business logic.
+
+No session manager.
+
+No knowledge engine.
+
+Provider owns only OpenAI communication.
+
+==========================================================
+QUALITY
+==========================================================
+
+Strict TypeScript.
+
+No any.
+
+Professional JSDoc.
+
+No duplicate types.
+
+Fail-fast.
+
+Strong typing.
+
+==========================================================
+SELF CHECK
+==========================================================
+
+Before stopping verify:
+
+✓ Compiles
+
+✓ No provider leaks
+
+✓ No OpenAI SDK imported outside provider
+
+✓ No Exotel references
+
+✓ Runtime unchanged
+
+✓ Bootstrap unchanged
+
+✓ Foundation unchanged
+
+Finally output:
+
+Files created
+
+Compilation
+
+Architecture compliance
+
+Public API summary
+
+STOP

@@ -5,22 +5,20 @@ description: Create and manage Replit's built-in PostgreSQL databases, check sta
 
 # Database Skill
 
-Use the project's pre-configured PostgreSQL database and execute SQL queries safely in your development and production environments.
-
-Every project comes with a PostgreSQL database already provisioned. There is no create-database step and no `createDatabase()` callback — the database always exists. Use `checkDatabase()` only to confirm it is reachable, then go straight to `executeSql()`.
+Manage PostgreSQL databases and execute SQL queries safely in your development and production environments.
 
 ## When to Use
 
 Use this skill when:
 
-- Setting up schema or data in the project's pre-configured PostgreSQL database
-- Checking that the database is reachable
+- Creating a new PostgreSQL database for your project
+- Checking if a database is provisioned and accessible
 - Running SQL queries against the development or production database
 - Querying data warehouses (BigQuery, Databricks, Snowflake). For Databricks, use the `databricks-m2m` connector (not the plain `databricks` connector).
 
 ## When NOT to Use
 
-- Schema migrations in production environments -- see "Production schema changes" below
+- Schema migrations in production environments — see "Production schema changes" below
 - Direct modifications to Stripe tables (use Stripe API instead)
 - Converting a pre-existing database over to Replit, unless a user explicitly asks you to.
 
@@ -28,17 +26,17 @@ Use this skill when:
 
 For projects that use Replit's managed PostgreSQL, the production database schema is managed automatically by Replit's Publish flow. When the user clicks Publish, Replit diffs the development schema against production, asks the user to resolve any renames in the Publish UI, and applies the diff to production. This is the supported path for changing the production schema; the agent must not write any code or scripts to migrate the production database.
 
-For the full set of rules on what the agent must and must not do here -- including specific patterns to avoid (custom migration scripts, deploy-build hooks, startup-time DDL) and the correct dev-side flow -- read `.local/skills/database/references/database-migrations-on-publish.md`.
+For the full set of rules on what the agent must and must not do here — including specific patterns to avoid (custom migration scripts, deploy-build hooks, startup-time DDL) and the correct dev-side flow — read `.local/skills/database/references/database-migrations-on-publish.md`.
 
 ## Reference Documents
 
-- `.local/skills/database/references/database-migrations-on-publish.md` -- Full detail on the publish-time schema migration flow, including the two automatic application points (post-merge -- dev, publish -- prod), the SQL diff and rename-confirmation behavior, and the canonical failure mode this guidance prevents. Read this when the user reports production is missing a column or table, asks to "push dev to prod" / "migrate the production database" / "sync the schema", or reports the deployed app failing with "column does not exist" / "relation does not exist" errors.
+- `.local/skills/database/references/database-migrations-on-publish.md` — Full detail on the publish-time schema migration flow, including the two automatic application points (post-merge → dev, publish → prod), the SQL diff and rename-confirmation behavior, and the canonical failure mode this guidance prevents. Read this when the user reports production is missing a column or table, asks to "push dev to prod" / "migrate the production database" / "sync the schema", or reports the deployed app failing with "column does not exist" / "relation does not exist" errors.
 
 ## Available Functions
 
 ### checkDatabase()
 
-Confirm the project's pre-configured PostgreSQL database is reachable. The database always exists; this only verifies connectivity.
+Check if the PostgreSQL database is provisioned and accessible.
 
 **Parameters:** None
 
@@ -51,9 +49,31 @@ const status = await checkDatabase();
 if (status.provisioned) {
     console.log("Database is ready!");
 } else {
-    // The database exists but is unreachable right now. Surface the message;
-    // there is no createDatabase() step.
     console.log(status.message);
+    // Consider calling createDatabase()
+}
+```
+
+### createDatabase()
+
+Create or verify a PostgreSQL database exists for the project.
+
+**Parameters:** None
+
+**Returns:** Dict with:
+
+- `success` (bool): Whether operation succeeded
+- `message` (str): Status message
+- `alreadyExisted` (bool): True if database already existed
+- `secretKeys` (list): Environment variables set (DATABASE_URL, PGHOST, etc.)
+
+**Example:**
+
+```javascript
+const result = await createDatabase();
+if (result.success) {
+    console.log(`Database ready! Environment variables: ${result.secretKeys}`);
+    // Now you can use DATABASE_URL in your application
 }
 ```
 
@@ -65,8 +85,8 @@ Execute a SQL query with safety checks.
 
 - `sqlQuery` (str, required): The SQL query to execute. Use `$1`, `$2`, etc. placeholders when using parameterized queries.
 - `params` (array, optional): Parameter values for parameterized queries. When provided, values are bound separately from the SQL string, **preventing SQL injection**. Each `$N` placeholder in `sqlQuery` corresponds to the Nth element in this array (1-indexed). Supported types: string, number, boolean, null. **Two restrictions:**
-  - **Single-statement only.** When `params` is provided (including `params: []`), `sqlQuery` MUST be a single SQL statement. Semicolon-delimited multi-statement scripts (`BEGIN; ...; COMMIT;`, migration batches, etc.) are rejected on the parameterized path. Send them as a single `executeSql` call WITHOUT `params` -- separate calls do NOT share a transaction or session, so splitting would silently lose atomicity. Validate any interpolated values against a strict allowlist before embedding them.
-  - **`replit_database` target only.** Data warehouse targets (bigquery, databricks, snowflake) do not support parameter binding -- passing `params` with those targets raises an error.
+  - **Single-statement only.** When `params` is provided (including `params: []`), `sqlQuery` MUST be a single SQL statement. Semicolon-delimited multi-statement scripts (`BEGIN; ...; COMMIT;`, migration batches, etc.) are rejected on the parameterized path. Send them as a single `executeSql` call WITHOUT `params` — separate calls do NOT share a transaction or session, so splitting would silently lose atomicity. Validate any interpolated values against a strict allowlist before embedding them.
+  - **`replit_database` target only.** Data warehouse targets (bigquery, databricks, snowflake) do not support parameter binding — passing `params` with those targets raises an error.
 - `target` (str, default "replit_database"): Target database: "replit_database", "bigquery", "databricks", or "snowflake"
 - `environment` (str, default "development"): "development" runs against the development database (all SQL operations supported). "production" runs READ-ONLY queries against a replica of the production database (only SELECT queries allowed). Production is only supported for the "replit_database" target. "production" database, depending on when the user last deployed, may have outdated schemas.
 - `sampleSize` (int, optional): Sample size for warehouse queries (only for bigquery/databricks/snowflake)
@@ -84,7 +104,7 @@ This applies when **all** of these are true:
 - `target` is `replit_database` (the default).
 - `sqlQuery` is a single SQL statement (no semicolons separating multiple statements).
 
-In that case, never use string interpolation or concatenation to build SQL with dynamic literal values -- pass them through `params`. This prevents SQL injection.
+In that case, never use string interpolation or concatenation to build SQL with dynamic literal values — pass them through `params`. This prevents SQL injection.
 
 ```javascript
 // BAD - vulnerable to SQL injection:
@@ -120,10 +140,10 @@ await executeSql({
 });
 ```
 
-**When `params` is NOT supported on `replit_database`** (multi-statement scripts only -- `BEGIN; ...; COMMIT;`, migrations, batched DDL):
+**When `params` is NOT supported on `replit_database`** (multi-statement scripts only — `BEGIN; ...; COMMIT;`, migrations, batched DDL):
 
-1. **For independent statements that don't need shared transaction or session state**, you can split them into separate `executeSql` calls each with its own `params` (e.g., a sequence of unrelated INSERTs into different tables). Note that separate `executeSql` calls do NOT share a connection, transaction, or session -- temp tables, `SET LOCAL` GUCs, and `BEGIN`/`COMMIT` will not carry across calls.
-2. **For scripts that DO need transactional atomicity or session state** (most multi-statement writes, migrations, scripts that depend on temp tables), send the whole script as a single `executeSql` call without `params`. Validate any interpolated values against a strict allowlist (e.g. integers only, identifier whitelist) before embedding them in the SQL string. Treat any interpolated value as a potential injection vector -- never interpolate free-form user text.
+1. **For independent statements that don't need shared transaction or session state**, you can split them into separate `executeSql` calls each with its own `params` (e.g., a sequence of unrelated INSERTs into different tables). Note that separate `executeSql` calls do NOT share a connection, transaction, or session — temp tables, `SET LOCAL` GUCs, and `BEGIN`/`COMMIT` will not carry across calls.
+2. **For scripts that DO need transactional atomicity or session state** (most multi-statement writes, migrations, scripts that depend on temp tables), send the whole script as a single `executeSql` call without `params`. Validate any interpolated values against a strict allowlist (e.g. integers only, identifier whitelist) before embedding them in the SQL string. Treat any interpolated value as a potential injection vector — never interpolate free-form user text.
 
 **For warehouse targets** (`bigquery`, `databricks`, `snowflake`), `params` is NEVER supported. The runtime rejects any warehouse query that includes `params`, whether single-statement or multi-statement. You MUST either: (a) reject the user input if it cannot be validated, or (b) validate the value against a strict allowlist (e.g. integers only, fixed identifier set) before interpolating it into the SQL string. Never interpolate free-form user text into warehouse SQL.
 
@@ -178,7 +198,7 @@ const result4 = await executeSql({
     environment: "production"
 });
 
-// Data warehouse query -- project exact columns + partition filter + LIMIT.
+// Data warehouse query — project exact columns + partition filter + LIMIT.
 // `sampleSize` only caps rows returned to the client; it does NOT reduce the
 // bytes the warehouse scans, so a bare `SELECT *` still costs the full scan.
 // (Note: `params` is NOT supported for warehouse targets; if a date or other
@@ -196,7 +216,7 @@ const result5 = await executeSql({
 
 // Multi-statement transactional scripts (BEGIN ... COMMIT, temp tables,
 // SET LOCAL, etc.) MUST run as a single executeSql call WITHOUT `params`
-// -- separate calls do NOT share a connection or transaction, so
+// — separate calls do NOT share a connection or transaction, so
 // splitting a transaction across multiple calls would silently lose
 // atomicity. If the script needs user-controlled values, validate them
 // against a strict allowlist (integers only, identifier whitelist)
@@ -227,9 +247,9 @@ that re-runs warehouse queries every few seconds can burn thousands of dollars p
 
 ### Use `executeSql` against a warehouse ONLY for these cases
 
-1. **Schema discovery** -- `INFORMATION_SCHEMA.TABLES`, `INFORMATION_SCHEMA.COLUMNS`,
+1. **Schema discovery** — `INFORMATION_SCHEMA.TABLES`, `INFORMATION_SCHEMA.COLUMNS`,
    `DESCRIBE TABLE`, and similar metadata queries to understand the structure.
-2. **Small sample reads** with an explicit `LIMIT` (`LIMIT 5`--`LIMIT 100`) to inspect
+2. **Small sample reads** with an explicit `LIMIT` (`LIMIT 5`–`LIMIT 100`) to inspect
    value shapes while designing an app or answering an ad-hoc question.
 3. **One-off analytical questions** that the user explicitly asked in chat and that
    cannot be answered from cached data.
@@ -238,42 +258,42 @@ that re-runs warehouse queries every few seconds can burn thousands of dollars p
 
 - Power a data app's runtime queries. The app's API server must run those queries
   itself, with DB-backed caching (TTL matched to the dashboard's lowest refresh
-  interval -- 5 minutes by default). See the `data-visualization` skill's
+  interval — 5 minutes by default). See the `data-visualization` skill's
   `common-database.md` for the `api_cache` schema and helpers.
-- Re-run the same query repeatedly during a session -- cache the result locally
+- Re-run the same query repeatedly during a session — cache the result locally
   (in a JavaScript variable or a CSV file under `.agents/outputs/`) and reuse it.
 - Perform full table scans when an aggregated, partitioned, or `LIMIT`-bounded
   query would answer the same question.
 
 ### Required discipline for every warehouse query
 
-- **Project exact columns** -- never `SELECT *` on wide tables.
+- **Project exact columns** — never `SELECT *` on wide tables.
 - **Always `LIMIT`** when exploring.
-- **Partition / cluster filter** -- scope by the partition or cluster column
+- **Partition / cluster filter** — scope by the partition or cluster column
   (`WHERE event_date >= ...`) so the warehouse prunes data and you are billed
   for a tiny slice, not the whole table.
 - **Prefer pre-aggregated tables** (e.g. `_daily`, `_summary`) over raw event tables.
-- **Diff-only reads** -- for incremental/refresh queries, filter on `WHERE updated_at > :last_seen`
+- **Diff-only reads** — for incremental/refresh queries, filter on `WHERE updated_at > :last_seen`
   and persist `last_seen` so subsequent queries only scan the delta.
 
 ### If the user is building a data app (dashboard, report, explorer)
 
 Hand off to the `data-visualization` skill. Use `executeSql` only for the initial
 schema discovery and a few sample queries. The runtime queries belong in the app's
-API server with DB-backed caching -- not in repeated `executeSql` calls from the agent
+API server with DB-backed caching — not in repeated `executeSql` calls from the agent
 loop.
 
 ## Best Practices
 
-1. **Use the pre-configured built-in database**: Every project already has Replit's built-in PostgreSQL database provisioned, and it is always preferred over external services like Supabase. It supports rollback and integrates directly with the Replit product. Only use external database services if the user has specific requirements. The `pg` package should be installed already.
-2. **Confirm reachability if unsure**: Call `checkDatabase()` to confirm connectivity before running queries. There is no separate creation step — the database already exists.
+1. **Prefer the built-in database**: Replit's built-in PostgreSQL database is always preferred over external services like Supabase. It supports rollback and integrates directly with the Replit product. Only use external database services if the user has specific requirements. The `pg` package should be installed already.
+2. **Check before creating**: Call `checkDatabase()` before `createDatabase()` to avoid unnecessary operations
 3. **ALWAYS use parameterized queries with user input on the `replit_database` single-statement path**: When `target` is `replit_database` (the default) and `sqlQuery` is a single statement, you MUST use the `params` argument with `$1`, `$2`, etc. placeholders for any user-provided literal value. NEVER use string interpolation, template literals, or concatenation for values in that case. For dynamic identifiers (table/column names) or SQL keywords (sort directions, operators), validate against a strict allowlist before interpolating since `params` cannot bind those. For warehouse targets and multi-statement transactional scripts where `params` is not supported, send the whole script as a single `executeSql` call and validate any interpolated values against a strict allowlist; only split into separate calls when the statements are truly independent and don't share transaction or session state.
 4. **Test queries first**: Run SELECT queries before INSERT/UPDATE/DELETE
 5. **Keep backups**: Important data should be backed up before destructive operations
 
 ## Environment Variables
 
-The pre-configured database exposes these environment variables:
+After creating a database, these environment variables are available:
 
 - `DATABASE_URL`: Full connection string
 - `PGHOST`: Database host
@@ -285,13 +305,18 @@ The pre-configured database exposes these environment variables:
 ## Example Workflow
 
 ```javascript
-// 1. Confirm the pre-configured database is reachable
+// 1. Check if database exists
 const status = await checkDatabase();
+
 if (!status.provisioned) {
-    console.log(`Database unreachable: ${status.message}`);
+    // 2. Create database
+    const createResult = await createDatabase();
+    if (!createResult.success) {
+        console.log(`Failed: ${createResult.message}`);
+    }
 }
 
-// 2. Create schema
+// 3. Create schema
 await executeSql({
     sqlQuery: `
         CREATE TABLE IF NOT EXISTS users (
@@ -302,20 +327,20 @@ await executeSql({
     `
 });
 
-// 3. Insert data (using parameterized query)
+// 4. Insert data (using parameterized query)
 await executeSql({
     sqlQuery: "INSERT INTO users (email) VALUES ($1)",
     params: ['user@example.com']
 });
 
-// 4. Query data
+// 5. Query data
 const result = await executeSql({ sqlQuery: "SELECT * FROM users" });
 console.log(result.output);
 ```
 
 ## Limitations
 
-- Production queries are READ-ONLY (SELECT only) -- INSERT, UPDATE, DELETE, and DDL statements will fail
+- Production queries are READ-ONLY (SELECT only) — INSERT, UPDATE, DELETE, and DDL statements will fail
 - Production environment is only supported for the "replit_database" target (not data warehouses)
 - Cannot modify Stripe schema tables (read-only)
 - Destructive queries (DROP, TRUNCATE, etc.) are blocked via the skill callback path

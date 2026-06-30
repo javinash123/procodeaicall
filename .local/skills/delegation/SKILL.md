@@ -1,144 +1,200 @@
 ---
 name: delegation
-description: Delegate independent work through the subagent CodeExecution callback, with the ability to dispatch multiple subagents in parallel, subagents in background, and followups to existing subagents for continued work or questions and answers. Provides general guidance on subagents, reified by the specific skills that use them.
+description: Delegate tasks to specialized subagents. Use subagent for synchronous task execution, startAsyncSubagent for background task execution, messageSubagent for async follow-ups, or messageSubagentAndGetResponse for sync follow-ups.
 ---
 
 # Delegation Skill
 
-Delegate work to a subagent through the `subagent` callback inside CodeExecution.
-You choose a `name`; the same `subagent` call covers every kind of delegated
-work via `config.$kind`.
+Delegate tasks to specialized subagents for autonomous execution.
 
 ## When to Use
 
 Use this skill when:
 
-- You need to delegate autonomous implementation work
-- Multiple tasks can run independently in parallel
-- A task is large enough to benefit from a separate agent context
+- You need to delegate tasks to run autonomously (especially when you have a session plan)
+- You have multiple independent tasks that can run in parallel
 
 ## When NOT to Use
 
 - Simple tasks that you can complete directly
 - Tasks that require immediate user interaction
-- Simple one-shot read-only exploration that a single `ripgrep` or `glob/read` tool can handle
-- Quick file edits
-- Analysis, planning, or debugging that needs your current full context
+- Read-only operations (use ripgrep or glob/read tools instead)
+- Quick file edits (use edit tool directly)
+- Analysis, planning, or debugging (e.g. performing code review)
 
-## Available Callbacks
+## Available Functions
 
-### subagent
+### subagent(task, fromPlan, relevantFiles, relevantSkills)
 
-`subagent({ name, task, config })` is an async CodeExecution callback. Call it from the codeExecution tool.
+Launch a subagent to handle a task synchronously. Blocks until the subagent completes and returns the result.
 
 **Parameters:**
 
-- `name` (required): a short handle you pick, alphanumeric and `-` only, e.g. `"auth-fix"`. `subagent` always creates a new one (a live-name clash is auto-renamed), so to continue an existing subagent use `sendFollowup` with the result's `name`.
-- `task` (required): the full task, question, or test plan. Put all detail here.
-- `config.$kind` (required): the kind of subagent to create. This is specific to the skill that uses the subagent callback. A non-specialized subagent must use the $kind: "general".
-- Other config values are specific to the skill that uses the subagent callback.
+- `task` (str, required): Task ID from session plan (e.g., "T003") OR brief task description
+- `fromPlan` (bool, default False): If True, subagent reads full task context from .local/session_plan.md
+- `relevantFiles` (list[str], optional): File paths the subagent should access
+- `relevantSkills` (list[str], optional): Paths to all implementation skills you've read. Use the full path from the skills view. Pass every skill with integration details (auth, storage, payments) — not orchestration skills meant for you (design, delegation, react-vite).
+- `specialization` (str, default "GENERAL"): "GENERAL" or "SMALL_TASK" for quick tasks
 
-**Returns:** A job that resolves to the subagent's result.
+**Returns:** Dict with task results
 
-#### General Subagent
+```json
+{
+    "success": true,
+    "message": "Task summary",
+    "subagentAlias": "subagent_1",
+    "result": "Full task output..."
+}
+```
 
-A general subagent is a generic subagent that can be used for any task. The `config` object for a general subagent can include:
-- `config.relevantFiles`: workspace-relative paths the subagent reads first. Files accept 1-based line ranges, e.g. `"src/auth.ts:10-50"`.
-- `config.relevantSkills`: skill paths the subagent reads first.
+**Usage Patterns:**
 
-For example:
-```js
-const authFixTask = "Fix the auth bug in src/auth.ts and summarize the changed files.";
-const authfixResult = await subagent({
-  name: "auth-fix",
-  task: authFixTask,
-  config: {
-    $kind: "general",
-    relevantFiles: ["src/auth.ts", "src/auth.test.ts:10-50,200-250"],
-    relevantSkills: [".local/skills/auth/SKILL.md"],
-  },
+**1. From Plan (Recommended when you have a session plan):**
+
+```javascript
+// Reference tasks by ID - subagent reads full context from .local/session_plan.md
+const result = await subagent({ task: "T003", fromPlan: true });
+console.log(result);  // Always print the result
+```
+
+**2. Direct Task (for ad-hoc tasks without a plan):**
+
+```javascript
+const result = await subagent({
+    task: "Fix the auth bug in src/auth.ts",
+    relevantFiles: ["src/auth.ts"],
+    relevantSkills: [".local/skills/clerk-auth/SKILL.md", ".local/skills/database/SKILL.md"]
 });
-console.log(authfixResult.text); // Mainly the `text` matter. Unless the skill for a particular specialized subagent indicates otherwise.
+console.log(result);  // Always print the result
 ```
 
-### sendFollowup
+### startAsyncSubagent(task, fromPlan, relevantFiles, relevantSkills)
 
-`sendFollowup({ name, message })` continues an **existing** subagent, keeping its
-history and context instead of starting fresh. This is the only way to follow up
-on a subagent — calling `subagent` again creates a new one (see `name` above).
+Launch a subagent to handle a task asynchronously in the background. Returns immediately without waiting for completion. Use the `wait_for_background_tasks` tool to collect results later.
 
 **Parameters:**
 
-- `name` (required): the canonical `name` returned by the original `subagent` call. Note: `subagent` call can in rare cases return a different name for disambiguation. You will be told if that ever happens.
-- `message` (required): the follow-up instruction or question. Put all detail here.
+- `task` (str, required): Task ID from session plan (e.g., "T003") OR brief task description
+- `fromPlan` (bool, default False): If True, subagent reads full task context from .local/session_plan.md
+- `relevantFiles` (list[str], optional): File paths the subagent should access
+- `relevantSkills` (list[str], optional): Paths to all implementation skills you've read. Use the full path from the skills view. Pass every skill with integration details (auth, storage, payments) — not orchestration skills meant for you (design, delegation, react-vite).
+- `specialization` (str, default "GENERAL"): "GENERAL" or "SMALL_TASK" for quick tasks
 
-`sendFollowup` returns the same kind of job as `subagent` — await it for the
-subagent's result (same `{ name, text, jobId, status }` shape) or run it in the background without awaiting it.
+**Returns:** Immediately with acknowledgment. Use the `wait_for_background_tasks` tool to collect results.
 
-```js
-const firstJob = subagent({ name: "auth-fix", task, config: { $kind: "general" } });
+**Usage Patterns:**
+
+**1. From Plan (Recommended when you have a session plan):**
+
+```javascript
+// Reference tasks by ID - no print needed, result comes via wait_for_background_tasks
+await startAsyncSubagent({ task: "T003", fromPlan: true });
 ```
 
-After the subagent finishes in the background, you can continue it with `sendFollowup`.
-```js
-// Continue the SAME subagent — do NOT call subagent() again.
-const followup = await sendFollowup({ name: "auth-fix", message: "For your auth.tsx changes, make sure to comment out the tests for now." });
-console.log(followup.text);
+**2. Direct Task (for ad-hoc tasks without a plan):**
+
+```javascript
+await startAsyncSubagent({
+    task: "Fix the auth bug in src/auth.ts",
+    relevantFiles: ["src/auth.ts"],
+    relevantSkills: [".local/skills/clerk-auth/SKILL.md", ".local/skills/database/SKILL.md"]
+});
 ```
 
-## Usage Patterns
+**Parallel Execution:**
 
-Different $kinds of subagents return different values. The `subagent` callback returns a job that, when awaited, resolves to the subagent's result.
-
-All subagent results have the following properties:
-- `name`: the name of the subagent
-- `text`: the text of the subagent's result
-- `jobId`: the id of the subagent's job
-- `status`: the status of the subagent's job
-
-### Synchronous Usage
-
-```js
-const authFixTask = "Fix the auth bug in src/auth.ts and summarize the changed files.";
-const authfixResult = await subagent({
-  name: "auth-fix",...});
-console.log(authfixResult.text);
+```javascript
+// Launch independent tasks simultaneously
+console.log(await startAsyncSubagent({ task: "T002", fromPlan: true }));
+console.log(await startAsyncSubagent({ task: "T003", fromPlan: true }));
+console.log(await startAsyncSubagent({ task: "T004", fromPlan: true }));
 ```
 
-### Using Promise.all to Run Multiple Subagents in Parallel
+**Giving Subagents Access to Skills:**
 
-```js
-const [charts, auth] = await Promise.all([
-  subagent({ name: "build-charts", ...}),
-  subagent({ name: "add-auth-regression-tests", ... }),
-]);
-console.log("Build charts result:");
-console.log(charts.text);
-console.log("================================================");
-console.log("Add auth regression tests result:");
-console.log(auth.text);
-// Note: Use `Promise.all` / `Promise.race` only when this turn needs the subagent results before continuing.
+```javascript
+// Pass skill paths from the skills view
+await startAsyncSubagent({
+    task: "T005",
+    fromPlan: true,
+    relevantSkills: [".local/skills/database/SKILL.md", ".local/skills/clerk-auth/SKILL.md"]
+});
 ```
 
-### Asynchronous Usage (Background Subagent)
+### messageSubagent(subagentId, message)
 
-```js
-const buildChartsJob = subagent({ ...});
-// The job runs in the background while you do independent parent-agent work.
-// After that work is done, join before finalizing.
-const buildChartsResult = await waitForJob({ jobId: buildChartsJob.jobId, timeout: 600 });
-console.log(buildChartsResult.text);
+Send a follow-up message to an existing subagent asynchronously. Returns immediately after the message is delivered. Use this when the subagent should continue in the background.
+
+**Parameters:**
+
+- `subagentId` (str, required): Alias returned when the subagent was started
+- `message` (str, required): Follow-up instruction or clarification for the subagent
+
+**Returns:** Acknowledgment that the message was sent. The subagent keeps running in the background.
+
+**Example:**
+
+```javascript
+// Async follow-up: continue background work
+await messageSubagent({
+    subagentId: "subagent-happy-tiger",
+    message: "After the fix, add regression tests for the auth edge case."
+});
 ```
 
-Background subagents are for parallelism while the main agent has other independent work to do. Do not finish the turn with a relevant subagent job still running. When your independent work is done, use `await waitForJob({ jobId: job.jobId, timeout: 600 })` to collect the result, inspect it, and continue. If `waitForJob` times out, call it again. If the subagent is no longer needed, call `cancelJob({ jobId: job.jobId })` instead of leaving it running.
+Use the `wait_for_background_tasks` tool to collect results later.
+
+### messageSubagentAndGetResponse(subagentId, message, timeoutSeconds)
+
+Send a follow-up message to an existing subagent synchronously. Blocks until the subagent completes, times out, or is interrupted.
+
+**Parameters:**
+
+- `subagentId` (str, required): Alias returned when the subagent was started
+- `message` (str, required): Follow-up instruction or clarification for the subagent
+- `timeoutSeconds` (float, default 300.0): Max time to wait before returning a timeout status
+
+**Returns:** Dict with `success`, `message`, `result`, and `exitReason`.
+
+**Example:**
+
+```javascript
+// Sync follow-up: wait for the answer now
+const result = await messageSubagentAndGetResponse({
+    subagentId: "subagent-happy-tiger",
+    message: "Summarize root cause and include exact changed files.",
+    timeoutSeconds: 180.0
+});
+console.log(result.result);
+```
+
+**When to choose which:**
+
+- Use `messageSubagent` when you want fire-and-forget behavior
+- Use `messageSubagentAndGetResponse` when you need the response immediately
 
 ## Best Practices
 
-1. Delegate only work that can proceed independently.
-2. Include the exact files, constraints, and relevant skill names in the `task`.
-3. Use `Promise.all` / `Promise.race` only when this turn needs the subagent results before continuing.
-4. Use background subagents only when you have independent work to do before joining them.
-5. Wait for or cancel every relevant background subagent before finalizing user-facing work.
-6. Verify subagent results before finalizing user-facing work.
+1. **Use session plans**: For 2+ tasks, create a .local/session_plan.md and use `fromPlan=True`
+2. **Launch in parallel**: Independent tasks can run simultaneously with `startAsyncSubagent`
+3. **Use `subagent()` when you need the result immediately**: For tasks where you need to act on the output, use the synchronous `subagent()` and print the result.
+4. **Use `startAsyncSubagent()` for independent tasks that can run in the background**: The tasks will be performed in parallel.
+5. **Use `messageSubagent()` for async follow-ups**: Message running subagents without blocking, then use the `wait_for_background_tasks` tool to collect results
+6. **Use `messageSubagentAndGetResponse()` for sync follow-ups**: Use this when you need the subagent's output before continuing
+7. **Trust the results**: Subagent outputs should generally be trusted
+8. **Pass all implementation skills via relevantSkills**: Include every implementation skill you've read — use the full path from the skills view for each one
 
-The subagent can read and edit files, run commands, use diagnostics, and load relevant skills; the main agent remains responsible for final integration, verification, previews, and user-facing status.
+## Subagent Capabilities
+
+The subagent has access to:
+
+- File operations (read, write, edit, glob, grep)
+- Bash commands
+- LSP diagnostics
+- Depending on specialization, additional tools like media generation or canvas tools may be available
+- Skills (loaded via `relevantSkills` parameter)
+
+The subagent does **NOT**:
+
+- Run or restart workflows
+- Preview/test the app (that's your job as main agent)

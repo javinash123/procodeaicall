@@ -1,5 +1,5 @@
-import { Button } from './components/ui/button';
-import { Badge } from './components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
@@ -7,24 +7,18 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from './components/ui/card';
-import { Input } from './components/ui/input';
-import { Label } from './components/ui/label';
-import { Switch } from './components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// The core palette, shown first and in this order. Every design system leads
-// with these.
-const CORE_SWATCHES = [
+const SWATCHES = [
+  { name: 'background', className: 'bg-background border' },
+  { name: 'foreground', className: 'bg-foreground' },
   { name: 'primary', className: 'bg-primary' },
   { name: 'secondary', className: 'bg-secondary' },
   { name: 'accent', className: 'bg-accent' },
-] as const;
-
-// Supporting roles, shown after the core.
-const SUPPORTING_SWATCHES = [
-  { name: 'background', className: 'bg-background border' },
-  { name: 'foreground', className: 'bg-foreground' },
   { name: 'muted', className: 'bg-muted' },
   { name: 'destructive', className: 'bg-destructive' },
   { name: 'border', className: 'bg-border' },
@@ -76,33 +70,16 @@ function App() {
           </p>
         </header>
 
-        <Section
-          title="Colors"
-          description="Core palette first (primary, secondary, accent), then supporting roles."
-        >
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {CORE_SWATCHES.map((swatch) => (
-                <div key={swatch.name} className="space-y-2">
-                  <div
-                    className={`h-16 w-full rounded-md ${swatch.className}`}
-                  />
-                  <p className="text-sm font-medium">{swatch.name}</p>
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-              {SUPPORTING_SWATCHES.map((swatch) => (
-                <div key={swatch.name} className="space-y-2">
-                  <div
-                    className={`h-16 w-full rounded-md ${swatch.className}`}
-                  />
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {swatch.name}
-                  </p>
-                </div>
-              ))}
-            </div>
+        <Section title="Colors" description="Core palette from the tokens.">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {SWATCHES.map((swatch) => (
+              <div key={swatch.name} className="space-y-2">
+                <div
+                  className={`h-16 w-full rounded-md ${swatch.className}`}
+                />
+                <p className="text-sm font-medium">{swatch.name}</p>
+              </div>
+            ))}
           </div>
         </Section>
 
@@ -169,9 +146,9 @@ function App() {
               Tabs inherit the accent and muted tokens.
             </TabsContent>
             <TabsContent value="usage" className="text-sm">
-              Import components from this package, e.g.{' '}
+              Import components from{' '}
               <code className="rounded bg-muted px-1 py-0.5">
-                @workspace/&lt;slug&gt;/components/ui
+                @/components/ui
               </code>
               .
             </TabsContent>

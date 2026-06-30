@@ -62,9 +62,21 @@ console.log(`Files with errors: ${Object.keys(allErrors.diagnostics)}`);
 - Adding comments or documentation
 - Debugging runtime errors (LSP won't show these)
 
-### Suggest rollback
+### suggestRollback(reason)
 
-Suggest rolling back to a previous checkpoint. Call `SuggestUserAction({ action: "rollback", message: "..." })` with a short, non-technical explanation for why rollback is suggested.
+Suggest rolling back to a previous checkpoint.
+
+**Parameters:**
+
+- `reason` (str, required): Short, non-technical explanation for why rollback is suggested
+
+**Returns:** Dict with `success`, `message`, and `reason`
+
+**Example:**
+
+```javascript
+await suggestRollback({ reason: "The changes caused unexpected errors across multiple files" });
+```
 
 **Use when user expresses intent to:**
 
@@ -100,4 +112,11 @@ if (Object.keys(errors.diagnostics).length > 0) {
         }
     }
 }
+```
+
+### Helping user undo changes
+
+```javascript
+// User: "Everything broke, can you undo this?"
+await suggestRollback({ reason: "Recent changes caused errors. Click View Checkpoints to restore a working version." });
 ```

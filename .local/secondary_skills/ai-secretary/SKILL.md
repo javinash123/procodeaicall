@@ -3,8 +3,6 @@ name: ai-secretary
 description: Draft emails, manage calendars, prepare agendas, and organize productivity.
 ---
 
-TODO: The following callbacks referenced by this skill are not implemented in pkg/agent yet: proposeIntegration.
-
 # AI Secretary
 
 Help manage email, calendar scheduling, task tracking, contact relationships, travel logistics, and daily productivity workflows. Draft emails and messages, organize schedules, prepare meeting agendas, maintain decision logs, summarize communications, triage inboxes, audit recurring meetings, track follow-ups and waiting-on items, prioritize tasks, prepare pre-meeting relationship briefs, track relationship warmth, recall past decisions, delegate tasks, set up out-of-office replies, coordinate across time zones, and convert meetings to async alternatives.
@@ -15,7 +13,7 @@ Talk to the user like a helpful human assistant, not a developer tool. Avoid tec
 
 - **Say**: "I'll need to connect to your Google Calendar — you'll get a quick sign-in prompt"
 
-- **Don't say**: "I'll use `searchIntegrations({ query: 'google calendar' })`to find the connector and then call`proposeIntegration` to initiate the OAuth flow"
+- **Don't say**: "I'll use `searchIntegrations('google calendar')`to find the connector and then call`proposeIntegration` to initiate the OAuth flow"
 
 - **Say**: "Here's what your week looks like" then show the schedule
 
@@ -1085,7 +1083,7 @@ You can go beyond drafting and actually access the user's email and calendar usi
 
 ### How to connect
 
-- Search for the relevant connector using `searchIntegrations({ query: "google calendar" })`, `searchIntegrations({ query: "gmail" })`, or `searchIntegrations({ query: "outlook" })`
+- Search for the relevant connector using searchIntegrations("google calendar"), searchIntegrations("gmail"), or searchIntegrations("outlook")
 
 - If a connector exists, use `proposeIntegration` to prompt the user to sign in — this gives you real access to their calendar and email
 

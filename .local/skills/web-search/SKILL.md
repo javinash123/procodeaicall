@@ -21,12 +21,11 @@ description: Search the web, fetch content, extract branding profiles, and captu
 
 ## Available Functions
 
-### webSearch({ query, count? })
+### Single web search — webSearch(query)
 
 **Parameters:**
 
 - `query` (str, required): Natural language search query phrased as a complete question
-- `count` (number, optional): Number of results, 1-10
 
 **Returns:** Dict with `searchAnswer` and `resultPages` (list of title/url/snippet dicts)
 
@@ -39,17 +38,22 @@ for (const page of results.resultPages) {
 }
 ```
 
-### Multiple web searches
+### Multiple web searches — webSearch({ queries })
 
-Issue one `webSearch({ query })` call per query and run the calls in parallel. The callback does not accept a `queries` array.
+Run multiple searches concurrently (max 10).
+
+**Parameters:**
+
+- `queries` (list[str]): List of natural language search queries phrased as complete questions
+
+**Returns:** List of result dicts, each with `searchAnswer` and `resultPages` (list of title/url/snippet dicts)
 
 **Example:**
 
 ```javascript
-const [openaiResults, anthropicResults] = await Promise.all([
-    webSearch({ query: "OpenAI API rate limits 2026" }),
-    webSearch({ query: "Anthropic API rate limits 2026" })
-]);
+const results = await webSearch({
+    queries: ["OpenAI API rate limits 2026", "Anthropic API rate limits 2026"]
+});
 ```
 
 ### webFetch(url)

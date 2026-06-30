@@ -1,0 +1,346 @@
+You are a Senior Principal Software Engineer.
+
+You are implementing NIJVOX Voice Engine V2.
+
+The architecture has already been frozen.
+
+DO NOT redesign anything.
+
+Read the existing Voice Engine foundation before making any changes.
+
+==========================================================
+GOAL
+==========================================================
+
+Implement ONLY the Conversation Runtime Core.
+
+This is NOT the AI.
+
+This is NOT Exotel.
+
+This is NOT OpenAI.
+
+This is ONLY the runtime that controls every live conversation.
+
+Think of this as the operating system for one phone call.
+
+==========================================================
+DO NOT TOUCH
+==========================================================
+
+Do not modify any existing SaaS code.
+
+Do not modify authentication.
+
+Do not modify CRM.
+
+Do not modify Campaigns.
+
+Do not modify existing Exotel integration.
+
+Do not modify current Voice Engine V1.
+
+Do not implement OpenAI.
+
+Do not implement EventBus.
+
+Do not implement STT.
+
+Do not implement TTS.
+
+Do not implement Transport.
+
+==========================================================
+CREATE ONLY
+==========================================================
+
+server/voice-engine/runtime/
+
+Create these files.
+
+runtime/
+    index.ts
+    RuntimeState.ts
+    ConversationRuntime.ts
+    RuntimeFactory.ts
+    RuntimeEvents.ts
+    RuntimeTimers.ts
+    RuntimeContext.ts
+
+==========================================================
+IMPLEMENT
+==========================================================
+
+1.
+
+RuntimeState enum.
+
+States:
+
+CREATED
+
+INITIALIZING
+
+CONNECTED
+
+LISTENING
+
+THINKING
+
+SPEAKING
+
+INTERRUPTED
+
+WAITING
+
+COMPLETED
+
+FAILED
+
+CLOSED
+
+----------------------------------------------------------
+
+2.
+
+ConversationRuntime interface.
+
+Expose ONLY lifecycle methods.
+
+initialize()
+
+connect()
+
+startListening()
+
+startThinking()
+
+startSpeaking()
+
+interrupt()
+
+complete()
+
+close()
+
+destroy()
+
+getState()
+
+getSession()
+
+----------------------------------------------------------
+
+3.
+
+RuntimeContext interface.
+
+Contains immutable references to
+
+Session
+
+Configuration
+
+Logger
+
+Metrics
+
+Provider Registry
+
+Knowledge Snapshot
+
+Campaign Snapshot
+
+Clock
+
+----------------------------------------------------------
+
+4.
+
+RuntimeEvents
+
+Define ONLY strongly typed runtime events.
+
+RuntimeCreated
+
+RuntimeConnected
+
+RuntimeListening
+
+RuntimeThinking
+
+RuntimeSpeaking
+
+RuntimeInterrupted
+
+RuntimeCompleted
+
+RuntimeClosed
+
+RuntimeError
+
+No implementation.
+
+----------------------------------------------------------
+
+5.
+
+RuntimeTimers
+
+Define interfaces only.
+
+SilenceTimer
+
+SpeechTimeout
+
+ThinkingTimeout
+
+SessionTimeout
+
+HeartbeatTimer
+
+No implementation.
+
+----------------------------------------------------------
+
+6.
+
+RuntimeFactory
+
+Create ONLY dependency injection.
+
+createConversationRuntime()
+
+No runtime logic.
+
+----------------------------------------------------------
+
+7.
+
+Rules
+
+State transitions must be documented.
+
+Example:
+
+CREATED
+
+↓
+
+INITIALIZING
+
+↓
+
+CONNECTED
+
+↓
+
+LISTENING
+
+↓
+
+THINKING
+
+↓
+
+SPEAKING
+
+↓
+
+LISTENING
+
+↓
+
+COMPLETED
+
+↓
+
+CLOSED
+
+Do NOT implement transitions.
+
+Only document and expose interfaces.
+
+----------------------------------------------------------
+
+8.
+
+Documentation
+
+Every interface must contain
+
+professional JSDoc
+
+explaining:
+
+purpose
+
+ownership
+
+thread safety
+
+lifecycle
+
+----------------------------------------------------------
+
+RULES
+
+No implementations.
+
+No TODO comments.
+
+No mock logic.
+
+No any.
+
+No timers.
+
+No setTimeout.
+
+No websocket.
+
+No OpenAI.
+
+No Exotel.
+
+No business logic.
+
+No provider logic.
+
+Everything must compile.
+
+==========================================================
+SELF CHECK
+==========================================================
+
+Before stopping verify:
+
+✓ TypeScript compiles.
+
+✓ Only runtime folder created.
+
+✓ Existing project untouched.
+
+✓ No implementations.
+
+✓ Interfaces only.
+
+✓ Runtime lifecycle documented.
+
+✓ State machine documented.
+
+Finally produce:
+
+1.
+
+Files created.
+
+2.
+
+Compilation status.
+
+3.
+
+Architecture compliance report.
+
+STOP.

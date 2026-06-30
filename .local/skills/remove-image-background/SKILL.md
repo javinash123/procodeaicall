@@ -3,8 +3,6 @@ name: remove-image-background
 description: Remove backgrounds from existing images, producing transparent PNG files.
 ---
 
-TODO: The following callbacks referenced by this skill are not implemented in pkg/agent yet: removeImageBackground.
-
 # Remove Image Background Skill
 
 Remove the background from an existing image file in the project, producing a transparent PNG.

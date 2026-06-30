@@ -3,15 +3,14 @@ name: canvas
 description: "Create, read, and manipulate shapes on the canvas. The canvas is the primary surface for showing live UI previews via iframe embeds (using the mockup-sandbox skill), as well as static shapes, text, notes, images, and videos. Use this skill for any canvas operation — reading board state, placing shapes, or managing iframe lifecycle. You must read this skill (0-500 lines) before any canvas operation"
 ---
 
-TODO: This skill is disabled until pkg/agent registers `applyCanvasActions`, `focusCanvasShapes`, and `getCanvasState`.
-
 # Canvas Skill
 
 ## IMPORTANT: Place Building Iframes Before Building
 
-When the user's request will produce **new visual content** on the canvas (e.g. "create a landing page", "show me 3 card variants", "mockup a dashboard"), your very first action must be to place building placeholders -- before writing any code or setting up servers:
+When the user's request will produce **new visual content** on the canvas (e.g. "create a landing page", "show me 3 card variants", "mockup a dashboard"), your very first action must be to place building placeholders — before writing any code or setting up servers:
 
-1. Call `applyCanvasActions()` with a `create-auto` action to create iframe shapes with `state: "building"` and names for every element you plan to produce. No URL is needed -- the UI shows a building indicator.
+1. Call `applyCanvasActions()` with a `create-auto` action to create iframe shapes with `state: "building"` and names for every element you plan to produce. No URL is needed — the UI shows a building indicator.
+   - **Exception:** if the `pending_canvas_frames` block for the current user turn lists frames, use those exact `shape_id`s with `type: "update"` actions for the first N elements instead of `create-auto`. The client has already placed those Building iframes. Only fall back to `create-auto` for elements beyond the reserved count. Ignore `pending_canvas_frames` blocks attached to earlier turns — those reservations belong to those earlier user messages.
 2. Only call `getCanvasState()` first when you must place shapes at exact coordinates or relative to existing content.
 3. Only then proceed with the rest of the work (mockup-sandbox setup, writing code, starting servers, etc.).
 4. As each element becomes ready, update its iframe to `state: "live"` with the real URL.
@@ -24,7 +23,7 @@ This does **not** apply to read-only requests (e.g. "what's on the canvas?"), mo
 
 The workspace canvas is an infinite board where you can create, position, and manipulate visual elements. It supports shapes, iframes (primarily used for design exploration), and artifacts (live-running apps such as websites or mobile apps).
 
-When users want to view frames at full size, they must click the preview button above the frame. Users can also toggle in and out of the canvas using the canvas button below the workspace-level preview window. When telling the user where to view canvas content, say "open the Preview tab and toggle on the canvas" -- there is no "Canvas tab".
+When users want to view frames at full size, they must click the preview button above the frame. Users can also toggle in and out of the canvas using the canvas button below the workspace-level preview window. When telling the user where to view canvas content, say "open the Preview tab and toggle on the canvas" — there is no "Canvas tab".
 
 Artifact frames have special constraints - they cannot be deleted or freely resized (to maintain the snap back in ratio).
 
@@ -34,13 +33,13 @@ Beyond iframes, the canvas also supports static shapes (rectangles, ellipses, te
 
 ### Callbacks
 
-You have three callbacks available via `codeExecution`:
+You have three callbacks available via `code_execution`:
 
 - **`getCanvasState`** -- Read what shapes are on the board, their positions, types, and properties.
 - **`applyCanvasActions`** -- Create, auto-place, update, delete, move, resize, reorder, align, or distribute shapes.
 - **`focusCanvasShapes`** -- Pan and zoom the viewport to show specific shapes.
 
-All callbacks are async and must be awaited. Call them directly in `codeExecution` -- they are pre-registered.
+All callbacks are async and must be awaited. Call them directly in `code_execution` -- they are pre-registered.
 
 **Parameter casing.** All canvas callbacks accept **camelCase** keys (e.g. `shapeIds`, `animateMs`, `focusArea`, `shapeId`, `componentName`). Passing snake_case keys causes a pydantic validation error like `shapeIds Field required`. The schemas below reflect the camelCase keys you must actually pass.
 
@@ -221,6 +220,10 @@ Modify the canvas board by applying an ordered list of actions in a single atomi
 }
 ```
 
+#### Pre-reserved frames
+
+Some user turns include a `pending_canvas_frames` block: design-mockup iframes the client already placed in `state: "building"` with listed `shape_id`s before this turn. Update those exact ids with `applyCanvasActions` `type: "update"` instead of creating replacement shapes. Each block is scoped to the user message it precedes — do not consume `shape_id`s from a `pending_canvas_frames` block attached to an earlier turn. See the **mockup-sandbox** skill for the update payload.
+
 ### `getCanvasState`
 
 Read the current state of the canvas board. Returns shapes at three detail levels based on distance from the viewport or focus area.
@@ -258,7 +261,7 @@ Read the current state of the canvas board. Returns shapes at three detail level
 
 ### `focusCanvasShapes`
 
-Pan and zoom the user's canvas viewport to center on specific shapes. Only call after the user asks to see your work -- except for the empty-canvas mockup exception (see "Focusing the Viewport" below).
+Pan and zoom the user's canvas viewport to center on specific shapes. Only call after the user asks to see your work — except for the empty-canvas mockup exception (see "Focusing the Viewport" below).
 
 ```json
 {
@@ -328,8 +331,6 @@ Embed live web content. Use the `state` field to manage the iframe lifecycle:
 - `"modifying"` -- Set before editing an existing component's backing file.
 - `"live"` -- Set when the component is ready to display. URL is **required** in this state.
 
-
-
 Create the iframe immediately with `state: "building"`, then update it to `"live"` once the URL is available. Use `create-auto` unless you need exact coordinates:
 
 ```javascript
@@ -349,7 +350,7 @@ await applyCanvasActions({ actions: [
 
 // 2. ... build the component / start the server ...
 
-// 3. Update to live once the URL is ready.
+// 3. Update to live once the URL is ready
 await applyCanvasActions({ actions: [
   {
     type: "update",
@@ -362,8 +363,6 @@ await applyCanvasActions({ actions: [
   }
 ] });
 ```
-
-
 
 **Note: `create` and `update` actions have different payload structures.**
 
@@ -479,7 +478,7 @@ Do not follow `align`/`distribute` with a manual `move` on any of the same shape
 
 Pan and zoom the user's canvas viewport to center on specific shapes. **Only call after the user asks to see your work** -- don't auto-focus after creating or updating shapes. Finish your work and ask the user if they'd like to see it. Moving the viewport while the user is working is disorienting.
 
-**Exception:** the `mockup-sandbox` skill overrides this when `getCanvasState` returns zero shapes -- focus on the just-placed placeholders so the user sees them appear. Once any shape exists, the default rule above applies.
+**Exception:** the `mockup-sandbox` skill overrides this when `getCanvasState` returns zero shapes — focus on the just-placed placeholders so the user sees them appear. Once any shape exists, the default rule above applies.
 
 ## Iframe Rules & Gotchas
 
@@ -495,7 +494,7 @@ Pan and zoom the user's canvas viewport to center on specific shapes. **Only cal
 1. Use `create-auto` for new iframes that just need automatic placement, or call `getCanvasState()` before manual coordinate changes.
 2. For manual changes, use the `summary` and `focusedShapes` to understand positions and IDs.
 3. Call `applyCanvasActions` with a batch of changes.
-4. **CRITICAL -- Present the result.** After your final canvas action, bind the mockup sandbox artifact ID from `listArtifacts()`, then call `presentArtifact({ artifactId: mockupArtifact.artifactId, shapeIds: [...] })` with the IDs of all shapes you created or modified. This is how the user finds your work -- without it, they cannot navigate to the shapes. Do NOT skip this step. Do NOT ask the user if they want to focus -- just present.
+4. **CRITICAL — Present the result.** After your final canvas action, you MUST call `presentArtifact({ artifactId, shapeIds: [...] })` with the IDs of all shapes you created or modified. This is how the user finds your work — without it, they cannot navigate to the shapes. Do NOT skip this step. Do NOT ask the user if they want to focus — just present.
 
 ## Error Codes
 

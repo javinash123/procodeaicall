@@ -3,12 +3,8 @@ description: "React + Vite web app"
 kind: web
 
 access:
-  type: any_of
-  conditions:
-    - type: stack
-      name: PNPM_WORKSPACE
-    - type: stack
-      name: DATABRICKS_APP
+  type: stack
+  name: PNPM_WORKSPACE
 
 service_configs:
   - name: web

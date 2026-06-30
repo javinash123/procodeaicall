@@ -1,0 +1,337 @@
+You are a Senior Principal Software Engineer.
+
+You are implementing NIJVOX Voice Engine V2.
+
+Architecture is frozen.
+
+Read ALL existing Voice Engine modules before writing code.
+
+==========================================================
+
+GOAL
+
+Implement ONLY the Audio Engine.
+
+This module owns ALL audio processing.
+
+No AI.
+
+No OpenAI.
+
+No Exotel.
+
+No transport.
+
+Only audio.
+
+==========================================================
+
+DO NOT TOUCH
+
+Foundation
+
+Runtime
+
+Bootstrap
+
+OpenAI Provider
+
+Conversation Orchestrator
+
+Existing SaaS
+
+Voice Engine V1
+
+==========================================================
+
+CREATE ONLY
+
+server/voice-engine/audio-engine/
+
+AudioBuffer.ts
+
+AudioChunk.ts
+
+AudioScheduler.ts
+
+AudioClock.ts
+
+AudioPipeline.ts
+
+AudioStatistics.ts
+
+AudioCodec.ts
+
+AudioLatency.ts
+
+AudioEngine.ts
+
+AudioEngineFactory.ts
+
+index.ts
+
+==========================================================
+
+IMPLEMENT
+
+1.
+
+AudioBuffer
+
+Executable.
+
+Responsibilities:
+
+append()
+
+drain()
+
+peek()
+
+clear()
+
+size()
+
+Support immutable chunk metadata.
+
+No codec logic.
+
+----------------------------------------------------------
+
+2.
+
+AudioChunk
+
+Immutable model.
+
+Contains
+
+sequence
+
+timestamp
+
+sampleRate
+
+encoding
+
+duration
+
+payload
+
+direction
+
+----------------------------------------------------------
+
+3.
+
+AudioScheduler
+
+Executable.
+
+No timers.
+
+Pure scheduling decisions.
+
+Decides
+
+send now
+
+hold
+
+drop
+
+merge
+
+flush
+
+----------------------------------------------------------
+
+4.
+
+AudioClock
+
+Monotonic clock abstraction.
+
+Supports
+
+now()
+
+elapsed()
+
+reset()
+
+No Date.now() usage outside clock.
+
+----------------------------------------------------------
+
+5.
+
+AudioPipeline
+
+Executable coordinator.
+
+Receives chunks.
+
+Produces pipeline decisions.
+
+No provider.
+
+No transport.
+
+----------------------------------------------------------
+
+6.
+
+AudioStatistics
+
+Track
+
+latency
+
+jitter
+
+packet loss
+
+buffer depth
+
+average chunk duration
+
+No metrics exporter.
+
+Only calculations.
+
+----------------------------------------------------------
+
+7.
+
+AudioCodec
+
+Interface registry only.
+
+No codec implementation.
+
+Support
+
+PCM
+
+μ-law
+
+A-law
+
+PCM16
+
+Linear16
+
+Opus
+
+----------------------------------------------------------
+
+8.
+
+AudioLatency
+
+Executable calculator.
+
+Track
+
+receive latency
+
+processing latency
+
+response latency
+
+end-to-end latency
+
+----------------------------------------------------------
+
+9.
+
+AudioEngine
+
+Coordinator.
+
+Owns
+
+buffer
+
+scheduler
+
+clock
+
+statistics
+
+latency
+
+pipeline
+
+No websocket.
+
+No transport.
+
+No provider.
+
+==========================================================
+
+RULES
+
+No OpenAI
+
+No Exotel
+
+No codec implementation
+
+No WebSocket
+
+No HTTP
+
+No setTimeout
+
+No process.env
+
+Everything through dependency injection
+
+==========================================================
+
+QUALITY
+
+Strict TS
+
+No any
+
+No TODO
+
+No placeholder
+
+Immutable models
+
+Professional JSDoc
+
+==========================================================
+
+SELF CHECK
+
+Verify
+
+✓ Compiles
+
+✓ No existing modules modified
+
+✓ No provider logic
+
+✓ No transport logic
+
+✓ No codec implementation
+
+✓ Pure audio engine
+
+Output
+
+Files created
+
+Compilation
+
+Architecture compliance
+
+Public API
+
+STOP

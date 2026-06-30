@@ -231,19 +231,13 @@ To capture the HTML file as a static image:
 
 screenshot({
 
-source: {
-
-type: "appPreview",
-
-artifactDirName: "mockup-sandbox",
+artifact_dir_name: "mockup-sandbox",
 
 path: "/<filename>.html",
 
-viewportSize: { width: 1200, height: 900 },
+viewport_size: [1200, 900],
 
-},
-
-saveTo: "exports/<title-slug>-infographic.jpg"
+save_to: "exports/<title-slug>-infographic.jpg"
 
 });
 
@@ -278,19 +272,13 @@ When using the React fallback (see `references/react-fallback.md` for full detai
 
 screenshot({
 
-source: {
-
-type: "appPreview",
-
-artifactDirName: "mockup-sandbox",
+artifact_dir_name: "mockup-sandbox",
 
 path: "/preview/infographics/<ComponentName>",
 
-viewportSize: { width: 1050, height: 1600 },
+viewport_size: [1050, 1600],
 
-},
-
-saveTo: "exports/<name>-infographic.jpg"
+save_to: "exports/<name>-infographic.jpg"
 
 });
 

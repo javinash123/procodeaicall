@@ -1,0 +1,309 @@
+You are a Senior Principal Software Engineer.
+
+You are implementing NIJVOX Voice Engine V2.
+
+Architecture is frozen.
+
+Read ALL existing Voice Engine modules before writing code.
+
+==========================================================
+
+GOAL
+
+Implement ONLY the Conversation Orchestrator.
+
+This module becomes the heart of Voice Engine V2.
+
+It coordinates every conversation.
+
+It contains NO provider-specific logic.
+
+It contains NO transport-specific logic.
+
+It owns ONLY orchestration.
+
+==========================================================
+
+DO NOT TOUCH
+
+Foundation
+
+Runtime
+
+Bootstrap
+
+OpenAI Provider
+
+Existing SaaS
+
+Voice Engine V1
+
+Existing Exotel
+
+==========================================================
+
+CREATE ONLY
+
+server/voice-engine/orchestrator/
+
+ConversationOrchestrator.ts
+
+ConversationTurn.ts
+
+TurnState.ts
+
+TurnPolicy.ts
+
+ConversationContext.ts
+
+InterruptManager.ts
+
+TurnScheduler.ts
+
+OrchestratorFactory.ts
+
+index.ts
+
+==========================================================
+
+IMPLEMENT
+
+1.
+
+ConversationOrchestrator
+
+Executable production code.
+
+Responsibilities
+
+- Own one runtime
+
+- Own one provider resolver
+
+- Own one realtime provider session
+
+- Execute conversation lifecycle
+
+- Coordinate providers
+
+- Coordinate runtime
+
+No business logic.
+
+----------------------------------------------------------
+
+2.
+
+ConversationTurn
+
+Implement immutable Turn object.
+
+Tracks
+
+turnId
+
+speaker
+
+timestamps
+
+latency
+
+completion
+
+interruptions
+
+No AI logic.
+
+----------------------------------------------------------
+
+3.
+
+TurnState
+
+Executable enum.
+
+States
+
+CREATED
+
+LISTENING
+
+PROCESSING
+
+RESPONDING
+
+INTERRUPTED
+
+COMPLETED
+
+FAILED
+
+----------------------------------------------------------
+
+4.
+
+TurnPolicy
+
+Configuration only.
+
+Defines
+
+Maximum interruption depth
+
+Maximum silence
+
+Response timeout
+
+Turn timeout
+
+Retry policy
+
+----------------------------------------------------------
+
+5.
+
+ConversationContext
+
+Executable object.
+
+Stores
+
+Current Turn
+
+Previous Turn
+
+Active Instructions
+
+Tool Context
+
+Conversation Memory Reference
+
+Campaign Snapshot Reference
+
+Knowledge Snapshot Reference
+
+No database logic.
+
+----------------------------------------------------------
+
+6.
+
+InterruptManager
+
+Executable.
+
+Responsible ONLY for
+
+tracking
+
+interrupt requests
+
+interrupt acknowledgements
+
+active interruption state
+
+No provider logic.
+
+----------------------------------------------------------
+
+7.
+
+TurnScheduler
+
+Executable.
+
+Schedules
+
+next turn
+
+completion
+
+timeouts
+
+retry
+
+No timers.
+
+No setTimeout.
+
+Only scheduling decisions.
+
+==========================================================
+
+RULES
+
+No OpenAI imports.
+
+No Exotel imports.
+
+No transport.
+
+No CRM.
+
+No MongoDB.
+
+No Campaign queries.
+
+No Knowledge Engine.
+
+No HTTP.
+
+No websocket.
+
+No process.env.
+
+Everything through dependency injection.
+
+==========================================================
+
+QUALITY
+
+Strict TypeScript
+
+No any
+
+No TODO
+
+No placeholder
+
+No duplicated logic
+
+Professional JSDoc
+
+Thread-safe
+
+Immutable where possible
+
+==========================================================
+
+SELF CHECK
+
+Verify
+
+✓ Compiles
+
+✓ Runtime untouched
+
+✓ Provider untouched
+
+✓ Bootstrap untouched
+
+✓ No provider logic
+
+✓ No transport logic
+
+✓ No OpenAI references
+
+✓ No Exotel references
+
+Output
+
+Files created
+
+Compilation
+
+Architecture compliance
+
+Public API
+
+STOP

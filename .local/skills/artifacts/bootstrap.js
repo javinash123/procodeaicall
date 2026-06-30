@@ -1,5 +1,9 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+const { parseArgs: parseNodeArgs } = require('node:util');
+
 const TEMPLATE_SUFFIX = '.template';
 const HTML_FILE_EXTENSIONS = new Set(['.html', '.htm']);
 const TOKEN_VALUES = {
@@ -7,14 +11,6 @@ const TOKEN_VALUES = {
   __REPLIT_ARTIFACT_TITLE__: (_, title) => title,
   __REPLIT_ARTIFACT_PACKAGE_NAME__: (slug) => `@workspace/${slug}`,
 };
-
-function writeStdout(message) {
-  process.stdout.write(`${message}\n`);
-}
-
-function writeStderr(message) {
-  process.stderr.write(`${message}\n`);
-}
 
 function escapeHtml(value) {
   return value
@@ -25,7 +21,7 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function parseArgs(parseNodeArgs, argv) {
+function parseArgs(argv) {
   const { values, positionals } = parseNodeArgs({
     args: argv.slice(2),
     allowPositionals: true,
@@ -39,7 +35,7 @@ function parseArgs(parseNodeArgs, argv) {
   const title = values.title;
 
   if (!artifactType || !slug || !title) {
-    writeStderr(
+    console.error(
       'Usage: node bootstrap.js <artifactType> --slug=<slug> --title=<title>',
     );
     process.exit(1);
@@ -48,7 +44,7 @@ function parseArgs(parseNodeArgs, argv) {
   return { artifactType, slug, title };
 }
 
-function interpolate(content, slug, title, isHtml) {
+function interpolate(content, slug, title, { isHtml }) {
   let rendered = content;
   for (const [token, resolver] of Object.entries(TOKEN_VALUES)) {
     const value = resolver(slug, title);
@@ -58,7 +54,7 @@ function interpolate(content, slug, title, isHtml) {
   return rendered;
 }
 
-function copyDir(fs, path, src, dest, slug, title) {
+function copyDir(src, dest, slug, title) {
   fs.mkdirSync(dest, { recursive: true });
 
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
@@ -66,7 +62,7 @@ function copyDir(fs, path, src, dest, slug, title) {
     let destName = entry.name;
 
     if (entry.isDirectory()) {
-      copyDir(fs, path, srcPath, path.join(dest, destName), slug, title);
+      copyDir(srcPath, path.join(dest, destName), slug, title);
       continue;
     }
 
@@ -79,10 +75,8 @@ function copyDir(fs, path, src, dest, slug, title) {
 
     if (isTemplate) {
       const raw = fs.readFileSync(srcPath, 'utf8');
-      const isHtml = HTML_FILE_EXTENSIONS.has(
-        path.extname(destName).toLowerCase(),
-      );
-      fs.writeFileSync(destPath, interpolate(raw, slug, title, isHtml));
+      const isHtml = HTML_FILE_EXTENSIONS.has(path.extname(destName).toLowerCase());
+      fs.writeFileSync(destPath, interpolate(raw, slug, title, { isHtml }));
       continue;
     }
 
@@ -90,40 +84,35 @@ function copyDir(fs, path, src, dest, slug, title) {
   }
 }
 
-async function main() {
-  const fs = await import('node:fs');
-  const path = await import('node:path');
-  const { parseArgs: parseNodeArgs } = await import('node:util');
-
-  const { artifactType, slug, title } = parseArgs(parseNodeArgs, process.argv);
+function main() {
+  const { artifactType, slug, title } = parseArgs(process.argv);
   const workspaceRoot = process.cwd();
-  const scriptPath = process.argv[1] ?? 'bootstrap.js';
-  const scriptDir = path.dirname(path.resolve(scriptPath));
+
 
   let artifactFilesDir = artifactType;
   if (artifactType === 'data-visualization') {
     artifactFilesDir = 'react-vite';
   }
 
-  const filesDir = path.join(scriptDir, 'artifacts', artifactFilesDir, 'files');
+  const filesDir = path.join(__dirname, 'artifacts', artifactFilesDir, 'files');
   const destDir = path.join(workspaceRoot, 'artifacts', slug);
 
   if (!fs.existsSync(filesDir)) {
-    writeStderr(`Error: missing template directory for ${artifactFilesDir}`);
+    console.error(`Error: missing template directory for ${artifactFilesDir}`);
     process.exit(1);
   }
 
   if (fs.existsSync(destDir)) {
-    writeStderr(`Error: artifacts/${slug}/ already exists`);
+    console.error(`Error: artifacts/${slug}/ already exists`);
     process.exit(1);
   }
 
-  writeStdout(`Bootstrapping ${artifactType} artifact: ${slug}`);
+  console.log(`Bootstrapping ${artifactType} artifact: ${slug}`);
 
-  copyDir(fs, path, filesDir, destDir, slug, title);
-  writeStdout(`  Copied files to artifacts/${slug}/`);
+  copyDir(filesDir, destDir, slug, title);
+  console.log(`  Copied files to artifacts/${slug}/`);
 
-  writeStdout('Done.');
+  console.log('Done.');
 }
 
-void main();
+main();

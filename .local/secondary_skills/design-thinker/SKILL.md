@@ -281,7 +281,7 @@ When presenting design thinking analysis on the canvas, follow these rules for a
 - **`labelColor: "white"` can cause rendering errors** — avoid it. Use lighter fill colors where default black text is readable.
 
 - **`color: "black"`on geo shapes with`fill: "solid"`causes errors** — use`grey` or a dark supported color instead.
-- **Always call `getCanvasState` before placing shapes** — check for existing content and find empty space.
+- **Always call `get_canvas_state` before placing shapes** — check for existing content and find empty space.
 
 - **Delete before recreate** — when updating shapes, delete first then create fresh. Updates to notes can behave unexpectedly.
 

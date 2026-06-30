@@ -9,7 +9,7 @@ Help users find the right Replit skill for their objective. When the user descri
 
 ## Process
 
-1. **Discover available skills dynamically.** Before matching, run `skillSearch({ query: "..." })` via code execution with the user's objective as the query. This searches all currently installed skills -- including any new ones added since this file was last updated. Also scan`.local/skills/`and`.local/secondary_skills/` directories for any skills not yet in the catalog below.
+1. **Discover available skills dynamically.** Before matching, run `skillSearch(query)`via code execution with the user's objective as the query. This searches all currently installed skills — including any new ones added since this file was last updated. Also scan`.local/skills/`and`.local/secondary_skills/` directories for any skills not yet in the catalog below.
 2. Listen to the user's objective or question.
 
 3. Match their goal against both the dynamic results and the catalog below.
@@ -26,7 +26,7 @@ Help users find the right Replit skill for their objective. When the user descri
 
 The catalog below is a snapshot. New skills may be added to the platform at any time. To stay current:
 
-- Always use `skillSearch()` as the primary discovery mechanism -- it reflects the latest installed skills.
+- Always use `skillSearch()` as the primary discovery mechanism — it reflects the latest installed skills.
 - If you discover a skill that is not in the catalog below, still recommend it and mention that it is a newer addition.
 
 - Periodically, the user or agent can refresh the catalog by scanning `.local/skills/*/SKILL.md`and`.local/secondary_skills/*/SKILL.md` for names and descriptions, then updating this file.
@@ -91,7 +91,7 @@ The catalog below is a snapshot. New skills may be added to the platform at any 
 
 | **integrations** | Connect to third-party services (Stripe, GitHub, Google, Linear, Notion, etc.) |
 
-| **rayfin** | Scaffold, run, and deploy Rayfin apps -- Microsoft's Backend-as-a-Service (auth, database, storage) deployed to Microsoft Fabric. Gated behind the Replit <> Microsoft partnership flag |
+| **rayfin** | Scaffold, run, and deploy Rayfin apps — Microsoft's Backend-as-a-Service (auth, database, storage) deployed to Microsoft Fabric. Gated behind the Replit <> Microsoft partnership flag |
 
 | **query-integration-data** | Query and modify data in connected integrations or data warehouses |
 
@@ -131,7 +131,7 @@ The catalog below is a snapshot. New skills may be added to the platform at any 
 
 |-------|-------------|
 
-| **media-generation** | Generate AI images. For AI video clips, read `media-generation/video-generation.md`; for music, sound effects, and text-to-speech audio, read `media-generation/audio-generation.md` |
+| **media-generation** | Generate AI images. For AI video clips, read `media-generation/video_generation.md`; for music, sound effects, and text-to-speech audio, read `media-generation/audio_generation.md` |
 
 | **photo-editor** | Edit, resize, crop, filter, and optimize images |
 
@@ -149,9 +149,9 @@ The catalog below is a snapshot. New skills may be added to the platform at any 
 
 | **testing** | Run automated UI tests with Playwright |
 
-| **security-scan** | Scan for dependency vulnerabilities and code security issues |
+| **security_scan** | Scan for dependency vulnerabilities and code security issues |
 
-| **threat-modeling** | Perform structured threat modeling for a project |
+| **threat_modeling** | Perform structured threat modeling for a project |
 
 | **validation** | Register shell commands as CI-style validation checks |
 
@@ -165,13 +165,13 @@ The catalog below is a snapshot. New skills may be added to the platform at any 
 
 |-------|-------------|
 
-| **project-tasks** | Create and manage persistent project tasks |
+| **project_tasks** | Create and manage persistent project tasks |
 
-| **code-review** | Spawn a code review subagent for deep analysis and debugging |
+| **code_review** | Spawn a code review subagent for deep analysis and debugging |
 
 | **delegation** | Delegate tasks to specialized subagents |
 
-| **post-merge-setup** | Maintain the post-merge setup script for task merges |
+| **post_merge_setup** | Maintain the post-merge setup script for task merges |
 
 ### Research and Productivity
 
@@ -215,7 +215,7 @@ The catalog below is a snapshot. New skills may be added to the platform at any 
 
 | **repl-seo-optimizer** | Fix SEO issues in your app's code before launch |
 
-| **seo-auditor** | Audit websites for SEO issues |
+| **seo-auditor** | Audit external websites for SEO issues (for the user's own app, run a scan with SEO Agent in the Growth pane) |
 
 | **programmatic-seo** | Build SEO-optimized pages at scale using templates and data |
 
@@ -279,9 +279,9 @@ The catalog below is a snapshot. New skills may be added to the platform at any 
 
 | **artifacts** | Bootstrap and register new artifacts in the monorepo |
 
-| **repl-setup** | Configure web apps in the Replit environment (hosts, connectivity, caching) |
+| **repl_setup** | Configure web apps in the Replit environment (hosts, connectivity, caching) |
 
-| **external-apis** | Access external APIs through Replit-managed billing |
+| **external_apis** | Access external APIs through Replit-managed billing |
 
 | **agent-inbox** | List and manage user feedback items from the agent inbox |
 
@@ -293,7 +293,7 @@ The catalog below is a snapshot. New skills may be added to the platform at any 
 - **Landing page**: react-vite + media-generation + design
 - **AI-powered app**: ai-integrations-openai (or anthropic/gemini) + react-vite + database
 
-- **Full publish flow**: testing + security-scan + deployment
+- **Full publish flow**: testing + security_scan + deployment
 - **Design iteration**: mockup-sandbox + design-exploration + mockup-graduate
 
 - **SEO launch**: repl-seo-optimizer + programmatic-seo + deployment

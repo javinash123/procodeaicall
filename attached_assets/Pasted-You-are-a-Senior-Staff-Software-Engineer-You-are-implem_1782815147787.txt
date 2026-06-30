@@ -1,0 +1,366 @@
+You are a Senior Staff Software Engineer.
+
+You are implementing NIJVOX Voice Engine V2.
+
+IMPORTANT
+
+Read the frozen architecture carefully before making any changes.
+
+This implementation MUST strictly follow the architecture.
+
+You are NOT allowed to redesign anything.
+
+--------------------------------------------------
+
+GOAL
+
+Build ONLY the Foundation layer.
+
+This is NOT the voice engine.
+
+This is ONLY the shared infrastructure that every future module depends on.
+
+--------------------------------------------------
+
+DO NOT TOUCH
+
+Do NOT modify any existing SaaS modules.
+
+Do NOT modify authentication.
+
+Do NOT modify campaigns.
+
+Do NOT modify CRM.
+
+Do NOT modify dashboard.
+
+Do NOT modify MongoDB models.
+
+Do NOT modify existing routes.
+
+Do NOT modify Exotel calling APIs.
+
+Do NOT modify current voice engine.
+
+Do NOT delete any files.
+
+Do NOT refactor existing code.
+
+--------------------------------------------------
+
+ONLY CREATE
+
+Create a new folder:
+
+server/voice-engine/
+
+Inside it create ONLY the following folders.
+
+config/
+events/
+errors/
+interfaces/
+logger/
+providers/
+session/
+transport/
+audio/
+stt/
+llm/
+tts/
+pipeline/
+metrics/
+monitoring/
+types/
+
+--------------------------------------------------
+
+Inside these folders create ONLY:
+
+shared types
+
+interfaces
+
+configuration schema
+
+constants
+
+dependency injection entry point
+
+factory interfaces
+
+NO BUSINESS LOGIC.
+
+--------------------------------------------------
+
+IMPLEMENT
+
+1.
+
+VoiceEngineConfig interface
+
+including
+
+ProviderConfig
+
+AudioConfig
+
+LoggingConfig
+
+MetricsConfig
+
+SessionConfig
+
+TransportConfig
+
+HealthConfig
+
+SecurityConfig
+
+Use Zod validation.
+
+--------------------------------------------------
+
+2.
+
+EventBus interface
+
+Strongly typed.
+
+Support
+
+emit()
+
+on()
+
+off()
+
+once()
+
+onAny()
+
+No implementation.
+
+--------------------------------------------------
+
+3.
+
+VoiceEvent types.
+
+Create all event interfaces exactly matching the frozen architecture.
+
+Use discriminated unions.
+
+--------------------------------------------------
+
+4.
+
+Provider interfaces.
+
+Create ONLY interfaces.
+
+TelephonyProvider
+
+STTProvider
+
+LLMProvider
+
+TTSProvider
+
+Include capability declarations.
+
+Include ping().
+
+Include optional streaming interfaces.
+
+No implementations.
+
+--------------------------------------------------
+
+5.
+
+Session interfaces.
+
+Create
+
+VoiceSession
+
+SerializableSessionState
+
+TransientSessionState
+
+SessionState enum
+
+ConversationMessage
+
+CampaignSnapshot
+
+No logic.
+
+--------------------------------------------------
+
+6.
+
+Logger interface.
+
+Support
+
+debug
+
+info
+
+warn
+
+error
+
+child
+
+No implementation.
+
+--------------------------------------------------
+
+7.
+
+Metrics interfaces.
+
+Collector interface
+
+MetricEvent
+
+Histogram
+
+Counter
+
+Gauge
+
+No implementation.
+
+--------------------------------------------------
+
+8.
+
+Health interfaces.
+
+HealthStatus
+
+ProviderHealth
+
+ReadyStatus
+
+--------------------------------------------------
+
+9.
+
+Error hierarchy.
+
+VoiceEngineError
+
+ErrorCode enum
+
+RetryableError
+
+FatalError
+
+ConfigurationError
+
+ProviderError
+
+TransportError
+
+--------------------------------------------------
+
+10.
+
+Dependency Injection.
+
+Create
+
+createVoiceEngine()
+
+VoiceEngine interface
+
+VoiceEngineDependencies
+
+VoiceEngineFactory
+
+This is ONLY wiring.
+
+No runtime logic.
+
+--------------------------------------------------
+
+11.
+
+Exports
+
+Create clean barrel exports.
+
+Every folder must expose an index.ts.
+
+Root
+
+server/voice-engine/index.ts
+
+must become the ONLY public entry point.
+
+--------------------------------------------------
+
+RULES
+
+No implementation logic.
+
+No TODO comments.
+
+No placeholder methods.
+
+No mock implementations.
+
+No any types.
+
+No circular imports.
+
+No duplicated types.
+
+Use readonly wherever possible.
+
+Prefer interfaces over classes.
+
+Everything must compile.
+
+--------------------------------------------------
+
+SELF CHECK
+
+Before stopping verify:
+
+✓ TypeScript compiles.
+
+✓ No existing project file modified unless required for exports.
+
+✓ No business logic added.
+
+✓ No provider implementations created.
+
+✓ No transport implementation created.
+
+✓ No session manager implementation created.
+
+✓ No event bus implementation created.
+
+✓ No logger implementation created.
+
+✓ All imports resolve.
+
+✓ All barrel exports resolve.
+
+Finally produce a report containing:
+
+Files created
+
+Files modified
+
+Architecture compliance confirmation
+
+Compilation status
+
+Stop after that.

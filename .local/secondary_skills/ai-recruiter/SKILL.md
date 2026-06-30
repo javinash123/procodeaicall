@@ -3,8 +3,6 @@ name: ai-recruiter
 description: Source and evaluate candidates with job analysis, CV screening, and pipeline tracking.
 ---
 
-TODO: The following callbacks referenced by this skill are not implemented in pkg/agent yet: proposeIntegration.
-
 # AI Recruiter
 
 Help source and evaluate candidates for open roles. Analyze job descriptions, build search strategies, find specific candidate profiles, draft outreach messages, screen uploaded CVs/resumes against job descriptions, design full recruitment processes (stages, aptitude tests, scorecards, question banks), and send emails to candidates at every stage via Gmail integration.
@@ -384,10 +382,10 @@ When the user wants to communicate decisions to candidates (confirmations, rejec
 
 #### Prerequisites
 
-- The Gmail integration must be connected. Use `searchIntegrations({ query: "gmail" })` to check availability.
+- The Gmail integration must be connected. Use `searchIntegrations("gmail")` to check availability.
 - If not connected, guide the user through setup: use `proposeIntegration`with the Gmail connector ID to trigger OAuth. After the user authorizes, use`addIntegration`to wire it to the project, then`proposeIntegration` again to establish the token.
 
-- Use `listConnections('google-mail')` inside `"use impure"` to get credentials once connected.
+- Use `listConnections('google-mail')` to get credentials once connected.
 
 ##### Email workflow
 
@@ -422,23 +420,23 @@ When the user wants to communicate decisions to candidates (confirmations, rejec
 
 ```javascript
 
-const result = await (async function() {
-  "use impure";
-  const conns = await listConnections('google-mail');
+const conns = await listConnections('google-mail');
 
-  if (conns.length === 0) {
-    return { ok: false, reason: "No Gmail credentials available" };
-  }
+if (conns.length === 0) {
 
-  const settings = conns[0].settings;
+// No Gmail connection — guide user through setup
 
-  // Use the Gmail API to send emails
+const results = await searchIntegrations("gmail");
 
-  // Always use confirm_connector_operation before sending
+// Use proposeIntegration with the connector ID
 
-  return { ok: true };
-})();
-console.log(result);
+}
+
+const settings = conns[0].settings;
+
+// Use the Gmail API to send emails
+
+// Always use confirm_connector_operation before sending
 
 ```
 
@@ -646,10 +644,10 @@ Use Google Sheets as the central tracking system for the entire hiring pipeline.
 
 #### Prerequisites (2)
 
-- Google Sheets integration must be connected. Use `searchIntegrations({ query: "google sheets" })` to check availability.
+- Google Sheets integration must be connected. Use `searchIntegrations("google sheets")` to check availability.
 - If not connected, guide the user through setup: use `proposeIntegration`with connector ID`connector:ccfg_google-sheet_E42A9F6CA62546F68A1FECA0E8`.
 
-- Use `listConnections('google-sheet')` inside `"use impure"` to get credentials once connected.
+- Use `listConnections('google-sheet')` to get credentials once connected.
 
 ##### When to create a tracking sheet
 
@@ -767,23 +765,21 @@ Running evaluation that compounds insights as candidates progress. Update this a
 
 ```javascript
 
-const result = await (async function() {
-  "use impure";
-  const conns = await listConnections('google-sheet');
+const conns = await listConnections('google-sheet');
 
-  if (conns.length === 0) {
-    return { ok: false, reason: "No Google Sheets credentials available" };
-  }
+if (conns.length === 0) {
 
-  const settings = conns[0].settings;
+const results = await searchIntegrations("google sheets");
 
-  // Use the Google Sheets API to create and update the tracking spreadsheet
+// Use proposeIntegration with the connector ID
 
-  // Always use confirm_connector_operation before write operations
+}
 
-  return { ok: true };
-})();
-console.log(result);
+const settings = conns[0].settings;
+
+// Use the Google Sheets API to create and update the tracking spreadsheet
+
+// Always use confirm_connector_operation before write operations
 
 ```
 
@@ -793,10 +789,10 @@ Use Google Calendar to schedule interviews directly, rather than just proposing 
 
 #### Prerequisites (3)
 
-- Google Calendar integration must be connected. Use `searchIntegrations({ query: "google calendar" })` to check availability.
+- Google Calendar integration must be connected. Use `searchIntegrations("google calendar")` to check availability.
 - If not connected, guide the user through setup: use `proposeIntegration`with connector ID`connector:ccfg_google-calendar_DDDBAC03DE404369B74F32E78D`.
 
-- Use `listConnections('google-calendar')` inside `"use impure"` to get credentials once connected.
+- Use `listConnections('google-calendar')` to get credentials once connected.
 
 ##### When to offer calendar scheduling
 
@@ -825,23 +821,21 @@ Use Google Calendar to schedule interviews directly, rather than just proposing 
 
 ```javascript
 
-const result = await (async function() {
-  "use impure";
-  const conns = await listConnections('google-calendar');
+const conns = await listConnections('google-calendar');
 
-  if (conns.length === 0) {
-    return { ok: false, reason: "No Google Calendar credentials available" };
-  }
+if (conns.length === 0) {
 
-  const settings = conns[0].settings;
+const results = await searchIntegrations("google calendar");
 
-  // Use the Google Calendar API to check availability and create events
+// Use proposeIntegration with the connector ID
 
-  // Always use confirm_connector_operation before creating events
+}
 
-  return { ok: true };
-})();
-console.log(result);
+const settings = conns[0].settings;
+
+// Use the Google Calendar API to check availability and create events
+
+// Always use confirm_connector_operation before creating events
 
 ```
 
@@ -933,10 +927,10 @@ Task format (adapt to the platform):
 
 ###### Setup for any notification channel
 
-1. Use `searchIntegrations({ query: "[platform name]" })` to check availability
+1. Use `searchIntegrations("[platform name]")` to check availability
 2. If not connected, guide the user through setup with `proposeIntegration` using the connector ID from the table above
 
-3. Use `listConnections('[connection name]')` inside `"use impure"` to get credentials once connected
+3. Use `listConnections('[connection name]')` to get credentials once connected
 4. Ask the user where to send notifications (channel, project, board, or database)
 
 5. Always use `confirm_connector_operation` before creating tasks or sending messages
@@ -945,23 +939,22 @@ Task format (adapt to the platform):
 
 // Example for any platform — adapt the connection name
 
-const result = await (async function() {
-  "use impure";
-  const conns = await listConnections('[connection-name]');
+const conns = await listConnections('[connection-name]');
 
-  if (conns.length === 0) {
-    return { ok: false, reason: "No credentials available" };
-  }
+if (conns.length === 0) {
 
-  const settings = conns[0].settings;
+const results = await searchIntegrations("[platform name]");
 
-  // Use the platform's API to send messages or create tasks
+// Use proposeIntegration with the connector ID
 
-  // Always use confirm_connector_operation before write operations
+}
 
-  return { ok: true };
-})();
-console.log(result);
+const settings = conns[0].settings;
+
+// Use the platform's API to send messages or create tasks
+
+// Always use confirm_connector_operation before write operations
+
 ```
 
 ###### When to create reminders

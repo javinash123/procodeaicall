@@ -188,14 +188,7 @@ Apply requested tweaks and present the updated direction for final approval. Thi
 
 ## Step 5: Deliver the Brand Kit
 
-Once a direction is approved, **delegate to the design subagent**
-    
-```javascript
-const brandDesignTask = `Build polished visual boards for the approved direction.`;
-subagent({ name: "brand-design", task: brandDesignTask, config: { $kind: "design" } })
-// see delegation and design skills
-```
-This builds polished visual boards. Embed them as iframes on the canvas.
+Once a direction is approved, **delegate to the design subagent** (`subagent`with`specialization="DESIGN"`) to build polished visual boards. Embed them as iframes on the canvas.
 
 ### Deliverables
 

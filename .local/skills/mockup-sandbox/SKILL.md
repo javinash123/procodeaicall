@@ -16,14 +16,14 @@ Activate this skill when the user wants to:
 - Preview responsive behavior ("how does this look on mobile?", "show me mobile and desktop")
 - Preview component states ("show me loading, error, and empty states")
 - Compare themes ("dark mode vs light mode", "what about a warmer color scheme?")
-- Show a multi-page flow, **only when the user explicitly requests multiple pages** ("preview the signup flow: landing -- signup -- dashboard")
+- Show a multi-page flow, **only when the user explicitly requests multiple pages** ("preview the signup flow: landing → signup → dashboard")
 - Iterate on an existing component's design on the canvas (also activates mockup-extract)
 
 **Rule of thumb:** if the result should be rendered HTML/CSS/React on the canvas, use this skill. If it's just shapes, text, or diagrams, the canvas skill handles it directly.
 
 ## Extract First, Then Iterate
 
-**When the user wants to redesign, improve, or create variants of something that already exists in their app, always start by extracting the real component code** using {{skill("mockup-extract")}}. Never rebuild an existing component from scratch by hand-coding approximations -- you will get dimensions, colors, spacing, icon sizes, opacity values, and other details wrong. The real source code has the exact values; use them.
+**When the user wants to redesign, improve, or create variants of something that already exists in their app, always start by extracting the real component code** using {{skill("mockup-extract")}}. Never rebuild an existing component from scratch by hand-coding approximations — you will get dimensions, colors, spacing, icon sizes, opacity values, and other details wrong. The real source code has the exact values; use them.
 
 The correct workflow for redesigning existing UI:
 
@@ -37,7 +37,7 @@ The incorrect workflow (do not do this):
 2. ~~Guess at dimensions, colors, spacing, and other values~~
 3. ~~Iterate on an inaccurate approximation~~
 
-This applies whenever the component being redesigned already exists as code in the main app -- even if the user doesn't explicitly say "extract". If they say "redesign my sidebar", "improve the onboarding flow", or "show me alternatives for the settings page", the code already exists and must be extracted, not approximated.
+This applies whenever the component being redesigned already exists as code in the main app — even if the user doesn't explicitly say "extract". If they say "redesign my sidebar", "improve the onboarding flow", or "show me alternatives for the settings page", the code already exists and must be extracted, not approximated.
 
 ## Gathering Requirements
 
@@ -75,7 +75,7 @@ Then start its dev server **before** creating any components or placing iframes 
 await restartWorkflow({ workflowName: "artifacts/mockup-sandbox: Component Preview Server" });
 ```
 
-The dev server must be running first so that component files are picked up by the Vite plugin and preview URLs resolve correctly. Preview URLs use path-based routing: `https://${REPLIT_DOMAINS}/__mockup/preview/{folder}/{ComponentName}` -- no port number needed.
+The dev server must be running first so that component files are picked up by the Vite plugin and preview URLs resolve correctly. Preview URLs use path-based routing: `https://${REPLIT_DOMAINS}/__mockup/preview/{folder}/{ComponentName}` — no port number needed.
 
 ### Step 2: Create mockup components
 
@@ -97,7 +97,9 @@ export function Minimal() {
 ### Step 3: Embed on the canvas
 
 Create `iframe` shapes on the workspace canvas.
-Preview URLs follow the pattern `https://${REPLIT_DOMAINS}/__mockup/preview/{folder}/{ComponentName}` -- no port number.
+Preview URLs follow the pattern `https://${REPLIT_DOMAINS}/__mockup/preview/{folder}/{ComponentName}` — no port number.
+
+**Reserved design frames.** A reserved design frame is a client-placed Building iframe with a preassigned `shape_id` that exists before your agent run starts. Your job is to update that exact iframe; do not create a replacement shape for it. If the `pending_canvas_frames` block for the current user turn lists frames, use those exact `shape_id` values for the first N mockup iframes you produce. Ignore `pending_canvas_frames` blocks attached to earlier turns. For additional variants beyond the reserved count, use the normal create flow described below. The `updates` payload for iframe updates uses flat top-level fields because the canvas callback validates `updates` directly.
 
 Example -- a pricing card is a "Card / Panel", so use a snug iframe (see [Iframe Sizing Guide](#iframe-sizing-guide)):
 
@@ -124,7 +126,7 @@ If an iframe is created while the workflow is still booting, rely on the canvas 
 
 **Multi-viewport layouts.** When showing the same component at different screen sizes, place them in a row using the viewport presets (Mobile: 390x844, Tablet: 768x1024, Desktop: 1280x720). Use `align` (top) + `distribute` (horizontal) in the same batch to line them up instead of hand-computing 50px gutters.
 
-**Empty-canvas exception.** If `getCanvasState` shows the canvas is empty -- `focusedShapes`, `blurryShapes`, **and** `peripheralClusters` all empty (the `summary` count alone misses off-screen content) -- follow the placement with one `focusCanvasShapes` call on the placeholder IDs in the same execution. Otherwise default rule (`presentArtifact` only). For 3+ placeholders, layer on `align`/`distribute` per the "Variant grid layout" paragraph above; for 1-2 placeholders skip them -- `align` requires 2+ shapes and `distribute` requires 3+, so an unconditional batch fails before any placeholder is shown.
+**Empty-canvas exception.** If `getCanvasState` shows the canvas is empty — `focusedShapes`, `blurryShapes`, **and** `peripheralClusters` all empty (the `summary` count alone misses off-screen content) — follow the placement with one `focusCanvasShapes` call on the placeholder IDs in the same execution. Otherwise default rule (`presentArtifact` only). For 3+ placeholders, layer on `align`/`distribute` per the "Variant grid layout" paragraph above; for 1-2 placeholders skip them — `align` requires 2+ shapes and `distribute` requires 3+, so an unconditional batch fails before any placeholder is shown.
 
 ```javascript
 const ids = ["coffee-artisan", "coffee-modern", "coffee-warm"];
@@ -139,46 +141,44 @@ await focusCanvasShapes({ shapeIds: ids, animateMs: 500 });
 
 **Clean up the layout before presenting.** Before the final `presentArtifact` call (Step 5), align and distribute any row or column of 3+ iframes you placed. This produces a pixel-perfect layout that hand-computed coordinates usually miss by a few units, and it's what the user first sees when they focus on your work. For a 2-shape pair (e.g. before/after), align the shared edge but set the gap on create -- `distribute` rejects 2 shapes.
 
-**Do not call `SuggestUserAction({ action: "deploy", message: "..." })`.** The mockup sandbox is a local prototyping tool and is not meant to be deployed -- if the user asks to publish or deploy canvas/mockup content, integrate/graduate it into a real app artifact first.
+**Do not call `suggestDeploy()`.** The mockup sandbox is a local prototyping tool and is not meant to be deployed — if the user asks to publish or deploy canvas/mockup content, integrate/graduate it into a real app artifact first.
 
-**Never share dev domain URLs in chat.** Dev URLs (`*.replit.dev`, `$REPLIT_DEV_DOMAIN`) are internal -- use them only in tool calls (iframe shapes tasks), never in user-facing messages.
+**Never share dev domain URLs in chat.** Dev URLs (`*.replit.dev`, `$REPLIT_DEV_DOMAIN`) are internal — use them only in tool calls (iframe shapes, subagent tasks), never in user-facing messages.
 
 # Step 5: Verification and Presentation
 
 **Check system logs.** Always check the system logs to ensure no iframe previews are broken, since broken iframes cause an error overlay across the canvas. If you see iframe-related errors, fix them before proceeding and restart the workflow.
 
-**CRITICAL -- Always present after canvas work.** After all mockups are embedded, you MUST call `presentArtifact` with the shape IDs. This is how the user navigates to your work -- without it, they cannot find the shapes you placed. Never skip this step. Never ask the user if they want to see the shapes -- just present.
+**CRITICAL — Always present after canvas work.** After all mockups are embedded, you MUST call `presentArtifact` with the shape IDs. This is how the user navigates to your work — without it, they cannot find the shapes you placed. Never skip this step. Never ask the user if they want to see the shapes — just present.
 
 ```javascript
 // ALWAYS call this after creating or updating canvas shapes.
-const { artifacts } = await listArtifacts();
-const mockupArtifact = artifacts.find((artifact) => artifact.artifactDir === "artifacts/mockup-sandbox");
-await presentArtifact({ artifactId: mockupArtifact.artifactId, shapeIds: ["shape-id-1", "shape-id-2"] });
+await presentArtifact({ artifactId, shapeIds: ["shape-id-1", "shape-id-2"] });
 ```
 
 ## Architecture
 
 ```text
 artifacts/mockup-sandbox/                              # Isolated from main app
--- package.json                      # Dependencies (React, Tailwind, shadcn/ui, cartographer)
--- vite.config.ts                    # Vite config
--- mockupPreviewPlugin.ts            # Vite plugin for component discovery + automatic 404 rescan
--- tsconfig.json                     # TypeScript config for tsgo type checking
--- components.json                   # shadcn/ui config
--- .npmrc
--- index.html
--- src/
-    -- main.tsx                      # Entry point
-    -- App.tsx                       # Landing page
-    -- index.css                     # Tailwind v4 styles
-    -- .generated/
-    --   -- mockup-components.ts      # Auto-generated component registry
-    -- components/
-    --   -- ui/                       # 50+ shadcn/ui components (pre-installed)
-    --   -- mockups/                  # YOUR MOCKUP COMPONENTS GO HERE
-    -- lib/
-    --   -- utils.ts
-    -- hooks/
+├── package.json                      # Dependencies (React, Tailwind, shadcn/ui, cartographer)
+├── vite.config.ts                    # Vite config
+├── mockupPreviewPlugin.ts            # Vite plugin for component discovery + automatic 404 rescan
+├── tsconfig.json                     # TypeScript config for tsgo type checking
+├── components.json                   # shadcn/ui config
+├── .npmrc
+├── index.html
+└── src/
+    ├── main.tsx                      # Entry point
+    ├── App.tsx                       # Landing page
+    ├── index.css                     # Tailwind v4 styles
+    ├── .generated/
+    │   └── mockup-components.ts      # Auto-generated component registry
+    ├── components/
+    │   ├── ui/                       # 50+ shadcn/ui components (pre-installed)
+    │   └── mockups/                  # YOUR MOCKUP COMPONENTS GO HERE
+    ├── lib/
+    │   └── utils.ts
+    └── hooks/
 ```
 
 ## Folder Structure
@@ -187,27 +187,27 @@ The folder structure in `mockups/` automatically organizes components:
 
 ```text
 components/mockups/
--- pricing-cards/           # Single-component variants
---   -- _group.css           # Group-level tokens + fonts (optional)
---   -- Minimal.tsx          # imports './_group.css'
---   -- Bold.tsx             # imports './_group.css'
---   -- Gradient.tsx         # imports './_group.css'
--- crm-dashboard/           # Multi-page project (only when user explicitly requests multiple pages)
---   -- _shared/             # Shared layout (not preview targets)
---   --   -- AppLayout.tsx
---   --   -- Navbar.tsx
---   --   -- Sidebar.tsx
---   -- _group.css
---   -- Dashboard.tsx
---   -- UserList.tsx
---   -- Settings.tsx
--- login-forms/
---   -- Simple.tsx
---   -- Dark.tsx
--- QuickIdea.tsx            # Ungrouped (loose files)
+├── pricing-cards/           # Single-component variants
+│   ├── _group.css           # Group-level tokens + fonts (optional)
+│   ├── Minimal.tsx          # imports './_group.css'
+│   ├── Bold.tsx             # imports './_group.css'
+│   └── Gradient.tsx         # imports './_group.css'
+├── crm-dashboard/           # Multi-page project (only when user explicitly requests multiple pages)
+│   ├── _shared/             # Shared layout (not preview targets)
+│   │   ├── AppLayout.tsx
+│   │   ├── Navbar.tsx
+│   │   └── Sidebar.tsx
+│   ├── _group.css
+│   ├── Dashboard.tsx
+│   ├── UserList.tsx
+│   └── Settings.tsx
+├── login-forms/
+│   ├── Simple.tsx
+│   └── Dark.tsx
+└── QuickIdea.tsx            # Ungrouped (loose files)
 ```
 
-Files prefixed with `_` are not preview targets by convention. `_shared/` holds helper components imported by sibling page files. `_group.css` holds group-level CSS overrides -- tokens, font `@import`s, `@font-face` blocks -- that every component in the group explicitly imports (see [Fonts](#fonts)).
+Files prefixed with `_` are not preview targets by convention. `_shared/` holds helper components imported by sibling page files. `_group.css` holds group-level CSS overrides — tokens, font `@import`s, `@font-face` blocks — that every component in the group explicitly imports (see [Fonts](#fonts)).
 
 ## Working with Assets
 
@@ -245,20 +245,22 @@ import heroImg from "@/assets/hero.png";
 
 The `@` alias maps to `artifacts/mockup-sandbox/src/`, so `@/assets/hero.png` resolves to `artifacts/mockup-sandbox/src/assets/hero.png`.
 
-**Important -- pick one approach per image and do not cross them:**
+**Important — pick one approach per image and do not cross them:**
 
-- Files in `src/assets/` **must** be imported (`import img from "@/assets/hero.png"`). Referencing them by URL path (`<img src="/src/assets/hero.png" />`) will 404 -- Vite does not serve `src/` files as static assets.
-- Files in `public/images/` are served as-is at `/__mockup/images/--`. Do not import them.
+- Files in `src/assets/` **must** be imported (`import img from "@/assets/hero.png"`). Referencing them by URL path (`<img src="/src/assets/hero.png" />`) will 404 — Vite does not serve `src/` files as static assets.
+- Files in `public/images/` are served as-is at `/__mockup/images/…`. Do not import them.
 
-For mockups, **prefer Option 1 (public folder)** -- it is simpler and avoids the most common mistake.
+For mockups, **prefer Option 1 (public folder)** — it is simpler and avoids the most common mistake.
 
 To generate images for mockups, use the `media-generation` skill:
 
 ```javascript
 await generateImage({
-    prompt: "Modern product photo of wireless headphones",
-    outputPath: "artifacts/mockup-sandbox/public/images/headphones.png",
-    summary: "wireless headphones product photo"
+    images: [{
+        prompt: "Modern product photo of wireless headphones",
+        outputPath: "artifacts/mockup-sandbox/public/images/headphones.png",
+        aspectRatio: "1:1"
+    }]
 });
 ```
 
@@ -274,7 +276,7 @@ Then reference: `<img src="/__mockup/images/headphones.png" />`.
 <h1 className="font-['Playfair_Display']">Heading</h1>
 ```
 
-**Custom fonts.** For fonts outside the bundled set, add a non-blocking `<link>` tag to `artifacts/mockup-sandbox/index.html`. Do not use CSS `@import url(...)` -- it is render-blocking and will delay all Tailwind styles until the font finishes downloading.
+**Custom fonts.** For fonts outside the bundled set, add a non-blocking `<link>` tag to `artifacts/mockup-sandbox/index.html`. Do not use CSS `@import url(...)` — it is render-blocking and will delay all Tailwind styles until the font finishes downloading.
 
 ```html
 <!-- in artifacts/mockup-sandbox/index.html <head> -->
@@ -295,7 +297,7 @@ Or override the default font via a CSS variable in a component's own CSS file:
 :root { --font-serif: 'Cormorant Garamond', serif; }
 ```
 
-Missing fonts fail silently -- no console error, no build failure, just a fallback font with the wrong weight and width. Verify typography visually.
+Missing fonts fail silently — no console error, no build failure, just a fallback font with the wrong weight and width. Verify typography visually.
 
 ## Adding Packages
 
@@ -328,7 +330,7 @@ import { Input } from "@/components/ui/input";
 
 ## Design Variation Guidelines
 
-When the user asks for variations, alternatives, "show me options," or any request that implies divergent exploration (e.g., "try 3 different approaches," "what else could this be?"), read {{skill("design-exploration")}} first. It provides a structured comprehension -- brief -- delegation workflow that produces meaningfully diverse output instead of superficial reskins.
+When the user asks for variations, alternatives, "show me options," or any request that implies divergent exploration (e.g., "try 3 different approaches," "what else could this be?"), read {{skill("design-exploration")}} first. It provides a structured comprehension → brief → delegation workflow that produces meaningfully diverse output instead of superficial reskins.
 
 When asked to generate variations, your first task is to **understand the design before changing it**.
 
@@ -371,14 +373,15 @@ For design variation tasks (2+ alternatives of the same component or page), use 
 
 Every mockup request -- whether handled directly or via subagents -- should show immediate visual feedback on the canvas using the iframe `state` field. When creating a new iframe for a component that doesn't exist yet, set `state: "building"`. The canvas renders a native building indicator -- no URL is needed at this point.
 
-**Flow for new components (0 -- 1):**
+**Flow for new components (0 → 1):**
 
 1. Read the canvas state to find empty space
 2. Immediately place iframe(s) with `state: "building"` and `componentName` at the expected sizes
-   - **Empty-canvas only:** if the canvas was empty before this batch, follow the placement with a `focusCanvasShapes` on the new placeholder IDs in the same execution. See [Step 4 -- Empty-canvas exception](#step-4-layout-and-focus) for the precise emptiness check.
+   - **Reserved frames:** if the `pending_canvas_frames` block for the current user turn is present, use those exact `shape_id`s with `type: "update"` actions instead of creating placeholders for the first N variants.
+   - **Empty-canvas only:** if the canvas was empty before this batch, follow the placement with a `focusCanvasShapes` on the new placeholder IDs in the same execution. See [Step 4 → Empty-canvas exception](#step-4-layout-and-focus) for the precise emptiness check.
 3. Proceed with component development.
    - For direct builds, set the iframe `state: "live"` once the component is ready, then screenshot the component to confirm it renders.
-   - For subagent builds, ask the subagent to set the iframe `state: "live"` AND verify with a screenshot before reporting -- broken iframes are invisible to the user until someone checks. The subagent's prompt has the screenshot tool mechanics; the parent only needs to include a verification instruction in the task (e.g. "Screenshot the preview to verify it renders before reporting").
+   - For subagent builds, ask the subagent to set the iframe `state: "live"` AND verify with a screenshot before reporting — broken iframes are invisible to the user until someone checks. The subagent's prompt has the screenshot tool mechanics; the parent only needs to include a verification instruction in the task (e.g. "Screenshot the preview to verify it renders before reporting").
 4. Check the system logs for iframe-related issues, fix any problems, and restart the workflow once all components are created.
 
 **Flow for modifying existing components:**
@@ -409,6 +412,7 @@ Then once the component is built, set the URL and mark it live:
   "type": "update",
   "shapeId": "pricing-bold",
   "updates": {
+    "shapeType": "iframe",
     "url": "https://<dev-url>/__mockup/preview/pricing-cards/Bold",
     "componentPath": "artifacts/mockup-sandbox/src/components/mockups/pricing-cards/Bold.tsx",
     "state": "live"
@@ -416,26 +420,53 @@ Then once the component is built, set the URL and mark it live:
 }
 ```
 
+**Reserved Building iframe example:**
 
+```json
+{
+  "type": "update",
+  "shapeId": "shape:<reserved-id>",
+  "updates": {
+    "shapeType": "iframe",
+    "componentName": "Bold Pricing Card"
+  }
+}
+```
+
+Then once the component is built, set the URL and mark it live. Keep the reserved `shapeId`:
+
+```json
+{
+  "type": "update",
+  "shapeId": "shape:<reserved-id>",
+  "updates": {
+    "shapeType": "iframe",
+    "url": "https://<dev-url>/__mockup/preview/pricing-cards/Bold",
+    "componentPath": "artifacts/mockup-sandbox/src/components/mockups/pricing-cards/Bold.tsx",
+    "componentName": "Bold Pricing Card",
+    "state": "live"
+  }
+}
+```
 
 ### When to use subagents
 
-Use subagents when the task involves **2+ design variants** of the same component or page. Also use a single DESIGN subagent for any single-page app or full-page mockup (landing pages, homepages, portfolios, etc.) -- the DESIGN subagent produces higher-quality visual output, unless the user asks you to handle it yourself. For a single small component (card, button, form) or a modification to an existing mockup, do the work directly.
+Use subagents when the task involves **2+ design variants** of the same component or page. Also use a single DESIGN subagent for any single-page app or full-page mockup (landing pages, homepages, portfolios, etc.) — the DESIGN subagent produces higher-quality visual output, unless the user asks you to handle it yourself. For a single small component (card, button, form) or a modification to an existing mockup, do the work directly.
 
-**Do not create multiple pages unless the user explicitly asks.** When the user says "design a dashboard" or "build a CRM", build it as a single page -- do not proactively split it into Dashboard, UserList, Settings, etc. Only fan out into multiple page files when the user specifically requests separate pages (e.g., "design a CRM with dashboard, users, and settings pages").
+**Do not create multiple pages unless the user explicitly asks.** When the user says "design a dashboard" or "build a CRM", build it as a single page — do not proactively split it into Dashboard, UserList, Settings, etc. Only fan out into multiple page files when the user specifically requests separate pages (e.g., "design a CRM with dashboard, users, and settings pages").
 
-**Single-page apps are single components.** When the user asks for a landing page, homepage, or any single-page app, create it as **one component file** -- do not split sections (hero, features, pricing, footer, etc.) into separate component files or separate screens. A landing page is one scrollable page rendered in one iframe, unless the user explicitly asks for separate screens or sections as independent components. For landing pages and similar content-rich pages, prioritize generating images (hero visuals, product shots, background art, illustrations) -- placeholder boxes and generic imagery make landing pages look unfinished. Use `generateImage` to create custom visuals that match the page's mood and brand direction.
+**Single-page apps are single components.** When the user asks for a landing page, homepage, or any single-page app, create it as **one component file** — do not split sections (hero, features, pricing, footer, etc.) into separate component files or separate screens. A landing page is one scrollable page rendered in one iframe, unless the user explicitly asks for separate screens or sections as independent components. For landing pages and similar content-rich pages, prioritize generating images (hero visuals, product shots, background art, illustrations) — placeholder boxes and generic stock imagery make landing pages look unfinished. Use `generateImage` to create custom visuals that match the page's mood and brand direction.
 
-**Which kind?** Use design subagents (`config: { $kind: "design" }`) for all mockup creation work. DESIGN subagents are tuned for creative visual output -- they produce better, more diverse designs when given a brief mood/direction rather than prescriptive specs. Do not use GENERAL subagents for mockup component creation; they lack the design sensibility and carry unnecessary overhead (task lists, context management).
+**Which specialization?** Use **DESIGN** subagents (`specialization: "DESIGN"`) for all mockup creation work. DESIGN subagents are tuned for creative visual output — they produce better, more diverse designs when given a brief mood/direction rather than prescriptive specs. Do not use GENERAL subagents for mockup component creation; they lack the design sensibility and carry unnecessary overhead (task lists, context management).
 
-**For extract and graduate workflows, use GENERAL subagents** if parallelization is needed. These are engineering tasks (import graph tracing, production code transformation) -- DESIGN subagents lack the codebase navigation skills they require. See the companion skills for details.
+**For extract and graduate workflows, use GENERAL subagents** if parallelization is needed. These are engineering tasks (import graph tracing, production code transformation) — DESIGN subagents lack the codebase navigation skills they require. See the companion skills for details.
 
 | Scenario | Subagents? | Specialization | Pattern |
 | --- | --- | --- | --- |
-| "Design a pricing card" | No | -- | Direct |
+| "Design a pricing card" | No | — | Direct |
 | "Design a landing page" | Yes (1) | DESIGN | Single DESIGN subagent (one file) |
 | "Design a single-page app" | Yes (1) | DESIGN | Single DESIGN subagent (one file) |
-| "Make the header bigger" | No | -- | In-place modification |
+| "Make the header bigger" | No | — | In-place modification |
 | "Extract my existing component" | If parallelizing | GENERAL | Direct or fan-out (mockup-extract) |
 | "Graduate / apply this mockup to my app" | If parallelizing | GENERAL | Direct or fan-out (mockup-graduate) |
 | "Redesign my navbar with 2 options" | Yes | DESIGN | Variants fan-out |
@@ -443,14 +474,14 @@ Use subagents when the task involves **2+ design variants** of the same componen
 
 ### Pattern: Direct (no subagent)
 
-Use for single small components (cards, buttons, forms) or modifications to existing mockups. For single full-page mockups (landing pages, homepages, single-page apps), delegate to a single DESIGN subagent instead -- unless the user asks otherwise. Follow the standard setup steps (Steps 3-6), with building placeholders for instant feedback.
+Use for single small components (cards, buttons, forms) or modifications to existing mockups. For single full-page mockups (landing pages, homepages, single-page apps), delegate to a single DESIGN subagent instead — unless the user asks otherwise. Follow the standard setup steps (Steps 3-6), with building placeholders for instant feedback.
 
 ```text
 Parent: Place iframe(s) with state: "building" on canvas
-    -- Create component file
-    -- Restart workflow
-    -- Update iframe with URL + state: "live"
-    -- presentArtifact with shapeIds
+    → Create component file
+    → Restart workflow
+    → Update iframe with URL + state: "live"
+    → presentArtifact with shapeIds
 ```
 
 For modifications to existing mockups, set `state: "modifying"` on the iframe, edit the file in place, then set `state: "live"` when done. **Do not** create a new file for modifications. If the user wants to preserve the old version for comparison, *then* duplicate the file into a new variant first.
@@ -462,9 +493,9 @@ Use when the user wants multiple visual options for the same component or page.
 ```text
 Parent: Place iframes with state: "building" on canvas (one per variant, in a row)
 Parent: Establish requirements, seed each variant direction
-    -- DESIGN subagent: "Minimal" variant
-    -- DESIGN subagent: "Bold" variant
-    -- DESIGN subagent: "Gradient" variant
+    ├──→ DESIGN subagent: "Minimal" variant
+    ├──→ DESIGN subagent: "Bold" variant
+    └──→ DESIGN subagent: "Gradient" variant
 Parent: Check system logs, fix issues and restart workflow once all subagents complete
 ```
 
@@ -472,8 +503,10 @@ Parent: Check system logs, fix issues and restart workflow once all subagents co
 
 1. Run the design-exploration comprehension steps (analyze component, identify constraints, select variation axes) and compose a structured design brief
 2. Create the folder (e.g., `mockups/pricing-cards/`)
-3. Place iframes with `state: "building"` in a horizontal row on the canvas, one per variant, with stable shape IDs. For 3+ variants, place them at rough positions and use `align` (top) + `distribute` (horizontal) in the same batch rather than hand-computing gutters.
-4. Seed each subagent with: the design brief, target file path, shape ID to update, dev URL, and the specific design hypothesis for this variant. **Tell each subagent not to edit `index.css`** -- multiple subagents run in parallel and will overwrite each other's changes.
+3. Place iframes with `state: "building"` in a horizontal row on the canvas, one per variant, with stable shape IDs.
+   - **Reserved frames:** assign the provided `shape_id`s to specific variants and do not create replacements. Keep the reserved frames at their client-provided positions and sizes; do not move, resize, align, or distribute them.
+   - **Additional variants:** for variants beyond the reserved count, create new Building iframes. For 3+ newly created frames, place them at rough positions and use `align` (top) + `distribute` (horizontal) in the same batch rather than hand-computing gutters.
+4. Seed each subagent with: the design brief, target file path, shape ID to update, dev URL, and the specific design hypothesis for this variant. If the shape ID came from the `pending_canvas_frames` block for the current user turn, explicitly tell the subagent to update that exact ID rather than create a replacement. **Tell each subagent not to edit `index.css`** — multiple subagents run in parallel and will overwrite each other's changes.
 5. After all subagents complete: restart workflow, call `presentArtifact` with all shape IDs.
 
 **Subagent task format:**
@@ -508,7 +541,7 @@ The exported function name must match the filename: export function Bold().
 Use Tailwind + shadcn/ui.
 
 ## CSS rules
-Do NOT edit index.css -- other subagents are running in parallel and will overwrite
+Do NOT edit index.css — other subagents are running in parallel and will overwrite
 your changes. All styles must be self-contained within your component:
 - Use Tailwind utility classes and inline styles for all visual styling
 - For custom fonts, use Google Fonts <link> tags in a wrapper <div> or inline @import
@@ -517,6 +550,7 @@ your changes. All styles must be self-contained within your component:
 
 When done, update the canvas iframe to show the real preview:
   Shape ID: pricing-bold
+  If this Shape ID came from the pending_canvas_frames block for the current user turn, update exactly this ID; do not create a replacement.
   URL: https://<dev-url>/__mockup/preview/pricing-cards/Bold
   componentPath: artifacts/mockup-sandbox/src/components/mockups/pricing-cards/Bold.tsx
   state: "live"
@@ -524,10 +558,10 @@ When done, update the canvas iframe to show the real preview:
 
 **Parent responsibilities:**
 
-1. Place iframes with `state: "building"` on the canvas with stable shape IDs
+1. Place iframes with `state: "building"` on the canvas with stable shape IDs. For reserved frames, assign the provided `shape_id`s to specific pages and do not create replacements.
 2. Create the project folder and `_shared/` subfolder
 3. Build shared layout components (`AppLayout.tsx` with a content slot, `Navbar.tsx`, `Sidebar.tsx`, etc.)
-4. Fan out DESIGN subagents for each page, passing `_shared/` file paths, shape ID, and dev URL. **Tell each subagent not to edit `index.css`** -- multiple subagents run in parallel and will overwrite each other's changes.
+4. Fan out DESIGN subagents for each page, passing `_shared/` file paths, shape ID, and dev URL. If the shape ID came from the `pending_canvas_frames` block for the current user turn, explicitly tell the subagent to update that exact ID rather than create a replacement. **Tell each subagent not to edit `index.css`** — multiple subagents run in parallel and will overwrite each other's changes.
 5. After all subagents complete: restart workflow, call `presentArtifact` with all shape IDs.
 
 **Multi-page subagent task format (only when user explicitly requests multiple pages):**
@@ -548,7 +582,7 @@ The exported function name must match the filename: export function Dashboard().
 Use Tailwind + shadcn/ui.
 
 ## CSS rules
-Do NOT edit index.css -- other subagents are running in parallel and will overwrite
+Do NOT edit index.css — other subagents are running in parallel and will overwrite
 your changes. All styles must be self-contained within your component:
 - Use Tailwind utility classes and inline styles for all visual styling
 - For custom fonts, use Google Fonts <link> tags in a wrapper <div> or inline @import
@@ -557,6 +591,7 @@ your changes. All styles must be self-contained within your component:
 
 When done, update the canvas iframe to show the real preview:
   Shape ID: crm-dashboard
+  If this Shape ID came from the pending_canvas_frames block for the current user turn, update exactly this ID; do not create a replacement.
   URL: https://<dev-url>/__mockup/preview/crm-dashboard/Dashboard
   componentPath: artifacts/mockup-sandbox/src/components/mockups/crm-dashboard/Dashboard.tsx
   state: "live"
@@ -569,34 +604,34 @@ Use when the user wants to compare multiple complete design directions for a mul
 Each variant gets its own folder with its own `_shared/` components. One DESIGN subagent builds an entire variant (shared components + all pages), giving it full creative control over the design direction.
 
 ```text
-Parent: Place iframes with state: "building" in a variant -- page grid on canvas
+Parent: Place iframes with state: "building" in a variant × page grid on canvas
 Parent: Define page list, seed each variant direction
-    -- DESIGN subagent: Build entire crm-minimal/
-    -- DESIGN subagent: Build entire crm-bold/ 
-    -- DESIGN subagent: Build entire crm-playful/ 
-Parent: Checked the system logs and restart the workflow once all components are created 
+    ├──→ DESIGN subagent: Build entire crm-minimal/
+    ├──→ DESIGN subagent: Build entire crm-bold/
+    └──→ DESIGN subagent: Build entire crm-playful/
+Parent: Checked the system logs and restart the workflow once all components are created
 
 ```
 
 ```text
 mockups/
--- crm-minimal/
---   -- _shared/
---   --   -- AppLayout.tsx
---   --   -- Navbar.tsx
---   -- Dashboard.tsx
---   -- UserList.tsx
---   -- Settings.tsx
--- crm-bold/
---   -- _shared/
---   --   -- AppLayout.tsx
---   --   -- TopNav.tsx
---   -- Dashboard.tsx
---   -- UserList.tsx
---   -- Settings.tsx
+├── crm-minimal/
+│   ├── _shared/
+│   │   ├── AppLayout.tsx
+│   │   └── Navbar.tsx
+│   ├── Dashboard.tsx
+│   ├── UserList.tsx
+│   └── Settings.tsx
+├── crm-bold/
+│   ├── _shared/
+│   │   ├── AppLayout.tsx
+│   │   └── TopNav.tsx
+│   ├── Dashboard.tsx
+│   ├── UserList.tsx
+│   └── Settings.tsx
 ```
 
-**Canvas layout for variant -- page grids:**
+**Canvas layout for variant × page grids:**
 
 Arrange as a matrix with text label shapes for headers. Variants as rows, pages as columns:
 
@@ -624,9 +659,10 @@ similar). Then create each page file importing from _shared/ for visual consiste
 Each exported function name must match its filename. Use Tailwind + shadcn/ui.
 
 When done, update the canvas iframes to show real previews (set state: "live" on each):
-  Shape ID: crm-minimal-dashboard -- URL: https://<dev-url>/__mockup/preview/crm-minimal/Dashboard
-  Shape ID: crm-minimal-userlist -- URL: https://<dev-url>/__mockup/preview/crm-minimal/UserList
-  Shape ID: crm-minimal-settings -- URL: https://<dev-url>/__mockup/preview/crm-minimal/Settings
+  Shape ID: crm-minimal-dashboard → URL: https://<dev-url>/__mockup/preview/crm-minimal/Dashboard
+  Shape ID: crm-minimal-userlist → URL: https://<dev-url>/__mockup/preview/crm-minimal/UserList
+  Shape ID: crm-minimal-settings → URL: https://<dev-url>/__mockup/preview/crm-minimal/Settings
+  If any Shape ID came from the pending_canvas_frames block for the current user turn, update exactly that ID; do not create a replacement.
 ```
 
 **Important:** The multi-page pattern above should only be used when the user explicitly requests separate pages. If the user says "design a CRM" or "design a dashboard" without specifying separate pages, build everything as a single page component.
@@ -641,7 +677,7 @@ When done, update the canvas iframes to show real previews (set state: "live" on
 
 4. **Verify paths before delegating.** Before passing file paths to subagents, list `artifacts/mockup-sandbox/` to confirm `src/components/mockups/` exists and pass the verified full path. Getting this wrong means files land in a directory the Vite plugin never scans.
 
-5. **Tell subagents the image path convention.** Always include this in the subagent task: "Place all images in `artifacts/mockup-sandbox/public/images/` and reference them as `<img src="/__mockup/images/filename.jpg" />`. Do NOT put images in `src/assets/` and reference them by URL path -- Vite does not serve `src/` as static assets and they will 404. For `generateImage`, use `outputPath` starting with `artifacts/mockup-sandbox/public/images/`."
+5. **Tell subagents the image path convention.** Always include this in the subagent task: "Place all images in `artifacts/mockup-sandbox/public/images/` and reference them as `<img src="/__mockup/images/filename.jpg" />`. Do NOT put images in `src/assets/` and reference them by URL path — Vite does not serve `src/` as static assets and they will 404. For `generateImage`, use `outputPath` starting with `artifacts/mockup-sandbox/public/images/`."
 
 6. **Give subagents creative freedom.** Subagents produce better designs when given high-level requirements, not prescriptive specs. Pass:
    - Target file path and exported function name
@@ -654,7 +690,7 @@ When done, update the canvas iframes to show real previews (set state: "live" on
 
    **Exception:** For multi-page apps (only when the user explicitly requests multiple pages), the parent defines the design system in `_shared/` and the subagent works within it. Creative freedom applies to page content and layout, not the shared chrome.
 
-7. **Match the config kind to the task type.** Use `config: { $kind: "design" }` for creative mockup creation (building new components, designing variants) -- it's tuned for visual output and produces better, more diverse designs. Use `config: { $kind: "general" }` for engineering tasks (extract, graduate) -- it's built for codebase navigation, dependency tracing, and architecture-aware transformations. Never use design for extract/graduate or general for mockup creation.
+7. **Match specialization to the task type.** Use `DESIGN` for creative mockup creation (building new components, designing variants) — it's tuned for visual output and produces better, more diverse designs. Use `GENERAL` for engineering tasks (extract, graduate) — it's built for codebase navigation, dependency tracing, and architecture-aware transformations. Never use DESIGN for extract/graduate or GENERAL for mockup creation.
 
 ## Related Skills
 
@@ -673,20 +709,20 @@ Size the iframe to fit the content. A full page needs a desktop-sized viewport; 
 
 For landing pages and multi-section pages, use larger iframe dimensions:
 
-- **Landing page (desktop):** 1280 -- 900 -- shows hero + start of next section, user scrolls within iframe
-- **Landing page (full):** 1280 -- 2400 -- shows entire page without scrolling (screenshot-style review)
-- **Multi-page app (desktop):** 1280 -- 800 -- standard app viewport
-- **Multi-page app (mobile):** 390 -- 844 -- iPhone viewport
+- **Landing page (desktop):** 1280 × 900 -- shows hero + start of next section, user scrolls within iframe
+- **Landing page (full):** 1280 × 2400 -- shows entire page without scrolling (screenshot-style review)
+- **Multi-page app (desktop):** 1280 × 800 -- standard app viewport
+- **Multi-page app (mobile):** 390 × 844 -- iPhone viewport
 
-When comparing full landing pages side-by-side, use 1280 -- 900 and arrange horizontally with 50px gutters. The user scrolls within each iframe to see the full page.
+When comparing full landing pages side-by-side, use 1280 × 900 and arrange horizontally with 50px gutters. The user scrolls within each iframe to see the full page.
 
 ### Responsive comparison presets
 
 When showing the **same component** at multiple screen widths, use these standard viewport sizes and arrange them in a row with ~50px gutters:
 
-- Mobile: 390 -- 844
-- Tablet: 768 -- 1024
-- Desktop: 1280 -- 720
+- Mobile: 390 × 844
+- Tablet: 768 × 1024
+- Desktop: 1280 × 720
 
 ## Common Pitfalls
 
@@ -694,7 +730,7 @@ When showing the **same component** at multiple screen widths, use these standar
 
 Each mockup component must be fully self-contained. Prefer inlining small sub-components (nav bars, footers, cards) directly in the mockup file rather than importing from elsewhere. This keeps mockups isolated and editable without risk of breaking other variants.
 
-**Exception: multi-page `_shared/` imports.** For multi-page projects (only when the user explicitly requests multiple pages -- see [Subagent Orchestration](#subagent-orchestration)), pages import shared layout components from their sibling `_shared/` folder. This is intentional -- the shared shell ensures visual consistency across pages. The rule still applies within each page: don't import from other project folders or from other pages.
+**Exception: multi-page `_shared/` imports.** For multi-page projects (only when the user explicitly requests multiple pages — see [Subagent Orchestration](#subagent-orchestration)), pages import shared layout components from their sibling `_shared/` folder. This is intentional -- the shared shell ensures visual consistency across pages. The rule still applies within each page: don't import from other project folders or from other pages.
 
 ### No variant switchers inside components
 
@@ -702,7 +738,7 @@ Mockups are displayed as individual iframes on the canvas -- the canvas itself i
 
 ### Sync design tokens with the main app
 
-When extracting existing components, create `_group.css` in the extraction's group folder with the main app's `:root` and `.dark` CSS variable blocks plus any font `@import`s the app uses. Each extracted component imports `./_group.css` explicitly. Do not edit the global `artifacts/mockup-sandbox/src/index.css` -- that would leak one app's tokens into every unrelated mockup group in the sandbox. See the {{skill("mockup-extract")}} skill for the full process.
+When extracting existing components, create `_group.css` in the extraction's group folder with the main app's `:root` and `.dark` CSS variable blocks plus any font `@import`s the app uses. Each extracted component imports `./_group.css` explicitly. Do not edit the global `artifacts/mockup-sandbox/src/index.css` — that would leak one app's tokens into every unrelated mockup group in the sandbox. See the {{skill("mockup-extract")}} skill for the full process.
 
 ### Fixing broken previews
 

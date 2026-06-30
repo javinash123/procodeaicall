@@ -1,0 +1,295 @@
+You are a Senior Principal Software Engineer.
+
+You are implementing NIJVOX Voice Engine V2.
+
+The architecture has already been frozen.
+
+DO NOT redesign anything.
+
+Read the existing Voice Engine foundation and runtime before making changes.
+
+==========================================================
+GOAL
+==========================================================
+
+Implement ONLY the Runtime Configuration System and Dependency Injection Container.
+
+This is the first executable module.
+
+It must become the bootstrap layer used by every future Voice Engine component.
+
+No provider implementations.
+
+No OpenAI.
+
+No Exotel.
+
+No transport.
+
+No business logic.
+
+==========================================================
+DO NOT TOUCH
+==========================================================
+
+Do not modify any existing SaaS modules.
+
+Do not modify authentication.
+
+Do not modify CRM.
+
+Do not modify campaigns.
+
+Do not modify dashboard.
+
+Do not modify existing Exotel integration.
+
+Do not modify Voice Engine V1.
+
+Do not modify Runtime interfaces.
+
+==========================================================
+ALLOWED FILES
+==========================================================
+
+Create ONLY
+
+server/voice-engine/bootstrap/
+
+    Bootstrap.ts
+    DependencyContainer.ts
+    ProviderResolver.ts
+    EnvironmentLoader.ts
+    ConfigLoader.ts
+    HealthRegistry.ts
+    index.ts
+
+Modify ONLY if absolutely necessary:
+
+server/voice-engine/index.ts
+
+==========================================================
+IMPLEMENT
+==========================================================
+
+1.
+
+EnvironmentLoader
+
+Load configuration from process.env.
+
+Validate using existing Zod schemas.
+
+Never expose process.env directly.
+
+Provide strongly typed configuration only.
+
+----------------------------------------------------------
+
+2.
+
+ConfigLoader
+
+Merge
+
+Environment
+
+Default Config
+
+Runtime Overrides
+
+Validation
+
+Freeze final configuration using Object.freeze().
+
+----------------------------------------------------------
+
+3.
+
+DependencyContainer
+
+Implement a lightweight dependency injection container.
+
+Requirements:
+
+registerSingleton()
+
+registerFactory()
+
+registerInstance()
+
+resolve()
+
+has()
+
+clear()
+
+No external DI library.
+
+Support lazy initialization.
+
+Support readonly registrations.
+
+----------------------------------------------------------
+
+4.
+
+ProviderResolver
+
+This is NOT a provider implementation.
+
+Only resolve registered providers.
+
+Support:
+
+STT
+
+LLM
+
+TTS
+
+Telephony
+
+Metrics
+
+Logger
+
+Health
+
+No OpenAI logic.
+
+----------------------------------------------------------
+
+5.
+
+HealthRegistry
+
+Executable implementation.
+
+Allow providers to register health callbacks.
+
+Expose:
+
+register()
+
+unregister()
+
+getHealth()
+
+getReadyStatus()
+
+No HTTP routes.
+
+----------------------------------------------------------
+
+6.
+
+Bootstrap
+
+Implement createVoiceEngineRuntime()
+
+Responsibilities:
+
+Load config
+
+Build DI container
+
+Register core services
+
+Register provider resolver
+
+Register health registry
+
+Return immutable runtime object
+
+No provider implementations.
+
+----------------------------------------------------------
+
+7.
+
+Rules
+
+Everything must be dependency injected.
+
+No globals.
+
+No static singletons.
+
+No process.env usage outside EnvironmentLoader.
+
+No circular imports.
+
+No dynamic require().
+
+No business logic.
+
+No provider-specific code.
+
+==========================================================
+QUALITY REQUIREMENTS
+==========================================================
+
+Use strict TypeScript.
+
+No any.
+
+Prefer interfaces.
+
+Readonly wherever possible.
+
+Defensive programming.
+
+Fail-fast configuration validation.
+
+Professional JSDoc.
+
+==========================================================
+SELF CHECK
+==========================================================
+
+Before stopping verify:
+
+✓ TypeScript compiles.
+
+✓ No new project errors.
+
+✓ Only allowed files modified.
+
+✓ Runtime interfaces unchanged.
+
+✓ No provider implementations.
+
+✓ No OpenAI references.
+
+✓ No Exotel references.
+
+✓ No transport code.
+
+✓ DI container fully functional.
+
+✓ Configuration validation working.
+
+Finally produce:
+
+1.
+
+Files created.
+
+2.
+
+Files modified.
+
+3.
+
+Compilation status.
+
+4.
+
+Architecture compliance report.
+
+5.
+
+Dependency graph showing how future modules will plug into the runtime.
+
+STOP.
