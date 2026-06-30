@@ -25,13 +25,13 @@ ElevenLabs is available as a Replit connector. Set it up through the integration
 
 // In the code execution sandbox:
 
-const results = await searchIntegrations("elevenlabs");
+const results = await searchIntegrations({ query: "elevenlabs" });
 
 console.log(results);
 
 // Propose the connector to the user (they'll complete OAuth)
 
-await proposeIntegration("connector:ccfg_elevenlabs_...");
+await proposeIntegration({ integrationId: "connector:ccfg_elevenlabs_..." });
 
 ```
 
@@ -41,7 +41,7 @@ After the user authorizes, on the next loop:
 
 // Add the connection to the project
 
-const addResult = await addIntegration("connection:conn_elevenlabs_...");
+const addResult = await addIntegration({ integrationId: "connection:conn_elevenlabs_..." });
 
 console.log(addResult);
 
@@ -49,19 +49,25 @@ console.log(addResult);
 
 ### 2. Access Credentials
 
-Use `listConnections` in the code execution sandbox to get the API key:
+Use `listConnections` inside a `"use impure"` function in the code execution sandbox to get the API key:
 
 ```javascript
 
-const conns = await listConnections('elevenlabs');
+const result = await (async function() {
+  "use impure";
+  const conns = await listConnections('elevenlabs');
 
-if (conns.length > 0) {
+  if (conns.length === 0) {
+    return { ok: false, reason: "No ElevenLabs credentials available" };
+  }
 
-const apiKey = conns[0].settings.api_key;
+  const apiKey = conns[0].settings.api_key;
 
-// Use this key for ElevenLabs API calls
+  // Use this key for ElevenLabs API calls
 
-}
+  return { ok: true };
+})();
+console.log(result);
 
 ```
 

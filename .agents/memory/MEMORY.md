@@ -1,0 +1,1 @@
+- [Exotel echo spiral fix](exotel-echo-spiral.md) — TTS buffering causes echo loops; fixed with postSpeechCooldown + echo detection + prompt/stage fixes.

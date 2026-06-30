@@ -33,64 +33,64 @@ There are three types of integrations, and they represent different stages of a 
 
 ```text
 connector (not_setup)
-    → user completes OAuth via proposeIntegration
-    → connection (not_added)
-        → addIntegration        ← code-side wiring (npm packages, scaffolds, project registration)
-        → proposeIntegration    ← platform-side binding (registers this Repl with connectors so the credential proxy will serve secrets)
-        → now it is a functioning connection (added + authorized, ready to use)
+    -- user completes OAuth via ProposeIntegration
+    -- connection (not_added)
+        -- addIntegration        -- code-side wiring (npm packages, scaffolds, project registration)
+        -- ProposeIntegration    -- platform-side binding (registers this Repl with connectors so the credential proxy will serve secrets)
+        -- now it is a functioning connection (added + authorized, ready to use)
 
 blueprint (not_installed)
-    → addIntegration or proposeIntegration
-    → blueprint (installed, code + packages added to project), ready to use
+    -- addIntegration or ProposeIntegration
+    -- blueprint (installed, code + packages added to project), ready to use
 ```
 
 ### Connectors
 
 - An available OAuth/API integration that has **not yet been authorized** by the user
 - Status: `not_setup`
-- Cannot be added directly — must use `proposeIntegration` which allows the user through the OAuth flow
+- Cannot be added directly -- must use `ProposeIntegration` which allows the user through the OAuth flow
 - Example ID: `connector:ccfg_google-sheet_E42A9F6DA6...`
 
 ### Connections
 
 - A connector that has **already been authorized** at the account level
 - Status: `not_added` (authorized at account level but not bound to this Repl) or `added` (active in this Repl)
-- Both `addIntegration` AND `proposeIntegration` are required on first setup — they do orthogonal things:
+- Both `addIntegration` AND `ProposeIntegration` are required on first setup -- they do orthogonal things:
   - `addIntegration` does code-side wiring (npm install, scaffolds, project registration). It does NOT touch the platform's connection-state backend.
-  - `proposeIntegration` does platform-side binding (registers this Repl with connectors-v2 as a permitted consumer). Without it the credential proxy at `connectors.replit.com/api/v2/connection` returns nothing for this Repl, even though the underlying credentials exist at the account level.
+  - `ProposeIntegration` does platform-side binding (registers this Repl with connectors-v2 as a permitted consumer). Without it the credential proxy at `connectors.replit.com/api/v2/connection` returns nothing for this Repl, even though the underlying credentials exist at the account level.
 - Example ID: `connection:conn_linear_01MG99PAJR6MQ5...`
 
-NOTE: You must not delay calling proposeIntegration even if it waits for the user. You will be blocked and not have access to test the feature you build because you don't have access to real data, real APIs, etc, which is even more inefficient than reaching out to the user as soon as you know you need the integration to get accepted.
+NOTE: You must not delay calling `ProposeIntegration` even if it waits for the user. You will be blocked and not have access to test the feature you build because you don't have access to real data, real APIs, etc, which is even more inefficient than reaching out to the user as soon as you know you need the integration to get accepted.
 
 ### Blueprints
 
 - These are just code templates that install packages and scaffold integration boilerplate
 - Status: `not_installed` or `previously_installed`
-- Use `addIntegration` directly; if `requiresConfirmation` is True, use `proposeIntegration` instead
+- Use `addIntegration` directly; if `requiresConfirmation` is True, use `ProposeIntegration` instead
 - Example ID: `blueprint:javascript_openai`
 
 ---
 
 ## Available Functions
 
-All functions are available directly in the `code_execution` sandbox. **Always use `console.log()` on return values** — functions execute silently with no output if you don't.
+`searchIntegrations`, `viewIntegration`, and `addIntegration` are available directly in the `codeExecution` sandbox. **Always use `console.log()` on return values** -- functions execute silently with no output if you don't. `ProposeIntegration` is a model tool, not a code execution callback; call it outside `codeExecution` when this skill tells you to prompt the user.
 
-### searchIntegrations(query)
+### searchIntegrations({ query })
 
-Search for available integrations. **Always run this first.** Try a few different query terms if the first search returns nothing — results depend on keyword matching.
+Search for available integrations. **Always run this first.** Try a few different query terms if the first search returns nothing -- results depend on keyword matching.
 
 **Returns:** Dict with:
 
 - `integrations`: list of integration objects, each with `id`, `displayName`, `description`, `integrationType`, `status`
-- `askForBlueprintConfirmation`: boolean — if True, blueprint additions in this environment will require user confirmation; expect `requiresConfirmation: True` back from `addIntegration` and be ready to call `proposeIntegration` instead
+- `askForBlueprintConfirmation`: boolean -- if True, blueprint additions in this environment will require user confirmation; expect `requiresConfirmation: True` back from `addIntegration` and be ready to call `ProposeIntegration` instead
 
 ```javascript
-const results = await searchIntegrations("Google Sheets");
+const results = await searchIntegrations({ query: "Google Sheets" });
 console.log(results);
 // { integrations: [{ id: 'connector:ccfg_google-sheet_...', displayName: 'Google Sheets',
 //   description: '...', integrationType: 'connector', status: 'not_setup' }], ... }
 
-// Always log — calling without console.log produces no visible output!
+// Always log -- calling without console.log produces no visible output!
 for (const item of results.integrations) {
   console.log(`${item.id}  type=${item.integrationType}  status=${item.status}`);
 }
@@ -98,64 +98,64 @@ for (const item of results.integrations) {
 
 **Notes:**
 
-- When the user has not explicitly requested a specific provider, at least search with a generic, capability-focused query to ensure all relevant options are returned. For example, when user asks "build an icon generating app", prefer `searchIntegrations("image generation")` instead of `searchIntegrations("OpenAI image generation")`
+- When the user has not explicitly requested a specific provider, at least search with a generic, capability-focused query to ensure all relevant options are returned. For example, when user asks "build an icon generating app", prefer `searchIntegrations({ query: "image generation" })` instead of `searchIntegrations({ query: "OpenAI image generation" })`
 - If a connector has already been authorized by the user or a teammate, it will appear as a `connection` (not a `connector`) in results
 - Try multiple queries if needed: `"stripe"`, `"payments"`, `"stripe payment processing"` may return different results
 - The `id` field is the exact string to pass to subsequent functions
 
 ---
 
-### viewIntegration(integrationId)
+### viewIntegration({ integrationId })
 
 Fetch full details and the code snippet for an integration without adding it to the project.
 
 **Returns:** Dict with `integrationType`, `integrationId`, `displayName`, `renderedContent`
 
-**Note:** `addIntegration` returns the exact same `renderedContent` blob, so in most cases you don't need to call this separately — just read the result of `addIntegration`. The main reason to call `viewIntegration` first is if you want to inspect the package name, code snippet, or documentation URL before committing to the install.
+**Note:** `addIntegration` returns the exact same `renderedContent` blob, so in most cases you don't need to call this separately -- just read the result of `addIntegration`. The main reason to call `viewIntegration` first is if you want to inspect the package name, code snippet, or documentation URL before committing to the install.
 
 ```javascript
-const info = await viewIntegration("connection:conn_linear_01KG10PAJR6MQ525SQSWEB8QHC");
+const info = await viewIntegration({ integrationId: "connection:conn_linear_01KG10PAJR6MQ525SQSWEB8QHC" });
 console.log(info.renderedContent);  // Same blob you'd get from addIntegration
 ```
 
 ---
 
-### addIntegration(integrationId)
+### addIntegration({ integrationId })
 
-Add a blueprint or connection to the current project. **Do not use for connectors** (those with `integrationType: connector` and `status: not_setup`) — use `proposeIntegration` for those.
+Add a blueprint or connection to the current project. **Do not use for connectors** (those with `integrationType: connector` and `status: not_setup`) -- use `ProposeIntegration` for those.
 
 **Returns:** Dict with:
 
 - `success`: boolean
-- `requiresConfirmation`: boolean — if True, call `proposeIntegration` instead
-- `connectionAlreadyAdded`: boolean — if True, the connection is already wired to this project; skip addIntegration but still call proposeIntegration to ensure the platform binding is current (tokens expire, bindings can be stale)
+- `requiresConfirmation`: boolean -- if True, call `ProposeIntegration` instead
+- `connectionAlreadyAdded`: boolean -- if True, the connection is already wired to this project; skip addIntegration but still call `ProposeIntegration` to ensure the platform binding is current (tokens expire, bindings can be stale)
 - `renderedContent`: same XML blob as `viewIntegration`
 - `observations`: list of stringified observation objects (verbose; contains npm install output)
 
-**Side effect:** Automatically installs required packages. This will restart or crash a running dev server — be aware if calling mid-session while the workflow is running.
+**Side effect:** Automatically installs required packages. This will restart or crash a running dev server -- be aware if calling mid-session while the workflow is running.
 
 ```javascript
-const result = await addIntegration("connection:conn_linear_01KG10PAJR6MQ525SQSWEB8QHC");
+const result = await addIntegration({ integrationId: "connection:conn_linear_01KG10PAJR6MQ525SQSWEB8QHC" });
 console.log(result.success);       // true
 console.log(result.observations);  // Contains package installation output as stringified objects
 
 // Handle confirmation requirement
 if (!result.success && result.requiresConfirmation) {
-  proposeIntegration("connection:conn_linear_01KG10PAJR6MQ525SQSWEB8QHC");
+  console.log("Call ProposeIntegration with connection:conn_linear_01KG10PAJR6MQ525SQSWEB8QHC next.");
 }
 ```
 
 **After calling addIntegration:**
 
 - Read `renderedContent` to get the code snippet
-- The snippet handles token refresh and expiry — use it as-is, don't simplify it
-- Never cache the client object the snippet creates — tokens expire
+- The snippet handles token refresh and expiry -- use it as-is, don't simplify it
+- Never cache the client object the snippet creates -- tokens expire
 
 ---
 
-### proposeIntegration(integrationId)
+### ProposeIntegration({ integrationId })
 
-Propose a connector to the user. This is a **control-flow operation** — it exits the agent loop immediately and waits for the user to complete OAuth or confirm setup. Nothing after this call will execute in the current loop.
+Propose a connector to the user. This is a **model tool**, not a code execution callback. It exits the agent loop immediately and waits for the user to complete OAuth or confirm setup. Nothing after this call will execute in the current loop.
 
 **Returns:** Dict with `success`, `displayName`, `exitLoop` (always True)
 
@@ -166,17 +166,13 @@ Propose a connector to the user. This is a **control-flow operation** — it exi
 - Connections with `status: added` if runtime fails with "not connected" (re-binds / refreshes)
 - Blueprints where `addIntegration` returns `requiresConfirmation: True`
 
-```javascript
-// Always explain to the user what is about to happen before calling this
-// The agent loop exits after this — no further code runs
-const result = await proposeIntegration("connector:ccfg_google-sheet_E42A9F6CA62546F68A1FECA0E8");
-```
+Always explain to the user what is about to happen, then call the `ProposeIntegration` tool with `{ integrationId: "connector:ccfg_google-sheet_E42A9F6CA62546F68A1FECA0E8" }`.
 
 **Notes:**
 
 - After the user completes OAuth, the connector becomes a `connection`
 - On the next agent loop, call `addIntegration` with the new `connection:...` ID
-- There is no user-visible message automatically shown when this exits — explain what you're doing in your chat response before calling it
+- There is no user-visible message automatically shown when this exits -- explain what you're doing in your chat response before calling it
 
 ---
 
@@ -185,21 +181,22 @@ const result = await proposeIntegration("connector:ccfg_google-sheet_E42A9F6CA62
 After `addIntegration` or `viewIntegration`, the `renderedContent` contains a code snippet. Key things to know:
 
 1. **It is not on the filesystem.** Copy it into a new file in your project (e.g., `server/googleSheets.ts`)
-2. **Never cache the client.** Tokens expire. The snippet exports a `getUncachable___Client()` function — call it fresh on every request
+2. **Never cache the client.** Tokens expire. The snippet exports a `getUncachable___Client()` function -- call it fresh on every request
 3. **The token refresh logic is correct as-is.** Don't simplify or remove the expiry check
-4. **The snippet uses environment variables** (`REPLIT_CONNECTORS_HOSTNAME`, `REPL_IDENTITY`, `WEB_REPL_RENEWAL`) that Replit injects automatically — no setup needed
+4. **The snippet uses environment variables** (`REPLIT_CONNECTORS_HOSTNAME`, `REPL_IDENTITY`, `WEB_REPL_RENEWAL`) that Replit injects automatically -- no setup needed
+5. **The snippet is for app/server code, not the CodeExecution sandbox.** A bare `import` of the connector package only resolves where the package is installed (a workspace package's `node_modules`), so it fails from the sandbox's working directory with `ERR_MODULE_NOT_FOUND`. To reach a connector from inside CodeExecution, use the `listConnections("<connector-name>")` impure global instead -- it resolves the client without the package being installed and redacts tokens at the boundary.
 
 ---
 
 ## Databricks
 
-When the user wants to connect to Databricks, use the `databricks-m2m` connector (not the plain `databricks` connector). The `databricks-m2m` connector provides machine-to-machine access and works in all contexts. Inside a Databricks App, prefer the `databricks` (U2M) connector when available — see the `databricks-app` skill for details.
+When the user wants to connect to Databricks, use the `databricks-m2m` connector (not the plain `databricks` connector). The `databricks-m2m` connector provides machine-to-machine access and works in all contexts. Inside a Databricks App, prefer the `databricks` (U2M) connector when available -- see the `databricks-app` skill for details.
 
 ## Common Pitfalls
 
 - **Not logging results:** `searchIntegrations` and all other functions return silently unless you `console.log()` the output
 - **Calling addIntegration on a connector:** Will fail or behave unexpectedly. Check `integrationType` first
-- **Asking for API keys when a connection exists:** If `searchIntegrations` returns a `connection`, the user is already authenticated at the account level — use `addIntegration` to wire the project, then `proposeIntegration` to bind this Repl to the connection. Both steps are always required.
+- **Asking for API keys when a connection exists:** If `searchIntegrations` returns a `connection`, the user is already authenticated at the account level -- use `addIntegration` to wire the project, then `ProposeIntegration` to bind this Repl to the connection. Both steps are always required.
 - **Caching the client:** The boilerplate snippet is explicit about this. Tokens expire. Always call `getUncachable___Client()` fresh
 - **Package install side effects:** `addIntegration` runs package installation (e.g. npm, uv), which can crash a running dev server. Restart the workflow after adding integrations
-- **Connection added but runtime still fails:** If `addIntegration` succeeds for a `connection` but the app throws "not connected" at runtime, the token may be expired or missing. Call `proposeIntegration` with the same connection ID to trigger re-authorization, then restart the workflow
+- **Connection added but runtime still fails:** If `addIntegration` succeeds for a `connection` but the app throws "not connected" at runtime, the token may be expired or missing. Call `ProposeIntegration` with the same connection ID to trigger re-authorization, then restart the workflow

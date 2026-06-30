@@ -34,5 +34,5 @@ initial_open_files:
 
 additional_skills:
   - media-generation
-  - references/first_build.md
-  - references/scene_selectors.md
+  - references/first-build.md
+  - references/scene-selectors.md

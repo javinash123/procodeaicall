@@ -1,6 +1,6 @@
 /**
  * Generates the consumable web theme (src/index.css) and the portable token
- * object (src/generated/tokens.ts) from tokens.json.
+ * object (src/generated/tokens.tsx) from tokens.json.
  *
  * tokens.json (DTCG) is the single source of truth. This runs on dev start and
  * on every tokens.json change (see vite.config.ts) and before build/typecheck
@@ -8,8 +8,8 @@
  *
  * - src/index.css        the design system's theme. The preview app imports it,
  *                        and consuming apps import this same file (web).
- * - src/generated/tokens.ts  hex token object for mobile (Expo) and any other
- *                            platform, so web + mobile share one source.
+ * - src/generated/tokens.tsx  hex token object for mobile (Expo) and any other
+ *                             platform, so web + mobile share one source.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -204,7 +204,7 @@ export function buildTokens() {
   const tokens = JSON.parse(readFileSync(tokensPath, "utf8"));
   writeFileSync(cssOut, buildCss(tokens));
   mkdirSync(tsOutDir, { recursive: true });
-  writeFileSync(join(tsOutDir, "tokens.ts"), buildTs(tokens));
+  writeFileSync(join(tsOutDir, "tokens.tsx"), buildTs(tokens));
   mkdirSync(dirname(faviconOut), { recursive: true });
   writeFileSync(faviconOut, buildFavicon(tokens));
 }
@@ -212,6 +212,6 @@ export function buildTokens() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   buildTokens();
   process.stdout.write(
-    "Generated src/index.css, src/generated/tokens.ts, and public/favicon.svg\n",
+    "Generated src/index.css, src/generated/tokens.tsx, and public/favicon.svg\n",
   );
 }

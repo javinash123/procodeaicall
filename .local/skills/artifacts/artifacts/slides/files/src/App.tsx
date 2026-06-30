@@ -12,10 +12,9 @@
  * check" if this file has been hand-edited and needs repair.
  */
 
-import { useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
-
-import { slides } from "@/slideLoader";
+import { useEffect, useRef, useState } from 'react';
+import { slides } from '@/slideLoader';
+import { useLocation } from 'wouter';
 
 function getSlideIndex(pathname: string): number {
   const match = pathname.match(/^\/slide(\d+)$/);
@@ -40,14 +39,19 @@ function SlideEditor() {
 
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (navigationDisabledRef.current) return;
-      if (event.key === " ") {
+      if (event.key === ' ') {
         event.preventDefault();
       }
-      if ((event.key === "ArrowLeft" || event.key === "ArrowUp") && currentIndex > 0) {
+      if (
+        (event.key === 'ArrowLeft' || event.key === 'ArrowUp') &&
+        currentIndex > 0
+      ) {
         navigate(`/slide${slides[currentIndex - 1].position}`);
       }
       if (
-        (event.key === "ArrowRight" || event.key === "ArrowDown" || event.key === " ") &&
+        (event.key === 'ArrowRight' ||
+          event.key === 'ArrowDown' ||
+          event.key === ' ') &&
         currentIndex < slides.length - 1
       ) {
         navigate(`/slide${slides[currentIndex + 1].position}`);
@@ -55,7 +59,7 @@ function SlideEditor() {
     };
 
     const INTERACTIVE =
-      "a,button,video,audio,input,select,textarea,details,summary,iframe,svg,canvas," +
+      'a,button,video,audio,input,select,textarea,details,summary,iframe,svg,canvas,' +
       '[role="button"],[contenteditable="true"]';
 
     const isInteractive = (target: EventTarget | null) =>
@@ -72,7 +76,7 @@ function SlideEditor() {
       if (isInteractive(event.target)) return;
 
       if (navigationDisabledRef.current) {
-        window.parent.postMessage({ type: "advanceSlide" }, "*");
+        window.parent.postMessage({ type: 'advanceSlide' }, '*');
         return;
       }
 
@@ -100,7 +104,7 @@ function SlideEditor() {
       touchHandledRef.current = true;
 
       if (navigationDisabledRef.current) {
-        window.parent.postMessage({ type: "advanceSlide" }, "*");
+        window.parent.postMessage({ type: 'advanceSlide' }, '*');
         return;
       }
 
@@ -112,15 +116,15 @@ function SlideEditor() {
       }
     };
 
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("click", onClick);
-    window.addEventListener("touchstart", onTouchStart);
-    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('click', onClick);
+    window.addEventListener('touchstart', onTouchStart);
+    window.addEventListener('touchend', onTouchEnd);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("click", onClick);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('click', onClick);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
     };
   }, [currentIndex, navigate]);
 
@@ -129,7 +133,7 @@ function SlideEditor() {
       {slides.map((slide, index) => (
         <div
           key={slide.id}
-          style={{ display: index === currentIndex ? "block" : "none" }}
+          style={{ display: index === currentIndex ? 'block' : 'none' }}
         >
           <slide.Component />
         </div>
@@ -149,7 +153,7 @@ function AllSlides() {
         <div
           key={slide.id}
           className="slide relative aspect-video overflow-hidden"
-          style={{ width: "1920px", height: "1080px" }}
+          style={{ width: '1920px', height: '1080px' }}
         >
           <div className="h-full w-full [&_.h-screen]:!h-full [&_.w-screen]:!w-full">
             <slide.Component />
@@ -175,23 +179,32 @@ function SlideViewer() {
         height: Math.min(window.innerHeight, window.innerWidth * (9 / 16)),
       });
     };
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, []);
 
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== " ") return;
-      if (event.key === " ") event.preventDefault();
+      if (
+        event.key !== 'ArrowLeft' &&
+        event.key !== 'ArrowRight' &&
+        event.key !== ' '
+      )
+        return;
+      if (event.key === ' ') event.preventDefault();
       iframeRef.current?.contentWindow?.dispatchEvent(
-        new KeyboardEvent("keydown", { key: event.key, code: event.code, bubbles: true }),
+        new KeyboardEvent('keydown', {
+          key: event.key,
+          code: event.code,
+          bubbles: true,
+        }),
       );
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   const firstPosition = slides.length > 0 ? slides[0].position : 1;
 
   return (
@@ -202,7 +215,7 @@ function SlideViewer() {
       <iframe
         ref={iframeRef}
         src={`${base}/slide${firstPosition}`}
-        style={{ width: dims.width, height: dims.height, border: "none" }}
+        style={{ width: dims.width, height: dims.height, border: 'none' }}
         onLoad={() => iframeRef.current?.focus()}
         title="Slide viewer"
       />
@@ -217,8 +230,8 @@ export default function App() {
   // The "/" and "/allslides" routes are handled separately below.
   useEffect(() => {
     if (
-      location !== "/" &&
-      location !== "/allslides" &&
+      location !== '/' &&
+      location !== '/allslides' &&
       getSlideIndex(location) === -1
     ) {
       if (slides.length > 0) {
@@ -233,19 +246,19 @@ export default function App() {
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       if (
-        event.data?.type === "navigateToSlide" &&
-        typeof event.data.position === "number" &&
+        event.data?.type === 'navigateToSlide' &&
+        typeof event.data.position === 'number' &&
         slides.some((s) => s.position === event.data.position)
       ) {
         navigate(`/slide${event.data.position}`);
       }
     };
 
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
   }, [navigate]);
 
-  if (location === "/") return <SlideViewer />;
-  if (location === "/allslides") return <AllSlides />;
+  if (location === '/') return <SlideViewer />;
+  if (location === '/allslides') return <AllSlides />;
   return <SlideEditor />;
 }

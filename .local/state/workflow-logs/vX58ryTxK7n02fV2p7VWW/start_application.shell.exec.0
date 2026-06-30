@@ -1,0 +1,18 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K/home/runner/workspace/node_modules/openai/src/client.ts:392
+      throw new Errors.OpenAIError(
+            ^
+
+
+OpenAIError: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+    at new OpenAI [90m(/home/runner/workspace/[39mnode_modules/[4mopenai[24m/src/client.ts:392:13[90m)[39m
+    at <anonymous> [90m(/home/runner/workspace/[39mserver/exotelStreamHandler.ts:18:16[90m)[39m
+[90m    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)[39m
+[90m    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)[39m
+[90m    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)[39m
+
+Node.js v20.20.0
+[1G[0K⠙[1G[0K

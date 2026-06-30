@@ -9,8 +9,6 @@ description: Guidelines for using RevenueCat to integrate payments in mobile app
 
 Before using anything in this skill, read the `monetization` skill and follow its routing instructions. It is the single source of truth for choosing a payment provider on Replit. Only continue with this RevenueCat skill once the monetization skill has confirmed that RevenueCat is the right provider (either because the user explicitly named RevenueCat, the project already has RevenueCat wired up, or the routing question resolved to RevenueCat).
 
-
-
 ## Introduction
 
 - RevenueCat lets users monetize their native mobile apps on Replit.

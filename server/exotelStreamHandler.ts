@@ -15,7 +15,13 @@ import { generateAIResponse, generateGreeting, type ConversationMessage, type Ca
 import { storage } from "./storage";
 import { phoneCallMap, callSidMap, normalizePhone } from "./callMap";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let _openai: OpenAI | null = null;
+const openai = new Proxy({} as OpenAI, {
+  get(_t, prop) {
+    if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    return (_openai as any)[prop];
+  },
+});
 
 // --- PATCH START: Exotel stream handling safety patch ---
 
@@ -196,7 +202,11 @@ export async function transcribeAudio(mulawChunks: Buffer[]): Promise<string> {
   if (mulawChunks.length === 0) return "";
 
   const raw = Buffer.concat(mulawChunks);
-  if (raw.length < 160) return ""; // less than 20 ms — treat as silence
+
+  // Minimum 300 ms of 8 kHz slin16 audio = 4800 bytes.
+  // Shorter bursts are almost always click/pop noise — Whisper will hallucinate
+  // plausible words on them rather than return empty string.
+  if (raw.length < 4800) return "";
 
   // PCM16 LE 8 kHz (Exotel sends raw slin16) → PCM16 16 kHz (Whisper prefers ≥16 kHz)
   const pcm8k  = new Int16Array(raw.buffer, raw.byteOffset, raw.byteLength / 2);
@@ -207,13 +217,38 @@ export async function transcribeAudio(mulawChunks: Buffer[]): Promise<string> {
   const { toFile } = await import("openai");
   const wavFile = await toFile(wav, "audio.wav", { type: "audio/wav" });
 
-  const result = await openai.audio.transcriptions.create({
-    model:    "whisper-1",
-    file:     wavFile,
-    language: "en",
+  // Use verbose_json so we get per-segment no_speech_prob.
+  // The prompt anchors Whisper to real-estate vocabulary which reduces the chance
+  // of hallucinating unrelated words ("vaccine", "Wi-Fi") on phone echo/noise.
+  const result: any = await openai.audio.transcriptions.create({
+    model:           "whisper-1",
+    file:            wavFile,
+    language:        "en",
+    response_format: "verbose_json" as any,
+    prompt:          "Real estate property sales call about apartments.",
   });
 
-  return result.text.trim();
+  // Drop the transcript if Whisper itself signals low confidence that speech occurred.
+  // no_speech_prob >= 0.5 means Whisper is at best guessing — empirically this
+  // catches phone-echo and silence hallucinations (nsp observed: 0.506) while
+  // keeping real caller speech (nsp observed: 0.182–0.491).
+  const segments: any[] = result.segments ?? [];
+  if (segments.length > 0) {
+    const avgNsp = segments.reduce((s: number, seg: any) => s + (seg.no_speech_prob ?? 0), 0) / segments.length;
+    if (avgNsp >= 0.5) {
+      return ""; // Whisper uncertainty → treat as silence
+    }
+  } else {
+    // No segment metadata returned — Whisper may have detected nothing meaningful.
+    // Apply a length heuristic: more than 6 words from a very short clip is
+    // statistically a hallucination (Whisper invents plausible filler on noise).
+    const text = (result.text ?? "").trim();
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const durationSec = raw.length / (8000 * 2); // bytes ÷ (sampleRate × bytesPerSample)
+    if (durationSec < 1.5 && wordCount > 6) return "";
+  }
+
+  return (result.text ?? "").trim();
 }
 
 // ─── TTS: Exotel-compatible audio encoding ────────────────────────────────────
@@ -310,6 +345,8 @@ export async function streamTTSToExotel(
 
   const reader  = (resp.body as any).getReader() as ReadableStreamDefaultReader<Uint8Array>;
   let remainder = Buffer.alloc(0);
+  // Track total 8 kHz PCM bytes sent so we can set an accurate post-speech cooldown
+  let total8kBytes = 0;
 
   const sendBuf = (buf: Buffer) => {
     // Ensure 2-byte alignment for PCM16 LE samples
@@ -321,6 +358,7 @@ export async function streamTTSToExotel(
     for (let off = 0; off < pcm8kBuf.length; off += EXOTEL_CHUNK_BYTES) {
       if (!session.isSpeaking || ws.readyState !== WebSocket.OPEN) return;
       sendExotelMedia(ws, session.streamSid, pcm8kBuf.slice(off, off + EXOTEL_CHUNK_BYTES).toString("base64"));
+      total8kBytes += Math.min(EXOTEL_CHUNK_BYTES, pcm8kBuf.length - off);
     }
   };
 
@@ -346,6 +384,26 @@ export async function streamTTSToExotel(
   // Flush any remaining bytes after stream ends
   if (session.isSpeaking && remainder.length >= 2 && ws.readyState === WebSocket.OPEN) {
     sendBuf(remainder);
+  }
+
+  // ── Post-speech cooldown ─────────────────────────────────────────────────────
+  // We've finished SENDING audio chunks, but Exotel is still PLAYING them.
+  // Set a cooldown equal to the estimated playback duration + 900 ms buffer so
+  // our own TTS audio doesn't echo back as inbound and cause a response spiral.
+  //
+  // Exception: if barge-in interrupted us, we already sent a Clear event which
+  // empties Exotel's buffer instantly.  The caller is actively speaking, so we
+  // must become responsive immediately — use a minimal 250 ms cooldown instead.
+  const playbackMs = pcm8kPlaybackMs(total8kBytes);
+  session.ttsPlaybackMs = playbackMs;
+  if (session.isSpeaking) {
+    // Normal completion — audio is still queued in Exotel's playout buffer
+    session.postSpeechCooldownUntil = Date.now() + playbackMs + 900;
+    log(`[exotel:${session.streamSid}] ▶ TTS done — playback ~${playbackMs} ms, cooldown +${playbackMs + 900} ms`, "ws");
+  } else {
+    // Interrupted by barge-in — Clear already flushed Exotel's buffer
+    session.postSpeechCooldownUntil = Date.now() + 250;
+    log(`[exotel:${session.streamSid}] ▶ TTS interrupted (barge-in) — minimal 250 ms cooldown`, "ws");
   }
 }
 
@@ -417,6 +475,21 @@ interface ExotelSession {
   preparedPitchChunks?: string[];  // TTS-encoded chunks ready to stream
   preparedPitchText?:   string;    // text version (added to conversation history)
   pitchReady:           boolean;   // true once preparedPitchChunks is populated
+  // Post-speech echo suppression: ignore inbound audio until this epoch ms
+  // Prevents our own TTS audio (buffered in Exotel) from being echoed back and
+  // re-processed as caller speech — which causes a "You're welcome" spiral.
+  postSpeechCooldownUntil: number;
+  ttsPlaybackMs:           number;  // estimated playback duration of last TTS response
+  // Audio buffered during the post-speech cooldown window (high-energy only).
+  // If the caller speaks right as TTS finishes (e.g. a quick "Yes"), their audio
+  // arrives during the cooldown and would normally be discarded. We save it here
+  // and prepend it to mediaChunks once the cooldown expires so it isn't lost.
+  cooldownBuffer:          Buffer[];
+  // Set to true once sendGreeting has finished — blocks processAudio and audio
+  // collection until the opening greeting has played. Prevents a race between
+  // the 800 ms greeting timer and the 800 ms silence-timer (both fire together
+  // at call start) from causing processAudio to run before the AI has greeted.
+  greetingDone:            boolean;
 }
 
 // ── VAD & timing constants ────────────────────────────────────────────────────
@@ -444,6 +517,11 @@ const BARGE_IN_THRESHOLD = 700;
 
 // How many consecutive high-energy chunks must arrive before we accept a barge-in.
 // 3 chunks × ~100 ms/chunk ≈ 300 ms of sustained speech.
+// Kept at 3 (not 2) because the AI's own TTS echo can produce 2 consecutive
+// high-energy chunks at 8kHz — reverting to 2 made the echo trigger barge-in,
+// which cut off the AI's speech, collected echo as audio, and fed it to Whisper,
+// creating a 30-iteration "Yes. Yes. Yes." loop (call 3 recording).
+// The no_speech_prob filter in transcribeAudio is the primary echo defence.
 const BARGE_IN_MIN_CHUNKS = 3;
 
 // ── Filler acknowledgments ────────────────────────────────────────────────────
@@ -483,7 +561,8 @@ function rmsLevel(buf: Buffer): number {
   return Math.sqrt(sumSq / (buf.length / 2));
 }
 
-/** Reset all per-turn state after AI finishes speaking */
+/** Reset all per-turn state after AI finishes speaking.
+ *  Does NOT touch postSpeechCooldownUntil — that is set by the TTS sender. */
 function resetTurn(session: ExotelSession): void {
   session.isSpeaking   = false;
   session.bargeInCount = 0;
@@ -494,7 +573,42 @@ function resetTurn(session: ExotelSession): void {
   if (session.forceTimer)   { clearTimeout(session.forceTimer);   session.forceTimer   = null; }
 }
 
+/**
+ * Echo guard: returns true if the STT transcript looks like a reflection of
+ * something the AI already said.  This happens when Exotel loops our outbound
+ * TTS audio back as inbound before the post-speech cooldown clears it.
+ *
+ * Algorithm: significant word-overlap (>45 %) between the transcript and any
+ * of the last 3 AI messages → almost certainly our own voice coming back.
+ */
+function isLikelyEcho(transcript: string, history: ConversationMessage[]): boolean {
+  const recentAI = history.filter(m => m.role === "assistant").slice(-3);
+  if (recentAI.length === 0) return false;
+
+  const normalize = (t: string) =>
+    new Set(t.toLowerCase().replace(/[^\w\s]/g, " ").split(/\s+/).filter(w => w.length > 2));
+
+  const tWords = normalize(transcript);
+  if (tWords.size < 2) return false;
+
+  for (const msg of recentAI) {
+    const mWords = normalize(msg.content);
+    const overlap = [...tWords].filter(w => mWords.has(w)).length;
+    const ratio   = overlap / tWords.size;
+    if (ratio > 0.45) return true;
+  }
+  return false;
+}
+
+/** Estimate playback duration (ms) for a PCM-16 LE audio buffer at 8 kHz */
+function pcm8kPlaybackMs(pcmBytes: number): number {
+  return Math.ceil((pcmBytes / 2 / EXOTEL_SAMPLE_RATE) * 1000);
+}
+
 async function processAudio(ws: WebSocket, session: ExotelSession): Promise<void> {
+  // Never run before the greeting has finished — conversationHistory would be
+  // empty and the AI would generate a random/goodbye response with no context.
+  if (!session.greetingDone) return;
   if (session.processing || session.mediaChunks.length === 0) return;
   session.processing = true;
 
@@ -508,6 +622,15 @@ async function processAudio(ws: WebSocket, session: ExotelSession): Promise<void
     log(`[exotel:${session.streamSid}] ▶ STT: "${userText}"`, "ws");
     if (!userText) {
       log(`[exotel:${session.streamSid}] ▶ Empty STT — skipping`, "ws");
+      return;
+    }
+
+    // ── Echo guard ────────────────────────────────────────────────────────────
+    // If the transcript has >45 % word overlap with a recent AI message, it is
+    // almost certainly our own TTS echoing back (Exotel phone loopback).
+    // Drop it silently rather than feeding it back to GPT.
+    if (isLikelyEcho(userText, session.conversationHistory)) {
+      log(`[exotel:${session.streamSid}] ▶ Echo detected ("${userText}") — discarded`, "ws");
       return;
     }
 
@@ -540,6 +663,9 @@ async function processAudio(ws: WebSocket, session: ExotelSession): Promise<void
         if (ws.readyState !== WebSocket.OPEN) break;
         sendExotelMedia(ws, session.streamSid, chunk);
       }
+      // Brief cooldown so filler audio doesn't echo back during GPT wait time
+      const fillerPlayMs = pcm8kPlaybackMs(fillerChunks.length * EXOTEL_CHUNK_BYTES);
+      session.postSpeechCooldownUntil = Date.now() + fillerPlayMs + 400;
       log(`[exotel:${session.streamSid}] ▶ Filler sent: "${filler}"`, "ws");
     }
 
@@ -558,6 +684,7 @@ async function processAudio(ws: WebSocket, session: ExotelSession): Promise<void
     }
 
     log(`[exotel:${session.streamSid}] ▶ Streaming TTS: "${reply}"`, "ws");
+    // streamTTSToExotel sets session.postSpeechCooldownUntil before returning
     await streamTTSToExotel(reply, ws, session);
     log(`[exotel:${session.streamSid}] ▶ Response streamed`, "ws");
 
@@ -576,7 +703,12 @@ async function processAudio(ws: WebSocket, session: ExotelSession): Promise<void
  * Fired once from the "start" event handler (fire-and-forget via setTimeout).
  */
 async function sendGreeting(ws: WebSocket, session: ExotelSession): Promise<void> {
-  if (session.isSpeaking || session.processing) return;
+  if (session.isSpeaking || session.processing) {
+    // Already mid-turn — can't send greeting. Open the gate anyway so inbound
+    // audio can flow; the call would be unusable otherwise.
+    session.greetingDone = true;
+    return;
+  }
   try {
     const campaignData = await loadCampaignData(session.campaignId);
     const greeting     = await generateGreeting(campaignData);
@@ -591,9 +723,23 @@ async function sendGreeting(ws: WebSocket, session: ExotelSession): Promise<void
     }
     // Add greeting to history so AI knows not to repeat it
     session.conversationHistory.push({ role: "assistant", content: greeting });
-    log(`[exotel:${session.streamSid}] ▶ Greeting sent (${chunks.length} chunks)`, "ws");
+
+    // Set post-speech cooldown so the greeting audio playing on the phone
+    // doesn't echo back and get mistaken for the caller's first response.
+    // Each chunk = EXOTEL_CHUNK_BYTES bytes of PCM16 @ 8kHz = 200 ms
+    const greetingPlaybackMs = pcm8kPlaybackMs(chunks.length * EXOTEL_CHUNK_BYTES);
+    session.ttsPlaybackMs           = greetingPlaybackMs;
+    session.postSpeechCooldownUntil = Date.now() + greetingPlaybackMs + 900;
+    log(`[exotel:${session.streamSid}] ▶ Greeting sent (${chunks.length} chunks, ~${greetingPlaybackMs} ms)`, "ws");
+
+    // Open the gate: media handler and processAudio can now run.
+    // This must be set AFTER the cooldown window is set so the media handler
+    // still drops echo during greeting playback.
+    session.greetingDone = true;
   } catch (err: any) {
     log(`[exotel] Greeting error: ${err?.message ?? err}`, "ws");
+    // Even on error, open the gate so the call doesn't get permanently stuck.
+    session.greetingDone = true;
   } finally {
     // Full reset: clears timers, buffers, and speaking state so any audio the
     // caller said before/during the greeting doesn't leak into the first turn.
@@ -618,19 +764,23 @@ export async function handleExotelStream(
   initialCampaignId?: string
 ): Promise<void> {
   const session: ExotelSession = {
-    streamSid:           "",
-    campaignId:          initialCampaignId,
-    campaignCache:       undefined,
-    mediaChunks:         [],
-    conversationHistory: [],
-    silenceTimer:        null,
-    forceTimer:          null,
-    firstChunkAt:        null,
-    processing:          false,
-    isSpeaking:          false,
-    bargeInCount:        0,
-    voicedChunks:        0,
-    pitchReady:          false,
+    streamSid:               "",
+    campaignId:              initialCampaignId,
+    campaignCache:           undefined,
+    mediaChunks:             [],
+    conversationHistory:     [],
+    silenceTimer:            null,
+    forceTimer:              null,
+    firstChunkAt:            null,
+    processing:              false,
+    isSpeaking:              false,
+    bargeInCount:            0,
+    voicedChunks:            0,
+    pitchReady:              false,
+    postSpeechCooldownUntil: 0,   // no cooldown at call start
+    ttsPlaybackMs:           0,
+    cooldownBuffer:          [],
+    greetingDone:            false,  // set true once sendGreeting finishes
   };
 
   log(`[exotel] session started campaignId=${session.campaignId ?? "none"}`, "ws");
@@ -744,6 +894,14 @@ export async function handleExotelStream(
         }
 
         case "media": {
+          // ── Greeting gate ─────────────────────────────────────────────────
+          // Never collect audio until the opening greeting has finished playing.
+          // Without this gate, the 800 ms silence timer and the 800 ms greeting
+          // timer race each other at call start: connection noise ("Hello. Hello.")
+          // can trigger processAudio with an empty conversationHistory, causing
+          // the AI to generate a random/goodbye response before introducing itself.
+          if (!session.greetingDone) break;
+
           // Safely extract base64 payload from any known field layout
           const encoded = getMediaPayload(payload);
           if (!encoded) {
@@ -759,6 +917,8 @@ export async function handleExotelStream(
             break; // echo of our own audio — discard silently
           }
 
+          // Decode the audio buffer early (needed for both the cooldown buffer
+          // and the main processing path below).
           let audioBuf: Buffer;
           try {
             audioBuf = Buffer.from(encoded, "base64");
@@ -768,6 +928,38 @@ export async function handleExotelStream(
           }
 
           const rms = rmsLevel(audioBuf);
+
+          // ── Post-speech cooldown gate ─────────────────────────────────────
+          // After we finish streaming TTS audio, Exotel is still PLAYING the
+          // buffered chunks.  During that playback, the phone's own speaker
+          // echoes our voice back as "inbound" audio.
+          //
+          // We ignore most audio in this window, BUT if the caller speaks at
+          // high energy right as TTS ends (e.g. a quick "Yes") we save it to
+          // cooldownBuffer so it isn't permanently lost.  On the next packet
+          // that arrives after the cooldown expires we prepend those saved
+          // chunks so the caller's response is still processed.
+          //
+          // Threshold is set ABOVE typical echo energy (measured 300-500 RMS at
+          // 8 kHz) so that phone echo does NOT enter the buffer — only genuine
+          // caller speech (typically 600+ RMS) qualifies.  Using VAD_THRESHOLD
+          // (200) here caused the call-3 "Yes. Yes. Yes." loop: echo chunks filled
+          // the buffer, were flushed at cooldown expiry, and cycled back through
+          // Whisper which hallucinated 30 consecutive "Yes." segments.
+          const COOLDOWN_BUFFER_MIN_RMS = 600;
+          if (Date.now() < session.postSpeechCooldownUntil) {
+            if (rms > COOLDOWN_BUFFER_MIN_RMS) {
+              session.cooldownBuffer.push(audioBuf);
+            }
+            break;
+          }
+
+          // Cooldown just expired — prepend any high-energy audio we saved
+          if (session.cooldownBuffer.length > 0) {
+            session.mediaChunks.unshift(...session.cooldownBuffer);
+            log(`[exotel:${session.streamSid}] ▶ Replaying ${session.cooldownBuffer.length} cooldown-buffered chunks`, "ws");
+            session.cooldownBuffer = [];
+          }
 
           // ── Barge-in: caller speaks while AI is talking ───────────────────
           if (session.isSpeaking) {

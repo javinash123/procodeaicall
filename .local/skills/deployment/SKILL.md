@@ -20,6 +20,7 @@ Use this skill when:
 - The user wants to see what errors are occurring in production
 - The user needs to debug a runtime issue with their deployed app
 - The user asks to check deployment or server logs
+- The user wants an external service (a webhook sender, CI pipeline, uptime monitor, or other automated caller) to reach their app, or needs a callback/webhook URL to hand to a third party
 - The user says their app failed to publish or a deployment build failed
 - After a deployment attempt that the agent initiated fails
 
@@ -33,8 +34,8 @@ Use this skill when:
 
 This skill has additional reference documents for specific deployment scenarios. Read them as needed:
 
-- `.local/skills/deployment/references/deployment-logs.md` — How to fetch and analyze runtime deployment logs. Read this when the user's deployed app is misbehaving, the live site is down, or they want to check production logs.
-- `.local/skills/deployment/references/deployment-failure-debugging.md` — How to diagnose and fix deployment build failures. Read this when the user's deployment build fails to publish, the app crashes during the publishing step, or the user asks for help debugging a deployment error.
+- `.local/skills/deployment/references/deployment-logs.md` -- How to fetch and analyze runtime deployment logs. Read this when the user's deployed app is misbehaving, the live site is down, or they want to check production logs.
+- `.local/skills/deployment/references/deployment-failure-debugging.md` -- How to diagnose and fix deployment build failures. Read this when the user's deployment build fails to publish, the app crashes during the publishing step, or the user asks for help debugging a deployment error.
 
 ## Available Functions
 
@@ -74,23 +75,23 @@ const result3 = await deployConfig({
 });
 ```
 
-### suggestDeploy()
+### Publishing suggestion
 
-Prompt the user to click the Publish button after the app is ready. **Only works in the main repl context** — in task-agent/subrepl sessions this callback returns `success: false`. If you are in a task agent, skip this call and instead remind the user to publish from the main version after merging.
+To prompt the user to click the Publish button after the app is ready, call `SuggestUserAction({ action: "deploy", message: "The app is ready to publish." })`. Do not call it from CodeExecution.
 
 ### getDeploymentInfo()
 
-Fetch the repl's current deployment metadata directly from the deployments service. Always call this — never guess from memory or environment variables — when you need to know whether the project is published, what its production URL is, or whether the live build is healthy. Do NOT run `echo $REPLIT_DOMAINS` to discover the production URL — inside the dev container that variable holds the `.replit.dev` development domain, not the production URL.
+Fetch the repl's current deployment metadata directly from the deployments service. Always call this -- never guess from memory or environment variables -- when you need to know whether the project is published, what its production URL is, or whether the live build is healthy. Do NOT run `echo $REPLIT_DOMAINS` to discover the production URL -- inside the dev container that variable holds the `.replit.dev` development domain, not the production URL.
 
 **Returns:** Dict with:
 
-- `success` (bool): `false` when the deployments service is unreachable. Treat as "deployment status unknown" — tell the user the status is currently unavailable rather than asserting there is no deployment
-- `isDeployed` (bool): `true` when an active deployment exists for this repl. When `false`, do not fabricate a URL — there is no production URL to give. If the user wants a production URL or asks what their live URL is, guide them through publishing first via the usual deployment flow (e.g. `suggestDeploy()`).
+- `success` (bool): `false` when the deployments service is unreachable. Treat as "deployment status unknown" -- tell the user the status is currently unavailable rather than asserting there is no deployment
+- `isDeployed` (bool): `true` when an active deployment exists for this repl. When `false`, do not fabricate a URL -- there is no production URL to give. If the user wants a production URL, guide them through publishing.
 - `primaryUrl` (str): fully-qualified production URL with `https://` scheme (a verified custom domain if the user configured one, otherwise the generated `*.replit.app` subdomain). Empty string when not deployed. Use this whenever you need the production URL (e.g. setting a `REPLIT_APP_URL` secret, configuring rewrites in an external CMS, curling the live site, or telling the user where their app is reachable)
 - `additionalUrls` (list[str]): other public URLs (e.g. additional verified custom domains). Empty list when none
 - `deploymentType` (str): one of `"autoscale"`, `"vm"`, `"static"`, `"scheduled"`, or `""` if unknown / not applicable. Matches the `deploymentTarget` vocabulary `deployConfig()` accepts
-- `hasSuccessfulBuild` (bool): `true` only when the deployment's current build is in the `success` status. `false` when the build is still pending, failed, suspended, or no current build exists. When `isDeployed` is `true` but this is `false`, the `primaryUrl` may be unreachable or still be serving a previous successful build — if the user reports the live site is broken, suspect the in-flight or failed build first (see `.local/skills/deployment/references/deployment-failure-debugging.md` for how to investigate)
-- `visibility` (str): publishing visibility of the current build — `"public"` (reachable by anyone on the internet), `"private"` (invited collaborators only), `"password"` (public URL gated by a shared password), or `""` (undeployed, or a deployment kind with no user-facing visibility). Use this to reason about who can actually reach a leaked secret or vulnerable endpoint
+- `hasSuccessfulBuild` (bool): `true` only when the deployment's current build is in the `success` status. `false` when the build is still pending, failed, suspended, or no current build exists. When `isDeployed` is `true` but this is `false`, the `primaryUrl` may be unreachable or still be serving a previous successful build -- if the user reports the live site is broken, suspect the in-flight or failed build first (see `.local/skills/deployment/references/deployment-failure-debugging.md` for how to investigate)
+- `visibility` (str): publishing visibility of the current build -- `"public"` (reachable by anyone on the internet), `"private"` (invited collaborators only), `"password"` (public URL gated by a shared password), or `""` (undeployed, or a deployment kind with no user-facing visibility). Use this to reason about who can actually reach a leaked secret or vulnerable endpoint
 
 **Example:**
 
@@ -103,7 +104,7 @@ if (!info.success) {
 } else {
     console.log(`Live at ${info.primaryUrl} (${info.deploymentType})`);
     if (!info.hasSuccessfulBuild) {
-        console.log("Current build is not in the success status — URL may be stale.");
+        console.log("Current build is not in the success status -- URL may be stale.");
     }
 }
 ```
@@ -111,6 +112,26 @@ if (!info.success) {
 ### fetchDeploymentLogs({ afterTimestamp, beforeTimestamp, message, messageContext })
 
 Fetch and analyze deployment logs. See `.local/skills/deployment/references/deployment-logs.md` for full documentation.
+
+## Webhooks and external services reaching the app
+
+When the user wants an external service to call their app -- a webhook sender (Stripe, GitHub, Slack), a CI pipeline, an uptime monitor, or any other automated caller -- you must hand them a URL that the service can actually reach, and tell them up front whether the app's privacy will block that traffic. Do not assume the caller can reach the app.
+
+Always call `getDeploymentInfo()` first and reason from `visibility` and `primaryUrl`:
+
+1. **Use the production URL, never the dev URL.** External services must hit `primaryUrl` (the `*.replit.app` deployment or custom domain), not the workspace `*.replit.dev` development URL. The dev URL is for you while building; it is not a stable public endpoint for third parties. Do NOT read `REPLIT_DOMAINS` to construct a webhook URL -- inside the dev container that variable holds the development domain. If `isDeployed` is `false`, there is no production URL yet: tell the user they need to publish first, and do not fabricate a `*.replit.app` URL.
+
+2. **Check privacy before promising it will work.** Read `visibility` from `getDeploymentInfo()`:
+   - `"public"` -- anyone on the internet can reach the app. The webhook works with no extra setup.
+   - `"private"` -- only invited collaborators can reach the app. An unauthenticated external caller (a webhook POST, a CI request) will be **rejected** unless they're using and external-access-token. Never tell the user the webhook is configured and working while the deployment is private without addressing access; that is the exact gap that leaves a webhook silently broken.
+   - `"password"` -- the URL is gated by a shared password, which most automated callers cannot supply.
+
+3. **For a private app, proactively guide the user to an external access token.** Do not wait for the user to name-drop "external access token," and do not merely call it a "good idea" -- when the deployment is private and an outside service needs in, an external access token is the required mechanism, so say so directly. Explain:
+   - External access tokens are bearer tokens that let an outside service reach a private app. They are available on Core and Pro plans; Enterprise workspaces need Replit to opt them in. Tokens only appear in the ui under adjust settings once the deployment is live and set to private.
+   - **Where to create one:** open the **Publishing** tool, select **Adjust settings**, and in the **Security** section find **External access tokens** -- create one there. Choose the **Production** environment for a token that an external service will use against the published app (a **Development** token only works against the `*.replit.dev` dev URL).
+   - The service presents the token either as an `Authorization: Bearer <token>` header (preferred -- keeps it out of URL logs) or as a `?project-protection-bypass=<token>` query parameter when it can only take a URL.
+   - The token is shown **once** at creation; if lost, it must be revoked and re-minted. A Production token is bound to the currently published deployment -- re-publishing onto a fresh deployment invalidates it.
+   - Full reference: https://docs.replit.com/replit-workspace/external-access-tokens
 
 ## Deployment Targets
 
@@ -213,7 +234,7 @@ build=["cargo", "build", "--release"]
 
 ## Publishing Geography
 
-Users can choose the geographic region where their app is published. This is configured in the **Advanced** settings of the Publishing tool, not in code. The agent cannot set this programmatically — the user selects it in the Publishing UI before clicking Publish.
+Users can choose the geographic region where their app is published. This is configured in the **Advanced** settings of the Publishing tool, not in code. The agent cannot set this programmatically -- the user selects it in the Publishing UI before clicking Publish.
 
 Key points:
 
@@ -226,11 +247,11 @@ Key points:
 If the user asks about deploying to a specific region (e.g. Europe, Asia, Australia):
 
 - **Not yet published & on Core/Pro/Enterprise:** They can select their preferred geography in the **Advanced** section of the Publishing tool before their first publish.
-- **Not yet published & on the Free plan:** Geography selection is not available — they will publish to North America by default. They can upgrade their plan to choose a region.
+- **Not yet published & on the Free plan:** Geography selection is not available -- they will publish to North America by default. They can upgrade their plan to choose a region.
 - **Already published:** The geography cannot be changed. Let the user know the selection was locked at first publish.
 - **Enterprise org with enforced geography:** The admin-set geography overrides individual choice. The user publishes to whatever geography their org requires.
 
-Do **not** tell users that Replit only supports US-based infrastructure — multiple geographies are available.
+Do **not** tell users that Replit only supports US-based infrastructure -- multiple geographies are available.
 
 ## Best Practices
 
@@ -255,7 +276,6 @@ await deployConfig({
     deploymentTarget: "autoscale",
     run: ["gunicorn", "--bind=0.0.0.0:5000", "app:app"]
 });
-
-// 2. After verifying the app works, suggest publishing to the user
-await suggestDeploy();
 ```
+
+After verifying the app works, call `SuggestUserAction({ action: "deploy", message: "The app is ready to publish." })`.

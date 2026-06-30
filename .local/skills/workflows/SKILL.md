@@ -10,9 +10,10 @@ A workflow binds a shell command (e.g., `npm run dev`, `python run.py`, `cargo r
 **Key characteristics:**
 
 - Workflows run until explicitly stopped
-- The system tracks workflows automatically — no separate configuration file is required
+- The system tracks workflows automatically -- no separate configuration file is required
 - Workflows auto-restart after package installation and module installation
 - You can only get console logs from a workflow if it is running
+
 
 ## Setup Tips
 
@@ -35,8 +36,6 @@ Use this skill when:
 - The application needs to be restarted to pick up new environment variables
 - You need to remove a workflow that's no longer needed
 - The user asks to start, stop, or restart the application
-- You need to check what workflows are configured
-- You need to check workflow status, output, or open ports
 
 ## When NOT to Use
 
@@ -44,56 +43,22 @@ Use this skill when:
 - When the application is already running and changes are hot-reloaded
 - One-off commands (use bash for commands that don't need to persist)
 - Build scripts (use bash for npm build, webpack, etc.)
-- Testing commands (use bash or runTest callback)
+- Testing commands (use bash or read the testing skill for testing subagent)
 - More than 10 workflows (keep workflows minimal; combine services if needed)
 
 ## Available Functions
 
-### listWorkflows()
+The TypeScript runtime currently registers `configureWorkflow`, `restartWorkflow`, and `removeWorkflow`. Do not call `listWorkflows` or `getWorkflowStatus`; they are not registered callbacks.
 
-List all configured workflows with their current state.
+To inspect workflow status or logs, use available shell/process tools or the Replit workflow UI. If a workflow restart fails, use the returned error plus normal project logs and commands to diagnose the application.
 
-**Parameters:** None
-
-**Returns:** List of workflow info dicts with `name` (str), `command` (str), and `state` ("not_started", "running", "finished", "failed").
-
-**Example:**
-
-```javascript
-const workflows = await listWorkflows();
-for (const w of workflows) {
-    console.log(`${w.name}: ${w.state}`);
-}
-```
-
-### getWorkflowStatus(name, maxScrollbackLines)
-
-Get detailed status of a specific workflow including output logs and open ports.
-
-**Parameters:**
-
-- `name` (str, required): Name of the workflow to check
-- `maxScrollbackLines` (int, default 100): Number of output lines to include
-
-**Returns:** Dict with `name`, `command`, `state`, `output` (recent terminal output), `openPorts` (list of listening ports), and `waitForPort`.
-
-**Example:**
-
-```javascript
-// Check if the server is running and see its output
-const status = await getWorkflowStatus({ name: "Start application" });
-console.log(`State: ${status.state}`);
-if (status.output) {
-    console.log(`Output:\n${status.output}`);
-}
-if (status.openPorts) {
-    console.log(`Listening on ports: ${status.openPorts}`);
-}
-```
+The functions below are `CodeExecution` callbacks. Outside a `CodeExecution` script, use the direct `WorkflowsRestart` tool for workflow starts and restarts.
 
 ### configureWorkflow({ name, command, waitForPort, outputType, autoStart, isCanvasWorkflow })
 
+
 Configure or create a workflow. This is the primary way to set up background processes.
+
 
 **Parameters:**
 
@@ -193,9 +158,11 @@ const result2 = await restartWorkflow({
 
 ## Common Workflow Names
 
+
 - `Start application` - Main application workflow
 - `Start Backend` - Backend server (in Expo/mobile apps)
 - `Project` - Parent workflow for multi-service apps
+
 
 ## Error Handling
 
@@ -217,14 +184,13 @@ When errors occur, check:
 
 ## Example Workflow
 
+
 ```javascript
 // Create a web application workflow
 await configureWorkflow({
     name: "Start application",
     command: "npm run dev",
-
     waitForPort: 5000,
-
     outputType: "webview"
 });
 
@@ -243,3 +209,4 @@ if (result.success) {
 // Clean up unused workflows
 await removeWorkflow({ name: "Old Backend" });
 ```
+

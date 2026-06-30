@@ -1,7 +1,8 @@
 // Video Template - Replace ReplitLoadingScene with your scenes
 
-import { AnimatePresence } from 'framer-motion';
 import { useVideoPlayer } from '@/lib/video';
+import { AnimatePresence } from 'framer-motion';
+
 import { ReplitLoadingScene } from './ReplitLoadingScene';
 
 const SCENE_DURATIONS = {
@@ -21,9 +22,7 @@ export default function VideoTemplate() {
       {/* mode="wait" = sequential, "sync" = simultaneous, "popLayout" = new snaps in while old animates out */}
       <AnimatePresence>
         {/* Replace this with your scenes */}
-        {currentScene === 0 && (
-          <ReplitLoadingScene key="loading" />
-        )}
+        {currentScene === 0 && <ReplitLoadingScene key="loading" />}
       </AnimatePresence>
     </div>
   );

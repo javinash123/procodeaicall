@@ -1,0 +1,25 @@
+[1G[0K⠙[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K⠙[1G[0KMongoDB connected successfully
+7:02:41 AM [ws] WebSocket server ready on path /stream
+7:02:41 AM [ws] Exotel voicebot stream ready on path /exotel-stream
+7:02:43 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+7:02:45 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev host=5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev
+7:02:45 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:02:49 AM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}
+7:10:09 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev host=5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev
+7:10:09 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:10:10 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev host=5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev
+7:10:10 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:10:26 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+7:32:22 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev host=5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev
+7:32:22 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:32:26 AM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+7:34:27 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev host=5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev
+7:34:27 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:34:28 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev host=5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev
+7:34:28 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:34:31 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}

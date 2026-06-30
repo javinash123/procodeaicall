@@ -6,7 +6,7 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { buildTokens } from "./scripts/build-tokens.mjs";
 
 /**
- * Regenerates src/generated/tokens.{css,ts} from tokens.json on startup and
+ * Regenerates src/index.css and src/generated/tokens.tsx from tokens.json on startup and
  * whenever tokens.json changes, so editing the single source of truth
  * hot-reloads the running app.
  */
@@ -70,11 +70,6 @@ export default defineConfig({
         ]
       : []),
   ],
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "src"),
-    },
-  },
   root: path.resolve(import.meta.dirname),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),

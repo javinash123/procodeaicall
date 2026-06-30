@@ -10,7 +10,7 @@ Replit applies schema changes for you in **exactly two** places. Anything outsid
 
 After a task merges back to main, Replit runs the project's post-merge setup script (`scripts/post-merge.sh` or stack default). For Drizzle-based stacks this typically runs `npm run db:push` or `pnpm --filter @workspace/db run push-force`, which applies the latest dev schema to the **development** database only.
 
-This is owned by the `post_merge_setup` skill — the agent does not need to invoke it manually.
+This is owned by the `post-merge-setup` skill — the agent does not need to invoke it manually.
 
 ### 2. Publish → production database
 
@@ -32,14 +32,13 @@ If the user reports a production schema problem, do **not**:
 
 - Run DDL directly against the production database (`psql $PROD_URL`, `drizzle-kit push` against a non-dev connection string, `pg_dump … | psql …`, etc.).
 - Write a custom migration script (`migrate-prod.sh`, `push-prod.ts`, etc.) that targets production.
-- Create or rely on ad-hoc SQL files in `migrations/` for Drizzle apps. Those files are not the schema source of truth and are not applied by `db:push`.
 - Modify the deploy build command — `.replit` `[deployment].build`, an artifact's `artifact.toml` `[services.production].build`, or any equivalent — to run `db:push`, `push-force`, `drizzle-kit push`, or any other schema mutation. This runs on every deploy and is unsafe.
 - Add startup-time DDL (`CREATE TABLE IF NOT EXISTS …`, `ALTER TABLE …`) to the application's entrypoint to "self-heal" production. Production schema is not the application's responsibility.
 - Use `executeSql({ environment: "production" })` for DDL. Production access is read-only and DDL calls will fail; the right answer is the Publish flow, not finding a way around the read-only guard.
 
 ## What the Agent Should Do
 
-1. Make the schema change in the schema source of truth declared by `drizzle.config.ts`. For other ORMs, use that ORM's real migration/source-of-truth flow.
+1. Make the schema change in the project's schema source of truth (e.g. `shared/schema.ts` for Drizzle, or the appropriate migrations directory for other ORMs).
 2. Let the project's stack-specific dev-side flow apply it to the development database (e.g. `npm run db:push` / `pnpm --filter @workspace/db run push-force` for Drizzle, or the post-merge setup script for stacks that have one).
 3. Verify the feature works in development.
 4. Tell the user to re-publish. If the change involves a rename or a destructive alter, let them know they will see a confirmation prompt in the Publish UI.

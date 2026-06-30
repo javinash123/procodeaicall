@@ -16,6 +16,10 @@ access:
       condition:
         type: deployment_target
         name: databricks_app
+    - type: not
+      condition:
+        type: stack
+        name: DATABRICKS_APP
 
 service_configs:
   - name: web

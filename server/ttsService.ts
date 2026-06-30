@@ -10,7 +10,13 @@ export interface TTSProvider {
 
 // ─── OpenAI TTS Provider ──────────────────────────────────────────────────────
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let _openai: OpenAI | null = null;
+const openai = new Proxy({} as OpenAI, {
+  get(_t, prop) {
+    if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    return (_openai as any)[prop];
+  },
+});
 
 // Available OpenAI voices: alloy, echo, fable, onyx, nova, shimmer
 const DEFAULT_VOICE: OpenAI.Audio.Speech.SpeechCreateParams["voice"] = "nova";

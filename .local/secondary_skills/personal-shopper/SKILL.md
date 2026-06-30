@@ -226,8 +226,7 @@ For visual products (sunglasses, clothing, shoes, home goods, furniture, decor),
 
 **Required steps for visual products:**
 
-1. Use the stock image search tool to search for the specific product by name (e.g., "Garrett Leight Kinney sunglasses"). Try the exact product name first.
-1. If stock image search returns no results, search the web for the product image URL from the brand's site or a retailer (e.g., search `"[product name] image"` and look for direct image URLs in the results).
+1. Search the web for the product image URL from the brand's site or a retailer (e.g., search `"[product name] image"` and look for direct image URLs in the results). Try the exact product name first.
 
 1. If neither approach yields usable images, then and only then tell the user: "I couldn't find images for this product — check the product link to see what they look like."
 

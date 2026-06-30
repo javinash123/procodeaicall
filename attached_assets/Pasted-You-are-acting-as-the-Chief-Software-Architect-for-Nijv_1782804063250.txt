@@ -1,0 +1,244 @@
+You are acting as the Chief Software Architect for Nijvox.
+
+This is NOT a coding task.
+
+You are NOT allowed to generate TypeScript implementation.
+
+You are NOT allowed to scaffold folders.
+
+You are NOT allowed to modify any existing project files.
+
+You are ONLY allowed to improve the existing Voice Engine V2 architecture.
+
+Context
+
+The previous architecture document has already been approved.
+
+Now perform a senior architecture review exactly as if this system will support 100,000 calls/day.
+
+The goals are:
+
+• Enterprise reliability
+• Professional voice quality
+• Lowest possible latency
+• Provider independence
+• Zero vendor lock-in
+• Maintainability for 5+ years
+
+Review the architecture and improve it.
+
+Specifically answer these topics.
+
+--------------------------------------------------
+
+1.
+
+Is the current architecture truly real-time?
+
+If not,
+
+explain what must change.
+
+--------------------------------------------------
+
+2.
+
+Should the Voice Engine be event-driven?
+
+If yes,
+
+design the internal Event Bus.
+
+Show:
+
+Events
+
+Publishers
+
+Subscribers
+
+Event lifecycle
+
+No implementation.
+
+--------------------------------------------------
+
+3.
+
+Review the complete audio pipeline.
+
+Customer Speech
+
+↓
+
+Exotel
+
+↓
+
+Gateway
+
+↓
+
+?
+
+↓
+
+STT
+
+↓
+
+LLM
+
+↓
+
+TTS
+
+↓
+
+Scheduler
+
+↓
+
+Exotel
+
+Find every possible latency bottleneck.
+
+Suggest improvements.
+
+--------------------------------------------------
+
+4.
+
+Review the Provider Layer.
+
+Can STT,
+
+LLM,
+
+TTS,
+
+Telephony
+
+be replaced independently?
+
+If not,
+
+redesign the interfaces.
+
+--------------------------------------------------
+
+5.
+
+Review Session Management.
+
+How should:
+
+Audio buffers
+
+Conversation history
+
+Timers
+
+Interruptions
+
+Knowledge context
+
+be stored?
+
+--------------------------------------------------
+
+6.
+
+Review scalability.
+
+Can this architecture support:
+
+100
+
+500
+
+1000
+
+Concurrent calls?
+
+What changes are required?
+
+--------------------------------------------------
+
+7.
+
+Review future features.
+
+Do NOT implement them.
+
+Only ensure architecture supports:
+
+Conversation memory
+
+Knowledge versioning
+
+Supervisor monitoring
+
+Call analytics
+
+Quality scoring
+
+Voice cloning
+
+Custom AI providers
+
+--------------------------------------------------
+
+8.
+
+Review testing strategy.
+
+Design testing layers for:
+
+Unit
+
+Integration
+
+Load
+
+Audio
+
+Latency
+
+Provider mocking
+
+--------------------------------------------------
+
+9.
+
+Review security.
+
+Voice data
+
+Secrets
+
+PII
+
+Audio recordings
+
+API keys
+
+Knowledge base
+
+--------------------------------------------------
+
+10.
+
+Finally,
+
+produce the FINAL Voice Engine V2 architecture.
+
+This architecture will become frozen.
+
+After this document,
+
+implementation begins.
+
+Output only markdown.
+
+Do not generate code.

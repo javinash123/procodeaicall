@@ -1,0 +1,17 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0KMongoDB connected successfully
+1:45:49 PM [ws] WebSocket server ready on path /stream
+1:45:49 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+1:45:51 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+1:46:01 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev host=5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev
+1:46:01 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+1:46:02 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+1:48:09 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev host=5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev
+1:48:09 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+1:48:26 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev host=5ce1eb46-2298-4b88-9720-96018b3cc211-00-18p43qqktsu1.pike.replit.dev
+1:48:26 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+1:48:27 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}

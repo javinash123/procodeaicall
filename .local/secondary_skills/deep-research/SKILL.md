@@ -148,15 +148,12 @@ Decompose the topic into distinct, non-overlapping focus areas based on the dept
 
 ### Phase 3: Parallel Source Discovery via Subagents
 
-Launch all research subagents simultaneously using `startAsyncSubagent`. Each subagent gets a specific focus area, tailored search terms, and a structured output template.
+Launch all research subagents simultaneously with `subagent(...)` futures inside CodeExecution. Each subagent gets a specific focus area, tailored search terms, and a structured output template. (see delegation skill)
 
 #### Subagent task template
 
 ```javascript
-
-await startAsyncSubagent({
-
-task: `Research FOCUS AREA: [Area Name]
+const researchTask = `Research FOCUS AREA: [Area Name]
 
 Topic context: [1-2 sentence description of the overall research question]
 
@@ -196,29 +193,31 @@ Return your findings using this EXACT structure:
 
 [Numbered list with title, URL, publication date (if available), and tier rating]
 
-Minimum: 5 distinct sources with URLs`
-
+Minimum: 5 distinct sources with URLs`;
+subagent({
+  name: "research",
+  task: researchTask,
+  config: { $kind: "general" },
 });
-
 ```
 
 ##### Launch pattern
 
 ```javascript
+const researchJobs = [
+  subagent({ name: "research-1", task: `Research FOCUS AREA 1: [Area] ...`, config: { $kind: "general" } }),
+  subagent({ name: "research-2", task: `Research FOCUS AREA 2: [Area] ...`, config: { $kind: "general" } }),
+  subagent({ name: "research-3", task: `Research FOCUS AREA 3: [Area] ...`, config: { $kind: "general" } }),
+  // ... (3 for Quick, 5 for Standard/Deep)
+];
 
-// Launch all subagents simultaneously
-
-await startAsyncSubagent({ task: `Research FOCUS AREA 1: [Area] ...` });
-
-await startAsyncSubagent({ task: `Research FOCUS AREA 2: [Area] ...` });
-
-await startAsyncSubagent({ task: `Research FOCUS AREA 3: [Area] ...` });
-
-// ... (3 for Quick, 5 for Standard/Deep)
-
+const researchResults = await Promise.all(researchJobs);
+for (const researchResult of researchResults) {
+  console.log(researchResult.text);
+}
 ```
 
-Then call the `wait_for_background_tasks` tool to collect their results.
+Await all subagent futures to collect their findings.
 
 Each subagent should:
 
@@ -283,10 +282,7 @@ Review the collected findings for completeness:
 **For Deep tier only:** Launch 1-2 targeted follow-up subagents to fill the most critical gaps:
 
 ```javascript
-
-await startAsyncSubagent({
-
-task: `GAP-FILL RESEARCH: [Specific gap identified]
+const gapFillTask = `GAP-FILL RESEARCH: [Specific gap identified]
 
 Context: During initial research on [topic], we found insufficient data on [gap].
 
@@ -297,10 +293,12 @@ Your job: Run 3-4 targeted searches to fill this specific gap:
 
 - [targeted search term 3]
 
-Return findings using the same structured template as the initial research.`
-
+Return findings using the same structured template as the initial research.`;
+const gapFillResult = await subagent({
+  name: "gap-fill",
+  task: gapFillTask,
+  config: { $kind: "general" },
 });
-
 ```
 
 ### Phase 6: Critique & Self-Review (Deep tier only)
@@ -444,9 +442,7 @@ const overview = await webSearch({ query: "state of electric vehicle market 2026
 
 // Phase 3: Launch 5 parallel research subagents
 
-await startAsyncSubagent({
-
-task: `Research FOCUS AREA 1: EV Market & Competition
+const research1Task = `Research FOCUS AREA 1: EV Market & Competition
 
 Topic context: Comprehensive analysis of the global electric vehicle industry in 2026.
 
@@ -462,17 +458,20 @@ For country-specific angles, also search in relevant local languages.
 
 If webFetch returns empty content, try alternative URLs.
 
-Return findings using the structured template with Key Facts, Notable Claims, Source Quality Assessment, Gaps, and Sources.`
+Return findings using the structured template with Key Facts, Notable Claims, Source Quality Assessment, Gaps, and Sources.`;
+const researchJobs = [
+  subagent({
+    name: "research-1",
+    task: research1Task,
+    config: { $kind: "general" },
+  }),
+  subagent({ name: "research-2", task: `Research FOCUS AREA 2: EV Battery Technology ...`, config: { $kind: "general" } }),
+  subagent({ name: "research-3", task: `Research FOCUS AREA 3: EV Policy & Regulation ...`, config: { $kind: "general" } }),
+  subagent({ name: "research-4", task: `Research FOCUS AREA 4: EV Charging Infrastructure ...`, config: { $kind: "general" } }),
+  subagent({ name: "research-5", task: `Research FOCUS AREA 5: EV Consumer Economics ...`, config: { $kind: "general" } }),
+];
 
-});
-
-await startAsyncSubagent({ task: `Research FOCUS AREA 2: EV Battery Technology ...` });
-
-await startAsyncSubagent({ task: `Research FOCUS AREA 3: EV Policy & Regulation ...` });
-
-await startAsyncSubagent({ task: `Research FOCUS AREA 4: EV Charging Infrastructure ...` });
-
-await startAsyncSubagent({ task: `Research FOCUS AREA 5: EV Consumer Economics ...` });
+const researchResults = await Promise.all(researchJobs);
 
 // Phase 4: Triangulate -- evaluate sources, resolve conflicts, score credibility
 
@@ -486,7 +485,7 @@ await startAsyncSubagent({ task: `Research FOCUS AREA 5: EV Consumer Economics .
 
 ```
 
-After the launch block above, call the `wait_for_background_tasks` tool to wait for subagents, then proceed to Phase 4.
+After the launch block above, await all subagent futures, then proceed to Phase 4.
 
 ## Best Practices
 

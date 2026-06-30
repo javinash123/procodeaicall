@@ -3,11 +3,13 @@ name: stock-analyzer
 description: Analyze stocks with fundamental analysis, technical indicators, and PDF reports.
 ---
 
+TODO: The following callbacks referenced by this skill are not implemented in pkg/agent yet: generateFrontend.
+
 # Stock & Investment Analyzer
 
 Analyze stocks, companies, and investment opportunities using financial market data. Provide company profiles, technical analysis, fundamental analysis, and portfolio insights.
 
-Primary deliverable: A professional PDF research report. The Excel model and interactive web app are optional extras — only build them if the user explicitly requests them.
+Primary deliverable: A professional PDF research report. The Excel model and interactive web app are optional extras -- only build them if the user explicitly requests them.
 
 When to Use
 
@@ -39,7 +41,7 @@ State clearly on the cover page (or first visible section): "This report is for 
 
 Include a full disclaimer on the final page (see "Limitations & Disclaimer" section below for the required text).
 
-Never use imperative language that implies a directive — say "may outperform" or "could be worth investigating," not "you should buy" or "add this to your portfolio."
+Never use imperative language that implies a directive -- say "may outperform" or "could be worth investigating," not "you should buy" or "add this to your portfolio."
 
 Always recommend consulting a licensed financial advisor before making any investment decision.
 
@@ -47,7 +49,7 @@ This applies to all outputs regardless of whether an investor profile has been c
 
 Optional Investor Profile
 
-Before starting any analysis, offer the user the option to share their investment profile. This step is entirely optional — if the user declines or wants to skip it, proceed immediately with a general-purpose analysis using the default assumptions below.
+Before starting any analysis, offer the user the option to share their investment profile. This step is entirely optional -- if the user declines or wants to skip it, proceed immediately with a general-purpose analysis using the default assumptions below.
 
 How to offer it: At the start of the analysis, ask something like: "I can tailor this analysis to your investment style if you'd like to answer a few quick questions. Otherwise, I'll provide a general market perspective. Which do you prefer?"
 
@@ -97,11 +99,11 @@ Risk tolerance: Moderate
 
 Time horizon: Medium-term (1-5 years)
 
-Allocation: Not assumed — present analysis without allocation recommendations
+Allocation: Not assumed -- present analysis without allocation recommendations
 
-Income needs: Not assumed — cover both growth and income angles
+Income needs: Not assumed -- cover both growth and income angles
 
-Experience level: Intermediate — use clear language but don't oversimplify
+Experience level: Intermediate -- use clear language but don't oversimplify
 
 How Profiling Shapes the Report
 
@@ -109,7 +111,7 @@ When profile data is available, adjust the report in these ways:
 
 Cover page: Add an "Investor Profile" summary box showing the user's stated risk tolerance, time horizon, and income preference
 
-Stock/sector picks: Add a suitability tag to each recommendation (e.g., "Suitable for: moderate risk, 3-5yr horizon" or "Caution: high volatility — may not suit conservative investors")
+Stock/sector picks: Add a suitability tag to each recommendation (e.g., "Suitable for: moderate risk, 3-5yr horizon" or "Caution: high volatility -- may not suit conservative investors")
 
 Allocation section: Add a "Suggested Allocation" section at the end of the report, tailored to their risk/timeline. Frame it as illustrative, not prescriptive (e.g., "A moderate-risk investor with a 3-5 year horizon might consider an allocation along these lines...")
 
@@ -119,7 +121,7 @@ Picks that don't fit: Still include all relevant picks, but flag any that confli
 
 When profile data is NOT available, omit the Investor Profile box, omit the Suggested Allocation section, and present all picks without suitability tags. The core analysis remains identical.
 
-Data Sources (Use These — Don't Guess)
+Data Sources (Use These -- Don't Guess)
 
 Python libs (run directly, no API key):
 
@@ -143,31 +145,31 @@ Sector screening: Use yfinance sector ETFs (XLE, XLK, XLF, XLV, XLI, XLP, XLU, X
 
 Note on finvizfinance: This library frequently breaks due to website changes. Avoid relying on it. Use yfinance sector ETFs and direct ticker lookups instead.
 
-Primary filings: Start from the EDGAR filing index: webFetch("<https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={ticker}&type=10-K>"). This returns a list of filings — find the most recent 10-K and webFetch its "Documents" link to reach the actual filing. Read Item 1A (Risk Factors) and Item 7 (MD&A) — this is where management admits problems.
+Primary filings: Start from the EDGAR filing index: webFetch("<https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={ticker}&type=10-K>"). This returns a list of filings -- find the most recent 10-K and webFetch its "Documents" link to reach the actual filing. Read Item 1A (Risk Factors) and Item 7 (MD&A) -- this is where management admits problems.
 
-Insider activity: webFetch("<http://openinsider.com/screener?s={ticker}>") — look for cluster buys (multiple execs buying same week) and P-code open-market purchases (insider paid cash at market price — strongest signal). Ignore option exercises (M-code) and 10b5-1 scheduled sales.
+Insider activity: webFetch("<http://openinsider.com/screener?s={ticker}>") -- look for cluster buys (multiple execs buying same week) and P-code open-market purchases (insider paid cash at market price -- strongest signal). Ignore option exercises (M-code) and 10b5-1 scheduled sales.
 
-Short interest: webSearch "{ticker} short interest fintel" — >20% of float = crowded short, squeeze risk either direction.
+Short interest: webSearch "{ticker} short interest fintel" -- >20% of float = crowded short, squeeze risk either direction.
 
 Data Source Fallbacks
 
 yfinance occasionally returns empty data, tickers change, or rate limits kick in. Use this fallback hierarchy:
 
-Primary: yfinance — try up to 2 retries with a short delay
+Primary: yfinance -- try up to 2 retries with a short delay
 
 Fallback: Web search for the specific metric (e.g., webSearch("[ticker] market cap 2026"))
 
-Last resort: Flag the metric as "data unavailable" — never fabricate numbers
+Last resort: Flag the metric as "data unavailable" -- never fabricate numbers
 
-Research First — Mandatory Before Any Output
+Research First -- Mandatory Before Any Output
 
 Never show financials, tables, or a report to the user without thoroughly researching first. Before generating the PDF, you must:
 
-Load the deep-research skill for comprehensive web research. This is not optional — every stock analysis must use deep research to gather real data before producing any deliverable.
+Load the deep-research skill for comprehensive web research. This is not optional -- every stock analysis must use deep research to gather real data before producing any deliverable.
 
 Pull actual financials from yfinance AND cross-reference with SEC EDGAR filings (10-K, 10-Q). Do not rely on a single source.
 
-Search for every company mentioned — if the user's request involves multiple companies or peers, pull financials on ALL of them, not just the primary ticker.
+Search for every company mentioned -- if the user's request involves multiple companies or peers, pull financials on ALL of them, not just the primary ticker.
 
 Bias towards tables and numbers from actual public filings. Every financial figure in the report must be traceable to a real source (SEC filing, earnings release, or yfinance data pull). Do not estimate or round when real numbers are available.
 
@@ -189,15 +191,15 @@ Step 2: Fundamental Analysis
 
 Valuation (compare to sector median, not S&P):
 
-P/E — meaningless alone; flag if >2x sector median
+P/E -- meaningless alone; flag if >2x sector median
 
-PEG — <1.0 = growth at reasonable price; >2.0 = priced for perfection
+PEG -- <1.0 = growth at reasonable price; >2.0 = priced for perfection
 
-EV/EBITDA — better than P/E for capital-intensive or leveraged cos
+EV/EBITDA -- better than P/E for capital-intensive or leveraged cos
 
-P/S — only metric for unprofitable growth; >20x = needs hypergrowth to justify
+P/S -- only metric for unprofitable growth; >20x = needs hypergrowth to justify
 
-FCF yield (FCF/market cap) — >5% = genuinely cheap; negative = burning cash
+FCF yield (FCF/market cap) -- >5% = genuinely cheap; negative = burning cash
 
 Quality red lines (practitioner heuristics):
 
@@ -213,19 +215,19 @@ Goodwill >50% of assets -> acquisition-heavy, writedown risk
 
 Step 3: Technical Context (Not Prediction)
 
-Compute in pandas — don't just describe:
+Compute in pandas -- don't just describe:
 
 Price vs 50/200 SMA: below both = downtrend, don't catch knives
 
 Golden cross (50 crosses above 200) = trend confirmation, not entry signal
 
-RSI(14): >70 overbought / <30 oversold — only useful at extremes + divergence
+RSI(14): >70 overbought / <30 oversold -- only useful at extremes + divergence
 
 Volume: moves on 2x+ avg volume are real; low-volume moves fade
 
 % off 52w high: >30% drawdown in an uptrending market = something broke
 
-Step 4: The Retail Edge — Signals Institutions Ignore
+Step 4: The Retail Edge -- Signals Institutions Ignore
 
 Insider cluster buys (OpenInsider): 3+ insiders open-market buying within 2 weeks is the single highest-conviction public signal. Research shows insider buys outperform; sells mean nothing (taxes/divorces/yachts).
 
@@ -233,13 +235,13 @@ Buying the dip: insider P-code purchase after >10% drop = management disagrees w
 
 Short squeeze setup: short interest >20% + days-to-cover >5 + any positive catalyst
 
-Unusual options: webSearch "{ticker} unusual options activity" — large OTM call sweeps before earnings sometimes leak info
+Unusual options: webSearch "{ticker} unusual options activity" -- large OTM call sweeps before earnings sometimes leak info
 
 Step 5: Comparative Table
 
-Build a pandas DataFrame with peers side-by-side: P/E, PEG, rev growth, gross margin, FCF yield, debt/EBITDA. The outlier in either direction is your thesis. Pull yfinance data for every peer company — do not leave cells blank or use estimates when real data is available. Every company in the comparison must have actual financials pulled and verified.
+Build a pandas DataFrame with peers side-by-side: P/E, PEG, rev growth, gross margin, FCF yield, debt/EBITDA. The outlier in either direction is your thesis. Pull yfinance data for every peer company -- do not leave cells blank or use estimates when real data is available. Every company in the comparison must have actual financials pulled and verified.
 
-Step 6: Web Research — Find Existing Analyst Reports and News
+Step 6: Web Research -- Find Existing Analyst Reports and News
 
 Use web search aggressively via the deep-research skill. Before writing the report, gather real external research to cite:
 
@@ -305,11 +307,11 @@ Catalysts, M&A, regulatory
 
 Use webFetch to pull actual content from SeekingAlpha articles, earnings transcripts, and investor presentations. Extract specific data points, quotes, and estimates to cite in the report.
 
-Project Architecture — Reusable Modules
+Project Architecture -- Reusable Modules
 
-The reports/ directory contains shared modules that all ticker-specific scripts import from. Never duplicate the ResearchReport class, chart functions, or Excel styling helpers — always import from these modules.
+The reports/ directory contains shared modules that all ticker-specific scripts import from. Never duplicate the ResearchReport class, chart functions, or Excel styling helpers -- always import from these modules.
 
-reports/report_base.py — Shared PDF Report Class:
+reports/report_base.py -- Shared PDF Report Class:
 
 - sanitize_text(text): Cleans Unicode characters for fpdf2's latin-1 encoding. Apply to ALL text before passing to pdf.cell() or pdf.multi_cell().
 - ResearchReport(company_name, ticker): Extends FPDF with all report methods. Constructor sets alias_nb_pages() and auto_page_break(margin=15).
@@ -320,7 +322,7 @@ reports/report_base.py — Shared PDF Report Class:
 - Usage: from report_base import ResearchReport, sanitize_text
 - IMPORTANT fpdf2 gotcha: bullet_point() uses cell(5, 4, chr(149)) then multi_cell(185, 4, text). You MUST pass an explicit width (185) to multi_cell after cell(), otherwise multi_cell gets 0 remaining width and throws "Not enough horizontal space" error. Never use multi_cell(0, ...) after a cell() on the same line.
 
-reports/chart_utils.py — Shared Chart Generation:
+reports/chart_utils.py -- Shared Chart Generation:
 
 - price_chart(df, ticker, company_name): 1-year price history with 50/200 SMAs. Returns saved path.
 - revenue_margin_chart(years, revenues, gross_margins, op_margins, net_margins, ticker): Bar+line combo chart. Returns saved path.
@@ -331,7 +333,7 @@ reports/chart_utils.py — Shared Chart Generation:
 - All charts saved to reports/charts/ at 150 DPI.
 - Usage: from chart_utils import price_chart, revenue_margin_chart, segment_chart, peer_valuation_chart
 
-reports/excel_base.py — Shared Excel Styling:
+reports/excel_base.py -- Shared Excel Styling:
 
 - Style constants: NAVY_FILL, WHITE_FONT, HEADER_FONT, INPUT_FILL, LIGHT_GRAY, GREEN_FILL, RED_FILL, THIN_BORDER, INPUT_BORDER, THICK_BORDER
 - style_header_row(ws, row, max_col): Navy header with white bold text
@@ -344,7 +346,7 @@ reports/excel_base.py — Shared Excel Styling:
 
 - Usage: from excel_base import *
 
-reports/data_utils.py — Data Pulling & Validation:
+reports/data_utils.py -- Data Pulling & Validation:
 
 - pull_stock_data(ticker, retries=2): Pulls all yfinance data with retry logic. Returns dict with all metrics, formatted strings (market_cap_str, range_52w, analyst_consensus), and raw DataFrames (financials, balance_sheet, cashflow, quarterly_financials, history_1y).
 - pull_peer_data(tickers): Pulls key metrics for a list of peer tickers. Returns dict of dicts.
@@ -354,7 +356,7 @@ reports/data_utils.py — Data Pulling & Validation:
 
 - Usage: from data_utils import pull_stock_data, pull_peer_data, validate_data, fmt_val
 
-reports/generate_report.py — Single Entry Point CLI:
+reports/generate_report.py -- Single Entry Point CLI:
 
 - Usage: python reports/generate_report.py TICKER --peers PEER1,PEER2,PEER3
 - Runs the data pipeline: pulls subject + peer data, validates, generates price + peer charts
@@ -365,9 +367,9 @@ reports/generate_report.py — Single Entry Point CLI:
 Workflow for Adding a New Ticker:
 
 1. Run: python reports/generate_report.py TICKER --peers PEER1,PEER2
-2. Create reports/generate_{ticker}_pdf.py — imports ResearchReport from report_base, chart paths from chart_utils
+2. Create reports/generate_{ticker}_pdf.py -- imports ResearchReport from report_base, chart paths from chart_utils
 
-3. Create reports/generate_{ticker}_dcf.py — imports excel_base helpers, uses Excel formulas (not hardcoded values)
+3. Create reports/generate_{ticker}_dcf.py -- imports excel_base helpers, uses Excel formulas (not hardcoded values)
 4. Run both scripts to generate the PDF and Excel model
 
 5. Present both files to the user
@@ -375,28 +377,28 @@ Workflow for Adding a New Ticker:
 Data Validation Rules:
 
 - Always call validate_data() after pulling data and print warnings
-- Negative trailing P/E means the company is unprofitable — flag it, don't hide it
+- Negative trailing P/E means the company is unprofitable -- flag it, don't hide it
 
 - If yfinance returns None for a metric, display "N/A" in the report, never 0 or a guess
 - Cross-reference key financials (revenue, net income) between yfinance and SEC filings when possible
 
 - If a peer ticker fails to pull data, include it in the table with "N/A" values rather than silently dropping it
 
-Peer Data — Always Pull from yfinance:
+Peer Data -- Always Pull from yfinance:
 
-- Never hardcode peer metrics — always pull from yfinance via pull_peer_data() so data is current
+- Never hardcode peer metrics -- always pull from yfinance via pull_peer_data() so data is current
 - Pull at least 4 peers in the same sector/industry
 
 - Common peer sets: Tech (AAPL/MSFT/GOOG/AMZN/META), Semis (NVDA/AMD/AVGO/QCOM/INTC), Auto (TSLA/GM/F/TM/RIVN)
 - For the comparable companies Excel sheet, use formulas for the median row: =MEDIAN(C5:C10)
 
-Build Order — PDF Report + DCF Excel Model (Built in Parallel)
+Build Order -- PDF Report + DCF Excel Model (Built in Parallel)
 
 Both the PDF research report and the DCF Excel model are primary deliverables. Build them in parallel from the same research data.
 
 Step 1: Generate charts (Python + matplotlib)
 
-Generate all charts first — these will be embedded in the PDF. Save as PNG at 150+ DPI to reports/charts/. Generate at least 4 charts: price history with SMAs, revenue/margin trends, peer valuation comparison, and one more relevant to the thesis.
+Generate all charts first -- these will be embedded in the PDF. Save as PNG at 150+ DPI to reports/charts/. Generate at least 4 charts: price history with SMAs, revenue/margin trends, peer valuation comparison, and one more relevant to the thesis.
 
 import matplotlib.pyplot as plt
 
@@ -424,13 +426,13 @@ Step 2: Generate the PDF research report (PRIMARY DELIVERABLE \#1)
 
 Write a Python generation script (reports/generate_pdf.py) using fpdf2 to produce a polished, multi-page equity research PDF. Do not output a markdown summary as a substitute. Do not skip the PDF.
 
-Why fpdf2, not jsPDF: Python is already required for yfinance and matplotlib. fpdf2 installs instantly (pip install fpdf2), runs reliably, and handles image embedding natively. jsPDF (Node) has heavy dependencies, frequent install timeouts in constrained environments, and is designed for browser-side generation — not server-side report building.
+Why fpdf2, not jsPDF: Python is already required for yfinance and matplotlib. fpdf2 installs instantly (pip install fpdf2), runs reliably, and handles image embedding natively. jsPDF (Node) has heavy dependencies, frequent install timeouts in constrained environments, and is designed for browser-side generation -- not server-side report building.
 
 Present the PDF to the user in chat immediately after generating it.
 
-Step 3: Build the DCF Excel Model (PRIMARY DELIVERABLE \#2 — built in parallel with the PDF)
+Step 3: Build the DCF Excel Model (PRIMARY DELIVERABLE \#2 -- built in parallel with the PDF)
 
-Always build the DCF Excel model alongside the PDF report. Do not wait for user request — this is a standard deliverable for every stock analysis.
+Always build the DCF Excel model alongside the PDF report. Do not wait for user request -- this is a standard deliverable for every stock analysis.
 
 Use openpyxl in Python to generate the .xlsx file (reports/{TICKER}_DCF_Model.xlsx):
 
@@ -442,7 +444,7 @@ from openpyxl.utils import get_column_letter
 
 The Excel model must include the following sheets:
 
-Sheet 1 — DCF Model:
+Sheet 1 -- DCF Model:
 
 - Revenue projections (5-year forecast with growth assumptions)
 - EBITDA / operating income projections (margin assumptions)
@@ -455,35 +457,35 @@ Sheet 1 — DCF Model:
 
 - Upside/downside % vs current price
 
-Sheet 2 — Sensitivity Analysis:
+Sheet 2 -- Sensitivity Analysis:
 
 - Two-variable data table: WACC (rows) vs terminal growth rate (columns) showing implied share price at each combination
 - Highlight the base case cell
 
 - Use conditional formatting: green for upside scenarios, red for downside
 
-Sheet 3 — Scenario Analysis:
+Sheet 3 -- Scenario Analysis:
 
 - Bull / Base / Bear cases with different revenue growth, margin, and multiple assumptions
 - Probability-weighted price target (e.g., 25% Bull, 50% Base, 25% Bear)
 
 - Show each scenario's implied share price and upside/downside
 
-Sheet 4 — Comparable Companies:
+Sheet 4 -- Comparable Companies:
 
 - Peer comparison table: ticker, market cap, P/E, EV/EBITDA, P/S, revenue growth, gross margin, FCF yield
 - Pull real data from yfinance for 4-6 peers
 
 - Highlight the subject company row
 
-Sheet 5 — Financial Summary:
+Sheet 5 -- Financial Summary:
 
 - Historical income statement (3-4 years from yfinance)
 - Historical balance sheet highlights (cash, debt, equity)
 
 - Key ratios: ROE, ROIC, debt/EBITDA, current ratio
 
-CRITICAL — Use Excel Formulas, Not Hardcoded Values:
+CRITICAL -- Use Excel Formulas, Not Hardcoded Values:
 
 - Every calculated cell MUST use an Excel formula, not a pre-computed Python value. The entire point of a financial model is that users can change assumptions and see results update automatically.
 - Input cells (yellow): hardcoded values the user can edit (growth rates, margins, WACC inputs, tax rate, etc.)
@@ -525,19 +527,19 @@ Step 4 (OPTIONAL): Build the web app
 
 Only build if the user requests an interactive dashboard or web view. When building the web app:
 
-Design it as a native web dashboard — responsive, interactive charts (Recharts), scrollable sections. Do NOT make it a literal PDF replica with fixed-size page containers.
+Design it as a native web dashboard -- responsive, interactive charts (Recharts), scrollable sections. Do NOT make it a literal PDF replica with fixed-size page containers.
 
-Hardcode data in a centralized data file (src/data/report-data.ts) — no backend API needed for static analysis.
+Hardcode data in a centralized data file (src/data/report-data.ts) -- no backend API needed for static analysis.
 
 Use the react-vite skill and generateFrontend() for scaffolding.
 
-PDF Report — Professional Research Report (Sell-Side Format)
+PDF Report -- Professional Research Report (Sell-Side Format)
 
-The PDF should look like a sell-side initiation note from Goldman, Morgan Stanley, or JP Morgan. This is the primary deliverable — invest the most effort here.
+The PDF should look like a sell-side initiation note from Goldman, Morgan Stanley, or JP Morgan. This is the primary deliverable -- invest the most effort here.
 
 Report Structure
 
-Page 1 — Cover / Executive Summary:
+Page 1 -- Cover / Executive Summary:
 
 Disclaimer line (required): "This report is for informational purposes only and does not constitute investment advice. It is not a recommendation to buy, sell, or hold any security."
 
@@ -553,17 +555,17 @@ A 1-year price chart (generated via matplotlib, embedded as image)
 
 Investor Profile box (only if profile was collected): Show risk tolerance, time horizon, and income preference in a small summary box
 
-Pages 2-3 — Investment Thesis:
+Pages 2-3 -- Investment Thesis:
 
 Bull case (with probability weighting if possible)
 
-Bear case (required — what kills this trade?)
+Bear case (required -- what kills this trade?)
 
 Key catalysts with expected timeline
 
 Competitive positioning / moat analysis
 
-Pages 3-4 — Financial Analysis:
+Pages 3-4 -- Financial Analysis:
 
 Revenue breakdown by segment (with a stacked bar chart)
 
@@ -575,7 +577,7 @@ Balance sheet health (debt maturity, liquidity)
 
 Peer comparison table (pulled from yfinance for 3-5 peers)
 
-Page 5 — Valuation:
+Page 5 -- Valuation:
 
 DCF model summary (show assumptions: WACC, terminal growth, revenue CAGR)
 
@@ -585,7 +587,7 @@ Historical valuation range (P/E or EV/EBITDA band chart)
 
 Price target derivation
 
-Page 6 — Technical Analysis:
+Page 6 -- Technical Analysis:
 
 Price chart with 50/200 SMA overlay (generated via matplotlib)
 
@@ -595,7 +597,7 @@ Key support/resistance levels
 
 RSI chart
 
-Page 7 — Risks:
+Page 7 -- Risks:
 
 Ranked by probability x impact
 
@@ -603,11 +605,11 @@ Regulatory, competitive, execution, macro risks
 
 Specific to this company, not generic boilerplate
 
-Final Page — Sources & Disclaimer:
+Final Page -- Sources & Disclaimer:
 
 Full citation list with dates for every external source referenced
 
-Full disclaimer (required — use the exact text from the "Limitations & Disclaimer" section below)
+Full disclaimer (required -- use the exact text from the "Limitations & Disclaimer" section below)
 
 If investor profile was collected, include a closing note: "This analysis was tailored to a [risk tolerance] risk profile with a [time horizon] time horizon. Your actual circumstances may differ. Consult a licensed financial advisor before making investment decisions."
 
@@ -673,7 +675,7 @@ pdf.set_font("Helvetica", "B", 24)
 
 pdf.cell(0, 12, "Company Analysis", ln=True)
 
-## Embed chart (w=160, NOT 190 — see chart sizing notes below)
+## Embed chart (w=160, NOT 190 -- see chart sizing notes below)
 
 pdf.image("reports/charts/price_chart.png", x=15, w=160)
 
@@ -717,21 +719,21 @@ text = text.replace(char, replacement)
 
 return text.encode("latin-1", errors="replace").decode("latin-1")
 
-Apply sanitize_text() to every string before passing it to pdf.cell(), pdf.multi_cell(), or pdf.write(). This is not optional — text from web scraping, yfinance, and deep research will contain Unicode characters that break the PDF.
+Apply sanitize_text() to every string before passing it to pdf.cell(), pdf.multi_cell(), or pdf.write(). This is not optional -- text from web scraping, yfinance, and deep research will contain Unicode characters that break the PDF.
 
 Avoiding Common fpdf2 Issues
 
-Chart sizing — DO NOT use w=190 (full page width): Charts generated by matplotlib at 150 DPI are typically 1500-1700px wide and 800-1000px tall. At w=190mm, fpdf2 scales them proportionally, producing chart heights of 90-130mm — nearly half an A4 page. This pushes the chart to the next page, leaving a large white gap below the section title. Use w=160 (centered with x=15) as the default chart width. This keeps charts at ~75-110mm tall, which fits comfortably on a page alongside a title and surrounding content.
+Chart sizing -- DO NOT use w=190 (full page width): Charts generated by matplotlib at 150 DPI are typically 1500-1700px wide and 800-1000px tall. At w=190mm, fpdf2 scales them proportionally, producing chart heights of 90-130mm -- nearly half an A4 page. This pushes the chart to the next page, leaving a large white gap below the section title. Use w=160 (centered with x=15) as the default chart width. This keeps charts at ~75-110mm tall, which fits comfortably on a page alongside a title and surrounding content.
 
-Section splitting across pages: fpdf2's auto page break only triggers when content would overflow — it does NOT keep a section title together with its table or chart. A subtitle at y=270 will render on the current page, but the table below it starts on the next page, leaving the title orphaned. To prevent this, implement an ensure_space(needed_mm) method (see sample code above) and call it before every subtitle+table or subtitle+chart combo. Estimate the needed space: title (~7mm) + table header (~6mm) + rows (5mm each) + body text if any. For charts, use ~80mm. For tables with 5-8 rows, use ~50-55mm.
+Section splitting across pages: fpdf2's auto page break only triggers when content would overflow -- it does NOT keep a section title together with its table or chart. A subtitle at y=270 will render on the current page, but the table below it starts on the next page, leaving the title orphaned. To prevent this, implement an ensure_space(needed_mm) method (see sample code above) and call it before every subtitle+table or subtitle+chart combo. Estimate the needed space: title (~7mm) + table header (~6mm) + rows (5mm each) + body text if any. For charts, use ~80mm. For tables with 5-8 rows, use ~50-55mm.
 
-Spacing discipline: Use tight spacing throughout. Recommended values: ln(0.5) after subtitles, ln(1) between sections, ln(1.5) between major sections. Avoid ln(3) or higher — it adds up fast across a multi-page report. Body text line height should be 4mm, bullet line height 4mm, table rows 5mm, table headers 6mm. These small values compound: a report with 20 sections saves 40-60mm of vertical space vs. generous spacing, which is nearly an entire extra page of content.
+Spacing discipline: Use tight spacing throughout. Recommended values: ln(0.5) after subtitles, ln(1) between sections, ln(1.5) between major sections. Avoid ln(3) or higher -- it adds up fast across a multi-page report. Body text line height should be 4mm, bullet line height 4mm, table rows 5mm, table headers 6mm. These small values compound: a report with 20 sections saves 40-60mm of vertical space vs. generous spacing, which is nearly an entire extra page of content.
 
 Auto page break margin: Use margin=15, not margin=20. The default 20mm wastes 5mm per page (45mm across a 9-page report). 15mm provides enough room for the footer without wasting space.
 
 Long text overflow: Use multi_cell() for paragraphs, not cell(). cell() truncates at one line.
 
-Table column overflow: cell() does NOT clip or wrap text — it renders beyond the cell boundary, causing text to overflow into adjacent columns or off the page. For tables with a wide text column (like "Details" in a risk matrix), allocate most of the width to that column. Example: [45, 24, 24, 97] instead of [55, 27, 27, 81]. Also shorten text strings to fit: abbreviate "Medium" to "Med", truncate long names ("Valuation Compression" -> "Valuation Compress."), and tighten phrasing. At 8pt Helvetica, a 97mm column fits roughly 50-55 characters. Test visually and shorten any string that overflows.
+Table column overflow: cell() does NOT clip or wrap text -- it renders beyond the cell boundary, causing text to overflow into adjacent columns or off the page. For tables with a wide text column (like "Details" in a risk matrix), allocate most of the width to that column. Example: [45, 24, 24, 97] instead of [55, 27, 27, 81]. Also shorten text strings to fit: abbreviate "Medium" to "Med", truncate long names ("Valuation Compression" -> "Valuation Compress."), and tighten phrasing. At 8pt Helvetica, a 97mm column fits roughly 50-55 characters. Test visually and shorten any string that overflows.
 
 Table alignment: Right-align numbers, left-align text. Use cell() with explicit widths for table columns.
 
@@ -749,25 +751,25 @@ Callout boxes for key insights ("Management guided 15% revenue growth in Q4 call
 
 Source citations as footnotes or inline parenthetical references
 
-Professional typography: 9pt body text (4mm line height), 8pt table text (5mm row height), 10pt subtitles, 13pt section headers. Keep spacing tight — ln(0.5) to ln(1.5) between elements, never ln(3) or higher.
+Professional typography: 9pt body text (4mm line height), 8pt table text (5mm row height), 10pt subtitles, 13pt section headers. Keep spacing tight -- ln(0.5) to ln(1.5) between elements, never ln(3) or higher.
 
 Color palette: Navy (#003366) for headers, dark gray (#333333) for body text, green (#228B22) for positive metrics, red (#CC0000) for negative metrics
 
 Page density: Aim for dense, information-rich pages with minimal white space. Every page should feel full. If a page has more than 40mm of unused space at the bottom, either pull the next section up (by removing the forced add_page()) or increase chart/table sizes to fill the space.
 
-Avoid forced page breaks between sections: Do NOT use add_page() between every section. This creates large white gaps when the previous section ends partway down the page. Instead, let content flow continuously and use ensure_space(needed_mm) to trigger a page break only when there isn't enough room for the next section's title + content. Only use add_page() for truly standalone sections (e.g., cover page, disclaimer page). For everything else — financial tables, charts, risk matrices, catalysts — let them flow naturally with ensure_space() guarding against orphaned titles.
+Avoid forced page breaks between sections: Do NOT use add_page() between every section. This creates large white gaps when the previous section ends partway down the page. Instead, let content flow continuously and use ensure_space(needed_mm) to trigger a page break only when there isn't enough room for the next section's title + content. Only use add_page() for truly standalone sections (e.g., cover page, disclaimer page). For everything else -- financial tables, charts, risk matrices, catalysts -- let them flow naturally with ensure_space() guarding against orphaned titles.
 
 Best Practices
 
-Timestamp everything — state data pull date; yfinance prices are ~15min delayed
+Timestamp everything -- state data pull date; yfinance prices are ~15min delayed
 
-Sector-relative only — a 30 P/E is cheap in software, expensive in utilities
+Sector-relative only -- a 30 P/E is cheap in software, expensive in utilities
 
-Label facts vs thesis — "FCF yield is 6%" (fact) vs "undervalued" (opinion)
+Label facts vs thesis -- "FCF yield is 6%" (fact) vs "undervalued" (opinion)
 
-Bear case required — every analysis must include: what kills this trade?
+Bear case required -- every analysis must include: what kills this trade?
 
-Position sizing reality — no single stock >5% for most retail portfolios; if conviction demands 20%, the conviction is the problem
+Position sizing reality -- no single stock >5% for most retail portfolios; if conviction demands 20%, the conviction is the problem
 
 Limitations & Disclaimer
 
@@ -781,7 +783,7 @@ Before making any investment decision, you should consult with a qualified, lice
 
 Technical limitations:
 
-yfinance scrapes Yahoo Finance — occasionally breaks, data may lag filings by days or weeks
+yfinance scrapes Yahoo Finance -- occasionally breaks, data may lag filings by days or weeks
 
 Cannot access Bloomberg, FactSet, Refinitiv, or real-time Level 2 market data
 

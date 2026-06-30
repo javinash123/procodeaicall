@@ -9,7 +9,7 @@ kind: design-system
 
 access:
   type: flag
-  name: flag-design-system-creation-ld
+  name: gate_design_system_creation
   variation: "true"
 
 service_configs:

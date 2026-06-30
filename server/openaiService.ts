@@ -1,8 +1,14 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return _openai;
+}
+// keep backward-compat alias used throughout this file
+const openai = { chat: { completions: { create: (...args: Parameters<OpenAI["chat"]["completions"]["create"]>) => getOpenAI().chat.completions.create(...args) } } } as unknown as OpenAI;
 
 export interface CallScriptInput {
   campaignGoal: string;
@@ -175,70 +181,100 @@ export async function generateAIResponse(
   const asksQuestion    = u.endsWith("?");
   const isShort         = userInput.trim().split(/\s+/).length <= 4;
 
+  // Count actual user turns (not AI turns) to determine stage
+  const userTurnCount = conversationHistory.filter(m => m.role === "user").length;
+
   // Pick the right instruction for this turn
   let stageInstruction: string;
-  if (turnCount <= 2) {
-    stageInstruction = `STAGE — QUALIFY (early in call):
-Ask ONE short question to understand the caller's situation before pitching anything.
-Do NOT give product details yet.
-Example: "Are you looking for a 2BHK or 3BHK?" or "Is this for yourself or an investment?"`;
-  } else if (turnCount <= 5) {
-    stageInstruction = `STAGE — PITCH SPECIFICS:
-Answer their question or give 1-2 specific facts from the knowledge base / script.
-Then ask one question that moves toward a visit or commitment.
-Do NOT pitch everything at once — one topic per turn.`;
+  if (userTurnCount <= 1) {
+    // First user message is usually just "yes" / "sure" — permission to proceed.
+    // Respond by asking ONE qualifying question only. No product pitch yet.
+    stageInstruction = `STAGE — QUALIFY (caller's first response):
+The caller just gave permission to continue (e.g. "yes", "sure"). Do NOT pitch product details yet.
+Ask exactly ONE short open question to understand their situation.
+Good examples: "Are you looking for a 2BHK or 3BHK?" / "Is this for yourself or as an investment?" / "What area are you considering?"
+Do NOT ask about scheduling a visit at this stage — that comes much later.`;
+  } else if (userTurnCount <= 4) {
+    stageInstruction = `STAGE — DISCOVER & PITCH SPECIFICS:
+Answer their question directly with ONE specific fact from the knowledge base.
+Then ask ONE question that advances the conversation.
+Do NOT combine multiple topics in one reply — one piece of information per turn.
+Do NOT pitch everything at once.`;
+  } else if (userTurnCount <= 7) {
+    stageInstruction = `STAGE — BUILD INTEREST:
+The caller has engaged for several turns — they are interested.
+Offer a concrete next step: suggest a site visit, a callback, or a brochure.
+Keep it conversational — do NOT pressure.`;
   } else {
     stageInstruction = `STAGE — CLOSE:
-Drive toward a specific next step: book a site visit, schedule a callback, or get their name to confirm.
-If they want to visit, confirm the time and ask for their name. Do not introduce new product details now.`;
+Drive toward a specific commitment: book a visit, confirm a callback time, or get their name.
+If they mention a day/time, confirm it immediately and ask for their name.
+Do not introduce new product details — focus only on the next step.`;
   }
 
-  // Special override instructions for detected intent
+  // Special override instructions for detected intent.
+  // On userTurnCount === 1 the caller just gave permission ("yes/sure") —
+  // skip the affirmative override so it doesn't conflict with the QUALIFY stage.
   let intentInstruction = "";
   if (wantsSchedule) {
     intentInstruction = `\n⚡ SCHEDULE INTENT DETECTED: The caller wants to book a visit or appointment.
 Confirm the time they mentioned, ask for their name, and commit. This is the BEST outcome of the call.
 Example: "Monday 11am works perfectly — may I get your name to confirm the booking?"`;
-  } else if (isAffirmative && !asksQuestion) {
+  } else if (isAffirmative && !asksQuestion && userTurnCount > 1) {
+    // Only activate affirmative shortcut after the first real exchange;
+    // on turn 1 the "yes" just means "go ahead" and the QUALIFY stage handles it.
     intentInstruction = `\n⚡ AFFIRMATIVE RESPONSE: They said yes / agreed to your last offer or question.
-Immediately deliver the next piece of information you were going to share — don't ask "are you sure?" or repeat your offer.`;
+Immediately deliver the next piece of information — do NOT ask "are you sure?" or repeat yourself.`;
   } else if (wantsInfo) {
-    intentInstruction = `\n⚡ INFO REQUEST: Give 2 specific facts from the knowledge base right now. Do not say "let me know if you have questions" or "how can I help?" — actually answer.`;
+    intentInstruction = `\n⚡ INFO REQUEST: Give 1-2 specific facts from the knowledge base right now. Do not deflect — actually answer the question.`;
   }
 
-  const systemPrompt = `You are a professional AI ${isSupport ? "customer support agent" : "sales agent"} on a LIVE outbound phone call. Every word you say is spoken aloud.
+  const systemPrompt = `You are a professional human ${isSupport ? "customer support agent" : "sales agent"} on a LIVE outbound phone call. Every word you say is spoken aloud — no text formatting, no lists, no markdown.
 
-${goal ? `Goal: ${goal}` : ""}
+${goal ? `Campaign goal: ${goal}` : ""}
 ${additionalContext ? `Business info: ${additionalContext}` : ""}
-${resolvedScript ? `Talking points (reference only — do not recite verbatim):\n${resolvedScript}` : ""}
-${kb ? `Knowledge base (use for accurate facts):\n${kb.slice(0, 1500)}` : ""}
+${kb ? `━━━ PROPERTY KNOWLEDGE BASE — your authoritative source of facts ━━━\n${kb.slice(0, 2500)}\n━━━ END KNOWLEDGE BASE ━━━` : ""}
+${resolvedScript ? `Reference talking points (do NOT recite verbatim — adapt to the conversation):\n${resolvedScript}` : ""}
 
-━━━ STRICT OUTPUT RULES — read before every response ━━━
+━━━ ABSOLUTE RULES — violating ANY of these is an error ━━━
 
-LENGTH (most important rule):
-• If the caller said yes / sure / ok / agreed → reply in EXACTLY 1 short sentence.
-• For all other turns → maximum 2 SHORT sentences. Count your sentences before outputting.
-• Never exceed 2 sentences. Ever.
+RULE 1 — LENGTH (hardest constraint):
+• Caller said yes / sure / ok / agreed / great → EXACTLY 1 short sentence — no more.
+• All other inputs → MAXIMUM 2 SHORT sentences. Count before you output.
+• ONE topic per turn. Never combine price + location + amenities in one reply.
+• Never exceed 2 sentences. Ever. The model will be penalised for exceeding this.
 
-FORMAT:
-• Spoken words only — no bullet points, no lists, no markdown, no asterisks.
+RULE 2 — FORMAT:
+• Plain spoken English only. No bullets, no lists, no dashes as list items, no markdown.
 • Do NOT start with filler openers: "Great!", "Absolutely!", "Of course!", "Certainly!", "Sure!".
+• Never re-introduce yourself — the greeting already did this.
 
-FORBIDDEN PHRASES (will destroy caller trust if used):
-• "Before you go" — do NOT say this; it implies the call is ending.
-• "I look forward to helping you" — do NOT say this; it sounds like a sign-off.
-• "How can I assist you?" — do NOT say this; it's generic and gives no value.
-• "Could you clarify what you mean?" — do NOT say this unless genuinely ambiguous.
-• "You're welcome" — only say this if the caller said "thank you".
-• Never re-introduce yourself. You introduced yourself in the greeting already.
+RULE 3 — ABSOLUTELY FORBIDDEN PHRASES (treat as fatal errors):
+• "You're welcome" — NEVER say this unless the caller's VERY LAST message was explicitly "thank you" or "thanks".
+• "Thank you for your time" / "Have a great day" / "Goodbye" / any farewell — YOU do not end the call. Only say goodbye if the caller explicitly says they want to stop.
+• "I can't access websites" / "I don't have access to the internet" / "I'm unable to browse" / "I can't look that up" — NEVER say this. You are a human sales agent who knows this property. You don't browse websites; you know the facts.
+• "Before you go" — implies call is ending prematurely.
+• "I look forward to helping you" — robotic sign-off; never use.
+• "How can I assist / help you?" — generic; gives no value.
+• "Is there anything else you'd like to know?" as a reply to a direct question — answer the question FIRST, then optionally offer more.
+• Do NOT volunteer discounts unless the caller asks about price.
 
-CONVERSATION ACCURACY:
-• "Yes", "Sure", "OK" = they agreed. Move forward. Do NOT ask another question.
-• If they ask about something you already mentioned (like amenities), give MORE specific detail — do not say you already covered it.
-• If they want to schedule, stop pitching and help them book.
+RULE 4 — CONVERSATION ACCURACY:
+• "Yes", "Sure", "OK" = caller agreed. Advance the conversation with ONE new piece of information. Do NOT ask another question or repeat yourself.
+• If the caller asks a direct question (amenities, location, price, etc.) — ANSWER it with facts from the knowledge base. If the knowledge base doesn't have the exact detail, say what you DO know and add "I'll confirm that for you" — but NEVER deflect with another question instead of an answer.
+• If the caller asks to schedule → immediately help them confirm a time. Ask for their name. Stop pitching.
 
 ${stageInstruction}
 ${intentInstruction}`;
+
+  // Build messages list.  Some callers (Exotel stream handler, wsServer) push the
+  // latest user turn into conversationHistory BEFORE calling this function.
+  // Others (REST API routes) pass the history without it and rely on userInput.
+  // We guard against duplicating the message: if history already ends with the
+  // current user input, do not append it again.
+  const lastEntry = conversationHistory[conversationHistory.length - 1];
+  const userAlreadyInHistory =
+    lastEntry?.role === "user" && lastEntry?.content === userInput;
 
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt },
@@ -246,14 +282,15 @@ ${intentInstruction}`;
       role: m.role as "user" | "assistant",
       content: m.content,
     })),
-    { role: "user", content: userInput },
+    // Append current user turn only when it isn't already the last history entry
+    ...(userAlreadyInHistory ? [] : [{ role: "user" as const, content: userInput }]),
   ];
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
     messages,
-    temperature: 0.25,  // very low — consistent, no hallucination, follows rules reliably
-    max_tokens: 55,     // ~40 words = 1-2 short spoken sentences; hard cap prevents dumps
+    temperature: 0.2,   // very low — consistent, no hallucination, follows rules reliably
+    max_tokens: 80,     // ~60 words = 1-2 short spoken sentences; hard cap prevents dumps
   });
 
   const raw = response.choices[0]?.message?.content?.trim() || "";

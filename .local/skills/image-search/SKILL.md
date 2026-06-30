@@ -29,7 +29,7 @@ Search for public web images and return the raw provider response body.
 - `query` (str, required): Search text for the desired images
 - `count` (int, optional): Maximum number of results to return
 
-**Returns:** Dict with optional `results` list. For each result, rely on `result.title` and `result.properties?.url`; other provider-specific fields may also be present.
+**Returns:** Dict with optional `results` list. For each result, rely on `result.title` and `result.imageUrl`; other provider-specific fields may also be present.
 
 **Example response:**
 
@@ -45,6 +45,7 @@ Search for public web images and return the raw provider response body.
     {
       "type": "image_result",
       "title": "Mid-century chair in walnut",
+      "imageUrl": "https://imgs.example.com/full.jpg",
       "url": "https://example.com/chairs",
       "source": "example.com",
       "page_fetched": "2026-04-17T23:51:41Z",
@@ -85,7 +86,7 @@ const response = await imageSearch({
 
 const items = response.results ?? []
 for (const item of items.slice(0, 4)) {
-  console.log(item.title, item.properties?.url)
+  console.log(item.title, item.imageUrl)
 }
 ```
 
@@ -95,49 +96,37 @@ When showing image results to the user:
 
 1. Pick up to 4 strong results
 2. Download each image URL into `attached_assets/image_search/`
-3. Call `presentAsset({awaitUserInput: false})` for each saved file
+3. Call `presentAsset({ filePath, title })` for each saved file
 
 ```javascript
-const fs = await import('node:fs/promises')
-const path = await import('node:path')
-
-const response = await imageSearch({
-  query: "mid-century chair",
-  count: 4,
-})
-
-const items = (response.results ?? []).slice(0, 4)
-await fs.mkdir('attached_assets/image_search', {recursive: true})
-
-for (const [index, item] of items.entries()) {
-  const imageUrl = item.properties?.url
-  if (!imageUrl) continue
-
-  const download = await fetch(imageUrl)
-  if (!download.ok) continue
-
-  const filePath = path.join(
-    'attached_assets/image_search',
-    'result_' + String(index + 1) + '.jpg',
-  )
-
-  await fs.writeFile(filePath, Buffer.from(await download.arrayBuffer()))
-
-  await presentAsset({
-    filePath,
-    title: item.title ?? 'Image search result',
-    awaitUserInput: false,
-  })
+// 1) DURABLE: callbacks live here, never inside "use impure"
+const response = await imageSearch({ query: "mid-century chair", count: 4 });
+// Pass only plain JSON into the impure boundary
+const items = (response.results ?? [])
+  .slice(0, 4)
+  .map(it => ({ imageUrl: it.imageUrl, title: it.title }));
+// 2) IMPURE: imports + fetch + disk writes happen here, returns plain JSON
+const saved = await (async (items) => {
+  "use impure";
+  const fs = await import('node:fs/promises');
+  const path = await import('node:path');
+  await fs.mkdir('attached_assets/image_search', { recursive: true });
+  const out = [];
+  for (const [index, item] of items.entries()) {
+    if (!item.imageUrl) continue;
+    const download = await fetch(item.imageUrl);
+    if (!download.ok) continue;
+    const filePath = path.join('attached_assets/image_search', `result_${index + 1}.jpg`);
+    await fs.writeFile(filePath, Buffer.from(await download.arrayBuffer()));
+    out.push({ filePath, title: item.title ?? 'Image search result' });
+  }
+  return out;
+})(items);
+// 3) DURABLE: present each saved file
+for (const f of saved) {
+  await presentAsset({ filePath: f.filePath, title: f.title });
 }
 ```
-
-## When called from the slides skill
-
-The slides skill runs `imageSearch` as part of its brand-research steps in `../slides/references/brand_research.md`. That reference owns the order (run `extractBranding` first, use `imageSearch` for the logo only when the first step's logo is missing or low quality, and use `imageSearch` for real-world photos like product / team / venue shots) and the budget (at most 4 `imageSearch` calls per deck).
-
-**Specific real subjects have a special rule.** If `imageSearch` cannot find a clean image of a logo, a named person, a specific real product, a real team, a real venue, or a real event, leave the slot empty and surface the gap to the user. **Do NOT auto-generate a stand-in via `media-generation` without explicit user approval** — a fabricated logo or fake "real" photo for a named entity is exactly the failure mode the research steps exist to prevent. The `media-generation` fallback applies only to **generic, non-specific** visuals (abstract backgrounds, mood imagery, anonymous skylines, generic illustrations). In named-entity decks (product launches, founder profiles, company overviews) the deck subject often makes product, team, and venue slots specific — treat those as real subjects and leave them empty until the user approves a stand-in. Align with `../slides/references/brand_research.md` → "Failures".
-
-Follow these steps rather than improvising the order — these are billable passthrough calls.
 
 ## Best Practices
 
