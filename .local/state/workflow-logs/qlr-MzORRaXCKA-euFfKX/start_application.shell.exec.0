@@ -1,0 +1,17 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0KMongoDB connected successfully
+3:07:43 PM [ws] WebSocket server ready on path /stream
+3:07:43 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[2m3:07:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
+3:07:44 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+3:07:49 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://localhost:5000 host=localhost:5000
+3:07:49 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+3:07:49 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev host=fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev
+3:07:49 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+3:07:50 PM [express] GET /api/auth/me 401 in 9ms :: {"message":"Unauthorized","redirectTo":"/login"}
+3:07:52 PM [ws] [upgrade] socket error on /vite-hmr: read ECONNRESET
+3:07:58 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}

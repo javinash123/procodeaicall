@@ -1,0 +1,12 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0KMongoDB connected successfully
+3:22:03 PM [ws] WebSocket server ready on path /stream
+3:22:03 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+3:22:04 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+3:22:11 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev host=fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev
+3:22:11 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+3:22:35 PM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}

@@ -10,9 +10,18 @@
  * `TransportFactory`. It performs no business logic of its own.
  *
  * ## mediaSession
- * `mediaSession` in the returned `SessionContext` is always `null` at
- * construction time. The engine creates per-call `MediaSession` objects
- * internally when a WebSocket connection is accepted by the gateway.
+ * A `MediaSession` is created in the CREATED (not yet started) state during
+ * `createSession()` so that `SessionContext.mediaSession` is never null.
+ * Per-call stubs are wired for `ConversationRuntime`, `IConversationOrchestrator`,
+ * and `IRealtimeProviderSession`; real implementations replace them when
+ * `mediaSession.initialize()` and `mediaSession.start()` are called by the
+ * integration layer.
+ *
+ * ## TransportGateway (single instance)
+ * The gateway is created once by `SessionFactory` and injected into
+ * `VoiceEngineFactory` via `builderOptions.gateway`. This guarantees that
+ * `SessionContext.transportGateway` and the gateway used internally by
+ * `VoiceEngine` are the SAME object — not two separate instances.
  *
  * ## Rules
  * - No OpenAI imports.
@@ -24,13 +33,24 @@
  */
 
 import type { ILogger } from '../logger/index.js';
+import type { IMetricsCollector } from '../metrics/index.js';
 import type { IVoiceEngineFactory } from '../engine/VoiceEngineFactory.js';
 import type { ITransportFactory } from '../transport/TransportFactory.js';
 import type { BootstrapOptions } from '../bootstrap/Bootstrap.js';
 import type { SessionId, CallSid, CampaignId, Nullable } from '../types/index.js';
+import type { ConversationRuntime } from '../runtime/ConversationRuntime.js';
+import type {
+  IConversationOrchestrator,
+  IRealtimeProviderSession,
+} from '../orchestrator/ConversationOrchestrator.js';
+import type { IClock } from '../runtime/RuntimeContext.js';
 import { createVoiceEngineRuntime } from '../bootstrap/Bootstrap.js';
 import { createSessionContext } from './SessionContext.js';
 import type { SessionContext, SessionMetadata } from './SessionContext.js';
+import { MediaSessionFactory } from '../media/MediaSessionFactory.js';
+import { createAudioEngine } from '../audio-engine/AudioEngineFactory.js';
+import { OrchestratorState } from '../orchestrator/ConversationOrchestrator.js';
+import { RuntimeState } from '../runtime/RuntimeState.js';
 
 // ─── Session ID ───────────────────────────────────────────────────────────────
 
@@ -88,12 +108,12 @@ export interface CreateSessionParams {
  */
 export interface ISessionFactory {
   /**
-   * Constructs a new `SessionContext` containing a fully wired `VoiceEngine`
-   * and `TransportGateway`.
+   * Constructs a new `SessionContext` containing a fully wired `VoiceEngine`,
+   * a `MediaSession` in the CREATED state, and a `TransportGateway`.
    *
    * The returned context is frozen and ready to be registered by
-   * `V2SessionCoordinator`. The `mediaSession` field is always `null`
-   * until a WebSocket connection is established.
+   * `V2SessionCoordinator`. The `mediaSession` field is NEVER null — a
+   * pre-wired session in the CREATED state is always present.
    *
    * @param params - Session creation parameters.
    * @returns A frozen `SessionContext`.
@@ -102,6 +122,118 @@ export interface ISessionFactory {
    * @throws {Error} if engine construction fails.
    */
   createSession(params: CreateSessionParams): Promise<Readonly<SessionContext>>;
+}
+
+// ─── Stub Helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Returns a no-op `ConversationRuntime` stub.
+ *
+ * Used to satisfy `MediaSessionContext` at graph-construction time.
+ * Real per-call implementations replace this when `mediaSession.initialize()`
+ * is called by the integration layer.
+ */
+function buildRuntimeStub(): ConversationRuntime {
+  const noop = () => Promise.resolve();
+  return {
+    initialize:     noop,
+    connect:        noop,
+    startListening: noop,
+    startThinking:  (_transcript: string) => Promise.resolve(),
+    startSpeaking:  (_responseText: string) => Promise.resolve(),
+    interrupt:      noop,
+    complete:       (_reason: string) => Promise.resolve(),
+    close:          noop,
+    destroy:        () => { /* no-op */ },
+    getState:       () => RuntimeState.CREATED,
+    getSession:     () => { throw new Error('SessionFactory stub: getSession() not implemented'); },
+    getContext:     () => { throw new Error('SessionFactory stub: getContext() not implemented'); },
+  };
+}
+
+/**
+ * Returns a no-op `IConversationOrchestrator` stub.
+ *
+ * Used to satisfy `MediaSessionContext` at graph-construction time.
+ */
+function buildOrchestratorStub(): IConversationOrchestrator {
+  const noop = () => Promise.resolve();
+  return {
+    state:            OrchestratorState.IDLE,
+    start:            noop,
+    stop:             (_reason?: string) => Promise.resolve(),
+    handleAudioChunk: (_base64Chunk: string, _now: number) => { /* no-op */ },
+    interrupt:        (_now: number) => Promise.resolve(),
+    getContext:       () => { throw new Error('SessionFactory stub: getContext() not implemented'); },
+    on:               (_type: string, _handler: (...args: unknown[]) => void) => { /* no-op */ },
+    off:              (_type: string, _handler: (...args: unknown[]) => void) => { /* no-op */ },
+    destroy:          () => { /* no-op */ },
+  } as unknown as IConversationOrchestrator;
+}
+
+/**
+ * Returns a no-op `IRealtimeProviderSession` stub.
+ *
+ * Used to satisfy `MediaSessionContext` at graph-construction time.
+ * No OpenAI SDK code is referenced here.
+ */
+function buildProviderSessionStub(): IRealtimeProviderSession {
+  const noop = () => Promise.resolve();
+  return {
+    isConnected:        false,
+    connect:            noop,
+    sendAudio:          (_base64Chunk: string) => { /* no-op */ },
+    sendText:           (_text: string) => Promise.resolve(),
+    interrupt:          noop,
+    updateInstructions: (_instructions: string) => Promise.resolve(),
+    close:              noop,
+    on:                 (_type: string, _handler: (event: unknown) => void) => { /* no-op */ },
+    off:                (_type: string, _handler: (event: unknown) => void) => { /* no-op */ },
+  };
+}
+
+/**
+ * Resolves a logger from the runtime's DI container.
+ * Falls back to a minimal console logger if no logger is registered.
+ */
+function resolveLogger(runtime: ReturnType<typeof createVoiceEngineRuntime>): ILogger {
+  try {
+    return runtime.resolver.logger();
+  } catch {
+    const log: ILogger = {
+      debug: (msg, ctx) => console.debug('[SessionFactory]', msg, ctx ?? ''),
+      info:  (msg, ctx) => console.info('[SessionFactory]',  msg, ctx ?? ''),
+      warn:  (msg, ctx) => console.warn('[SessionFactory]',  msg, ctx ?? ''),
+      error: (msg, ctx) => console.error('[SessionFactory]', msg, ctx ?? ''),
+      child: () => log,
+    };
+    return log;
+  }
+}
+
+/**
+ * Resolves a metrics collector from the runtime's DI container.
+ * Falls back to a no-op collector if none is registered.
+ */
+function resolveMetrics(runtime: ReturnType<typeof createVoiceEngineRuntime>): IMetricsCollector {
+  try {
+    return runtime.resolver.metrics();
+  } catch {
+    const noopTimer = () => () => { /* no-op */ };
+    const noopHistogram = () => ({ observe: () => { /* no-op */ }, startTimer: noopTimer });
+    const noopCounter   = () => ({ increment: () => { /* no-op */ }, reset: () => { /* no-op */ } });
+    const noopGauge     = () => ({
+      set:       () => { /* no-op */ },
+      increment: () => { /* no-op */ },
+      decrement: () => { /* no-op */ },
+    });
+    return {
+      histogram: noopHistogram,
+      counter:   noopCounter,
+      gauge:     noopGauge,
+      emit:      () => { /* no-op */ },
+    };
+  }
 }
 
 // ─── Implementation ───────────────────────────────────────────────────────────
@@ -153,24 +285,58 @@ export class SessionFactory implements ISessionFactory {
     const bootstrapOptions = params.bootstrapOptions ?? {};
     const runtime = createVoiceEngineRuntime(bootstrapOptions);
 
-    // ── Step 2: Create the VoiceEngine ────────────────────────────────────────
+    // ── Step 2: Create the TransportGateway ───────────────────────────────────
+    //
+    // The gateway is created HERE (once) and injected into the VoiceEngine via
+    // builderOptions.gateway. This guarantees SessionContext.transportGateway
+    // and VoiceEngine's internal gateway are the SAME object — not two
+    // separate instances.
+    const transportGateway = this._transportFactory.createGateway();
+
+    // ── Step 3: Create the VoiceEngine ────────────────────────────────────────
     //
     // autoStart: false — the caller (V2SessionCoordinator) is responsible for
     // calling initialize() and start() at the appropriate time. This keeps the
     // factory non-blocking and avoids premature network I/O during construction.
+    //
+    // builderOptions.gateway — injects the gateway we just created so both the
+    // engine and the SessionContext share a single TransportGateway instance.
     const voiceEngine = await this._engineFactory.create({
       bootstrapOptions,
       autoStart: false,
+      builderOptions: { gateway: transportGateway },
     });
 
-    // ── Step 3: Create the TransportGateway ───────────────────────────────────
+    // ── Step 4: Create the MediaSession (CREATED state) ───────────────────────
     //
-    // The gateway is created without any adapters registered. The integration
-    // layer (e.g. ExotelAdapter) registers itself before the gateway starts
-    // accepting connections.
-    const transportGateway = this._transportFactory.createGateway();
+    // A MediaSession is constructed now — in the CREATED (not yet started)
+    // state — so SessionContext.mediaSession is never null. The per-call
+    // deps that require campaign data or live provider connections (runtime,
+    // orchestrator, providerSession) are wired as no-op stubs here. Real
+    // implementations are substituted by the integration layer when it calls
+    // mediaSession.initialize() and mediaSession.start().
+    //
+    // VoiceEngine.start() is NOT called here. No realtime connections are opened.
+    const logger  = resolveLogger(runtime);
+    const metrics = resolveMetrics(runtime);
+    const clock: IClock = { now: () => Date.now() };
 
-    // ── Step 4: Assemble and freeze the SessionContext ────────────────────────
+    const mediaSessionFactory = new MediaSessionFactory();
+    const mediaSession = mediaSessionFactory.createMediaSession({
+      runtime:         buildRuntimeStub(),
+      audioEngine:     createAudioEngine(),
+      orchestrator:    buildOrchestratorStub(),
+      providerSession: buildProviderSessionStub(),
+      config:          runtime.config,
+      logger:          logger.child({ component: 'MediaSession', sessionId }),
+      metrics,
+      clock,
+      sessionId,
+      callSid:         params.callSid ?? '',
+      campaignId,
+    });
+
+    // ── Step 5: Assemble and freeze the SessionContext ────────────────────────
     const context = createSessionContext({
       sessionId,
       callSid:          params.callSid ?? null,
@@ -180,15 +346,16 @@ export class SessionFactory implements ISessionFactory {
       runtime,
       voiceEngine,
       transportGateway,
-      mediaSession:     null,
+      mediaSession,
       metadata:         params.metadata ?? {},
     });
 
     this._log.info('SessionContext created', {
       sessionId,
       campaignId,
-      callSid: context.callSid,
-      phone:   context.phone,
+      callSid:      context.callSid,
+      phone:        context.phone,
+      mediaSession: context.mediaSession !== null ? 'present' : 'null',
     });
 
     return context;

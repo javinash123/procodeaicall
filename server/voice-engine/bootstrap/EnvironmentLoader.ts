@@ -117,6 +117,8 @@ const RawEnvSchema = z.object({
     .transform((v) => (v ? parseInt(v, 10) : 5_000))
     .pipe(z.number().int().positive()),
 
+  OPENAI_API_KEY: z.string().optional(),
+
   LLM_PROVIDER: z.string().default('openai'),
   LLM_API_KEY: z.string().default(''),
   LLM_MODEL: z.string().default('gpt-4o'),
@@ -291,7 +293,7 @@ export function loadEnvironment(): LoadedEnvironment {
       }),
       llm: Object.freeze({
         provider: e.LLM_PROVIDER,
-        apiKey: e.LLM_API_KEY,
+        apiKey: e.LLM_API_KEY || e.OPENAI_API_KEY || '',
         model: e.LLM_MODEL,
         maxTokens: e.LLM_MAX_TOKENS,
         temperature: e.LLM_TEMPERATURE,
@@ -299,7 +301,7 @@ export function loadEnvironment(): LoadedEnvironment {
       }),
       tts: Object.freeze({
         provider: e.TTS_PROVIDER,
-        apiKey: e.TTS_API_KEY,
+        apiKey: e.TTS_API_KEY || e.OPENAI_API_KEY || '',
         defaultVoice: e.TTS_DEFAULT_VOICE,
         timeoutMs: e.TTS_TIMEOUT_MS,
       }),

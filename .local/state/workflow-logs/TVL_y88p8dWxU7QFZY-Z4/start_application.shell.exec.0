@@ -1,0 +1,24 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'openai' imported from /home/runner/workspace/server/openaiService.ts
+[90m    at packageResolve (node:internal/modules/esm/resolve:873:9)[39m
+[90m    at moduleResolve (node:internal/modules/esm/resolve:946:18)[39m
+[90m    at defaultResolve (node:internal/modules/esm/resolve:1188:11)[39m
+[90m    at nextResolve (node:internal/modules/esm/hooks:864:28)[39m
+    at resolveBase [90m(file:///home/runner/workspace/[39mnode_modules/[4mtsx[24m/dist/esm/index.mjs?1782832036827:2:3744[90m)[39m
+    at resolveDirectory [90m(file:///home/runner/workspace/[39mnode_modules/[4mtsx[24m/dist/esm/index.mjs?1782832036827:2:4243[90m)[39m
+    at resolveTsPaths [90m(file:///home/runner/workspace/[39mnode_modules/[4mtsx[24m/dist/esm/index.mjs?1782832036827:2:4984[90m)[39m
+    at async resolve [90m(file:///home/runner/workspace/[39mnode_modules/[4mtsx[24m/dist/esm/index.mjs?1782832036827:2:5355[90m)[39m
+[90m    at async nextResolve (node:internal/modules/esm/hooks:864:22)[39m
+[90m    at async Hooks.resolve (node:internal/modules/esm/hooks:306:24)[39m {
+  code: [32m'ERR_MODULE_NOT_FOUND'[39m
+}
+
+Node.js v20.20.0
+[1G[0K⠙[1G[0K
