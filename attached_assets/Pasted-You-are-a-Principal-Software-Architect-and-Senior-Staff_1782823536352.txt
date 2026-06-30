@@ -1,0 +1,235 @@
+You are a Principal Software Architect and Senior Staff Engineer.
+
+You are implementing NIJVOX Voice Engine V2.
+
+The architecture is COMPLETELY FROZEN.
+
+Your task is ONLY to assemble the already implemented modules.
+
+You are NOT allowed to redesign anything.
+
+========================================================
+
+GOAL
+
+Implement the Voice Engine Runtime Assembly.
+
+This module wires together all previously built modules.
+
+It contains NO business logic.
+
+It contains NO Exotel protocol logic.
+
+It contains NO OpenAI-specific logic.
+
+It contains ONLY dependency wiring and lifecycle management.
+
+========================================================
+
+DO NOT TOUCH
+
+Foundation
+
+Runtime
+
+Bootstrap
+
+Audio Engine
+
+Conversation Orchestrator
+
+Media Session
+
+Transport Gateway
+
+OpenAI Provider
+
+Exotel Adapter
+
+Existing SaaS
+
+Voice Engine V1
+
+========================================================
+
+CREATE ONLY
+
+server/voice-engine/engine/
+
+VoiceEngine.ts
+
+VoiceEngineLifecycle.ts
+
+VoiceEngineBuilder.ts
+
+VoiceEngineEvents.ts
+
+VoiceEngineHealth.ts
+
+VoiceEngineFactory.ts
+
+index.ts
+
+========================================================
+
+RESPONSIBILITIES
+
+VoiceEngine
+
+Owns
+
+Bootstrap
+
+ProviderResolver
+
+MediaSessionFactory
+
+TransportGateway
+
+ProviderFactory
+
+HealthRegistry
+
+Responsibilities
+
+initialize()
+
+start()
+
+stop()
+
+shutdown()
+
+destroy()
+
+========================================================
+
+VoiceEngineBuilder
+
+Assemble the dependency graph.
+
+No business logic.
+
+No transport logic.
+
+No provider logic.
+
+========================================================
+
+VoiceEngineLifecycle
+
+Implement executable lifecycle.
+
+INITIALIZING
+
+READY
+
+RUNNING
+
+STOPPING
+
+STOPPED
+
+FAILED
+
+DESTROYED
+
+========================================================
+
+VoiceEngineHealth
+
+Aggregate
+
+Transport
+
+Provider
+
+Media
+
+Runtime
+
+Health
+
+No HTTP routes.
+
+========================================================
+
+VoiceEngineEvents
+
+Strongly typed events.
+
+EngineInitializing
+
+EngineReady
+
+EngineStarted
+
+EngineStopped
+
+EngineDestroyed
+
+EngineFailed
+
+========================================================
+
+RULES
+
+VoiceEngine never imports OpenAI SDK.
+
+VoiceEngine never imports Exotel protocol.
+
+VoiceEngine never imports Audio Engine internals.
+
+VoiceEngine communicates ONLY through public interfaces.
+
+Dependency Injection only.
+
+No globals.
+
+No static singleton.
+
+No process.env.
+
+========================================================
+
+QUALITY
+
+Strict TypeScript.
+
+No any.
+
+Professional JSDoc.
+
+Immutable wherever possible.
+
+========================================================
+
+SELF CHECK
+
+Verify
+
+✓ Compiles
+
+✓ Existing modules unchanged
+
+✓ Dependency graph valid
+
+✓ No provider leakage
+
+✓ No transport leakage
+
+✓ No OpenAI SDK imports
+
+✓ No Exotel protocol imports
+
+Output
+
+Files created
+
+Compilation status
+
+Dependency graph
+
+Lifecycle diagram
+
+STOP.

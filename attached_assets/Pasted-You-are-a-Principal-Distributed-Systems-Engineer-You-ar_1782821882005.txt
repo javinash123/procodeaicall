@@ -1,0 +1,341 @@
+You are a Principal Distributed Systems Engineer.
+
+You are implementing NIJVOX Voice Engine V2.
+
+The architecture is FROZEN.
+
+DO NOT redesign anything.
+
+Read every Voice Engine V2 module before writing code.
+
+======================================================
+GOAL
+======================================================
+
+Implement the Transport Layer AND the Exotel Adapter.
+
+This is the ONLY module allowed to understand Exotel's WebSocket protocol.
+
+Every other module must remain completely unaware of Exotel.
+
+======================================================
+VERY IMPORTANT
+======================================================
+
+The Transport Layer MUST NEVER call OpenAI directly.
+
+The Transport Layer MUST NEVER call the Audio Engine directly.
+
+The Transport Layer MUST NEVER call the Conversation Orchestrator directly.
+
+The Transport Layer MUST communicate ONLY with MediaSession.
+
+MediaSession becomes the ONLY owner of the call lifecycle.
+
+======================================================
+DO NOT TOUCH
+======================================================
+
+Foundation
+
+Runtime
+
+Bootstrap
+
+Audio Engine
+
+Conversation Orchestrator
+
+OpenAI Provider
+
+Media Session
+
+Existing SaaS
+
+Voice Engine V1
+
+======================================================
+CREATE ONLY
+======================================================
+
+server/voice-engine/transport/
+
+TransportGateway.ts
+
+TransportConnection.ts
+
+TransportSession.ts
+
+TransportEvents.ts
+
+TransportFactory.ts
+
+index.ts
+
+--------------------------------------------
+
+server/voice-engine/providers/exotel/
+
+ExotelAdapter.ts
+
+ExotelProtocol.ts
+
+ExotelMessages.ts
+
+ExotelSession.ts
+
+ExotelFactory.ts
+
+index.ts
+
+======================================================
+TRANSPORT RESPONSIBILITIES
+======================================================
+
+Implement executable production code.
+
+TransportGateway owns
+
+TransportSession
+
+TransportConnection
+
+Adapter registration
+
+Connection lifecycle
+
+Reconnect policy
+
+Shutdown
+
+TransportGateway must expose
+
+registerAdapter()
+
+connect()
+
+disconnect()
+
+send()
+
+close()
+
+destroy()
+
+No provider logic.
+
+======================================================
+TRANSPORT SESSION
+======================================================
+
+One TransportSession represents
+
+ONE phone call.
+
+Responsibilities
+
+connection state
+
+sequence tracking
+
+heartbeat
+
+stream id
+
+transport metadata
+
+NO BUSINESS LOGIC
+
+======================================================
+EXOTEL ADAPTER
+======================================================
+
+This module understands ONLY
+
+Exotel protocol.
+
+Responsibilities
+
+Decode incoming Exotel messages.
+
+Encode outgoing Exotel messages.
+
+Map Exotel protocol
+
+↓
+
+Generic Transport Events.
+
+Map Generic Audio
+
+↓
+
+Exotel protocol.
+
+NO AI LOGIC.
+
+======================================================
+EXOTEL MESSAGE SUPPORT
+======================================================
+
+Support ALL message types.
+
+connected
+
+start
+
+media
+
+mark
+
+clear
+
+stop
+
+dtmf
+
+heartbeat
+
+unknown
+
+Unknown messages must never crash the session.
+
+======================================================
+IMPORTANT
+======================================================
+
+Incoming Media
+
+↓
+
+AudioChunk
+
+↓
+
+MediaSession.ingestInbound()
+
+--------------------------------------
+
+Outgoing Audio
+
+MediaSession
+
+↓
+
+AudioChunk
+
+↓
+
+Exotel Media
+
+======================================================
+ABSOLUTE RULES
+======================================================
+
+Transport MUST know NOTHING about
+
+OpenAI
+
+Conversation Orchestrator
+
+Knowledge Engine
+
+CRM
+
+Campaigns
+
+MongoDB
+
+HTTP Routes
+
+Business Logic
+
+======================================================
+WEBSOCKET RULES
+======================================================
+
+Implement
+
+connection lifecycle
+
+ping/pong
+
+heartbeat
+
+reconnect
+
+graceful close
+
+backpressure detection
+
+send queue
+
+max queue size
+
+======================================================
+QUALITY
+======================================================
+
+Strict TypeScript
+
+No any
+
+No TODO
+
+No placeholder
+
+Professional JSDoc
+
+Fail-fast
+
+Dependency Injection only
+
+======================================================
+PERFORMANCE
+======================================================
+
+Design for
+
+1000 concurrent calls.
+
+Avoid blocking operations.
+
+Avoid unnecessary object allocation.
+
+No global mutable state.
+
+======================================================
+SELF CHECK
+======================================================
+
+Before stopping verify
+
+✓ Compiles
+
+✓ No existing modules modified
+
+✓ No OpenAI imports
+
+✓ No Conversation Orchestrator imports
+
+✓ No Audio Engine imports
+
+✓ Only MediaSession dependency
+
+✓ Exotel isolated completely
+
+✓ WebSocket lifecycle implemented
+
+✓ Unknown protocol messages handled safely
+
+Finally output
+
+Files created
+
+Compilation status
+
+Architecture compliance
+
+Call flow diagram
+
+STOP

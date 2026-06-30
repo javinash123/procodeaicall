@@ -1,0 +1,283 @@
+You are a Senior Principal Software Engineer.
+
+You are implementing NIJVOX Voice Engine V2.
+
+Architecture is frozen.
+
+Read every existing Voice Engine module before writing code.
+
+==========================================================
+
+GOAL
+
+Implement ONLY the Media Session.
+
+The Media Session coordinates ONE live phone call.
+
+It owns the Conversation Runtime, Audio Engine, Conversation Orchestrator and Provider Session.
+
+It contains NO transport logic.
+
+It contains NO Exotel logic.
+
+It contains NO OpenAI logic.
+
+It contains NO business logic.
+
+==========================================================
+
+DO NOT TOUCH
+
+Foundation
+
+Runtime
+
+Bootstrap
+
+Audio Engine
+
+Conversation Orchestrator
+
+OpenAI Provider
+
+Existing SaaS
+
+Voice Engine V1
+
+==========================================================
+
+CREATE ONLY
+
+server/voice-engine/media/
+
+MediaSession.ts
+
+MediaSessionState.ts
+
+MediaSessionContext.ts
+
+MediaSessionEvents.ts
+
+MediaLifecycle.ts
+
+MediaCoordinator.ts
+
+MediaSessionFactory.ts
+
+index.ts
+
+==========================================================
+
+IMPLEMENT
+
+1.
+
+MediaSessionState
+
+Executable enum.
+
+CREATED
+
+INITIALIZING
+
+READY
+
+ACTIVE
+
+PAUSED
+
+INTERRUPTED
+
+COMPLETING
+
+COMPLETED
+
+FAILED
+
+DESTROYED
+
+----------------------------------------------------------
+
+2.
+
+MediaSession
+
+Executable production class.
+
+Responsibilities
+
+Own
+
+ConversationRuntime
+
+ConversationOrchestrator
+
+AudioEngine
+
+RealtimeProviderSession
+
+RuntimeContext
+
+No transport.
+
+----------------------------------------------------------
+
+3.
+
+MediaCoordinator
+
+Coordinate ONLY:
+
+Inbound audio
+
+Outbound audio
+
+Interruptions
+
+Session lifecycle
+
+Turn lifecycle
+
+Shutdown
+
+No transport.
+
+----------------------------------------------------------
+
+4.
+
+MediaLifecycle
+
+Pure lifecycle decisions.
+
+No timers.
+
+No network.
+
+No provider.
+
+----------------------------------------------------------
+
+5.
+
+MediaSessionContext
+
+Immutable references
+
+Runtime
+
+Audio Engine
+
+Orchestrator
+
+Realtime Session
+
+Configuration
+
+Logger
+
+Metrics
+
+Clock
+
+----------------------------------------------------------
+
+6.
+
+MediaSessionEvents
+
+Strongly typed.
+
+MediaCreated
+
+MediaReady
+
+MediaStarted
+
+MediaPaused
+
+MediaInterrupted
+
+MediaCompleted
+
+MediaDestroyed
+
+MediaError
+
+----------------------------------------------------------
+
+7.
+
+Factory
+
+Dependency injected.
+
+createMediaSession()
+
+==========================================================
+
+RULES
+
+No OpenAI imports.
+
+No Exotel imports.
+
+No WebSocket.
+
+No HTTP.
+
+No process.env.
+
+No business logic.
+
+No provider logic.
+
+No transport logic.
+
+Everything via dependency injection.
+
+==========================================================
+
+QUALITY
+
+Strict TypeScript
+
+No any
+
+No TODO
+
+No placeholders
+
+Immutable where possible
+
+Professional JSDoc
+
+==========================================================
+
+SELF CHECK
+
+Verify
+
+✓ Compiles
+
+✓ No existing modules modified
+
+✓ No transport
+
+✓ No OpenAI
+
+✓ No Exotel
+
+✓ No provider logic
+
+Output
+
+Files created
+
+Compilation
+
+Architecture compliance
+
+Public API
+
+STOP
