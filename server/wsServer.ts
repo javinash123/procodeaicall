@@ -8,6 +8,7 @@ import { textToSpeech } from "./ttsService";
 import { handleExotelStream } from "./exotelStreamHandler";
 import { getV2Coordinator } from "./voice-engine/migration/CoordinatorBootstrap";
 import type { SessionContext } from "./voice-engine/migration/SessionContext";
+import { activateV2Session } from "./voice-engine/migration/V2CallActivator";
 
 // ─── V2 Rollback Flag ─────────────────────────────────────────────────────────
 //
@@ -285,6 +286,15 @@ export function setupWebSocketServer(httpServer: Server): void {
           clientIp
         );
         log(`[V2 ROUTER] Socket owned by TransportGateway — sessionId=${ctx.sessionId}`, "ws");
+
+        // ── Activate the V2 pipeline ──────────────────────────────────────────
+        // Opens a real OpenAI Realtime session, assembles RuntimeIntegration,
+        // starts the audio pipeline, and attaches TurnDiagnosticsCollector.
+        // Cleanup (disconnect + JSON summary) fires automatically on transport close.
+        void activateV2Session(ctx).catch((err: Error) => {
+          log(`[V2 ROUTER] activateV2Session failed — sessionId=${ctx.sessionId} err=${err.message}`, "ws");
+        });
+
         for (let i = 0; i < buffered.length; i++) {
           const msg = buffered[i];
           process.nextTick(() => ws.emit("message", msg.data, msg.isBinary));

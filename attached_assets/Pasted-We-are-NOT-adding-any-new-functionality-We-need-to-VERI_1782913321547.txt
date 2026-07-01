@@ -1,0 +1,242 @@
+We are NOT adding any new functionality.
+
+We need to VERIFY that TurnDiagnosticsCollector is attached to the EXACT OpenAIRealtimeSession instance that is used during a real production Exotel call.
+
+The previous implementation compiles successfully but no [TURN-DIAGNOSTICS] logs appear during live calls.
+
+DO NOT assume the collector is attached correctly.
+
+Instead perform a complete runtime trace.
+
+====================================================
+TASK 1 — Trace the execution path
+====================================================
+
+Trace the exact execution flow for one live call.
+
+Start from:
+
+GET /test-call
+
+Follow every object until OpenAIRealtimeSession.
+
+Show this chain:
+
+/test-call
+↓
+V2SessionCoordinator.createSession()
+↓
+SessionFactory.createSession()
+↓
+VoiceEngineFactory.create()
+↓
+VoiceEngine
+↓
+MediaSession
+↓
+RealtimeBridge
+↓
+OpenAIRealtimeProvider.openSession()
+↓
+OpenAIRealtimeSession.connect()
+
+For every step print:
+
+- object type
+- object id (or generated session id)
+- whether a NEW object was created
+- whether an existing object was reused
+
+====================================================
+TASK 2 — Verify session identity
+====================================================
+
+There must be ONE and ONLY ONE OpenAIRealtimeSession for each call.
+
+Print logs like:
+
+[SESSION TRACE]
+
+Session ID
+OpenAI Session Object
+RealtimeBridge Session Object
+Diagnostics Attached To
+
+Verify they are the SAME INSTANCE.
+
+If any duplicate OpenAIRealtimeSession exists,
+identify where it is created.
+
+====================================================
+TASK 3 — Verify diagnostics attachment
+====================================================
+
+Print logs before and after:
+
+new TurnDiagnosticsCollector()
+
+collector.attach()
+
+collector.detach()
+
+Example:
+
+[TURN-DIAGNOSTICS]
+Collector created
+
+[TURN-DIAGNOSTICS]
+Collector attached
+
+[TURN-DIAGNOSTICS]
+Collector detached
+
+====================================================
+TASK 4 — Verify event subscriptions
+====================================================
+
+Immediately after attach(),
+print every event registered.
+
+Expected events include:
+
+realtime.audio_received
+
+realtime.transcript_completed
+
+realtime.response_completed
+
+realtime.error
+
+realtime.speech_started
+
+realtime.speech_stopped
+
+Print:
+
+Subscribed:
+✓ realtime.audio_received
+
+etc.
+
+====================================================
+TASK 5 — Verify events actually fire
+====================================================
+
+During ONE REAL CALL
+print every event received.
+
+Example
+
+[TURN-DIAGNOSTICS]
+
+EVENT
+realtime.audio_received
+
+EVENT
+realtime.transcript_completed
+
+EVENT
+realtime.response_completed
+
+If ZERO events arrive,
+trace why.
+
+====================================================
+TASK 6 — Persist diagnostics automatically
+====================================================
+
+After every completed call create
+
+logs/call-diagnostics/
+
+Inside create
+
+call_<timestamp>.json
+
+Example
+
+{
+  "sessionId":"",
+  "callSid":"",
+  "turns":[
+    {
+      "turn":1,
+      "stage":"Greeting",
+      "sttLatencyMs":182,
+      "ttftMs":412,
+      "responseDurationMs":2890,
+      "totalLatencyMs":3484,
+      "tokens":{},
+      "transcript":"..."
+    }
+  ]
+}
+
+No manual logging should be required.
+
+====================================================
+TASK 7 — Fail if diagnostics are inactive
+====================================================
+
+If attach() is called
+but no realtime events are received,
+
+DO NOT say "integration complete".
+
+Instead:
+
+Explain exactly why.
+
+Show which object owns the live websocket.
+
+Show which object owns the collector.
+
+Show why they differ.
+
+====================================================
+STRICT RULES
+====================================================
+
+Do NOT modify
+
+Conversation Policy
+
+Conversation State
+
+Audio Engine
+
+Media Engine
+
+Transport
+
+OpenAI prompts
+
+LLM behaviour
+
+Conversation logic
+
+Do NOT add features.
+
+Only verify and repair diagnostics wiring.
+
+====================================================
+DELIVERABLE
+====================================================
+
+Return:
+
+1. Object graph
+
+2. Session graph
+
+3. Event graph
+
+4. Where diagnostics were actually attached
+
+5. Whether the collector received events
+
+6. Whether JSON files are now written
+
+7. Sample console output from one successful live call
+
+Do not say "completed" unless a REAL call produces diagnostics.

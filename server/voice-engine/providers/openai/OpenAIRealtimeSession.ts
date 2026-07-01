@@ -47,6 +47,7 @@ import type {
   RealtimeEventHandler,
 } from './OpenAIRealtimeEvents.js';
 import { ProviderError, ErrorCode } from '../../errors/index.js';
+import type { ConversationSessionContext } from './ConversationSessionContext.js';
 
 type SessionState = 'idle' | 'connecting' | 'connected' | 'closing' | 'closed';
 
@@ -58,6 +59,12 @@ export interface IOpenAIRealtimeSession {
   readonly isConnected: boolean;
   /** The OpenAI-assigned session ID, available after `connect()` resolves. */
   readonly sessionId: string | null;
+  /**
+   * The live conversation session context (Policy + State engines), or null
+   * when the session was opened without a `policyContext`.
+   * Use this to dispatch signals (objections, pain points, etc.) at any time.
+   */
+  readonly conversationContext: ConversationSessionContext | null;
 
   connect(): Promise<void>;
   sendAudio(base64Chunk: string): void;
@@ -87,6 +94,12 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
   private readonly _metrics: IMetricsCollector;
   private readonly _initialInstructions: string;
 
+  /** Optional conversation intelligence context wired at construction time. */
+  private readonly _conversationContext: ConversationSessionContext | null;
+
+  /** Rolling buffer of the last completed agent transcript (for question detection). */
+  private _lastAgentTranscript: string | null = null;
+
   private _ws: WebSocket | null = null;
   private _state: SessionState = 'idle';
   private _sessionId: string | null = null;
@@ -97,10 +110,17 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     config: OpenAIRealtimeConfig,
     initialInstructions: string,
     logger: ILogger,
-    metrics: IMetricsCollector
+    metrics: IMetricsCollector,
+    conversationContext?: ConversationSessionContext
   ) {
     this._config = config;
-    this._initialInstructions = initialInstructions;
+    this._conversationContext = conversationContext ?? null;
+    // If a conversation context is provided, it generates the full initial
+    // instruction (policy + live state section).  Otherwise fall back to the
+    // raw string passed by the caller.
+    this._initialInstructions = conversationContext
+      ? conversationContext.buildInitialInstruction()
+      : initialInstructions;
     this._logger = logger.child({ component: 'OpenAIRealtimeSession' });
     this._metrics = metrics;
   }
@@ -111,6 +131,10 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
   get sessionId(): string | null {
     return this._sessionId;
+  }
+
+  get conversationContext(): ConversationSessionContext | null {
+    return this._conversationContext;
   }
 
   /**
@@ -366,6 +390,8 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         break;
 
       case 'response.audio_transcript.done':
+        // Capture completed agent transcript for question-detection in onAgentTurnCompleted()
+        this._lastAgentTranscript = event.transcript ?? null;
         this._emit({ type: 'realtime.transcript_completed', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, transcript: event.transcript });
         break;
 
@@ -373,18 +399,42 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         this._emit({ type: 'realtime.response_delta', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, delta: event.delta });
         break;
 
-      case 'response.done':
+      case 'response.done': {
+        const responseStatus = event.response.status as 'completed' | 'cancelled' | 'failed' | 'incomplete';
         this._emit({
           type: 'realtime.response_completed',
           timestamp: ts,
           eventId: event.event_id,
           responseId: event.response.id,
-          status: event.response.status as 'completed' | 'cancelled' | 'failed' | 'incomplete',
+          status: responseStatus,
           totalTokens: event.response.usage?.total_tokens ?? 0,
           inputTokens: event.response.usage?.input_tokens ?? 0,
           outputTokens: event.response.usage?.output_tokens ?? 0,
         });
+
+        // ── Conversation State: record agent turn & dynamically update instructions ──
+        // Only process completed (non-cancelled, non-failed) turns so interruptions
+        // don't count as full agent turns.
+        if (this._conversationContext && responseStatus === 'completed') {
+          const result = this._conversationContext.onAgentTurnCompleted(
+            this._lastAgentTranscript ?? undefined
+          );
+          this._lastAgentTranscript = null;
+
+          if (result.stateChanged && result.updatedInstruction) {
+            this._logger.debug(
+              'ConversationState changed — updating OpenAI session instructions',
+              { stage: result.currentStageLabel }
+            );
+            // Hot-update instructions without reconnecting
+            this._sendEvent({
+              type: 'session.update',
+              session: { instructions: result.updatedInstruction },
+            });
+          }
+        }
         break;
+      }
 
       case 'response.function_call_arguments.done':
         this._emit({ type: 'realtime.tool_call', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, callId: event.call_id, functionName: event.name, arguments: event.arguments });
@@ -392,6 +442,10 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
       case 'input_audio_buffer.speech_started':
         this._emit({ type: 'realtime.speech_started', timestamp: ts, eventId: event.event_id, itemId: event.item_id, audioStartMs: event.audio_start_ms });
+        // ── Conversation State: record barge-in interruption ──────────────────
+        if (this._conversationContext) {
+          this._conversationContext.onCustomerInterrupted();
+        }
         break;
 
       case 'input_audio_buffer.speech_stopped':

@@ -38,6 +38,8 @@ import type { HealthStatus } from '../../monitoring/index.js';
 import type { ILogger } from '../../logger/index.js';
 import type { IMetricsCollector } from '../../metrics/index.js';
 import { ProviderError, ErrorCode } from '../../errors/index.js';
+import { ConversationSessionContext } from './ConversationSessionContext.js';
+import type { PolicyConversationContext } from '../../conversation/index.js';
 
 /** Supported realtime models. */
 const SUPPORTED_MODELS: readonly string[] = [
@@ -49,10 +51,48 @@ const SUPPORTED_MODELS: readonly string[] = [
 
 /**
  * Options for opening a new realtime session.
+ *
+ * ## Conversation Intelligence (recommended)
+ * Provide `policyContext` to activate the Conversation Policy Engine and
+ * Conversation State Engine.  The session will:
+ * - Generate the initial system instruction from the policy + live state.
+ * - Automatically update the instruction after every completed agent turn.
+ * - Track stage, memory, progress, and objections throughout the call.
+ *
+ * ## Legacy fallback
+ * If `policyContext` is omitted, `instructions` is used verbatim and no
+ * automatic state tracking occurs.
  */
 export interface OpenSessionOptions {
-  /** System instructions / prompt for this conversation. */
+  /**
+   * Verbatim system instructions.  Used only when `policyContext` is NOT
+   * provided.  If `policyContext` is present this field is ignored — the
+   * policy engine generates the instruction instead.
+   */
   readonly instructions: string;
+
+  /**
+   * Conversation intelligence context.  When provided, the session wires
+   * the Policy Engine + State Engine automatically.  The `instructions`
+   * field is ignored.
+   */
+  readonly policyContext?: PolicyConversationContext;
+
+  /**
+   * Optional caller memory to pre-seed the state engine before the call
+   * starts (e.g. CRM data: name, company, known intent).
+   * Only used when `policyContext` is provided.
+   */
+  readonly preloadedMemory?: {
+    customerName?: string;
+    company?: string;
+    intent?: string;
+    painPoints?: string[];
+    isDecisionMaker?: boolean;
+    budget?: string;
+    timeline?: string;
+  };
+
   /** Optional tools to make available from the start. */
   readonly tools?: readonly Tool[];
 }
@@ -240,17 +280,60 @@ export class OpenAIRealtimeProvider implements ILLMProvider, ILLMStreamingProvid
    * Opens a new OpenAI Realtime WebSocket session for a live conversation.
    * The caller must call `session.connect()` then `session.close()` when done.
    *
-   * @param options - Instructions and optional tools for the session.
+   * ## With Conversation Intelligence (recommended)
+   * Pass `options.policyContext` to activate the Policy Engine and State Engine.
+   * The session will generate its own initial instruction and update it
+   * automatically after every completed agent turn — no reconnection required.
+   *
+   * ## Signal injection after session creation
+   * ```ts
+   * const session = provider.openSession({ policyContext: ctx });
+   * await session.connect();
+   *
+   * // Inject a pain point discovered from the customer's speech
+   * session.conversationContext?.dispatchSignal(
+   *   Signals.painPointIdentified('Manual outreach is too slow')
+   * );
+   *
+   * // Inject an objection
+   * session.conversationContext?.dispatchSignal(
+   *   Signals.objectionRaised('price', "Seems expensive.")
+   * );
+   * ```
+   *
+   * @param options - Instructions (or policyContext) and optional tools.
    * @returns An unconnected `IOpenAIRealtimeSession` ready to be connected.
    */
   openSession(options: OpenSessionOptions): IOpenAIRealtimeSession {
+    // Build a ConversationSessionContext when the caller supplies a policy
+    // context.  This activates the Policy Engine + State Engine for the call.
+    let conversationContext: ConversationSessionContext | undefined;
+
+    if (options.policyContext) {
+      conversationContext = new ConversationSessionContext({
+        policyContext: options.policyContext,
+        preloadedMemory: options.preloadedMemory,
+      });
+      this._logger.debug(
+        'OpenAI Realtime session created with Conversation Intelligence',
+        {
+          agentName: options.policyContext.agentName,
+          campaignGoal: options.policyContext.campaignGoal,
+          hasCaller: !!options.policyContext.caller,
+        }
+      );
+    } else {
+      this._logger.debug('OpenAI Realtime session created (legacy mode — no policy context)');
+    }
+
     const session = new OpenAIRealtimeSession(
       this._config,
       options.instructions,
       this._logger,
-      this._metrics
+      this._metrics,
+      conversationContext
     );
-    this._logger.debug('OpenAI Realtime session instance created');
+
     return session;
   }
 

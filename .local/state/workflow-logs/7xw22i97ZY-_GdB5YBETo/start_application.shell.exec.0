@@ -1,0 +1,44 @@
+[1G[0K⠙[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K⠙[1G[0KMongoDB connected successfully
+3:25:34 PM [ws] WebSocket server ready on path /stream
+3:25:34 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+3:25:35 PM [express] serving on port 5000
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [INFO] Creating V2 session {"campaignId":"69bd5558a57e122161197eab","phone":"9893328298","callSid":null}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionFactory"}] [DEBUG] Building session dependencies {"sessionId":"v2s-1782919845483-000001","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionFactory"}] [INFO] SessionContext created {"sessionId":"v2s-1782919845483-000001","campaignId":"69bd5558a57e122161197eab","callSid":null,"phone":"9893328298","mediaSession":"present"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Session registered {"sessionId":"v2s-1782919845483-000001","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Phone index updated {"sessionId":"v2s-1782919845483-000001","phone":"9893328298"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [INFO] V2 session created {"sessionId":"v2s-1782919845483-000001","campaignId":"69bd5558a57e122161197eab"}
+[test-call] V2 session created: v2s-1782919845483-000001
+Calling number: 9893328298
+[Exotel] Updating app (1213707) stream URL → wss://3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev/exotel-stream
+[Exotel] PUT Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] POST Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] ⚠️  Could not auto-update Exotel app stream URL.
+  → Open Exotel dashboard → App Builder → app ID 1213707
+  → Set the Stream / WebSocket URL to:
+      wss://3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev/exotel-stream
+CUSTOMER = 9893328298
+CALLERID = +918047359287
+[Exotel] App URL: http://my.exotel.com/nijvox1/exoml/start_voice/1213707
+[Exotel] WSS URL : wss://3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev/exotel-stream ← update this in Exotel dashboard
+[Exotel] Call response: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <Call>\n  <Sid>263574db5d31697594628821ffd41a71</Sid>\n  <ParentCallSid/>\n  <DateCreated>2026-07-01 21:00:46</DateCreated>\n  <DateUpdated>2026-07-01 21:00:46</DateUpdated>\n  <AccountSid>nijvox1</AccountSid>\n  <To>08047359287</To>\n  <From>09893328298</From>\n  <PhoneNumberSid>08047359287</PhoneNumberSid>\n  <Status>in-progress</Status>\n  <StartTime>2026-07-01 21:00:46</StartTime>\n  <EndTime/>\n  <Duration/>\n  <Price/>\n  <Direction>outbound-api</Direction>\n  <AnsweredBy/>\n  <ForwardedFrom/>\n  <CallerName/>\n  <Uri>/v1/Accounts/nijvox1/Calls/263574db5d31697594628821ffd41a71</Uri>\n  <RecordingUrl/>\n </Call>\n</TwilioResponse>\n"
+[Exotel] CallSid: 263574db5d31697594628821ffd41a71
+[test-call] callSidMap: 263574db5d31697594628821ffd41a71 → 69bd5558a57e122161197eab
+[test-call] phoneCallMap: 9893328298 → 69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [DEBUG] Attaching callSid {"sessionId":"v2s-1782919845483-000001","callSid":"263574db5d31697594628821ffd41a71"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] CallSid index updated {"sessionId":"v2s-1782919845483-000001","callSid":"263574db5d31697594628821ffd41a71"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [DEBUG] Attaching phone {"sessionId":"v2s-1782919845483-000001","phone":"9893328298"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Phone index updated {"sessionId":"v2s-1782919845483-000001","phone":"9893328298"}
+[test-call] V2 session v2s-1782919845483-000001 — callSid+phone attached
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+3:30:53 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev host=3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev
+3:30:53 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+3:31:04 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}

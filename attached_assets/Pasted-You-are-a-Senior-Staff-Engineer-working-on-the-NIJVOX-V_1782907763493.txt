@@ -1,0 +1,216 @@
+You are a Senior Staff Engineer working on the NIJVOX Voice Engine V2.
+
+IMPORTANT
+
+The Turn Diagnostics module is already implemented.
+
+DO NOT redesign it.
+
+DO NOT recreate it.
+
+DO NOT change its behavior.
+
+Your ONLY task is to integrate it into the live production call flow so every real Exotel call automatically generates diagnostics.
+
+====================================================
+
+GOAL
+
+Automatically attach TurnDiagnosticsCollector to every OpenAI Realtime session created by the Voice Engine.
+
+No manual code should be required.
+
+====================================================
+
+DO NOT MODIFY
+
+Conversation Policy Engine
+
+Conversation State Engine
+
+Transport Gateway
+
+Media Session
+
+Audio Engine
+
+Exotel Adapter
+
+Business Logic
+
+====================================================
+
+TASKS
+
+1.
+
+Trace the complete production flow.
+
+Find where the production OpenAI Realtime session is created.
+
+It will look similar to:
+
+provider.openSession(...)
+
+or
+
+new OpenAIRealtimeSession(...)
+
+This is the ONLY place where diagnostics should be attached.
+
+----------------------------------------------------
+
+2.
+
+Immediately after
+
+await session.connect()
+
+create and attach
+
+TurnDiagnosticsCollector
+
+Example
+
+const diagnostics =
+    new TurnDiagnosticsCollector({
+        session,
+        logger,
+    });
+
+diagnostics.attach(session);
+
+Store the diagnostics instance inside the session lifecycle.
+
+----------------------------------------------------
+
+3.
+
+When the session closes
+
+Always execute
+
+diagnostics.detach();
+
+This must happen even if errors occur.
+
+Use existing lifecycle hooks.
+
+----------------------------------------------------
+
+4.
+
+The diagnostics should automatically log
+
+ONE formatted report
+
+for EVERY completed conversation turn.
+
+No manual calls.
+
+No route changes.
+
+No API endpoint.
+
+No UI.
+
+----------------------------------------------------
+
+5.
+
+At the end of every call
+
+Print
+
+====================================================
+CALL SUMMARY
+
+Session ID
+
+Call SID
+
+Duration
+
+Turns
+
+Average Latency
+
+Average TTFT
+
+Average STT
+
+Average Response Duration
+
+Interruptions
+
+Stage Progression
+
+Token Usage
+
+Estimated Cost
+
+Errors
+
+====================================================
+
+----------------------------------------------------
+
+6.
+
+Do NOT change conversation behaviour.
+
+Do NOT change prompts.
+
+Do NOT change OpenAI requests.
+
+Do NOT change Exotel messages.
+
+Diagnostics must be read-only.
+
+====================================================
+
+LOGGING
+
+Prefix every log with
+
+[TURN-DIAGNOSTICS]
+
+Example
+
+[TURN-DIAGNOSTICS] TURN #1
+
+[TURN-DIAGNOSTICS] TURN #2
+
+[TURN-DIAGNOSTICS] CALL SUMMARY
+
+====================================================
+
+SELF CHECK
+
+Verify
+
+✓ Diagnostics attached automatically
+
+✓ Diagnostics detached automatically
+
+✓ Every production call generates logs
+
+✓ No duplicate collectors
+
+✓ No memory leaks
+
+✓ No behaviour changes
+
+Output
+
+Files modified
+
+Where diagnostics are attached
+
+Where diagnostics are detached
+
+Example log
+
+Compilation status
+
+STOP.

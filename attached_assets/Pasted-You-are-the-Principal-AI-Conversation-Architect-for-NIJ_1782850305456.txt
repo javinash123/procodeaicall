@@ -1,0 +1,142 @@
+You are the Principal AI Conversation Architect for NIJVOX.
+
+Architecture is frozen.
+
+The following modules already exist:
+
+- Voice Engine
+- Conversation Policy Engine
+- Conversation State Engine
+- OpenAI Realtime Provider
+
+DO NOT redesign them.
+
+DO NOT create new architecture.
+
+====================================================
+
+GOAL
+
+Integrate the Conversation Policy Engine and Conversation State Engine into every OpenAI Realtime session.
+
+This is integration work only.
+
+====================================================
+
+FILES ALLOWED TO MODIFY
+
+Only files that create or configure an OpenAI Realtime session.
+
+Typical examples include:
+
+server/voice-engine/providers/openai/
+
+OpenAIRealtimeProvider.ts
+
+OpenAIRealtimeSession.ts
+
+or equivalent integration files.
+
+Do NOT modify unrelated modules.
+
+====================================================
+
+IMPLEMENT
+
+When a realtime session is created:
+
+1. Build the Conversation Policy using the existing ConversationPolicyBuilder.
+
+2. Create a Conversation State instance using ConversationStateFactory.
+
+3. Generate the initial system instruction from:
+   - Conversation Policy
+   - Current Conversation State
+   - Campaign goal
+   - Company name
+   - Agent identity
+   - Existing campaign script (if present)
+
+4. Pass the generated instruction into the OpenAI Realtime session at creation time.
+
+5. Store the Conversation State inside the session context.
+
+====================================================
+
+AFTER EVERY CUSTOMER TURN
+
+Update Conversation State:
+
+- advance stages
+- update memory
+- update progress
+- detect objections
+- detect interruptions
+
+If the state changes,
+
+regenerate the system instruction.
+
+Update the OpenAI Realtime session instructions using the provider's supported session update mechanism.
+
+Do NOT recreate the session.
+
+====================================================
+
+IMPORTANT
+
+The AI should always know:
+
+Current Stage
+
+Known Customer Facts
+
+Known Pain Points
+
+Previous Objections
+
+Next Goal
+
+Allowed Behaviour
+
+====================================================
+
+DO NOT
+
+Create a new OpenAI session.
+
+Do not reconnect.
+
+Do not touch Transport.
+
+Do not touch Exotel.
+
+Do not touch MediaSession.
+
+Do not touch Audio Engine.
+
+====================================================
+
+SELF CHECK
+
+Verify
+
+✓ Conversation Policy is used
+
+✓ Conversation State is used
+
+✓ OpenAI instructions update dynamically
+
+✓ No reconnects
+
+✓ Existing architecture preserved
+
+Output
+
+Files modified
+
+Example initial instruction
+
+Example updated instruction after a customer objection
+
+Compilation status

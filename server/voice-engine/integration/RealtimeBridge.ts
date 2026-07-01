@@ -30,11 +30,15 @@
  * ```
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import type { ILogger } from '../logger/index.js';
 import type { IMediaSession } from '../media/MediaSession.js';
 import type { IOpenAIRealtimeSession } from '../providers/openai/OpenAIRealtimeSession.js';
 import type { Timestamp } from '../types/index.js';
 import { VoiceEngineError, ErrorCode } from '../errors/index.js';
+import { TurnDiagnosticsCollector } from '../diagnostics/index.js';
+import type { TurnDiagnosticsLog } from '../diagnostics/index.js';
 
 // ─── Bridge Event Types ───────────────────────────────────────────────────────
 
@@ -163,6 +167,46 @@ export interface RealtimeBridgeDependencies {
 /**
  * Production implementation of `IRealtimeBridge`.
  */
+// ─── Call Summary Accumulator ─────────────────────────────────────────────────
+
+interface CallSummaryAccumulator {
+  turnCount: number;
+  latencies: number[];
+  ttftValues: number[];
+  sttValues: number[];
+  responseDurations: number[];
+  interruptions: number;
+  stagesSeen: string[];
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalCostUsd: number;
+  errors: string[];
+}
+
+function freshAccumulator(): CallSummaryAccumulator {
+  return {
+    turnCount: 0,
+    latencies: [],
+    ttftValues: [],
+    sttValues: [],
+    responseDurations: [],
+    interruptions: 0,
+    stagesSeen: [],
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
+    totalCostUsd: 0,
+    errors: [],
+  };
+}
+
+function avg(values: number[]): string {
+  if (values.length === 0) return '—';
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  return `${Math.round(mean)} ms`;
+}
+
+// ─── Implementation ───────────────────────────────────────────────────────────
+
 export class RealtimeBridge implements IRealtimeBridge {
   private readonly _provider: IOpenAIRealtimeSession;
   private readonly _mediaSession: IMediaSession;
@@ -173,6 +217,13 @@ export class RealtimeBridge implements IRealtimeBridge {
   private _destroyed = false;
 
   private readonly _handlers = new Map<BridgeEventType, Set<BridgeEventHandler>>();
+
+  /** Diagnostics collector — created in connect(), detached in disconnect(). */
+  private _diagnosticsCollector: TurnDiagnosticsCollector | null = null;
+  /** Per-call stats accumulated by the onTurnComplete callback. */
+  private _summary: CallSummaryAccumulator = freshAccumulator();
+  /** Wall-clock ms when connect() completed — for call duration. */
+  private _callStartMs = 0;
 
   constructor(deps: Readonly<RealtimeBridgeDependencies>) {
     this._provider = deps.providerSession;
@@ -191,6 +242,7 @@ export class RealtimeBridge implements IRealtimeBridge {
 
   /**
    * Opens the provider WebSocket and registers all event handlers.
+   * Automatically attaches `TurnDiagnosticsCollector` — every call logs diagnostics.
    */
   async connect(): Promise<void> {
     this._assertNotDestroyed('connect');
@@ -212,6 +264,69 @@ export class RealtimeBridge implements IRealtimeBridge {
     }
 
     this._connected = true;
+    this._callStartMs = Date.now();
+
+    // ── Attach diagnostics ────────────────────────────────────────────────────
+    // Guard: never create a duplicate collector if connect() is somehow re-entered.
+    if (!this._diagnosticsCollector) {
+      this._summary = freshAccumulator();
+
+      this._diagnosticsCollector = new TurnDiagnosticsCollector({
+        session: this._provider,
+        logger: this._logger,
+        onTurnComplete: (log: TurnDiagnosticsLog) => {
+          // Accumulate stats for the end-of-call summary
+          this._summary.turnCount++;
+          if (log.totalLatencyMs !== null)     this._summary.latencies.push(log.totalLatencyMs);
+          if (log.timeToFirstTokenMs !== null) this._summary.ttftValues.push(log.timeToFirstTokenMs);
+          if (log.sttLatencyMs !== null)       this._summary.sttValues.push(log.sttLatencyMs);
+          if (log.audioOutputDurationMs !== null) this._summary.responseDurations.push(log.audioOutputDurationMs);
+          if (log.interruptionOccurred)        this._summary.interruptions++;
+          if (!this._summary.stagesSeen.includes(log.conversationStage)) {
+            this._summary.stagesSeen.push(log.conversationStage);
+          }
+          this._summary.totalInputTokens  += log.inputTokens;
+          this._summary.totalOutputTokens += log.outputTokens;
+          this._summary.totalCostUsd      += log.estimatedCostUsd;
+          this._summary.errors.push(...log.errors);
+
+          // Print the per-turn formatted box (with diagnostics prefix)
+          const prefix = '[TURN-DIAGNOSTICS] ';
+          const formatted = log.agentTranscript !== null
+            ? `${prefix}TURN #${log.turnIndex}  stage=${log.conversationStage}  latency=${log.totalLatencyMs ?? '—'}ms  TTFT=${log.timeToFirstTokenMs ?? '—'}ms  tokens=${log.totalTokens}  cost=$${log.estimatedCostUsd.toFixed(5)}`
+            : `${prefix}TURN #${log.turnIndex}  (no transcript)`;
+
+          this._logger.info(formatted, {
+            turnIndex: log.turnIndex,
+            sessionId: log.sessionId,
+            stage: log.conversationStage,
+            totalLatencyMs: log.totalLatencyMs,
+            timeToFirstTokenMs: log.timeToFirstTokenMs,
+            sttLatencyMs: log.sttLatencyMs,
+            audioOutputDurationMs: log.audioOutputDurationMs,
+            promptSizeChars: log.promptSizeChars,
+            audioChunksStreamed: log.audioChunksStreamedCount,
+            stageAdvanced: log.stageAdvanced,
+            objectionDetected: log.objectionDetected,
+            memoryUpdated: log.memoryUpdated,
+            interruptionOccurred: log.interruptionOccurred,
+            inputTokens: log.inputTokens,
+            outputTokens: log.outputTokens,
+            totalTokens: log.totalTokens,
+            estimatedCostUsd: log.estimatedCostUsd,
+            errors: log.errors,
+          });
+        },
+        printLogs: false, // We handle printing ourselves with the prefix above
+      });
+
+      this._diagnosticsCollector.attach(this._provider);
+      this._logger.info('[TURN-DIAGNOSTICS] Collector attached — diagnostics active for this call', {
+        sessionId: this._sessionId,
+        providerSessionId: this._provider.sessionId,
+      });
+    }
+
     this._logger.info('RealtimeBridge connected');
   }
 
@@ -236,6 +351,7 @@ export class RealtimeBridge implements IRealtimeBridge {
 
   /**
    * Closes the provider session and removes all handlers.
+   * Automatically detaches `TurnDiagnosticsCollector` and prints a call summary.
    */
   async disconnect(): Promise<void> {
     if (this._destroyed) return;
@@ -243,6 +359,23 @@ export class RealtimeBridge implements IRealtimeBridge {
     this._connected = false;
 
     this._logger.info('RealtimeBridge disconnecting');
+
+    // ── Detach diagnostics (always, even if close() throws) ───────────────────
+    if (this._diagnosticsCollector) {
+      try {
+        this._diagnosticsCollector.detach();
+      } catch {
+        // Defensive — diagnostics must never prevent a clean disconnect
+      }
+      this._diagnosticsCollector = null;
+
+      // Print end-of-call summary to logs
+      this._printCallSummary();
+
+      // Persist call summary to JSON file (fire-and-forget, never throws)
+      this._persistCallSummaryJson();
+    }
+
     await this._provider.close();
     this._handlers.clear();
   }
@@ -346,6 +479,103 @@ export class RealtimeBridge implements IRealtimeBridge {
   }
 
   // ─── Private Helpers ─────────────────────────────────────────────────────────
+
+  // ─── Private: Call Summary ───────────────────────────────────────────────────
+
+  private _printCallSummary(): void {
+    const s = this._summary;
+    const callDurationMs = this._callStartMs ? Date.now() - this._callStartMs : 0;
+    const durationSec = (callDurationMs / 1000).toFixed(1);
+
+    const stageProgression = s.stagesSeen.length > 0
+      ? s.stagesSeen.join(' → ')
+      : '—';
+
+    const errorSummary = s.errors.length === 0
+      ? 'none'
+      : `${s.errors.length} error(s): ${s.errors.slice(0, 3).join(' | ')}${s.errors.length > 3 ? ' …' : ''}`;
+
+    const lines = [
+      '[TURN-DIAGNOSTICS] ====================================================',
+      '[TURN-DIAGNOSTICS] CALL SUMMARY',
+      `[TURN-DIAGNOSTICS]   Session ID         : ${this._sessionId}`,
+      `[TURN-DIAGNOSTICS]   Provider Session   : ${this._provider.sessionId ?? '—'}`,
+      `[TURN-DIAGNOSTICS]   Duration           : ${durationSec}s`,
+      `[TURN-DIAGNOSTICS]   Turns              : ${s.turnCount}`,
+      `[TURN-DIAGNOSTICS]   Avg Latency (E2E)  : ${avg(s.latencies)}`,
+      `[TURN-DIAGNOSTICS]   Avg TTFT           : ${avg(s.ttftValues)}`,
+      `[TURN-DIAGNOSTICS]   Avg STT Latency    : ${avg(s.sttValues)}`,
+      `[TURN-DIAGNOSTICS]   Avg Response Dur   : ${avg(s.responseDurations)}`,
+      `[TURN-DIAGNOSTICS]   Interruptions      : ${s.interruptions}`,
+      `[TURN-DIAGNOSTICS]   Stage Progression  : ${stageProgression}`,
+      `[TURN-DIAGNOSTICS]   Token Usage        : in=${s.totalInputTokens.toLocaleString()}  out=${s.totalOutputTokens.toLocaleString()}  total=${(s.totalInputTokens + s.totalOutputTokens).toLocaleString()}`,
+      `[TURN-DIAGNOSTICS]   Estimated Cost     : $${s.totalCostUsd.toFixed(5)}`,
+      `[TURN-DIAGNOSTICS]   Errors             : ${errorSummary}`,
+      '[TURN-DIAGNOSTICS] ====================================================',
+    ];
+
+    for (const line of lines) {
+      this._logger.info(line);
+    }
+  }
+
+  /**
+   * Persists the call summary to a JSON file under
+   * `logs/call-diagnostics/call_<timestamp>_<sessionId>.json`.
+   *
+   * Never throws — all errors are swallowed to protect the disconnect path.
+   */
+  private _persistCallSummaryJson(): void {
+    try {
+      const s = this._summary;
+      const callDurationMs = this._callStartMs ? Date.now() - this._callStartMs : 0;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+      const record = {
+        sessionId:         this._sessionId,
+        providerSessionId: this._provider.sessionId ?? null,
+        callStartedAt:     this._callStartMs
+          ? new Date(this._callStartMs).toISOString()
+          : null,
+        callEndedAt:       new Date().toISOString(),
+        callDurationMs,
+        turnCount:         s.turnCount,
+        interruptions:     s.interruptions,
+        stageProgression:  s.stagesSeen,
+        avgLatencyMs:      s.latencies.length
+          ? Math.round(s.latencies.reduce((a, b) => a + b, 0) / s.latencies.length)
+          : null,
+        avgTtftMs:         s.ttftValues.length
+          ? Math.round(s.ttftValues.reduce((a, b) => a + b, 0) / s.ttftValues.length)
+          : null,
+        avgSttLatencyMs:   s.sttValues.length
+          ? Math.round(s.sttValues.reduce((a, b) => a + b, 0) / s.sttValues.length)
+          : null,
+        avgResponseDurMs:  s.responseDurations.length
+          ? Math.round(s.responseDurations.reduce((a, b) => a + b, 0) / s.responseDurations.length)
+          : null,
+        totalInputTokens:  s.totalInputTokens,
+        totalOutputTokens: s.totalOutputTokens,
+        totalTokens:       s.totalInputTokens + s.totalOutputTokens,
+        estimatedCostUsd:  s.totalCostUsd,
+        errors:            s.errors,
+      };
+
+      const dir = path.join(process.cwd(), 'logs', 'call-diagnostics');
+      fs.mkdirSync(dir, { recursive: true });
+
+      const filename = `call_${timestamp}_${this._sessionId}.json`;
+      const filepath = path.join(dir, filename);
+      fs.writeFileSync(filepath, JSON.stringify(record, null, 2), 'utf8');
+
+      this._logger.info('[TURN-DIAGNOSTICS] Call summary persisted to JSON', { filepath });
+    } catch (err) {
+      // Never let file I/O errors interrupt the disconnect path
+      this._logger.warn('[TURN-DIAGNOSTICS] Failed to persist call summary JSON', {
+        error: String(err),
+      });
+    }
+  }
 
   private _assertNotDestroyed(method: string): void {
     if (this._destroyed) {
