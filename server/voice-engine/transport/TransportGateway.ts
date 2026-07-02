@@ -39,6 +39,7 @@ import type { ILogger } from '../logger/index.js';
 import type { Timestamp, Nullable, SessionId } from '../types/index.js';
 import type { IMediaSession } from '../media/MediaSession.js';
 import type { AudioChunk } from '../audio-engine/AudioChunk.js';
+import { createAudioChunk } from '../audio-engine/AudioChunk.js';
 import { TransportSession, createTransportSession } from './TransportSession.js';
 import { TransportConnection } from './TransportConnection.js';
 import type { TransportConnectionConfig } from './TransportConnection.js';
@@ -504,7 +505,6 @@ export class TransportGateway implements ITransportGateway {
   private _routeEvent(event: TransportEvent, mediaSession: IMediaSession): void {
     switch (event.type) {
       case 'transport.audio_received': {
-        const { createAudioChunk } = this._importAudioChunk();
         const chunk = createAudioChunk({
           sequence: event.sequence,
           timestamp: event.timestamp,
@@ -562,17 +562,6 @@ export class TransportGateway implements ITransportGateway {
     Array.from(handlers).forEach((h) => {
       try { h(event); } catch { /* swallow */ }
     });
-  }
-
-  /**
-   * Lazy import wrapper for `createAudioChunk` to avoid circular deps.
-   * The audio-engine module is NOT imported at the top of this file.
-   */
-  private _importAudioChunk(): { createAudioChunk: typeof import('../audio-engine/AudioChunk.js').createAudioChunk } {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('../audio-engine/AudioChunk.js') as {
-      createAudioChunk: typeof import('../audio-engine/AudioChunk.js').createAudioChunk;
-    };
   }
 
   /**

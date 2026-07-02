@@ -24,6 +24,8 @@
  */
 
 import type { ILogger } from '../logger/index.js';
+import type { ILLMProvider } from '../interfaces/index.js';
+import type { IMetricsCollector } from '../metrics/index.js';
 import type { IVoiceEngineFactory } from '../engine/VoiceEngineFactory.js';
 import type { ITransportFactory } from '../transport/TransportFactory.js';
 import { SessionRegistry } from './SessionRegistry.js';
@@ -59,6 +61,20 @@ export interface MigrationFactoryDependencies {
    * All child components receive child-bound instances.
    */
   readonly logger: ILogger;
+
+  /**
+   * LLM provider singleton. When supplied, it is registered as
+   * Tokens.LLM_PROVIDER in every session's VoiceEngineRuntime container
+   * so that ctx.runtime.resolver.llm() resolves correctly.
+   */
+  readonly llmProvider?: ILLMProvider;
+
+  /**
+   * Metrics collector singleton. When supplied, it is registered as
+   * Tokens.METRICS in every session's VoiceEngineRuntime container
+   * so that ctx.runtime.resolver.metrics() resolves correctly.
+   */
+  readonly metricsCollector?: IMetricsCollector;
 }
 
 // ─── Options ──────────────────────────────────────────────────────────────────
@@ -154,7 +170,9 @@ export class MigrationFactory implements IMigrationFactory {
     return new SessionFactory(
       this._deps.voiceEngineFactory,
       this._deps.transportFactory,
-      this._deps.logger
+      this._deps.logger,
+      this._deps.llmProvider,
+      this._deps.metricsCollector
     );
   }
 }

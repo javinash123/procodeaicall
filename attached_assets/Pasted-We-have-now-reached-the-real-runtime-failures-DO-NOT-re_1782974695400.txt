@@ -1,0 +1,110 @@
+We have now reached the real runtime failures.
+
+DO NOT refactor the architecture.
+DO NOT add instrumentation.
+DO NOT add new logging (except if absolutely required to identify the failing line).
+DO NOT change prompts, policies, conversation logic, transport, or Exotel flow.
+
+Fix ONLY the two runtime failures below.
+
+====================================================
+ISSUE 1
+====================================================
+
+activateV2Session() fails with:
+
+DependencyContainer:
+token "ILogger" is not registered.
+
+Tasks:
+
+1. Trace the complete dependency chain from:
+
+activateV2Session()
+↓
+
+RuntimeIntegration
+↓
+
+VoiceEngine
+↓
+
+DI Container
+
+until the exact line where ILogger is first resolved.
+
+2. Fix the DI registration.
+
+Register ILogger exactly once during bootstrap.
+
+Do NOT create local fallback loggers.
+
+Do NOT bypass the container.
+
+Every runtime component must resolve the same ILogger singleton.
+
+If Metrics, Clock, or any other dependency is also missing, register them in the bootstrap container the same way.
+
+====================================================
+ISSUE 2
+====================================================
+
+Immediately afterwards TransportGateway repeatedly throws:
+
+ReferenceError:
+require is not defined
+
+Tasks:
+
+1. Find every require() executed from the V2 runtime path.
+
+2. Replace every require() with proper ES Module imports.
+
+Do NOT use dynamic require.
+
+Do NOT use createRequire.
+
+Do NOT mix CommonJS and ESM.
+
+====================================================
+AFTER FIXING
+====================================================
+
+Restart the server.
+
+Make ONE /test-call.
+
+Show the logs beginning from:
+
+[V2 TRACE] 4
+
+until either:
+
+[V2 TRACE] 10 Diagnostics attached
+
+or the first real exception.
+
+====================================================
+SUCCESS CRITERIA
+====================================================
+
+The following log sequence must appear:
+
+[V2 TRACE] 4 activateV2Session()
+[V2 TRACE] 5 OpenAIRealtimeProvider.openSession()
+[V2 TRACE] 6 OpenAIRealtimeSession.connect()
+[V2 TRACE] 7 Realtime websocket connected
+[V2 TRACE] 8 RuntimeIntegration.start()
+[V2 TRACE] 9 RealtimeBridge.connect()
+[V2 TRACE] 10 Diagnostics attached
+
+If execution stops before TRACE 10, stop immediately and report ONLY:
+
+1. the exact file
+2. the exact line number
+3. the exception
+4. why execution stopped
+
+Do not continue making changes after the first failure.
+
+Do not modify any other files unless they are directly required to fix these two runtime errors.

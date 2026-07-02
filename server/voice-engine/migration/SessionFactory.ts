@@ -34,6 +34,7 @@
 
 import type { ILogger } from '../logger/index.js';
 import type { IMetricsCollector } from '../metrics/index.js';
+import type { ILLMProvider } from '../interfaces/index.js';
 import type { IVoiceEngineFactory } from '../engine/VoiceEngineFactory.js';
 import type { ITransportFactory } from '../transport/TransportFactory.js';
 import type { BootstrapOptions } from '../bootstrap/Bootstrap.js';
@@ -246,6 +247,9 @@ function resolveMetrics(runtime: ReturnType<typeof createVoiceEngineRuntime>): I
  */
 export class SessionFactory implements ISessionFactory {
   private readonly _log: ILogger;
+  private readonly _logger: ILogger;
+  private readonly _llmProvider: ILLMProvider | undefined;
+  private readonly _metricsCollector: IMetricsCollector | undefined;
   private readonly _engineFactory: IVoiceEngineFactory;
   private readonly _transportFactory: ITransportFactory;
 
@@ -253,14 +257,21 @@ export class SessionFactory implements ISessionFactory {
    * @param engineFactory    - Factory for constructing `IVoiceEngine` instances.
    * @param transportFactory - Factory for constructing `ITransportGateway` instances.
    * @param logger           - Logger; will be child-bound to this component.
+   * @param llmProvider      - LLM provider singleton to register in every session runtime.
+   * @param metricsCollector - Metrics collector singleton to register in every session runtime.
    */
   constructor(
     engineFactory: IVoiceEngineFactory,
     transportFactory: ITransportFactory,
-    logger: ILogger
+    logger: ILogger,
+    llmProvider?: ILLMProvider,
+    metricsCollector?: IMetricsCollector
   ) {
     this._engineFactory    = engineFactory;
     this._transportFactory = transportFactory;
+    this._logger           = logger;
+    this._llmProvider      = llmProvider;
+    this._metricsCollector = metricsCollector;
     this._log              = logger.child({ component: 'SessionFactory' });
   }
 
@@ -285,8 +296,20 @@ export class SessionFactory implements ISessionFactory {
     // reference to it. The VoiceEngineFactory also builds its own internal
     // runtime copy via bootstrapOptions — both read the same environment
     // variables and produce equivalent, independent frozen objects.
+    //
+    // The factory's root logger is injected as providers.logger so that
+    // ctx.runtime.resolver.logger() always resolves without throwing —
+    // callers (e.g. activateV2Session) depend on this being registered.
     const bootstrapOptions = params.bootstrapOptions ?? {};
-    const runtime = createVoiceEngineRuntime(bootstrapOptions);
+    const runtime = createVoiceEngineRuntime({
+      ...bootstrapOptions,
+      providers: {
+        logger: this._logger,
+        ...(this._llmProvider      ? { llm:     this._llmProvider }      : {}),
+        ...(this._metricsCollector ? { metrics: this._metricsCollector } : {}),
+        ...bootstrapOptions.providers,
+      },
+    });
 
     // ── Step 2: Create the TransportGateway ───────────────────────────────────
     //

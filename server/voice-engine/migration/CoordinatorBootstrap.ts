@@ -25,7 +25,10 @@ import type { IVoiceEngineFactory, VoiceEngineFactoryOptions } from '../engine/V
 import type { IVoiceEngine } from '../engine/VoiceEngine.js';
 import type { BootstrapOptions } from '../bootstrap/Bootstrap.js';
 import { TransportFactory } from '../transport/TransportFactory.js';
+import { ExotelAdapter } from '../providers/exotel/ExotelAdapter.js';
 import { createV2SessionCoordinator } from './MigrationFactory.js';
+import { createVoiceEngineRuntime } from '../bootstrap/Bootstrap.js';
+import type { ILLMProvider } from '../interfaces/index.js';
 import type { IV2SessionCoordinator } from './V2SessionCoordinator.js';
 import type { ILogger, LogContext } from '../logger/index.js';
 import type { IMetricsCollector, Histogram, Counter, Gauge, MetricEvent } from '../metrics/index.js';
@@ -116,6 +119,45 @@ class ProviderAwareVoiceEngineFactory implements IVoiceEngineFactory {
   }
 }
 
+// ─── DI Validation ────────────────────────────────────────────────────────────
+
+/**
+ * Creates a throwaway VoiceEngineRuntime with the exact providers that every
+ * session will receive, attempts to resolve each required token, and prints a
+ * one-line status for each. Called exactly once at startup.
+ */
+function _printDIValidation(
+  logger: ILogger,
+  llmProvider: ILLMProvider | undefined
+): void {
+  const runtime = createVoiceEngineRuntime({
+    providers: {
+      logger,
+      metrics: _noopMetrics,
+      ...(llmProvider ? { llm: llmProvider } : {}),
+    },
+  });
+
+  const pad = (s: string) => s.padEnd(20, '.');
+
+  const check = (label: string, resolve: () => unknown): string => {
+    try { resolve(); return `${pad(label)} OK`; }
+    catch { return `${pad(label)} MISSING`; }
+  };
+
+  const lines = [
+    '[DI VALIDATION]',
+    check('ILogger',           () => runtime.resolver.logger()),
+    check('ILLMProvider',      () => runtime.resolver.llm()),
+    check('IMetricsCollector', () => runtime.resolver.metrics()),
+    check('HealthRegistry',    () => runtime.resolver.health()),
+    check('Config',            () => runtime.config),
+  ];
+
+  runtime.shutdown();
+  console.log(lines.join('\n'));
+}
+
 // ─── Singleton ────────────────────────────────────────────────────────────────
 
 let _coordinator: IV2SessionCoordinator | null = null;
@@ -152,10 +194,11 @@ export function getV2Coordinator(): IV2SessionCoordinator {
 
   // ── Step 2: build the engine factory, injecting provider if key is available ─
   let voiceEngineFactory: IVoiceEngineFactory = new VoiceEngineFactory();
+  let llmProviderSingleton: ReturnType<typeof createOpenAIRealtimeProvider> | undefined;
 
   if (openAIApiKey) {
     try {
-      const openAIProvider = createOpenAIRealtimeProvider(
+      llmProviderSingleton = createOpenAIRealtimeProvider(
         { apiKey: openAIApiKey },
         logger,
         _noopMetrics
@@ -163,7 +206,7 @@ export function getV2Coordinator(): IV2SessionCoordinator {
 
       voiceEngineFactory = new ProviderAwareVoiceEngineFactory(
         voiceEngineFactory,
-        { llm: openAIProvider }
+        { llm: llmProviderSingleton }
       );
 
       logger.info('[VoiceEngine] OpenAI LLM provider registered in DI chain');
@@ -178,11 +221,23 @@ export function getV2Coordinator(): IV2SessionCoordinator {
   }
 
   // ── Step 3: assemble the coordinator ────────────────────────────────────────
+  //
+  // ExotelAdapter is registered here once.  TransportFactory auto-registers it
+  // on every TransportGateway it creates, so every SessionContext's gateway
+  // has the adapter present before accept() is ever called.
+  //
+  // llmProviderSingleton is the same instance injected into ProviderAwareVoiceEngineFactory
+  // above. Passing it here ensures every session's VoiceEngineRuntime container has
+  // Tokens.LLM_PROVIDER registered so ctx.runtime.resolver.llm() resolves correctly.
+  const exotelAdapter = new ExotelAdapter(logger);
+
   _coordinator = createV2SessionCoordinator(
     {
       voiceEngineFactory,
-      transportFactory: new TransportFactory(logger),
+      transportFactory:  new TransportFactory(logger, [exotelAdapter]),
       logger,
+      llmProvider:       llmProviderSingleton,
+      metricsCollector:  _noopMetrics,
     },
     {
       coordinator: {
@@ -190,6 +245,12 @@ export function getV2Coordinator(): IV2SessionCoordinator {
       },
     }
   );
+
+  // ── DI Validation ────────────────────────────────────────────────────────────
+  // Create a throwaway runtime with the exact same providers every session will
+  // use, then attempt to resolve each required token. Printed exactly once at
+  // startup — before the server begins accepting calls.
+  _printDIValidation(logger, llmProviderSingleton);
 
   logger.info('V2SessionCoordinator ready', {
     activeSessions: _coordinator.activeSessionCount,

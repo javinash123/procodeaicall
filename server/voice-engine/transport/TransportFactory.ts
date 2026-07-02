@@ -18,7 +18,7 @@
 
 import type { ILogger } from '../logger/index.js';
 import { TransportGateway } from './TransportGateway.js';
-import type { ITransportGateway, TransportGatewayConfig } from './TransportGateway.js';
+import type { ITransportGateway, TransportGatewayConfig, ITransportAdapter } from './TransportGateway.js';
 
 /**
  * Public contract for the transport gateway factory.
@@ -27,8 +27,8 @@ export interface ITransportFactory {
   /**
    * Creates and returns a new `ITransportGateway`.
    *
-   * The returned gateway has no adapters registered. Callers must call
-   * `gateway.registerAdapter(adapter)` before accepting connections.
+   * All adapters supplied at construction time are registered before the
+   * gateway is returned — callers never need to call `registerAdapter` manually.
    *
    * @param config - Optional overrides for connection-level defaults.
    * @returns A new `ITransportGateway` ready to accept connections.
@@ -39,17 +39,24 @@ export interface ITransportFactory {
 /**
  * Production implementation of `ITransportFactory`.
  *
- * Instantiate once at bootstrap.
+ * Instantiate once at bootstrap. Pass all protocol adapters (e.g. ExotelAdapter)
+ * in the constructor — they are registered on every gateway this factory creates.
  */
 export class TransportFactory implements ITransportFactory {
   private readonly _logger: ILogger;
+  private readonly _adapters: readonly ITransportAdapter[];
 
-  constructor(logger: ILogger) {
-    this._logger = logger;
+  constructor(logger: ILogger, adapters: ITransportAdapter[] = []) {
+    this._logger   = logger;
+    this._adapters = adapters;
   }
 
   createGateway(config: Partial<TransportGatewayConfig> = {}): ITransportGateway {
-    return new TransportGateway(this._logger, config);
+    const gateway = new TransportGateway(this._logger, config);
+    for (const adapter of this._adapters) {
+      gateway.registerAdapter(adapter);
+    }
+    return gateway;
   }
 }
 
