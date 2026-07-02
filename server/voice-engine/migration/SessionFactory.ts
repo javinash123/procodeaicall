@@ -274,6 +274,8 @@ export class SessionFactory implements ISessionFactory {
 
     const sessionId = generateSessionId();
 
+    console.log(`[V2 TRACE] 1. Session created  sessionId=${sessionId}  campaignId=${campaignId}`);
+
     this._log.debug('Building session dependencies', { sessionId, campaignId });
 
     // ── Step 1: Build the bootstrap runtime ───────────────────────────────────

@@ -1,0 +1,1184 @@
+[1G[0K⠙[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K⠙[1G[0KMongoDB connected successfully
+7:04:53 PM [ws] WebSocket server ready on path /stream
+7:04:53 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = NO
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [WARN] [VoiceEngine] OPENAI_API_KEY not set — LLM provider will NOT be injected into session DI containers
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+7:04:55 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+7:05:00 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://f67c6c18-6b48-4ad7-a3fa-aa2bb5117372-00-19vtqcy8tftzf.spock.replit.dev host=f67c6c18-6b48-4ad7-a3fa-aa2bb5117372-00-19vtqcy8tftzf.spock.replit.dev
+7:05:00 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:05:07 PM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}
+7:25:50 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://f67c6c18-6b48-4ad7-a3fa-aa2bb5117372-00-19vtqcy8tftzf.spock.replit.dev host=f67c6c18-6b48-4ad7-a3fa-aa2bb5117372-00-19vtqcy8tftzf.spock.replit.dev
+7:25:50 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:26:18 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://f67c6c18-6b48-4ad7-a3fa-aa2bb5117372-00-19vtqcy8tftzf.spock.replit.dev host=f67c6c18-6b48-4ad7-a3fa-aa2bb5117372-00-19vtqcy8tftzf.spock.replit.dev
+7:26:18 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:26:23 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+[TEST-CALL]
+originalUrl = /test-call?phone=9893328298&campaignId=69bd5558a57e122161197eab
+-------------------------
+req.url = /test-call?phone=9893328298&campaignId=69bd5558a57e122161197eab
+-------------------------
+req.query = {"phone":"9893328298","campaignId":"69bd5558a57e122161197eab"}
+-------------------------
+campaignId = 69bd5558a57e122161197eab
+-------------------------
+phone = 9893328298
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [INFO] Creating V2 session {"campaignId":"69bd5558a57e122161197eab","phone":"9893328298","callSid":null}
+[V2 TRACE] 1. Session created  sessionId=v2s-1782933989440-000001  campaignId=69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionFactory"}] [DEBUG] Building session dependencies {"sessionId":"v2s-1782933989440-000001","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionFactory"}] [INFO] SessionContext created {"sessionId":"v2s-1782933989440-000001","campaignId":"69bd5558a57e122161197eab","callSid":null,"phone":"9893328298","mediaSession":"present"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Session registered {"sessionId":"v2s-1782933989440-000001","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Phone index updated {"sessionId":"v2s-1782933989440-000001","phone":"9893328298"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [INFO] V2 session created {"sessionId":"v2s-1782933989440-000001","campaignId":"69bd5558a57e122161197eab"}
+[test-call] V2 session created: v2s-1782933989440-000001
+Calling number: 9893328298
+[Exotel] Updating app (1213707) stream URL → wss://f67c6c18-6b48-4ad7-a3fa-aa2bb5117372-00-19vtqcy8tftzf.spock.replit.dev/exotel-stream
+[Exotel] PUT Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] POST Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] ⚠️  Could not auto-update Exotel app stream URL.
+  → Open Exotel dashboard → App Builder → app ID 1213707
+  → Set the Stream / WebSocket URL to:
+      wss://f67c6c18-6b48-4ad7-a3fa-aa2bb5117372-00-19vtqcy8tftzf.spock.replit.dev/exotel-stream
+CUSTOMER = 9893328298
+CALLERID = +918047359287
+[Exotel] App URL: http://my.exotel.com/nijvox1/exoml/start_voice/1213707
+[Exotel] WSS URL : wss://f67c6c18-6b48-4ad7-a3fa-aa2bb5117372-00-19vtqcy8tftzf.spock.replit.dev/exotel-stream ← update this in Exotel dashboard
+[Exotel] Call response: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <Call>\n  <Sid>3d1417b12d1bce1fbfb078c1664a1a72</Sid>\n  <ParentCallSid/>\n  <DateCreated>2026-07-02 00:56:30</DateCreated>\n  <DateUpdated>2026-07-02 00:56:30</DateUpdated>\n  <AccountSid>nijvox1</AccountSid>\n  <To>08047359287</To>\n  <From>09893328298</From>\n  <PhoneNumberSid>08047359287</PhoneNumberSid>\n  <Status>in-progress</Status>\n  <StartTime>2026-07-02 00:56:30</StartTime>\n  <EndTime/>\n  <Duration/>\n  <Price/>\n  <Direction>outbound-api</Direction>\n  <AnsweredBy/>\n  <ForwardedFrom/>\n  <CallerName/>\n  <Uri>/v1/Accounts/nijvox1/Calls/3d1417b12d1bce1fbfb078c1664a1a72</Uri>\n  <RecordingUrl/>\n </Call>\n</TwilioResponse>\n"
+[Exotel] CallSid: 3d1417b12d1bce1fbfb078c1664a1a72
+[test-call] callSidMap: 3d1417b12d1bce1fbfb078c1664a1a72 → 69bd5558a57e122161197eab
+[test-call] phoneCallMap: 9893328298 → 69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [DEBUG] Attaching callSid {"sessionId":"v2s-1782933989440-000001","callSid":"3d1417b12d1bce1fbfb078c1664a1a72"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] CallSid index updated {"sessionId":"v2s-1782933989440-000001","callSid":"3d1417b12d1bce1fbfb078c1664a1a72"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [DEBUG] Attaching phone {"sessionId":"v2s-1782933989440-000001","phone":"9893328298"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Phone index updated {"sessionId":"v2s-1782933989440-000001","phone":"9893328298"}
+[test-call] V2 session v2s-1782933989440-000001 — callSid+phone attached
+7:26:43 PM [ws] [upgrade] path=/exotel-stream from=127.0.0.1 origin=none host=f67c6c18-6b48-4ad7-a3fa-aa2bb5117372-00-19vtqcy8tftzf.spock.replit.dev
+7:26:43 PM [ws] [upgrade] routing /exotel-stream to exotel handler
+7:26:43 PM [ws] [/exotel-stream] Connection from [127.0.0.1] campaignId=none  total=1
+7:26:43 PM [ws] [V2 ROUTER] Awaiting Exotel 'start' event to resolve session
+7:26:43 PM [ws] [V2 ROUTER] 'connected' received — waiting for 'start'
+7:26:43 PM [ws] [V2 ROUTER] 'start' received — callSid=(none) phone=09893328298
+7:26:43 PM [ws] [V2 ROUTER] Session missing (callSid=(none), phone=09893328298) — fallback to V1
+7:26:43 PM [ws] [V2 ROUTER] Fallback to V1 — campaignId=none
+7:26:43 PM [ws] [exotel] session started campaignId=none
+7:26:43 PM [ws] [exotel] raw message: {"event":"connected"}
+
+7:26:43 PM [ws] [exotel] Connected — payload: {
+  "event": "connected"
+}
+7:26:43 PM [ws] [exotel] raw message: {"event":"start","stream_sid":"dd6ce6b3ab4d5b9db62966c08a561a72","sequence_number":"1","start":{"stream_sid":"dd6ce6b3ab4d5b9db62966c08a561a72","call_sid":"3d1417b12d1bce1fbfb078c1664a1a72","leg_sid":"","account_sid":"nijvox1","from":"09893328298","to":"08047359287","custom_parameters":{"campaignId":"69bd5558a57e122161197eab"},"media_format":{"encoding":"base64","sample_rate":"8000","bit_rate":"128kbps"}}}
+
+7:26:43 PM [ws] [exotel] Start payload: {
+  "event": "start",
+  "stream_sid": "dd6ce6b3ab4d5b9db62966c08a561a72",
+  "sequence_number": "1",
+  "start": {
+    "stream_sid": "dd6ce6b3ab4d5b9db62966c08a561a72",
+    "call_sid": "3d1417b12d1bce1fbfb078c1664a1a72",
+    "leg_sid": "",
+    "account_sid": "nijvox1",
+    "from": "09893328298",
+    "to": "08047359287",
+    "custom_parameters": {
+      "campaignId": "69bd5558a57e122161197eab"
+    },
+    "media_format": {
+      "encoding": "base64",
+      "sample_rate": "8000",
+      "bit_rate": "128kbps"
+    }
+  }
+}
+7:26:43 PM [ws] [exotel] campaignId from payload: 69bd5558a57e122161197eab
+7:26:43 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] campaignId resolved → 69bd5558a57e122161197eab
+7:26:43 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] Start — encoding=base64 sampleRate=8000 channels=1
+7:26:44 PM [ws] [exotel] Greeting error: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+7:26:44 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=1
+7:26:44 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=2
+7:26:44 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=3
+7:26:44 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=4
+7:26:44 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=5
+7:26:44 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=6
+7:26:44 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=7
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=8
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=9
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=9 buf=10
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=11
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=12
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=13
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=14
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=15
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=16
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=17
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=18
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=19
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=33 buf=20
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=21
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=22
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=23
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=24
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=25
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=26
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=27
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=28
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=29
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=30
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=31
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=32
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=33
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=34
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=35
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=36
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=37
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=9 buf=38
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=39
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=40
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=41
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=42
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=43
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=44
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=45
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=46
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=47
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=48
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=49
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=50
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=51
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=9 buf=52
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=53
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=54
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=55
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=56
+7:26:45 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=75 buf=57
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1506 buf=58
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=3952 buf=59
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1809 buf=60
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1205 buf=61
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1316 buf=62
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1296 buf=63
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=2847 buf=64
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=2714 buf=65
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1577 buf=66
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=905 buf=67
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=426 buf=68
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=158 buf=69
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=69 buf=70
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=38 buf=71
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=43 buf=72
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=38 buf=73
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=28 buf=74
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=28 buf=75
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=76
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=77
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=78
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=79
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=80
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=81
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=82
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=83
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=84
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=85
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=86
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=87
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=88
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=89
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=90
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=91
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=92
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=93
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=94
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=95
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=96
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=97
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=98
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=99
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=100
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=101
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=102
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=103
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=104
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=105
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=106
+7:26:46 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=107
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] silence detected (800 ms) → STT
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ▶ processAudio — 107 chunks, 34240 B
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=1
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ✖ processAudio error: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=1
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=2
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=3
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=4
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=5
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=6
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=7
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=8
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=9
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=10
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=11
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=12
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=13
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=14
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=15
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=16
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=17
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=18
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=19
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=20
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=21
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=22
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=23
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=24
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=25
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=9 buf=26
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=27
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=28
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=29
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=30
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=31
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=32
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=33
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=34
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=35
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=36
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=37
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=38
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=39
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=40
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=41
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=42
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=43
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=44
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=45
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=46
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=47
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=48
+7:26:47 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=49
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=50
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=51
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=52
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=53
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=54
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=55
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=56
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=57
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=58
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=59
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=60
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=61
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=62
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=63
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=64
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=65
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=66
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=67
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=68
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=26 buf=69
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=94 buf=70
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=71
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=72
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=73
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=74
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=75
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=76
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=77
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=78
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=79
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=80
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=81
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=82
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=83
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=84
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=85
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=86
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=87
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=88
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=89
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=90
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=91
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=92
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=93
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=94
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=95
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=96
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=97
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=98
+7:26:48 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=99
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=100
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=101
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=102
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=103
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=104
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=105
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=106
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=107
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=108
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=109
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=110
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=111
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=112
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=113
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=114
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=115
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=116
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=117
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=118
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=119
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=120
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=121
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=122
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=123
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=124
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=125
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=126
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=127
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=128
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=129
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=130
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=131
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=132
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=133
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=9 buf=134
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=135
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=136
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=137
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=138
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=139
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=140
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=141
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=142
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=143
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=144
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=145
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=146
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=147
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=148
+7:26:49 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=149
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=150
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=151
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=48 buf=152
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=39 buf=153
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=154
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=155
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=156
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=157
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=158
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=159
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=160
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=161
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=162
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=163
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=164
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=165
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=166
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=167
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=168
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=169
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=170
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=171
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=172
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=173
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=174
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=175
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=176
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=177
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=178
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=26 buf=179
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=316 buf=180
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=365 buf=181
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=85 buf=182
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=35 buf=183
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=32 buf=184
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=22 buf=185
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=186
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=187
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=188
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=189
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=190
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=191
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=192
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=193
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=194
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=195
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=196
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=24 buf=197
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=98 buf=198
+7:26:50 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=540 buf=199
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=906 buf=200
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=839 buf=201
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=507 buf=202
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=415 buf=203
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=251 buf=204
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=112 buf=205
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=147 buf=206
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=818 buf=207
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=963 buf=208
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=162 buf=209
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=75 buf=210
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=105 buf=211
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=427 buf=212
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=200 buf=213
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=219 buf=214
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=389 buf=215
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=120 buf=216
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=50 buf=217
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=218
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=219
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=220
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=221
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=222
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=223
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=224
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=225
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=226
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=227
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=228
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=229
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=230
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=231
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=122 buf=232
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=33 buf=233
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=234
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=235
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=236
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=237
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=238
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=239
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=240
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=241
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=242
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=243
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=244
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=245
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=246
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=247
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=248
+7:26:51 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=249
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=250
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=251
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] force-process after 5000 ms
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ▶ processAudio — 251 chunks, 80320 B
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ✖ processAudio error: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=1
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=2
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=3
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=4
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=5
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=6
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=7
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=8
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=9
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=10
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=11
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=12
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=13
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=14
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=15
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=16
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=17
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=18
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=19
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=20
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=21
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=22
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=23
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=24
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=25
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=26
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=27
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=28
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=29
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=30
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=31
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=32
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=33
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=34
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=35
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=36
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=37
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=38
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=39
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=52 buf=40
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=96 buf=41
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=22 buf=42
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=43
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=44
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=45
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=46
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=47
+7:26:52 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=48
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=49
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=50
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=51
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=52
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=53
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=54
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=55
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=56
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=57
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=58
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=59
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=60
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=61
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=62
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=63
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=64
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=65
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=66
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=67
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=68
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=69
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=70
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=71
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=72
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=73
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=74
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=75
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=76
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=77
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=78
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=79
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=80
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=81
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=82
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=83
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=84
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=85
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=86
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=87
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=88
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=89
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=90
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=91
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=92
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=93
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=94
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=95
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=96
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=97
+7:26:53 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=98
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=99
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=100
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=101
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=102
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=103
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=104
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=105
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=106
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=107
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=108
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=109
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=110
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=111
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=112
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=113
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=114
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=115
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=116
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=117
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=118
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=119
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=120
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=121
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=122
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=123
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=124
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=125
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=126
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=127
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=128
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=129
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=130
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=131
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=132
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=133
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=134
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=135
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=136
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=137
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=138
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=139
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=140
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=141
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=142
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=143
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=144
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=145
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=146
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=147
+7:26:54 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=148
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=149
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=150
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=151
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=152
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=153
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=154
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=155
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=156
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=157
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=158
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=159
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=160
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=161
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=162
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=163
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=164
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=165
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=166
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=167
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=168
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=169
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=170
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=171
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=172
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=173
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=174
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=175
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=176
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=177
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=178
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=179
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=180
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=181
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=182
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=183
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=184
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=185
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=186
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=187
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=188
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=189
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=190
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=191
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=192
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=193
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=44 buf=194
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=195
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=43 buf=196
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=56 buf=197
+7:26:55 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=29 buf=198
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=199
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=200
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=201
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=202
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=203
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=204
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=205
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=206
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=207
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=208
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=209
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=210
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=211
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=212
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=213
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=214
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=215
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=216
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=217
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=218
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=219
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=220
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=221
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=222
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=223
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=224
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=225
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=226
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=227
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=228
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=229
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=230
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=231
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=232
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=233
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=234
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=235
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=487 buf=236
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1295 buf=237
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=2277 buf=238
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=2433 buf=239
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=667 buf=240
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=797 buf=241
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=950 buf=242
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1097 buf=243
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1197 buf=244
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1007 buf=245
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1045 buf=246
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=515 buf=247
+7:26:56 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=169 buf=248
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=36 buf=249
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=174 buf=250
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=867 buf=251
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] force-process after 5000 ms
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ▶ processAudio — 251 chunks, 80320 B
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ✖ processAudio error: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=975 buf=1
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=845 buf=2
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=206 buf=3
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=119 buf=4
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=22 buf=5
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=25 buf=6
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=7
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=8
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=9
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=10
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=11
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=12
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=13
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=14
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=15
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=16
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=17
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=18
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=19
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=20
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=21
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=22
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=23
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=24
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=25
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=26
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=183 buf=27
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=108 buf=28
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=51 buf=29
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=24 buf=30
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=26 buf=31
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=32
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=33
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=34
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=35
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=36
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=37
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=38
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=39
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=40
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=41
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=35 buf=42
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=48 buf=43
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] silence detected (800 ms) → STT
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ▶ processAudio — 43 chunks, 13760 B
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ✖ processAudio error: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=27 buf=1
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=25 buf=2
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=3
+7:26:57 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=4
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=5
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=6
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=7
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=8
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=9
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=10
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=38 buf=11
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=12
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=13
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=14
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=15
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=16
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=17
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=18
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=26 buf=19
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=20
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=8 buf=21
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=22
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=23
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=24
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=25
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=26
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=27
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=28
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=29
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=30
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=31
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=32
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=33
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=34
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=35
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=36
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=37
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=38
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=39
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=40
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=41
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=42
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=43
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=44
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=45
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=46
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=47
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=48
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=49
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=50
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=51
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=52
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=53
+7:26:58 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=54
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=55
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=56
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=57
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=58
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=59
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=60
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=61
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=62
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=63
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=64
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=65
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=66
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=67
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=68
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=69
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=70
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=71
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=72
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=73
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=74
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=75
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=76
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=77
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=78
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=79
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=80
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=81
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=82
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=83
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=84
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=85
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=86
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=87
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=88
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=89
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=90
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=91
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=92
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=93
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=94
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=53 buf=95
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=96
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=97
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=33 buf=98
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=25 buf=99
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=29 buf=100
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=26 buf=101
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=102
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=103
+7:26:59 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=104
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=105
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=106
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=107
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=108
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=109
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=110
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=111
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=112
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=113
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=114
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=115
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=116
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=117
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=118
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=119
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=120
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=121
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=122
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=123
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=124
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=125
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=126
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=127
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=128
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=129
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=130
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=131
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=132
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=133
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=134
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=135
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=136
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=137
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=138
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=139
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=140
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=141
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=142
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=143
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=144
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=145
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=146
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=147
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=148
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=22 buf=149
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=28 buf=150
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=151
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=152
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=28 buf=153
+7:27:00 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=29 buf=154
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=155
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=156
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=157
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=158
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=159
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=160
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=161
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=162
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=163
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=164
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=165
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=166
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=167
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=168
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=169
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=170
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=171
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=172
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=173
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=174
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=175
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=176
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=177
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=178
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=179
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=180
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=181
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=182
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=183
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=205 buf=184
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=125 buf=185
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=424 buf=186
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=603 buf=187
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=183 buf=188
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=62 buf=189
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=30 buf=190
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=23 buf=191
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=192
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=193
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=194
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=24 buf=195
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=196
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=197
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=198
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=199
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=200
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=201
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=202
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=53 buf=203
+7:27:01 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=21 buf=204
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=205
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=206
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=24 buf=207
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=208
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=209
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=210
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=211
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=212
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=213
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=214
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=215
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=216
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=217
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=218
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=219
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=220
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=221
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=222
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=223
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=224
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=225
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=226
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=227
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] silence detected (800 ms) → STT
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ▶ processAudio — 227 chunks, 72640 B
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ✖ processAudio error: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=1
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=2
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=3
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=4
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=5
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=6
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=7
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=8
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=9
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=10
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=11
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=12
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=13
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=14
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=15
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=16
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=17
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=18
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=19
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=20
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=21
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=22
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=23
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=24
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=25
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=26
+7:27:02 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=27
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=28
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=29
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=30
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=31
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=32
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=11 buf=33
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=34
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=35
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=36
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=37
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=10 buf=38
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=39
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=40
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=459 buf=41
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1302 buf=42
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=2132 buf=43
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=2209 buf=44
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=2733 buf=45
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1104 buf=46
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=1204 buf=47
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=476 buf=48
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=441 buf=49
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=252 buf=50
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=388 buf=51
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=908 buf=52
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=745 buf=53
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=460 buf=54
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=99 buf=55
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=55 buf=56
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=57
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=58
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=59
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=21 buf=60
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=22 buf=61
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=62
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=63
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=64
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=65
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=66
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=67
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=68
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=69
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=70
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=71
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=72
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=73
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=74
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=75
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=76
+7:27:03 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=77
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=78
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=79
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=80
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=81
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=82
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=83
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=37 buf=84
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=114 buf=85
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=73 buf=86
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=36 buf=87
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=88
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=89
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=90
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=91
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=92
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=93
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=94
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] silence detected (800 ms) → STT
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ▶ processAudio — 94 chunks, 30080 B
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ✖ processAudio error: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=1
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=2
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=3
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=4
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=5
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=6
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=7
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=8
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=9
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=12 buf=10
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=13 buf=11
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=12
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=13
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=14
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=65 buf=15
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=69 buf=16
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=69 buf=17
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=29 buf=18
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=48 buf=19
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=124 buf=20
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=161 buf=21
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=231 buf=22
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=448 buf=23
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=862 buf=24
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=204 buf=25
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=91 buf=26
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=30 buf=27
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=28
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=29
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=30
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=31
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=32
+7:27:04 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=33
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=22 buf=34
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=130 buf=35
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=238 buf=36
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=199 buf=37
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=380 buf=38
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=557 buf=39
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=173 buf=40
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=100 buf=41
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=36 buf=42
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=24 buf=43
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=44
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=22 buf=45
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=117 buf=46
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=69 buf=47
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=48
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=75 buf=49
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=187 buf=50
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=42 buf=51
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=52
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=53
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=54
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=55
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=56
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=57
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=58
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=59
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=22 buf=60
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=21 buf=61
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=25 buf=62
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=63
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=64
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=65
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=66
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=67
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=68
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=18 buf=69
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=20 buf=70
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=71
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=15 buf=72
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=73
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=16 buf=74
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=19 buf=75
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=76
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=17 buf=77
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=14 buf=78
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=8 buf=79
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] silence detected (800 ms) → STT
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ▶ processAudio — 79 chunks, 25280 B
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ✖ processAudio error: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=8 buf=1
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] chunk size=320B rms=8 buf=2
+7:27:05 PM [ws] [exotel] raw message: {"event":"stop","stream_sid":"dd6ce6b3ab4d5b9db62966c08a561a72","sequence_number":"1103","stop":{"call_sid":"3d1417b12d1bce1fbfb078c1664a1a72","leg_sid":"","account_sid":"nijvox1","reason":"canceled or call ended"}}
+
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] Stop: {"event":"stop","stream_sid":"dd6ce6b3ab4d5b9db62966c08a561a72","sequence_number":"1103","stop":{"call_sid":"3d1417b12d1bce1fbfb078c1664a1a72","leg_sid":"","account_sid":"nijvox1","reason":"canceled or call ended"}}
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ▶ processAudio — 2 chunks, 640 B
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ▶ STT: ""
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] ▶ Empty STT — skipping
+7:27:05 PM [ws] [exotel:dd6ce6b3ab4d5b9db62966c08a561a72] session closed campaignId=69bd5558a57e122161197eab

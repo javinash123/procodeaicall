@@ -186,6 +186,7 @@ export class RuntimeIntegration implements IRuntimeIntegration {
    * 7. SessionSupervisor.start()
    */
   async start(): Promise<void> {
+    console.log(`[V2 TRACE] 8. RuntimeIntegration.start()  sessionId=${this._sessionId}`);
     this._assertState(IntegrationState.IDLE, 'start');
     this._state = IntegrationState.STARTING;
 
@@ -253,6 +254,7 @@ export class RuntimeIntegration implements IRuntimeIntegration {
       return;
     }
 
+    console.log(`[V2 TRACE] 15. Runtime stopping  sessionId=${this._sessionId}  reason=${reason}`);
     this._state = IntegrationState.STOPPING;
     this._logger.info('RuntimeIntegration stopping', { reason });
 

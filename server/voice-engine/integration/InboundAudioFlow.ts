@@ -112,6 +112,9 @@ export class InboundAudioFlow implements IInboundAudioFlow {
   private _active = false;
   private _chunkSequence = 0;
 
+  /** [V2 TRACE] first-only guard */
+  private _traceFirstAudio = true;
+
   /**
    * Bound handler reference retained so it can be passed to `off()` exactly.
    */
@@ -165,6 +168,11 @@ export class InboundAudioFlow implements IInboundAudioFlow {
    * @param event - Decoded transport audio event.
    */
   private _handleAudioReceived(event: TransportAudioReceivedEvent): void {
+    if (this._traceFirstAudio) {
+      this._traceFirstAudio = false;
+      console.log(`[V2 TRACE] 11. First inbound audio  sessionId=${this._sessionId}  bytes=${event.base64Payload.length}`);
+    }
+
     // Guard 1 — session state
     if (this._mediaSession.state !== MediaSessionState.ACTIVE) return;
 

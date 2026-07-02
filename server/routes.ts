@@ -461,6 +461,13 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
 
   // Quick test to trigger an Exotel call — accepts ?phone=xxx&campaignId=yyy
   app.get("/test-call", async (req, res) => {
+    console.log(
+      `[TEST-CALL]\noriginalUrl = ${req.originalUrl}\n` +
+      `-------------------------\nreq.url = ${req.url}\n` +
+      `-------------------------\nreq.query = ${JSON.stringify(req.query)}\n` +
+      `-------------------------\ncampaignId = ${req.query.campaignId}\n` +
+      `-------------------------\nphone = ${req.query.phone}`
+    );
     const phone      = (req.query.phone      as string) || "+917828288001";
     const campaignId = (req.query.campaignId as string) || undefined;
 

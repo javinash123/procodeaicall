@@ -106,6 +106,10 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
   private readonly _handlers = new Map<string, Set<RealtimeEventHandler>>();
 
+  /** [V2 TRACE] first-only guards */
+  private _traceFirstTranscript = true;
+  private _traceFirstAIResponse = true;
+
   constructor(
     config: OpenAIRealtimeConfig,
     initialInstructions: string,
@@ -142,6 +146,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
    * @throws {ProviderError} if the connection cannot be established within the configured timeout.
    */
   async connect(): Promise<void> {
+    console.log(`[V2 TRACE] 6. OpenAIRealtimeSession.connect()  state=${this._state}`);
     if (this._state !== 'idle') {
       throw new ProviderError(
         `OpenAIRealtimeSession.connect() called in invalid state: ${this._state}`,
@@ -172,6 +177,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
       this._ws = ws;
 
       ws.on('open', () => {
+        console.log(`[V2 TRACE] 7. Realtime websocket connected  url=${url}`);
         this._logger.debug('WebSocket open — waiting for session.created');
       });
 
@@ -378,6 +384,10 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         break;
 
       case 'response.created':
+        if (this._traceFirstAIResponse) {
+          this._traceFirstAIResponse = false;
+          console.log(`[V2 TRACE] 13. First AI response received  responseId=${event.response.id}`);
+        }
         this._emit({ type: 'realtime.response_started', timestamp: ts, eventId: event.event_id, responseId: event.response.id });
         break;
 
@@ -390,6 +400,10 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         break;
 
       case 'response.audio_transcript.done':
+        if (this._traceFirstTranscript) {
+          this._traceFirstTranscript = false;
+          console.log(`[V2 TRACE] 12. First transcript received  transcript="${(event.transcript ?? '').slice(0, 80)}"`);
+        }
         // Capture completed agent transcript for question-detection in onAgentTurnCompleted()
         this._lastAgentTranscript = event.transcript ?? null;
         this._emit({ type: 'realtime.transcript_completed', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, transcript: event.transcript });

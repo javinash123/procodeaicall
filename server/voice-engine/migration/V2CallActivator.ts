@@ -45,6 +45,8 @@ import type { TransportDisconnectedEvent } from '../transport/TransportEvents.js
  * @throws If `ctx.mediaSession` is null or the integration fails to start.
  */
 export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIntegration> {
+  console.log(`[V2 TRACE] 4. activateV2Session() entered  sessionId=${ctx.sessionId}  campaignId=${ctx.campaignId}`);
+
   if (!ctx.mediaSession) {
     throw new Error(
       `V2CallActivator: SessionContext ${ctx.sessionId} has no MediaSession — cannot activate.`
@@ -92,6 +94,7 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
   // OPENAI_API_KEY is present).  The cast is safe: V2 is only enabled when
   // the provider was successfully registered.
   const provider = ctx.runtime.resolver.llm() as unknown as OpenAIRealtimeProvider;
+  console.log(`[V2 TRACE] 5. OpenAIRealtimeProvider.openSession()  sessionId=${ctx.sessionId}`);
   const providerSession = provider.openSession({ instructions });
 
   logger.info('Provider session opened (unconnected — bridge will connect it)', {

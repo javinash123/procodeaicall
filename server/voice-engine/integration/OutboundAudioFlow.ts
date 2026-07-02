@@ -127,6 +127,9 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
   private _active = false;
   private _chunkSequence = 0;
 
+  /** [V2 TRACE] first-only guard */
+  private _traceFirstAudio = true;
+
   /**
    * Pre-bound handler references retained for clean `off()` equality.
    */
@@ -186,6 +189,11 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
    */
   private _handleAudioReady(event: BridgeAudioReadyEvent): void {
     if (!this._audioEngine.isRunning) return;
+
+    if (this._traceFirstAudio) {
+      this._traceFirstAudio = false;
+      console.log(`[V2 TRACE] 14. First outbound audio sent  sessionId=${this._sessionId}  responseId=${event.responseId}`);
+    }
 
     const chunk = this._buildChunk(event.base64Delta, event.timestamp);
 

@@ -285,6 +285,7 @@ export function setupWebSocketServer(httpServer: Server): void {
           ctx.mediaSession,   // non-null confirmed above
           clientIp
         );
+        console.log(`[V2 TRACE] 3. Transport accepted  sessionId=${ctx.sessionId}`);
         log(`[V2 ROUTER] Socket owned by TransportGateway — sessionId=${ctx.sessionId}`, "ws");
 
         // ── Activate the V2 pipeline ──────────────────────────────────────────
@@ -374,6 +375,7 @@ export function setupWebSocketServer(httpServer: Server): void {
         }
 
         if (v2Session) {
+          console.log(`[V2 TRACE] 2. Router matched session  sessionId=${(v2Session as SessionContext).sessionId}`);
           routeToV2(v2Session as SessionContext);
         } else {
           log(`[V2 ROUTER] Session missing (callSid=${callSid || "(none)"}, phone=${phone || "(none)"}) — fallback to V1`, "ws");

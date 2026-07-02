@@ -245,6 +245,7 @@ export class RealtimeBridge implements IRealtimeBridge {
    * Automatically attaches `TurnDiagnosticsCollector` — every call logs diagnostics.
    */
   async connect(): Promise<void> {
+    console.log(`[V2 TRACE] 9. RealtimeBridge.connect()  sessionId=${this._sessionId}`);
     this._assertNotDestroyed('connect');
 
     this._logger.info('RealtimeBridge connecting to provider');
@@ -321,6 +322,7 @@ export class RealtimeBridge implements IRealtimeBridge {
       });
 
       this._diagnosticsCollector.attach(this._provider);
+      console.log(`[V2 TRACE] 10. Diagnostics attached  sessionId=${this._sessionId}`);
       this._logger.info('[TURN-DIAGNOSTICS] Collector attached — diagnostics active for this call', {
         sessionId: this._sessionId,
         providerSessionId: this._provider.sessionId,
@@ -362,6 +364,7 @@ export class RealtimeBridge implements IRealtimeBridge {
 
     // ── Detach diagnostics (always, even if close() throws) ───────────────────
     if (this._diagnosticsCollector) {
+      console.log(`[V2 TRACE] 16. Diagnostics detached  sessionId=${this._sessionId}`);
       try {
         this._diagnosticsCollector.detach();
       } catch {
@@ -568,6 +571,7 @@ export class RealtimeBridge implements IRealtimeBridge {
       const filepath = path.join(dir, filename);
       fs.writeFileSync(filepath, JSON.stringify(record, null, 2), 'utf8');
 
+      console.log(`[V2 TRACE] 17. JSON diagnostics written  sessionId=${this._sessionId}  file=${filename}`);
       this._logger.info('[TURN-DIAGNOSTICS] Call summary persisted to JSON', { filepath });
     } catch (err) {
       // Never let file I/O errors interrupt the disconnect path
