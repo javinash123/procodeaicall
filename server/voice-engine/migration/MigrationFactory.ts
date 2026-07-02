@@ -24,7 +24,7 @@
  */
 
 import type { ILogger } from '../logger/index.js';
-import type { ILLMProvider } from '../interfaces/index.js';
+import type { ILLMProvider, ISTTProvider, ITTSProvider } from '../interfaces/index.js';
 import type { IMetricsCollector } from '../metrics/index.js';
 import type { IVoiceEngineFactory } from '../engine/VoiceEngineFactory.js';
 import type { ITransportFactory } from '../transport/TransportFactory.js';
@@ -68,6 +68,20 @@ export interface MigrationFactoryDependencies {
    * so that ctx.runtime.resolver.llm() resolves correctly.
    */
   readonly llmProvider?: ILLMProvider;
+
+  /**
+   * STT provider singleton. When supplied, it is registered as
+   * Tokens.STT_PROVIDER in every session's VoiceEngineRuntime container
+   * so that ctx.runtime.resolver.stt() resolves correctly.
+   */
+  readonly sttProvider?: ISTTProvider;
+
+  /**
+   * TTS provider singleton. When supplied, it is registered as
+   * Tokens.TTS_PROVIDER in every session's VoiceEngineRuntime container
+   * so that ctx.runtime.resolver.tts() resolves correctly.
+   */
+  readonly ttsProvider?: ITTSProvider;
 
   /**
    * Metrics collector singleton. When supplied, it is registered as
@@ -172,6 +186,8 @@ export class MigrationFactory implements IMigrationFactory {
       this._deps.transportFactory,
       this._deps.logger,
       this._deps.llmProvider,
+      this._deps.sttProvider,
+      this._deps.ttsProvider,
       this._deps.metricsCollector
     );
   }

@@ -58,8 +58,8 @@ export const OpenAIRealtimeConfigSchema = z.object({
   /** Realtime WebSocket URL. */
   realtimeURL: z.string().url().default('wss://api.openai.com/v1/realtime'),
 
-  /** Model to use for realtime conversations. */
-  model: z.string().default('gpt-4o-realtime-preview'),
+  /** Model to use for realtime conversations. Must be a GA Realtime model. */
+  model: z.string().default('gpt-realtime'),
 
   /** Voice used for audio output. */
   voice: RealtimeVoiceSchema.default('alloy'),

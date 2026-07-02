@@ -34,7 +34,7 @@
 
 import type { ILogger } from '../logger/index.js';
 import type { IMetricsCollector } from '../metrics/index.js';
-import type { ILLMProvider } from '../interfaces/index.js';
+import type { ILLMProvider, ISTTProvider, ITTSProvider } from '../interfaces/index.js';
 import type { IVoiceEngineFactory } from '../engine/VoiceEngineFactory.js';
 import type { ITransportFactory } from '../transport/TransportFactory.js';
 import type { BootstrapOptions } from '../bootstrap/Bootstrap.js';
@@ -249,6 +249,8 @@ export class SessionFactory implements ISessionFactory {
   private readonly _log: ILogger;
   private readonly _logger: ILogger;
   private readonly _llmProvider: ILLMProvider | undefined;
+  private readonly _sttProvider: ISTTProvider | undefined;
+  private readonly _ttsProvider: ITTSProvider | undefined;
   private readonly _metricsCollector: IMetricsCollector | undefined;
   private readonly _engineFactory: IVoiceEngineFactory;
   private readonly _transportFactory: ITransportFactory;
@@ -258,6 +260,8 @@ export class SessionFactory implements ISessionFactory {
    * @param transportFactory - Factory for constructing `ITransportGateway` instances.
    * @param logger           - Logger; will be child-bound to this component.
    * @param llmProvider      - LLM provider singleton to register in every session runtime.
+   * @param sttProvider      - STT provider singleton to register in every session runtime.
+   * @param ttsProvider      - TTS provider singleton to register in every session runtime.
    * @param metricsCollector - Metrics collector singleton to register in every session runtime.
    */
   constructor(
@@ -265,12 +269,16 @@ export class SessionFactory implements ISessionFactory {
     transportFactory: ITransportFactory,
     logger: ILogger,
     llmProvider?: ILLMProvider,
+    sttProvider?: ISTTProvider,
+    ttsProvider?: ITTSProvider,
     metricsCollector?: IMetricsCollector
   ) {
     this._engineFactory    = engineFactory;
     this._transportFactory = transportFactory;
     this._logger           = logger;
     this._llmProvider      = llmProvider;
+    this._sttProvider      = sttProvider;
+    this._ttsProvider      = ttsProvider;
     this._metricsCollector = metricsCollector;
     this._log              = logger.child({ component: 'SessionFactory' });
   }
@@ -306,6 +314,8 @@ export class SessionFactory implements ISessionFactory {
       providers: {
         logger: this._logger,
         ...(this._llmProvider      ? { llm:     this._llmProvider }      : {}),
+        ...(this._sttProvider      ? { stt:     this._sttProvider }      : {}),
+        ...(this._ttsProvider      ? { tts:     this._ttsProvider }      : {}),
         ...(this._metricsCollector ? { metrics: this._metricsCollector } : {}),
         ...bootstrapOptions.providers,
       },

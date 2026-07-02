@@ -28,7 +28,7 @@ import { TransportFactory } from '../transport/TransportFactory.js';
 import { ExotelAdapter } from '../providers/exotel/ExotelAdapter.js';
 import { createV2SessionCoordinator } from './MigrationFactory.js';
 import { createVoiceEngineRuntime } from '../bootstrap/Bootstrap.js';
-import type { ILLMProvider } from '../interfaces/index.js';
+import type { ILLMProvider, ISTTProvider, ITTSProvider } from '../interfaces/index.js';
 import type { IV2SessionCoordinator } from './V2SessionCoordinator.js';
 import type { ILogger, LogContext } from '../logger/index.js';
 import type { IMetricsCollector, Histogram, Counter, Gauge, MetricEvent } from '../metrics/index.js';
@@ -60,6 +60,61 @@ function createConsoleLogger(bindings: LogContext = {}): ILogger {
       createConsoleLogger({ ...bindings, ...childBindings }),
   };
 }
+
+// ─── No-op STT Provider ───────────────────────────────────────────────────────
+
+/**
+ * Minimal no-op `ISTTProvider`.
+ *
+ * The V2 path uses OpenAI Realtime (multimodal), which handles speech-to-text
+ * natively inside the model.  A discrete STT provider is not called on any
+ * live code path, but the token MUST be registered so that the DI container
+ * does not throw if any module ever resolves it, and so the DI validation
+ * block can report OK for ISTTProvider.
+ */
+const _noopSTTProvider: ISTTProvider = {
+  name: 'NoopSTTProvider',
+  capabilities: {
+    supportsStreaming:      false,
+    supportedLanguages:    [],
+    supportedAudioFormats: [],
+    supportsInterimResults: false,
+  },
+  ping: async () => ({ status: 'healthy', message: 'noop', checkedAt: Date.now() }),
+  transcribe: async () => ({ transcript: '', confidence: 0, isFinal: true, languageCode: 'en-US' }),
+  openStream: async (_config, _onResult) => ({
+    isActive: false,
+    write:    async () => {},
+    close:    async () => {},
+  }),
+};
+
+// ─── No-op TTS Provider ───────────────────────────────────────────────────────
+
+/**
+ * Minimal no-op `ITTSProvider`.
+ *
+ * The V2 path uses OpenAI Realtime for audio synthesis.  A discrete TTS
+ * provider is not called on any live code path, but the token MUST be
+ * registered so that the DI container does not throw if any module ever
+ * resolves it, and so the DI validation block can report OK for ITTSProvider.
+ */
+const _noopTTSProvider: ITTSProvider = {
+  name: 'NoopTTSProvider',
+  capabilities: {
+    supportsStreaming:       false,
+    supportedVoices:        [],
+    supportedOutputFormats: [],
+    supportsSSML:           false,
+  },
+  ping: async () => ({ status: 'healthy', message: 'noop', checkedAt: Date.now() }),
+  synthesize: async () => ({
+    audio:          Buffer.alloc(0),
+    format:         { encoding: 'LINEAR16', sampleRate: 8000, channels: 1 },
+    durationMs:     0,
+    characterCount: 0,
+  }),
+};
 
 // ─── No-op Metrics ────────────────────────────────────────────────────────────
 
@@ -133,7 +188,9 @@ function _printDIValidation(
   const runtime = createVoiceEngineRuntime({
     providers: {
       logger,
-      metrics: _noopMetrics,
+      metrics:  _noopMetrics,
+      stt:      _noopSTTProvider,
+      tts:      _noopTTSProvider,
       ...(llmProvider ? { llm: llmProvider } : {}),
     },
   });
@@ -149,6 +206,8 @@ function _printDIValidation(
     '[DI VALIDATION]',
     check('ILogger',           () => runtime.resolver.logger()),
     check('ILLMProvider',      () => runtime.resolver.llm()),
+    check('ISTTProvider',      () => runtime.resolver.stt()),
+    check('ITTSProvider',      () => runtime.resolver.tts()),
     check('IMetricsCollector', () => runtime.resolver.metrics()),
     check('HealthRegistry',    () => runtime.resolver.health()),
     check('Config',            () => runtime.config),
@@ -206,7 +265,11 @@ export function getV2Coordinator(): IV2SessionCoordinator {
 
       voiceEngineFactory = new ProviderAwareVoiceEngineFactory(
         voiceEngineFactory,
-        { llm: llmProviderSingleton }
+        {
+          llm: llmProviderSingleton,
+          stt: _noopSTTProvider,
+          tts: _noopTTSProvider,
+        }
       );
 
       logger.info('[VoiceEngine] OpenAI LLM provider registered in DI chain');
@@ -217,6 +280,13 @@ export function getV2Coordinator(): IV2SessionCoordinator {
       });
     }
   } else {
+    voiceEngineFactory = new ProviderAwareVoiceEngineFactory(
+      voiceEngineFactory,
+      {
+        stt: _noopSTTProvider,
+        tts: _noopTTSProvider,
+      }
+    );
     logger.warn('[VoiceEngine] OPENAI_API_KEY not set — LLM provider will NOT be injected into session DI containers');
   }
 
@@ -237,6 +307,8 @@ export function getV2Coordinator(): IV2SessionCoordinator {
       transportFactory:  new TransportFactory(logger, [exotelAdapter]),
       logger,
       llmProvider:       llmProviderSingleton,
+      sttProvider:       _noopSTTProvider,
+      ttsProvider:       _noopTTSProvider,
       metricsCollector:  _noopMetrics,
     },
     {

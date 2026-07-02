@@ -1,0 +1,32 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0KMongoDB connected successfully
+7:35:07 AM [ws] WebSocket server ready on path /stream
+7:35:07 AM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+7:35:08 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+7:35:13 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev host=fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev
+7:35:13 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:35:28 AM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}
+7:37:39 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev host=fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev
+7:37:39 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:37:42 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev host=fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev
+7:37:42 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:37:50 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+8:19:06 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev host=fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev
+8:19:06 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+8:19:16 AM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}

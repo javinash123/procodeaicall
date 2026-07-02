@@ -170,7 +170,6 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
       const ws = new WebSocket(url, {
         headers: {
           Authorization: `Bearer ${this._config.apiKey}`,
-          'OpenAI-Beta': 'realtime=v1',
         },
       });
 

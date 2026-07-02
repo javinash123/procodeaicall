@@ -1,0 +1,138 @@
+The Voice Engine migration is COMPLETE.
+
+The runtime now reaches:
+
+✓ Session created
+✓ routing=V2
+✓ Transport accepted
+✓ activateV2Session()
+✓ Campaign loaded
+✓ OpenAIRealtimeProvider.openSession()
+✓ RuntimeIntegration.start()
+✓ RealtimeBridge.connect()
+✓ OpenAIRealtimeSession.connect()
+✓ WebSocket connected
+
+The ONLY failure is:
+
+beta_api_shape_disabled
+
+"The Realtime Beta API is no longer supported.
+Please use /v1/realtime for the GA API."
+
+DO NOT investigate:
+
+- Voice Engine
+- Runtime
+- DI
+- Exotel
+- Transport
+- Routing
+- Conversation Engine
+
+Those are working correctly.
+
+========================================================
+
+TASK
+
+Migrate ONLY the OpenAIRealtime implementation from the deprecated Beta protocol to the current GA Realtime API.
+
+Review ONLY these files:
+
+- OpenAIRealtimeSession.ts
+- OpenAIRealtimeProvider.ts
+- OpenAIRealtimeTypes.ts
+- OpenAIRealtimeConfig.ts
+
+Do NOT touch any other subsystem unless absolutely required.
+
+========================================================
+
+Update the following to the GA protocol:
+
+1. session creation
+
+2. session.update
+
+3. response.create
+
+4. input audio events
+
+5. output audio events
+
+6. transcript events
+
+7. response events
+
+8. interruption events
+
+9. tool calling events
+
+10. session.created handling
+
+11. response.done handling
+
+12. conversation item events
+
+Remove every Beta-only event.
+
+Remove every Beta-only payload shape.
+
+Use the official GA Realtime protocol everywhere.
+
+========================================================
+
+Before changing code:
+
+List every deprecated Beta event currently used.
+
+For each one show the GA equivalent.
+
+Then replace it.
+
+========================================================
+
+After implementation
+
+Run one local validation.
+
+Show:
+
+CONNECTED
+
+↓
+
+session.created
+
+↓
+
+session.updated
+
+↓
+
+response.created
+
+without waiting for a real phone call.
+
+========================================================
+
+Deliver:
+
+1. files changed
+
+2. Beta events removed
+
+3. GA events added
+
+4. confirmation that OpenAIRealtimeSession now speaks only the GA Realtime protocol.
+
+Do not modify any Voice Engine architecture.
+
+Also verify the configured model.
+
+If the code still uses any deprecated preview realtime model (for example gpt-4o-realtime-preview), replace it with the current GA realtime model supported by the OpenAI Realtime API.
+
+Update configuration accordingly.
+
+Do not leave deprecated model names anywhere in the code.

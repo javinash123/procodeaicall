@@ -1,0 +1,88 @@
+The ILLMProvider registration has been fixed.
+
+Before I make another test call, perform a complete Dependency Injection validation.
+
+DO NOT redesign anything.
+DO NOT add new features.
+DO NOT modify conversation logic.
+DO NOT modify OpenAI logic.
+DO NOT modify Exotel logic.
+
+====================================================
+TASK
+====================================================
+
+Inspect every dependency resolved by the VoiceEngineRuntime during activateV2Session().
+
+List every token that can ever be resolved from DependencyContainer.
+
+Examples include (but are not limited to):
+
+ILogger
+ILLMProvider
+ITelephonyProvider
+ISTTProvider
+ITTSProvider
+IMetricsCollector
+HealthRegistry
+Config
+Clock
+ProviderResolver
+
+For EACH token:
+
+1. Show where it is registered.
+2. Show where it is first resolved.
+3. Verify it is always registered before DependencyContainer.seal().
+4. Verify no runtime path can resolve an unregistered token.
+
+====================================================
+IF ANY TOKEN IS MISSING
+====================================================
+
+Fix ALL missing registrations NOW.
+
+Do NOT stop after the first one.
+
+Do NOT wait for another runtime failure.
+
+Complete the DI graph in one pass.
+
+====================================================
+AFTER FIXING
+====================================================
+
+Run a dependency validation during startup.
+
+Print ONLY ONCE:
+
+[DI VALIDATION]
+
+ILogger ............. OK
+ILLMProvider ........ OK
+ISTTProvider ........ OK
+ITTSProvider ........ OK
+IMetricsCollector ... OK
+HealthRegistry ...... OK
+Config .............. OK
+
+Every required runtime dependency must be validated before the server starts accepting calls.
+
+====================================================
+ACCEPTANCE CRITERIA
+====================================================
+
+There should be NO runtime exceptions of the form:
+
+DependencyContainer: token "..." is not registered.
+
+Not for ILogger.
+Not for ILLMProvider.
+Not for any future token.
+
+Deliver:
+
+• Tokens checked
+• Tokens fixed
+• Files changed
+• Confirmation that the DI graph is now complete.
