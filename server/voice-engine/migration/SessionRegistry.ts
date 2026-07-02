@@ -26,6 +26,7 @@
 import type { ILogger } from '../logger/index.js';
 import type { SessionContext } from './SessionContext.js';
 import type { SessionId, CallSid, Nullable } from '../types/index.js';
+import { normalizePhoneNumber } from '../../phoneUtils.js';
 
 // ─── Public Interface ─────────────────────────────────────────────────────────
 
@@ -199,7 +200,8 @@ export class SessionRegistry implements ISessionRegistry {
   }
 
   getByPhone(phone: string): Nullable<SessionContext> {
-    const sessionId = this._phoneIndex.get(phone);
+    const normalized = normalizePhoneNumber(phone);
+    const sessionId  = this._phoneIndex.get(normalized);
     if (!sessionId) return null;
     return this._sessions.get(sessionId) ?? null;
   }
@@ -220,8 +222,9 @@ export class SessionRegistry implements ISessionRegistry {
         `SessionRegistry: cannot updatePhone — session "${sessionId}" not registered.`
       );
     }
-    this._phoneIndex.set(phone, sessionId);
-    this._log.debug('Phone index updated', { sessionId, phone });
+    const normalized = normalizePhoneNumber(phone);
+    this._phoneIndex.set(normalized, sessionId);
+    this._log.debug('Phone index updated', { sessionId, phone: normalized });
   }
 
   list(): readonly SessionContext[] {

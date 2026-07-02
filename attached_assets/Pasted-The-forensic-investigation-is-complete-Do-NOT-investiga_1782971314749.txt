@@ -1,0 +1,114 @@
+The forensic investigation is complete.
+
+Do NOT investigate anymore.
+
+Implement ONLY the following fixes.
+
+====================================================
+FIX 1 - Canonical Phone Normalization
+====================================================
+
+Create one shared helper:
+
+normalizePhoneNumber(phone: string): string
+
+Rules:
+
+- Remove spaces
+- Remove hyphens
+- Remove ()
+- Remove +
+- Remove leading country code 91
+- Remove leading 0
+- Return only the last 10 digits
+
+Examples:
+
++919893328298 -> 9893328298
+919893328298 -> 9893328298
+09893328298 -> 9893328298
+9893328298 -> 9893328298
+
+Use this helper EVERYWHERE:
+
+- SessionFactory
+- SessionRegistry
+- V2SessionCoordinator
+- attachPhone()
+- getSession()
+- wsServer router
+
+Do not duplicate normalization logic.
+
+====================================================
+FIX 2 - CallSid Extraction
+====================================================
+
+Create one helper:
+
+extractCallSid(message): string | null
+
+Support ALL variants:
+
+message.start.call_sid
+message.start.callSid
+message.start.CallSid
+
+message.call_sid
+message.callSid
+message.CallSid
+
+Trim whitespace.
+
+Return null if empty.
+
+Use ONLY this helper everywhere.
+
+====================================================
+FIX 3 - Router Lookup
+====================================================
+
+Router lookup order must be:
+
+1. Lookup by CallSid
+2. If not found, lookup by normalized phone
+3. If still not found, fallback to V1
+
+====================================================
+FIX 4 - Minimal Logs
+====================================================
+
+Keep only these logs:
+
+[V2 ROUTER]
+
+rawCallSid=
+normalizedCallSid=
+
+rawPhone=
+normalizedPhone=
+
+lookupMethod=
+
+matchedSession=
+
+routing=V2|V1
+
+====================================================
+ACCEPTANCE CRITERIA
+====================================================
+
+After one test call the console MUST show:
+
+[V2 ROUTER]
+routing=V2
+
+RuntimeIntegration.start()
+
+RealtimeBridge.connect()
+
+Diagnostics attached
+
+No fallbackToV1()
+
+Do not modify anything else.

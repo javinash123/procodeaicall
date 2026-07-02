@@ -814,6 +814,32 @@ export async function handleExotelStream(
           // Log the full Start payload so we can diagnose any shape variations
           log(`[exotel] Start payload: ${JSON.stringify(payload, null, 2)}`, "ws");
 
+          // ── FORENSIC PART 3: PAYLOAD COMPARISON — V1 side ─────────────────
+          // This is the SAME raw WebSocket message the router received.
+          // The raw bytes were buffered by the router and replayed via ws.emit().
+          // Each side calls JSON.parse independently — they are NOT the same JS object.
+          console.log([
+            `\n${'◇'.repeat(60)}`,
+            `[FORENSIC] PAYLOAD COMPARISON — V1 handler sees this 'start' message`,
+            `  raw text (complete):`,
+            rawText,
+            ``,
+            `  V1 callSid extraction:`,
+            `    payload.start.call_sid : ${JSON.stringify(payload?.start?.call_sid)}`,
+            `    payload.start.CallSid  : ${JSON.stringify(payload?.start?.CallSid)}`,
+            `    payload.start.callSid  : ${JSON.stringify(payload?.start?.callSid)}`,
+            `    payload.call_sid       : ${JSON.stringify(payload?.call_sid)}`,
+            `  V1 from extraction:`,
+            `    payload.start.from     : ${JSON.stringify(payload?.start?.from)}`,
+            `    payload.start.From     : ${JSON.stringify(payload?.start?.From)}`,
+            `    payload.from           : ${JSON.stringify((payload as any)?.from)}`,
+            `    payload.From           : ${JSON.stringify((payload as any)?.From)}`,
+            `  NOTE: Router and V1 parse the same raw bytes separately — they are`,
+            `        NOT the same JavaScript object (each JSON.parse call creates a new one).`,
+            `${'◇'.repeat(60)}\n`,
+          ].join('\n'));
+          // ── END FORENSIC ─────────────────────────────────────────────────
+
           // streamSid may be at the top level or nested under payload.start
           session.streamSid =
             payload?.streamSid ??

@@ -1,0 +1,232 @@
+STOP.
+
+Do NOT modify any code.
+
+Do NOT fix anything.
+
+Do NOT refactor anything.
+
+Do NOT normalize phone numbers.
+
+Do NOT change the router.
+
+Do NOT change OpenAI.
+
+Do NOT change Exotel.
+
+Do NOT change diagnostics.
+
+Your ONLY task is to perform a runtime forensic investigation.
+
+====================================================
+KNOWN FACTS
+====================================================
+
+1. /test-call creates a V2 session.
+
+2. SessionRegistry reports a session was registered.
+
+3. Exotel connects successfully.
+
+4. Router falls back to V1.
+
+5. V2 TRACE stops before RuntimeIntegration starts.
+
+6. TURN-DIAGNOSTICS never appears.
+
+7. The legacy V1 pipeline processes the call.
+
+====================================================
+I WANT ABSOLUTE PROOF
+====================================================
+
+Instrument the runtime ONLY.
+
+Do NOT change behaviour.
+
+====================================================
+PART 1
+Show the complete lifetime of ONE session.
+
+Print:
+
+SESSION CREATED
+
+sessionId
+
+phone
+
+normalizedPhone
+
+campaignId
+
+callSid
+
+registry size
+
+----------------------------------------------------
+
+SESSION ATTACHED
+
+callSid
+
+phone
+
+normalizedPhone
+
+registry size
+
+----------------------------------------------------
+
+EXOTEL START EVENT
+
+Dump the ENTIRE decoded object exactly as the router receives it.
+
+I want the complete JSON.
+
+Do NOT truncate.
+
+----------------------------------------------------
+
+ROUTER LOOKUP
+
+Print
+
+lookup by callSid
+
+lookup by phone
+
+normalized phone
+
+registry contents
+
+registry keys
+
+result
+
+----------------------------------------------------
+
+If lookup fails
+
+print WHY.
+
+Not assumptions.
+
+Actual values.
+
+====================================================
+PART 2
+OBJECT IDENTITY
+====================================================
+
+Print object identity for
+
+SessionContext
+
+TransportGateway
+
+MediaSession
+
+VoiceEngine
+
+RealtimeBridge
+
+OpenAIRealtimeSession
+
+If any object is recreated unexpectedly,
+
+show where.
+
+====================================================
+PART 3
+PAYLOAD COMPARISON
+====================================================
+
+I observed:
+
+Router logs
+
+callSid=(none)
+
+Later
+
+V1 handler logs
+
+call_sid=xxxxxxxx
+
+Explain this contradiction.
+
+Show
+
+1.
+
+Raw websocket message
+
+2.
+
+Decoded message used by router
+
+3.
+
+Decoded message used by V1
+
+4.
+
+Are they literally the same object?
+
+YES / NO
+
+If NO
+
+show exactly where they diverge.
+
+====================================================
+PART 4
+SESSION REGISTRY
+====================================================
+
+Print every key stored.
+
+Example
+
+callSid:
+
+phone:
+
+normalized phone:
+
+campaignId:
+
+sessionId:
+
+Show every lookup.
+
+====================================================
+PART 5
+FINAL ROOT CAUSE
+====================================================
+
+At the end answer ONLY:
+
+Root Cause #1
+
+Root Cause #2
+
+Root Cause #3
+
+Rank them by confidence.
+
+Do NOT write code.
+
+Do NOT suggest fixes.
+
+Do NOT say "probably".
+
+Only use evidence collected during runtime.
+
+====================================================
+DELIVERABLE
+
+One forensic report.
+
+Nothing else.

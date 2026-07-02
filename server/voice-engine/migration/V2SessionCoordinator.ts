@@ -1,3 +1,5 @@
+import { normalizePhoneNumber } from '../../phoneUtils.js';
+
 /**
  * @module V2SessionCoordinator
  *
@@ -214,8 +216,9 @@ export class V2SessionCoordinator implements IV2SessionCoordinator {
   }
 
   attachPhone(sessionId: SessionId, phone: string): void {
-    this._log.debug('Attaching phone', { sessionId, phone });
-    this._registry.updatePhone(sessionId, phone);
+    const normalized = normalizePhoneNumber(phone);
+    this._log.debug('Attaching phone', { sessionId, phone: normalized });
+    this._registry.updatePhone(sessionId, normalized);
   }
 
   getSession(lookup: SessionLookup): Nullable<Readonly<SessionContext>> {
@@ -226,7 +229,7 @@ export class V2SessionCoordinator implements IV2SessionCoordinator {
       return this._registry.getByCallSid(lookup.callSid);
     }
     if (lookup.phone !== undefined) {
-      return this._registry.getByPhone(lookup.phone);
+      return this._registry.getByPhone(normalizePhoneNumber(lookup.phone));
     }
 
     this._log.warn('getSession called with no lookup key');

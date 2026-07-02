@@ -13,11 +13,7 @@ export const callSidMap = new Map<string, string>();
 export const phoneCallMap = new Map<string, string>();
 
 /**
- * Normalise a phone number to its last 10 digits so that
- *   "+919893328298", "919893328298", "09893328298", "9893328298"
- * all hash to the same key "9893328298".
+ * Normalise a phone number to its last 10 digits.
+ * Delegates to the shared canonical helper in phoneUtils.
  */
-export function normalizePhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  return digits.slice(-10);
-}
+export { normalizePhoneNumber as normalizePhone } from './phoneUtils';

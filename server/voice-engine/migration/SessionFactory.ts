@@ -51,6 +51,7 @@ import { MediaSessionFactory } from '../media/MediaSessionFactory.js';
 import { createAudioEngine } from '../audio-engine/AudioEngineFactory.js';
 import { OrchestratorState } from '../orchestrator/ConversationOrchestrator.js';
 import { RuntimeState } from '../runtime/RuntimeState.js';
+import { normalizePhoneNumber } from '../../phoneUtils.js';
 
 // ─── Session ID ───────────────────────────────────────────────────────────────
 
@@ -342,7 +343,7 @@ export class SessionFactory implements ISessionFactory {
     const context = createSessionContext({
       sessionId,
       callSid:          params.callSid ?? null,
-      phone:            params.phone   ?? null,
+      phone:            params.phone ? normalizePhoneNumber(params.phone) : null,
       campaignId,
       createdAt:        Date.now(),
       runtime,

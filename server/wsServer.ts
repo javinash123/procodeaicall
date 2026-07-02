@@ -9,6 +9,7 @@ import { handleExotelStream } from "./exotelStreamHandler";
 import { getV2Coordinator } from "./voice-engine/migration/CoordinatorBootstrap";
 import type { SessionContext } from "./voice-engine/migration/SessionContext";
 import { activateV2Session } from "./voice-engine/migration/V2CallActivator";
+import { normalizePhoneNumber, extractCallSid } from "./phoneUtils";
 
 // ─── V2 Rollback Flag ─────────────────────────────────────────────────────────
 //
@@ -341,44 +342,50 @@ export function setupWebSocketServer(httpServer: Server): void {
       if (event === "start") {
         decided = true;
 
-        // Exotel embeds call identifiers inside start.customParameters and
-        // the top-level start object depending on the API version.
+        // ── FIX 2: Extract callSid via canonical helper (all field variants) ──
+        const rawCallSid  = extractCallSid(parsed);
+        const callSid     = rawCallSid ?? "";
+
+        // ── FIX 1: Extract and normalize phone ────────────────────────────────
         const startBlock = parsed.start ?? {};
-        const callSid: string =
-          startBlock.callSid    ||
-          startBlock.callSID    ||
-          parsed.callSid        ||
+        const rawPhone: string =
+          startBlock.from                          ||
+          (startBlock as any).From                 ||
+          startBlock.customParameters?.phone       ||
+          startBlock.customParameters?.From        ||
+          startBlock.customParameters?.callerPhone ||
           "";
-        const phone: string =
-          startBlock.from                             ||
-          startBlock.customParameters?.phone          ||
-          startBlock.customParameters?.From           ||
-          startBlock.customParameters?.callerPhone    ||
-          "";
+        const normalizedPhone = rawPhone ? normalizePhoneNumber(rawPhone) : "";
 
-        log(`[V2 ROUTER] 'start' received — callSid=${callSid || "(none)"} phone=${phone || "(none)"}`, "ws");
-
+        // ── FIX 3: Lookup order — callSid → normalized phone → V1 ─────────────
         const coordinator = getV2Coordinator();
         let v2Session: ReturnType<typeof coordinator.getSession> = null;
+        let lookupMethod = "none";
 
         if (callSid) {
           v2Session = coordinator.getSession({ callSid });
-          if (v2Session) {
-            log(`[V2 ROUTER] Session found by callSid=${callSid}`, "ws");
-          }
+          if (v2Session) lookupMethod = "callSid";
         }
-        if (!v2Session && phone) {
-          v2Session = coordinator.getSession({ phone });
-          if (v2Session) {
-            log(`[V2 ROUTER] Session found by phone=${phone}`, "ws");
-          }
+        if (!v2Session && normalizedPhone) {
+          v2Session = coordinator.getSession({ phone: normalizedPhone });
+          if (v2Session) lookupMethod = "phone";
         }
 
+        const routing         = v2Session ? "V2" : "V1";
+        const matchedSession  = v2Session ? (v2Session as SessionContext).sessionId : "none";
+
+        // ── FIX 4: Minimal [V2 ROUTER] log ────────────────────────────────────
+        log(
+          `[V2 ROUTER] rawCallSid=${rawCallSid ?? "(none)"} normalizedCallSid=${callSid || "(none)"}` +
+          ` rawPhone=${rawPhone || "(none)"} normalizedPhone=${normalizedPhone || "(none)"}` +
+          ` lookupMethod=${lookupMethod} matchedSession=${matchedSession} routing=${routing}`,
+          "ws"
+        );
+
         if (v2Session) {
-          console.log(`[V2 TRACE] 2. Router matched session  sessionId=${(v2Session as SessionContext).sessionId}`);
+          console.log(`[V2 TRACE] 2. Router matched session  sessionId=${matchedSession}`);
           routeToV2(v2Session as SessionContext);
         } else {
-          log(`[V2 ROUTER] Session missing (callSid=${callSid || "(none)"}, phone=${phone || "(none)"}) — fallback to V1`, "ws");
           fallbackToV1();
         }
         return;
