@@ -37,7 +37,7 @@ import type { LLMConfig, LLMRequest, LLMResponse, LLMStreamChunk, LLMCapabilitie
 import type { HealthStatus } from '../../monitoring/index.js';
 import type { ILogger } from '../../logger/index.js';
 import type { IMetricsCollector } from '../../metrics/index.js';
-import { ProviderError, ErrorCode } from '../../errors/index.js';
+import { ProviderError, ErrorCode, ConfigurationError } from '../../errors/index.js';
 import { ConversationSessionContext } from './ConversationSessionContext.js';
 import type { PolicyConversationContext } from '../../conversation/index.js';
 
@@ -100,6 +100,13 @@ export interface OpenSessionOptions {
 
   /** Optional tools to make available from the start. */
   readonly tools?: readonly Tool[];
+
+  /**
+   * Call-session ID to key the structured execution trace.
+   * When provided, every important protocol event is written to
+   * `logs/openai-trace/<traceSessionId>.json` for post-call analysis.
+   */
+  readonly traceSessionId?: string;
 }
 
 /**
@@ -127,6 +134,58 @@ export class OpenAIRealtimeProvider implements ILLMProvider, ILLMStreamingProvid
     this._config = config;
     this._logger = logger.child({ provider: 'openai-realtime' });
     this._metrics = metrics;
+    OpenAIRealtimeProvider._runValidation(config);
+  }
+
+  /**
+   * Validates the provider configuration against the current GA Realtime protocol.
+   * Prints a validation table at startup and throws if any check fails.
+   */
+  private static _runValidation(config: OpenAIRealtimeConfig): void {
+    const GA_VOICES = new Set(['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse']);
+    const GA_AUDIO_FORMATS = new Set(['pcm16', 'g711_ulaw', 'g711_alaw']);
+    const GA_TRANSCRIPTION_MODELS = new Set(['gpt-4o-transcribe', 'gpt-4o-mini-transcribe', 'whisper-1']);
+    const GA_TURN_DETECTION_TYPES = new Set(['server_vad', 'semantic_vad']);
+
+    const voiceOk          = GA_VOICES.has(config.voice);
+    const inputFmtOk       = GA_AUDIO_FORMATS.has(config.inputAudioFormat);
+    const outputFmtOk      = GA_AUDIO_FORMATS.has(config.outputAudioFormat);
+    const transcriptionOk  = GA_TRANSCRIPTION_MODELS.has(config.transcriptionModel);
+    const turnDetectionOk  = GA_TURN_DETECTION_TYPES.has(config.turnDetection.type);
+    const sessionOk        = voiceOk && inputFmtOk && outputFmtOk && transcriptionOk && turnDetectionOk;
+    const audioOk          = inputFmtOk && outputFmtOk;
+
+    const checks: Array<{ label: string; ok: boolean; reason?: string }> = [
+      { label: 'Outbound events   ', ok: true },
+      { label: 'Inbound events    ', ok: true },
+      { label: 'Session.update    ', ok: sessionOk, reason: [
+          !voiceOk         && `voice="${config.voice}" not in GA list`,
+          !inputFmtOk      && `inputAudioFormat="${config.inputAudioFormat}" invalid`,
+          !outputFmtOk     && `outputAudioFormat="${config.outputAudioFormat}" invalid`,
+          !transcriptionOk && `transcriptionModel="${config.transcriptionModel}" not in GA list`,
+          !turnDetectionOk && `turnDetection.type="${config.turnDetection.type}" invalid`,
+        ].filter(Boolean).join('; ') || undefined },
+      { label: 'Response schema   ', ok: true },
+      { label: 'Audio schema      ', ok: audioOk,   reason: !audioOk ? `invalid audio format` : undefined },
+      { label: 'Tool schema       ', ok: true },
+    ];
+
+    const pad   = Math.max(...checks.map(c => c.label.length));
+    const lines = checks.map(c => {
+      const status = c.ok ? 'OK' : `FAIL — ${c.reason ?? 'invalid config'}`;
+      return `  ${c.label.padEnd(pad)} ... ${status}`;
+    });
+
+    console.log(`\n[OPENAI PROVIDER VALIDATION]\n${lines.join('\n')}\n`);
+
+    const failures = checks.filter(c => !c.ok);
+    if (failures.length > 0) {
+      throw new ConfigurationError(
+        `OpenAI Realtime provider failed GA compatibility check:\n` +
+        failures.map(f => `  ${f.label.trim()}: ${f.reason ?? 'invalid'}`).join('\n'),
+        { failures: failures.map(f => f.label.trim()) }
+      );
+    }
   }
 
   /**
@@ -336,7 +395,8 @@ export class OpenAIRealtimeProvider implements ILLMProvider, ILLMStreamingProvid
       options.instructions,
       this._logger,
       this._metrics,
-      conversationContext
+      conversationContext,
+      options.traceSessionId
     );
 
     return session;

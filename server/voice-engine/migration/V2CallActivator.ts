@@ -95,7 +95,7 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
   // the provider was successfully registered.
   const provider = ctx.runtime.resolver.llm() as unknown as OpenAIRealtimeProvider;
   console.log(`[V2 TRACE] 5. OpenAIRealtimeProvider.openSession()  sessionId=${ctx.sessionId}`);
-  const providerSession = provider.openSession({ instructions });
+  const providerSession = provider.openSession({ instructions, traceSessionId: ctx.sessionId });
 
   logger.info('Provider session opened (unconnected — bridge will connect it)', {
     sessionId: ctx.sessionId,

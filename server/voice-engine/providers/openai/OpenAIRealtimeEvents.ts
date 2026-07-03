@@ -80,6 +80,25 @@ export interface RealtimeAudioSentEvent extends BaseRealtimeEvent {
 // ─── Transcription ────────────────────────────────────────────────────────────
 
 /**
+ * Emitted for each streaming delta of the customer's input audio transcript.
+ */
+export interface RealtimeInputTranscriptDeltaEvent extends BaseRealtimeEvent {
+  readonly type: 'realtime.input_transcript_delta';
+  readonly itemId: string;
+  readonly delta: string;
+}
+
+/**
+ * Emitted when the server finishes transcribing the customer's input audio.
+ * Carries the full user-side transcript for logging and CRM purposes.
+ */
+export interface RealtimeInputTranscriptCompletedEvent extends BaseRealtimeEvent {
+  readonly type: 'realtime.input_transcript_completed';
+  readonly itemId: string;
+  readonly transcript: string;
+}
+
+/**
  * Emitted for each text delta of the assistant's audio transcript.
  */
 export interface RealtimeTranscriptDeltaEvent extends BaseRealtimeEvent {
@@ -207,6 +226,8 @@ export type RealtimeProviderEvent =
   | RealtimeSessionUpdatedEvent
   | RealtimeAudioReceivedEvent
   | RealtimeAudioSentEvent
+  | RealtimeInputTranscriptDeltaEvent
+  | RealtimeInputTranscriptCompletedEvent
   | RealtimeTranscriptDeltaEvent
   | RealtimeTranscriptCompletedEvent
   | RealtimeResponseStartedEvent

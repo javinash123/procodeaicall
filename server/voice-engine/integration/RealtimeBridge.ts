@@ -39,6 +39,7 @@ import type { Timestamp } from '../types/index.js';
 import { VoiceEngineError, ErrorCode } from '../errors/index.js';
 import { TurnDiagnosticsCollector } from '../diagnostics/index.js';
 import type { TurnDiagnosticsLog } from '../diagnostics/index.js';
+import { startTrace, endTrace, recordTrace } from '../diagnostics/CallTraceWriter.js';
 
 // ─── Bridge Event Types ───────────────────────────────────────────────────────
 
@@ -250,6 +251,8 @@ export class RealtimeBridge implements IRealtimeBridge {
 
     this._logger.info('RealtimeBridge connecting to provider');
 
+    startTrace(this._sessionId);
+
     this._wireProviderHandlers();
 
     try {
@@ -381,6 +384,8 @@ export class RealtimeBridge implements IRealtimeBridge {
 
     await this._provider.close();
     this._handlers.clear();
+
+    endTrace(this._sessionId);
   }
 
   // ─── Event Bus ───────────────────────────────────────────────────────────────
@@ -410,6 +415,17 @@ export class RealtimeBridge implements IRealtimeBridge {
     // Outbound audio from AI → caller
     this._provider.on('realtime.audio_received', (event) => {
       if (this._destroyed) return;
+      recordTrace(this._sessionId, {
+        component: 'RealtimeBridge',
+        event: 'realtime.audio_received',
+        payloadSummary: {
+          responseId: event.responseId,
+          itemId:     event.itemId,
+          deltaBytes: Math.round(event.delta.length * 0.75),
+        },
+        success: true,
+        skipped: false,
+      });
       this._emit({
         type: 'bridge.audio_ready',
         base64Delta: event.delta,
@@ -417,6 +433,17 @@ export class RealtimeBridge implements IRealtimeBridge {
         itemId: event.itemId,
         timestamp: event.timestamp,
       } satisfies BridgeAudioReadyEvent);
+      recordTrace(this._sessionId, {
+        component: 'RealtimeBridge',
+        event: 'bridge.audio_ready',
+        payloadSummary: {
+          responseId: event.responseId,
+          itemId:     event.itemId,
+          deltaBytes: Math.round(event.delta.length * 0.75),
+        },
+        success: true,
+        skipped: false,
+      });
     });
 
     // Server VAD detected caller speech → barge-in signal

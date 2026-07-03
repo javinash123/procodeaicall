@@ -1,0 +1,24 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0KMongoDB connected successfully
+10:38:42 AM [ws] WebSocket server ready on path /stream
+10:38:42 AM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+10:38:44 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+10:38:49 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://9dcadcd4-71fd-4465-989c-2f23bf4bb305-00-r6ktkqg4lzkv.spock.replit.dev host=9dcadcd4-71fd-4465-989c-2f23bf4bb305-00-r6ktkqg4lzkv.spock.replit.dev
+10:38:49 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:38:59 AM [express] GET /api/auth/me 401 in 4ms :: {"message":"Unauthorized","redirectTo":"/login"}

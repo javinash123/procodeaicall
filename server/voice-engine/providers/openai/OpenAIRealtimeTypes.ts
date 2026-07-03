@@ -28,9 +28,6 @@ export type RealtimeVoice =
   | 'ballad'
   | 'coral'
   | 'echo'
-  | 'fable'
-  | 'onyx'
-  | 'nova'
   | 'sage'
   | 'shimmer'
   | 'verse';
@@ -43,6 +40,7 @@ export interface ServerVADTurnDetection {
   readonly prefix_padding_ms?: number;
   readonly silence_duration_ms?: number;
   readonly create_response?: boolean;
+  readonly interrupt_response?: boolean;
 }
 
 export interface SemanticVADTurnDetection {
@@ -109,6 +107,7 @@ export interface FunctionTool {
   readonly name: string;
   readonly description?: string;
   readonly parameters?: Readonly<Record<string, unknown>>;
+  readonly strict?: boolean;
 }
 
 export type Tool = FunctionTool;
@@ -116,16 +115,18 @@ export type Tool = FunctionTool;
 // ─── Session Resource ─────────────────────────────────────────────────────────
 
 export interface RealtimeSessionResource {
+  readonly type?: 'realtime';
   readonly id?: string;
   readonly object?: string;
   readonly model?: string;
-  readonly modalities?: readonly ('text' | 'audio')[];
   readonly instructions?: string;
   readonly voice?: RealtimeVoice;
   readonly input_audio_format?: RealtimeAudioFormat;
   readonly output_audio_format?: RealtimeAudioFormat;
   readonly input_audio_transcription?: {
-    readonly model?: string;
+    readonly model: string;
+    readonly language?: string;
+    readonly prompt?: string;
   } | null;
   readonly turn_detection?: TurnDetection | null;
   readonly tools?: readonly Tool[];
@@ -272,6 +273,14 @@ export interface ConversationItemInputAudioTranscriptionCompletedEvent {
   readonly item_id: string;
   readonly content_index: number;
   readonly transcript: string;
+}
+
+export interface ConversationItemInputAudioTranscriptionDeltaEvent {
+  readonly type: 'conversation.item.input_audio_transcription.delta';
+  readonly event_id: string;
+  readonly item_id: string;
+  readonly content_index: number;
+  readonly delta: string;
 }
 
 export interface ConversationItemInputAudioTranscriptionFailedEvent {
@@ -454,6 +463,7 @@ export type ServerEvent =
   | ConversationCreatedEvent
   | ConversationItemCreatedEvent
   | ConversationItemInputAudioTranscriptionCompletedEvent
+  | ConversationItemInputAudioTranscriptionDeltaEvent
   | ConversationItemInputAudioTranscriptionFailedEvent
   | InputAudioBufferCommittedEvent
   | InputAudioBufferClearedEvent

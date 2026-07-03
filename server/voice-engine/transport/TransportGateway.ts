@@ -44,6 +44,7 @@ import { TransportSession, createTransportSession } from './TransportSession.js'
 import { TransportConnection } from './TransportConnection.js';
 import type { TransportConnectionConfig } from './TransportConnection.js';
 import type { TransportEventType, TransportEvent, TransportEventHandler } from './TransportEvents.js';
+import { recordTrace } from '../diagnostics/CallTraceWriter.js';
 
 // ─── Adapter Interface ────────────────────────────────────────────────────────
 
@@ -327,14 +328,65 @@ export class TransportGateway implements ITransportGateway {
 
   sendAudio(sessionId: SessionId, chunk: AudioChunk, markName?: string): void {
     const record = this._connections.get(sessionId);
-    if (!record || !record.connection.isConnected) return;
+    const streamId = record?.session.metadata.streamId ?? '';
+    const connected = record?.connection.isConnected ?? false;
+
+    if (!record) {
+      recordTrace(sessionId, {
+        component: 'TransportGateway',
+        event: 'TransportGateway.sendAudio',
+        payloadSummary: { sessionId, recordFound: false },
+        success: false,
+        skipped: true,
+        skipReason: 'no connection record — sessionId not registered in TransportGateway',
+      });
+      return;
+    }
+
+    if (!connected) {
+      recordTrace(sessionId, {
+        component: 'TransportGateway',
+        event: 'TransportGateway.sendAudio',
+        payloadSummary: { sessionId, recordFound: true, connected: false, streamId },
+        success: false,
+        skipped: true,
+        skipReason: 'connection.isConnected=false',
+      });
+      return;
+    }
+
+    if (streamId === '') {
+      recordTrace(sessionId, {
+        component: 'TransportGateway',
+        event: 'TransportGateway.sendAudio',
+        payloadSummary: { sessionId, recordFound: true, connected: true, streamId: '' },
+        success: false,
+        skipped: true,
+        skipReason: 'streamId is empty — Exotel start message not yet received',
+      });
+    }
 
     const adapter = this._adapters.get(record.adapterName);
     if (!adapter) return;
 
-    const streamId = record.session.metadata.streamId;
     const audioFrame = adapter.encodeOutboundAudio(chunk, streamId);
     record.connection.send(audioFrame);
+
+    recordTrace(sessionId, {
+      component: 'TransportGateway',
+      event: 'TransportGateway.sendAudio',
+      payloadSummary: { sessionId, streamId, sequence: chunk.sequence, frameBytes: audioFrame.length },
+      success: true,
+      skipped: false,
+    });
+
+    recordTrace(sessionId, {
+      component: 'ExotelAdapter',
+      event: 'ExotelAdapter.sendMedia',
+      payloadSummary: { streamId, frameBytes: audioFrame.length, sequence: chunk.sequence },
+      success: true,
+      skipped: false,
+    });
 
     if (markName !== undefined) {
       const markFrame = adapter.encodeMark(streamId, markName);

@@ -16,7 +16,7 @@ import { z } from 'zod';
 
 const RealtimeVoiceSchema = z.enum([
   'alloy', 'ash', 'ballad', 'coral', 'echo',
-  'fable', 'onyx', 'nova', 'sage', 'shimmer', 'verse',
+  'sage', 'shimmer', 'verse',
 ]);
 
 const RealtimeAudioFormatSchema = z.enum(['pcm16', 'g711_ulaw', 'g711_alaw']);
@@ -85,8 +85,8 @@ export const OpenAIRealtimeConfigSchema = z.object({
    */
   enableInputTranscription: z.boolean().default(true),
 
-  /** Whisper model to use for input transcription. */
-  transcriptionModel: z.string().default('whisper-1'),
+  /** Transcription model for input audio. GA preferred: gpt-4o-transcribe. */
+  transcriptionModel: z.string().default('gpt-4o-transcribe'),
 
   /** Turn detection configuration. */
   turnDetection: TurnDetectionSchema.default({
@@ -96,9 +96,6 @@ export const OpenAIRealtimeConfigSchema = z.object({
     silence_duration_ms: 800,
     create_response: true,
   }),
-
-  /** Output modalities. 'audio' must be included for voice output. */
-  modalities: z.array(z.enum(['text', 'audio'])).default(['text', 'audio']),
 
   /** Timeout for establishing the WebSocket connection in milliseconds. */
   connectTimeoutMs: z.number().int().positive().default(10_000),

@@ -39,6 +39,7 @@ import type {
   BridgeSpeechDetectedEvent,
 } from './RealtimeBridge.js';
 import { createAudioChunk } from '../audio-engine/AudioChunk.js';
+import { recordTrace } from '../diagnostics/CallTraceWriter.js';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -188,6 +189,18 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
    * @param event - Provider audio ready event from the bridge.
    */
   private _handleAudioReady(event: BridgeAudioReadyEvent): void {
+    recordTrace(this._sessionId, {
+      component: 'OutboundAudioFlow',
+      event: 'OutboundAudioFlow._handleAudioReady',
+      payloadSummary: {
+        responseId:    event.responseId,
+        engineRunning: this._audioEngine.isRunning,
+      },
+      success: this._audioEngine.isRunning,
+      skipped: !this._audioEngine.isRunning,
+      skipReason: !this._audioEngine.isRunning ? 'audioEngine.isRunning=false — engine not started or stopped' : undefined,
+    });
+
     if (!this._audioEngine.isRunning) return;
 
     if (this._traceFirstAudio) {
@@ -199,10 +212,25 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
 
     try {
       this._audioEngine.ingestOutbound(chunk);
+      recordTrace(this._sessionId, {
+        component: 'AudioEngine',
+        event: 'AudioEngine.ingestOutbound',
+        payloadSummary: { sequence: chunk.sequence },
+        success: true,
+        skipped: false,
+      });
     } catch (err) {
       this._logger.warn('OutboundAudioFlow: audioEngine.ingestOutbound failed', {
         error: String(err),
         sequence: chunk.sequence,
+      });
+      recordTrace(this._sessionId, {
+        component: 'AudioEngine',
+        event: 'AudioEngine.ingestOutbound',
+        payloadSummary: { sequence: chunk.sequence, error: String(err) },
+        success: false,
+        skipped: false,
+        skipReason: `ingestOutbound threw: ${String(err)}`,
       });
       return;
     }
@@ -210,6 +238,15 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
     if (!this._config.tickOnIngest) return;
 
     const result = this._audioEngine.tickOutbound(null);
+
+    recordTrace(this._sessionId, {
+      component: 'AudioEngine',
+      event: 'AudioEngine.tickOutbound',
+      payloadSummary: { chunksToSend: result.chunksToSend.length },
+      success: result.chunksToSend.length > 0,
+      skipped: result.chunksToSend.length === 0,
+      skipReason: result.chunksToSend.length === 0 ? 'tickOutbound produced 0 chunks — audio engine buffering or not ready' : undefined,
+    });
 
     for (const scheduled of result.chunksToSend) {
       this._transport.sendAudio(this._sessionId, scheduled as AudioChunk);

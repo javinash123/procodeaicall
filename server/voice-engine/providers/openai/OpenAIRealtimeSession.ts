@@ -48,6 +48,7 @@ import type {
 } from './OpenAIRealtimeEvents.js';
 import { ProviderError, ErrorCode } from '../../errors/index.js';
 import type { ConversationSessionContext } from './ConversationSessionContext.js';
+import { recordTrace } from '../../diagnostics/CallTraceWriter.js';
 
 type SessionState = 'idle' | 'connecting' | 'connected' | 'closing' | 'closed';
 
@@ -97,6 +98,9 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
   /** Optional conversation intelligence context wired at construction time. */
   private readonly _conversationContext: ConversationSessionContext | null;
 
+  /** Call-session ID used as key for the structured execution trace. */
+  private readonly _traceSessionId: string | null;
+
   /** Rolling buffer of the last completed agent transcript (for question detection). */
   private _lastAgentTranscript: string | null = null;
 
@@ -115,10 +119,12 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     initialInstructions: string,
     logger: ILogger,
     metrics: IMetricsCollector,
-    conversationContext?: ConversationSessionContext
+    conversationContext?: ConversationSessionContext,
+    traceSessionId?: string
   ) {
     this._config = config;
     this._conversationContext = conversationContext ?? null;
+    this._traceSessionId = traceSessionId ?? null;
     // If a conversation context is provided, it generates the full initial
     // instruction (policy + live state section).  Otherwise fall back to the
     // raw string passed by the caller.
@@ -190,16 +196,30 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
           return;
         }
 
+        if (process.env.VOICE_ENGINE_DEBUG === 'true') {
+          console.log('[OPENAI INBOUND]\n' + JSON.stringify(event, null, 2));
+        }
+
         if (event.type === 'session.created') {
           clearTimeout(timeout);
           this._sessionId = event.session.id ?? null;
           this._state = 'connected';
           this._logger.info('OpenAI Realtime session created', { sessionId: this._sessionId });
 
-          this._sendEvent({
-            type: 'session.update',
-            session: this._buildSessionConfig(this._initialInstructions),
-          });
+          this._record('session.created', { openAiSessionId: this._sessionId });
+
+          // Schema capture — writes the raw session.created payload for audit purposes
+          try {
+            require('fs').writeFileSync(
+              '/tmp/openai-session-created.json',
+              JSON.stringify(event, null, 2),
+            );
+          } catch { /* non-fatal */ }
+
+          const sessionPayload = this._buildSessionConfig(this._initialInstructions);
+          const sessionUpdateEvent = { type: 'session.update' as const, session: sessionPayload };
+          console.log('[AUDIT] session.update sent:\n' + JSON.stringify(sessionUpdateEvent, null, 2));
+          this._sendEvent(sessionUpdateEvent);
 
           resolve();
         }
@@ -285,7 +305,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     this._assertConnected();
     this._sendEvent({
       type: 'session.update',
-      session: { instructions },
+      session: { type: 'realtime', instructions },
     });
   }
 
@@ -296,7 +316,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     this._assertConnected();
     this._sendEvent({
       type: 'session.update',
-      session: { tools: tools as Tool[] },
+      session: { type: 'realtime', tools: tools as Tool[] },
     });
   }
 
@@ -350,9 +370,26 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
   // ─── Private ────────────────────────────────────────────────────────────────
 
+  /** Records a trace entry keyed to the call session (no-op if no traceSessionId). */
+  private _record(
+    event: string,
+    payloadSummary: Record<string, unknown>,
+    opts: { success?: boolean; skipped?: boolean; skipReason?: string } = {}
+  ): void {
+    if (!this._traceSessionId) return;
+    recordTrace(this._traceSessionId, {
+      component: 'OpenAIRealtimeSession',
+      event,
+      payloadSummary,
+      success:    opts.success    ?? true,
+      skipped:    opts.skipped    ?? false,
+      skipReason: opts.skipReason,
+    });
+  }
+
   private _buildSessionConfig(instructions: string): Partial<RealtimeSessionResource> {
     return {
-      modalities: this._config.modalities as ('text' | 'audio')[],
+      type: 'realtime',
       instructions,
       voice: this._config.voice,
       input_audio_format: this._config.inputAudioFormat,
@@ -371,6 +408,9 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
       this._logger.warn('Attempted to send event on non-open WebSocket', { type: event.type });
       return;
     }
+    if (process.env.VOICE_ENGINE_DEBUG === 'true') {
+      console.log('[OPENAI OUTBOUND]\n' + JSON.stringify(event, null, 2));
+    }
     this._ws.send(JSON.stringify(event));
   }
 
@@ -379,10 +419,12 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
     switch (event.type) {
       case 'session.updated':
+        this._record('session.updated', { openAiSessionId: this._sessionId });
         this._emit({ type: 'realtime.session_updated', timestamp: ts, eventId: event.event_id, session: event.session });
         break;
 
       case 'response.created':
+        this._record('response.created', { responseId: event.response.id, status: event.response.status });
         if (this._traceFirstAIResponse) {
           this._traceFirstAIResponse = false;
           console.log(`[V2 TRACE] 13. First AI response received  responseId=${event.response.id}`);
@@ -391,6 +433,11 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         break;
 
       case 'response.audio.delta':
+        this._record('response.audio.delta', {
+          responseId: event.response_id,
+          itemId:     event.item_id,
+          deltaBytes: Math.round(event.delta.length * 0.75),
+        });
         this._emit({ type: 'realtime.audio_received', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, delta: event.delta });
         break;
 
@@ -414,6 +461,13 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
       case 'response.done': {
         const responseStatus = event.response.status as 'completed' | 'cancelled' | 'failed' | 'incomplete';
+        this._record('response.done', {
+          responseId:   event.response.id,
+          status:       responseStatus,
+          totalTokens:  event.response.usage?.total_tokens  ?? 0,
+          inputTokens:  event.response.usage?.input_tokens  ?? 0,
+          outputTokens: event.response.usage?.output_tokens ?? 0,
+        });
         this._emit({
           type: 'realtime.response_completed',
           timestamp: ts,
@@ -426,8 +480,6 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         });
 
         // ── Conversation State: record agent turn & dynamically update instructions ──
-        // Only process completed (non-cancelled, non-failed) turns so interruptions
-        // don't count as full agent turns.
         if (this._conversationContext && responseStatus === 'completed') {
           const result = this._conversationContext.onAgentTurnCompleted(
             this._lastAgentTranscript ?? undefined
@@ -439,10 +491,9 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
               'ConversationState changed — updating OpenAI session instructions',
               { stage: result.currentStageLabel }
             );
-            // Hot-update instructions without reconnecting
             this._sendEvent({
               type: 'session.update',
-              session: { instructions: result.updatedInstruction },
+              session: { type: 'realtime', instructions: result.updatedInstruction },
             });
           }
         }
@@ -450,10 +501,17 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
       }
 
       case 'response.function_call_arguments.done':
+        this._record('response.function_call_arguments.done', {
+          responseId:   event.response_id,
+          itemId:       event.item_id,
+          callId:       event.call_id,
+          functionName: event.name,
+        });
         this._emit({ type: 'realtime.tool_call', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, callId: event.call_id, functionName: event.name, arguments: event.arguments });
         break;
 
       case 'input_audio_buffer.speech_started':
+        this._record('input_audio_buffer.speech_started', { itemId: event.item_id, audioStartMs: event.audio_start_ms });
         this._emit({ type: 'realtime.speech_started', timestamp: ts, eventId: event.event_id, itemId: event.item_id, audioStartMs: event.audio_start_ms });
         // ── Conversation State: record barge-in interruption ──────────────────
         if (this._conversationContext) {
@@ -462,7 +520,63 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         break;
 
       case 'input_audio_buffer.speech_stopped':
+        this._record('input_audio_buffer.speech_stopped', { itemId: event.item_id, audioEndMs: event.audio_end_ms });
         this._emit({ type: 'realtime.speech_stopped', timestamp: ts, eventId: event.event_id, itemId: event.item_id, audioEndMs: event.audio_end_ms });
+        break;
+
+      case 'conversation.item.input_audio_transcription.completed':
+        this._emit({ type: 'realtime.input_transcript_completed', timestamp: ts, eventId: event.event_id, itemId: event.item_id, transcript: event.transcript });
+        break;
+
+      case 'conversation.item.input_audio_transcription.delta':
+        this._emit({ type: 'realtime.input_transcript_delta', timestamp: ts, eventId: event.event_id, itemId: event.item_id, delta: event.delta });
+        break;
+
+      case 'conversation.item.input_audio_transcription.failed':
+        this._logger.warn('Input audio transcription failed', { itemId: event.item_id, error: event.error.message });
+        this._emit({ type: 'realtime.error', timestamp: ts, eventId: event.event_id, errorType: event.error.type, errorCode: event.error.code, message: `Transcription failed: ${event.error.message}`, fatal: false });
+        break;
+
+      // ── Silent handlers: acknowledged but not surfaced upstream ──────────────
+      case 'conversation.created':
+      case 'conversation.item.created':
+      case 'input_audio_buffer.cleared':
+      case 'response.content_part.added':
+      case 'response.content_part.done':
+      case 'response.text.done':
+        break;
+
+      case 'input_audio_buffer.committed':
+        this._record('input_audio_buffer.committed', { itemId: (event as any).item_id ?? null });
+        break;
+
+      case 'response.function_call_arguments.delta':
+        this._record('response.function_call_arguments.delta', {
+          responseId: (event as any).response_id,
+          itemId:     (event as any).item_id,
+          deltaLen:   ((event as any).delta ?? '').length,
+        });
+        break;
+
+      case 'response.output_item.added':
+        this._record('response.output_item.added', {
+          itemType: (event as any).item?.type ?? null,
+          itemId:   (event as any).item?.id   ?? null,
+        });
+        break;
+
+      case 'response.output_item.done':
+        this._record('response.output_item.done', {
+          itemType: (event as any).item?.type ?? null,
+          itemId:   (event as any).item?.id   ?? null,
+        });
+        break;
+
+      case 'response.audio.done':
+        this._record('response.audio.done', {
+          responseId: (event as any).response_id ?? null,
+          itemId:     (event as any).item_id     ?? null,
+        });
         break;
 
       case 'rate_limits.updated':

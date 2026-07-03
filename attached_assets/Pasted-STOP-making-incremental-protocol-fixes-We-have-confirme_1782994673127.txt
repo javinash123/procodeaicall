@@ -1,0 +1,139 @@
+STOP making incremental protocol fixes.
+
+We have confirmed:
+
+✓ Voice Engine is complete
+✓ Transport is complete
+✓ Exotel is complete
+✓ RuntimeIntegration is complete
+✓ RealtimeBridge is complete
+✓ OpenAI websocket connects
+✓ session.created succeeds
+
+The remaining failures are ALL inside the OpenAI provider implementation.
+
+====================================================
+
+TASK
+
+Perform a COMPLETE refactor of ONLY the OpenAI provider layer.
+
+Goal:
+
+The provider must match the CURRENT OpenAI Realtime GA protocol exactly.
+
+Do NOT preserve old payload builders if they no longer match the GA protocol.
+
+====================================================
+
+Files to review
+
+- OpenAIRealtimeSession.ts
+- OpenAIRealtimeProvider.ts
+- OpenAIRealtimeTypes.ts
+- OpenAIRealtimeEvents.ts
+- OpenAIRealtimeConfig.ts
+
+====================================================
+
+For EVERY outbound event:
+
+- session.update
+- response.create
+- response.cancel
+- input_audio_buffer.append
+- input_audio_buffer.commit
+- input_audio_buffer.clear
+- conversation.item.create
+- tool outputs
+
+Compare against the CURRENT OpenAI Realtime GA protocol.
+
+====================================================
+
+For EVERY inbound event:
+
+- session.created
+- session.updated
+- response.created
+- response.output_item.added
+- response.audio.delta
+- response.audio.done
+- response.done
+- conversation.item.*
+- input_audio_buffer.*
+- transcription events
+- tool events
+- error events
+
+Compare against the CURRENT GA protocol.
+
+====================================================
+
+Requirements
+
+Do NOT fix only the current runtime error.
+
+Instead:
+
+1. Build a compatibility matrix.
+
+Columns:
+
+Current implementation
+GA protocol
+Mismatch
+Action
+
+2. Fix ALL mismatches in ONE commit.
+
+3. Remove obsolete fields.
+
+4. Rename outdated fields.
+
+5. Add missing required fields.
+
+6. Remove deprecated events.
+
+7. Add newly required events.
+
+====================================================
+
+Validation
+
+At startup run a provider self-check.
+
+Print:
+
+[OPENAI PROVIDER VALIDATION]
+
+Outbound events ........ OK
+Inbound events ......... OK
+Session.update schema .. OK
+Response schema ........ OK
+Audio schema ........... OK
+Tool schema ............ OK
+
+If anything is not GA compatible,
+FAIL startup with a clear message.
+
+====================================================
+
+Deliver:
+
+1. Compatibility matrix
+2. Files changed
+3. Removed protocol fields
+4. Added protocol fields
+5. Validation output
+
+Do NOT modify:
+
+Voice Engine
+Transport
+RuntimeIntegration
+Conversation Engine
+MediaSession
+Exotel
+
+Only the OpenAI provider layer.
