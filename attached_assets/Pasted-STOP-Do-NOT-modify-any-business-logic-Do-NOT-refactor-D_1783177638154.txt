@@ -1,0 +1,129 @@
+STOP.
+
+Do NOT modify any business logic.
+Do NOT refactor.
+Do NOT change architecture.
+Do NOT touch Exotel, TransportGateway, RealtimeBridge, AudioEngine or any V2 session logic.
+
+We now have evidence that:
+
+- session.created arrives
+- session.updated arrives
+- response.created arrives
+- response.output_item.added arrives
+- response.done arrives
+- response.audio.delta NEVER arrives
+
+Therefore the investigation is ONLY about why OpenAI is not producing audio.
+
+Your task is to PRODUCE EVIDENCE, not fixes.
+
+====================================================================
+STEP 1
+====================================================================
+
+Locate every place where a response.create event is sent.
+
+There should be only one or two.
+
+Print:
+
+- filename
+- function name
+- line number
+
+Do NOT edit anything.
+
+====================================================================
+STEP 2
+====================================================================
+
+Immediately before websocket.send() for every response.create event, print the EXACT JSON being sent.
+
+I want the COMPLETE payload.
+
+Not abbreviated.
+
+Exactly what OpenAI receives.
+
+Example:
+
+================ RESPONSE.CREATE SENT ================
+
+{
+  ...
+}
+
+======================================================
+
+====================================================================
+STEP 3
+====================================================================
+
+When OpenAI replies with response.created,
+
+print the COMPLETE raw JSON event exactly as received.
+
+Then print every subsequent event until response.done.
+
+Example:
+
+RAW EVENT:
+
+{
+...
+}
+
+RAW EVENT:
+
+{
+...
+}
+
+NO FILTERING.
+
+NO SUMMARIZING.
+
+====================================================================
+STEP 4
+====================================================================
+
+After response.done, print ONE summary:
+
+Audio delta count:
+Text delta count:
+Audio transcript delta count:
+Function call count:
+Output items:
+Finish status:
+
+Example:
+
+Audio delta count........0
+Text delta count.........18
+Audio transcript.........0
+Output items............1
+Finish status...........completed
+
+====================================================================
+STEP 5
+====================================================================
+
+DO NOT FIX ANYTHING.
+
+DO NOT CHANGE CODE.
+
+DO NOT CHANGE PAYLOADS.
+
+DO NOT CHANGE THE SESSION.
+
+DO NOT CHANGE THE AUDIO FORMAT.
+
+I only want evidence.
+
+When finished, tell me ONLY:
+
+1. files modified
+2. exact logging added
+
+Nothing else.

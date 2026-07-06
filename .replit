@@ -45,8 +45,3 @@ waitForPort = 5000
 [agent]
 mockupState = "FULLSTACK"
 expertMode = true
-
-[userenv]
-
-[userenv.shared]
-MONGODB_URI = "mongodb+srv://jainavinash0007_db_user:8XQ2tPpGUq89RbR5@nijvox.xihds14.mongodb.net/"

@@ -506,6 +506,7 @@ export class RealtimeBridge implements IRealtimeBridge {
         timestamp: event.timestamp,
       } satisfies BridgeErrorEvent);
     });
+
   }
 
   // ─── Private Helpers ─────────────────────────────────────────────────────────

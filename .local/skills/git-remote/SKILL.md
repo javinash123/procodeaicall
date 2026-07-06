@@ -11,6 +11,23 @@ Interact with GitHub remote repositories. When `provider` is omitted, the remote
 
 - The repl must have a git repository initialized with an `origin` remote configured
 - The user must have connected their GitHub account to Replit
+## Opening the Git pane
+
+You can render a one-click "Open in git" button that takes the user to the Git workspace pane — status, branches, commits, history, or changes. To render it, write this tag on its own line at the end of your reply (it is replaced by the button; the user clicks it to open the pane):
+
+```
+<open-in-pane tool="git"></open-in-pane>
+```
+
+Button behavior:
+
+- Render it when the request is mainly navigation; when navigation is mixed with real work, still do the work with the appropriate tools.
+- Keep your chat reply to one concise, self-contained sentence telling the user where they can find the requested surface. Do not mention a button, shortcut, tag, or marker. Do not say the pane is already open or that you opened it.
+
+| User asks | Tag to emit |
+| --- | --- |
+| "Take me to the Git history." | `<open-in-pane tool="git"></open-in-pane>` |
+| "Where do I see my branches / changes?" | `<open-in-pane tool="git"></open-in-pane>` |
 
 ## Available Functions
 

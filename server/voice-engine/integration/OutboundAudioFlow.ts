@@ -1,9 +1,9 @@
 /**
  * @module OutboundAudioFlow
  *
- * Drives the outbound audio pipeline:
+ * Drives the outbound audio pipeline with real-time pacing:
  * ```
- * RealtimeBridge → AudioEngine → MediaSession → Transport
+ * RealtimeBridge → AudioEngine → PacingQueue → Transport
  * ```
  *
  * ## Responsibilities
@@ -11,11 +11,21 @@
  * - Ingests each provider audio delta into `IAudioEngine.ingestOutbound()`.
  * - Ticks the outbound pipeline via `IAudioEngine.tickOutbound()` to produce
  *   scheduled chunks.
- * - Delivers each scheduled chunk to the caller via
- *   `ITransportGateway.sendAudio()`.
- * - On `bridge.speech_detected` (barge-in): flushes the outbound pipeline and
- *   sends a clear command to the transport to silence buffered audio at the
- *   provider end.
+ * - Enqueues each scheduled chunk into the internal FIFO pacing queue.
+ * - Delivers chunks to `ITransportGateway.sendAudio()` at real-time pace:
+ *   the first chunk in any burst is sent immediately; every subsequent chunk
+ *   is sent after the previous chunk's `durationMs` has elapsed, so Exotel
+ *   receives audio no faster than it can play it.
+ * - On `bridge.speech_detected` (barge-in): cancels the pacing timer, drains
+ *   the queue, flushes the engine buffer, and sends a clear command to the
+ *   transport to silence buffered audio at the provider end.
+ *
+ * ## Pacing Queue Invariants
+ * 1. At most ONE `setTimeout` handle is live at any point in time.
+ * 2. `_pacingTimer === null` if and only if the queue is idle (no scheduled send).
+ * 3. Chunks are always dequeued in the order they were enqueued (FIFO).
+ * 4. `_resetPacer()` is the single teardown path for both normal stop and
+ *    interruption; it always leaves the queue empty and the timer cancelled.
  *
  * ## Rules
  * - No OpenAI SDK imports.
@@ -24,8 +34,8 @@
  * - Dependency Injection only.
  *
  * ## Performance
- * All processing is synchronous within each event callback.
- * Target: <10 ms per chunk in the hot path.
+ * The hot path (ingest + enqueue) is synchronous and < 1 ms.
+ * The send path runs on the event loop via setTimeout — no blocking I/O.
  */
 
 import type { ILogger } from '../logger/index.js';
@@ -58,7 +68,7 @@ export interface OutboundAudioFormat {
  * Tuning configuration for `OutboundAudioFlow`.
  */
 export interface OutboundAudioFlowConfig {
-  /** Audio format of the provider's output stream. Defaults to PCM16 at 24 kHz. */
+  /** Audio format of the provider's output stream. Defaults to µ-law at 8 kHz. */
   readonly audioFormat: OutboundAudioFormat;
   /**
    * Whether to tick the outbound pipeline after each ingest.
@@ -106,7 +116,8 @@ export interface IOutboundAudioFlow {
   start(): void;
 
   /**
-   * Detaches all bridge event listeners and stops forwarding audio.
+   * Detaches all bridge event listeners, cancels the pacing timer,
+   * and discards any queued audio.
    * Safe to call multiple times; subsequent calls are no-ops.
    */
   stop(): void;
@@ -130,6 +141,32 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
 
   /** [V2 TRACE] first-only guard */
   private _traceFirstAudio = true;
+
+  // ─── Pacing Queue ────────────────────────────────────────────────────────────
+
+  /**
+   * FIFO queue of chunks awaiting real-time paced delivery.
+   *
+   * Writes: `_enqueue()` — called from the bridge event handler (hot path).
+   * Reads:  `_sendNext()` — called either synchronously from `_enqueue()` when
+   *          the pacer is idle, or from the timer callback.
+   *
+   * Node.js is single-threaded. No concurrent access is possible.
+   * Ordering is therefore guaranteed by insertion order.
+   */
+  private readonly _pacingQueue: AudioChunk[] = [];
+
+  /**
+   * Handle of the single active pacing `setTimeout`.
+   *
+   * Invariant: `_pacingTimer === null` ↔ pacer is idle (queue may be non-empty
+   * only during the synchronous window inside `_sendNext` before a new timer
+   * is scheduled, which is not observable from outside).
+   *
+   * The timer is set to `null` at the TOP of `_sendNext` before the send so
+   * that `_enqueue` can distinguish idle from running at any point.
+   */
+  private _pacingTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
    * Pre-bound handler references retained for clean `off()` equality.
@@ -170,13 +207,15 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
   }
 
   /**
-   * Detaches bridge event listeners and stops outbound audio forwarding.
+   * Detaches bridge event listeners, cancels the pacing timer, and discards
+   * all queued audio. Safe to call multiple times.
    */
   stop(): void {
     if (!this._active) return;
     this._active = false;
     this._bridge.off('bridge.audio_ready', this._onAudioReady);
     this._bridge.off('bridge.speech_detected', this._onSpeechDetected);
+    this._resetPacer();
     this._logger.info('OutboundAudioFlow stopped');
   }
 
@@ -184,7 +223,10 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
 
   /**
    * Called for every audio delta received from the AI provider.
-   * Ingests into the outbound pipeline and delivers scheduled chunks to transport.
+   *
+   * Ingests the delta into the engine, ticks to obtain scheduled chunks, then
+   * enqueues each chunk for real-time paced delivery instead of sending
+   * immediately.
    *
    * @param event - Provider audio ready event from the bridge.
    */
@@ -248,41 +290,134 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
       skipReason: result.chunksToSend.length === 0 ? 'tickOutbound produced 0 chunks — audio engine buffering or not ready' : undefined,
     });
 
+    // Enqueue each chunk for real-time paced delivery.
+    // _enqueue() starts the pacer on the first chunk of any burst; subsequent
+    // chunks in the same burst are appended to the tail of the FIFO and sent
+    // after their predecessors have played.
     for (const scheduled of result.chunksToSend) {
-      this._transport.sendAudio(this._sessionId, scheduled as AudioChunk);
+      this._enqueue(scheduled as AudioChunk);
     }
   }
 
   /**
    * Called when the provider VAD signals that the caller began speaking
-   * (barge-in). Flushes the outbound pipeline and clears the transport buffer
-   * to stop audio playback immediately.
+   * (barge-in).
+   *
+   * The pacing queue is reset first so no further scheduled sends reach the
+   * transport. The engine buffer is then flushed (discarding its contents),
+   * and a clear command is sent to Exotel so it stops playing any audio it
+   * has already buffered. This ordering guarantees the clear arrives at Exotel
+   * before any new audio could be queued.
    */
   private _handleSpeechDetected(_event: BridgeSpeechDetectedEvent): void {
     if (!this._audioEngine.isRunning) return;
 
-    this._logger.debug('OutboundAudioFlow: barge-in detected, flushing outbound pipeline');
+    this._logger.debug('OutboundAudioFlow: barge-in detected, resetting pacing queue');
 
-    // Flush the engine pipeline (drain any buffered frames)
-    const flushResult = this._audioEngine.flushOutbound();
+    // 1. Cancel the timer and discard all queued chunks — no more scheduled sends.
+    this._resetPacer();
 
-    // Deliver any remaining frames before clearing
-    for (const scheduled of flushResult.chunksToSend) {
-      this._transport.sendAudio(this._sessionId, scheduled as AudioChunk);
-    }
+    // 2. Drain the engine's internal pipeline buffer and discard the chunks.
+    //    This resets the engine's scheduler state without leaking audio into
+    //    the (now-empty) pacing queue.
+    this._audioEngine.flushOutbound();
 
-    // Clear transport buffer — stops audio playback at the telephony provider
+    // 3. Tell Exotel to immediately discard whatever it has already buffered.
     this._transport.sendClear(this._sessionId);
 
-    this._logger.debug('OutboundAudioFlow: outbound flushed and transport cleared', {
-      flushedChunks: flushResult.chunksToSend.length,
-    });
+    this._logger.debug('OutboundAudioFlow: pacer reset and transport cleared');
+  }
+
+  // ─── Private: Pacing Queue ────────────────────────────────────────────────────
+
+  /**
+   * Appends `chunk` to the tail of the FIFO pacing queue.
+   *
+   * If the pacer is idle (`_pacingTimer === null`), the chunk is the first in
+   * a new burst: it is sent immediately and the single-timer chain is started.
+   * Otherwise the chunk waits at the tail until its turn.
+   *
+   * Ordering guarantee: because Node.js is single-threaded and all calls to
+   * `_enqueue` originate from the same synchronous event-handler loop, items
+   * are always pushed in the order the audio engine produced them.
+   */
+  private _enqueue(chunk: AudioChunk): void {
+    this._pacingQueue.push(chunk);
+
+    if (this._pacingTimer === null) {
+      // Pacer is idle — send the head immediately and start the timer chain.
+      this._sendNext();
+    }
+    // Else: pacer already running — the timer will reach this chunk in order.
+  }
+
+  /**
+   * Pops the head chunk from the queue, sends it, and schedules the next tick
+   * after exactly `chunk.durationMs` milliseconds.
+   *
+   * If the queue is empty after the send, the pacer returns to idle and no
+   * timer is scheduled.
+   *
+   * Invariant: `_pacingTimer` is always `null` when this method is entered,
+   * either because the pacer was idle (called from `_enqueue`) or because the
+   * timer callback cleared it before invoking this method.
+   */
+  private _sendNext(): void {
+    // _pacingTimer is already null here (either idle or cleared by callback).
+    const chunk = this._pacingQueue.shift();
+    if (chunk === undefined) {
+      // Queue emptied between schedule and fire — pacer idles.
+      return;
+    }
+
+    // Send this chunk to the transport now.
+    this._transport.sendAudio(this._sessionId, chunk);
+
+    if (this._pacingQueue.length === 0) {
+      // Queue drained — pacer idles until next audio burst arrives.
+      // _pacingTimer remains null.
+      return;
+    }
+
+    // More chunks waiting — schedule the next send after this chunk plays.
+    // The callback clears _pacingTimer before calling _sendNext so that
+    // _enqueue can always distinguish idle from running.
+    this._pacingTimer = setTimeout(() => {
+      this._pacingTimer = null;
+      this._sendNext();
+    }, chunk.durationMs);
+  }
+
+  /**
+   * Cancels the active pacing timer and discards all queued chunks.
+   *
+   * This is the single teardown path for both normal stop and all
+   * interruption scenarios (barge-in, disconnect, error). After this call:
+   * - `_pacingTimer === null`
+   * - `_pacingQueue.length === 0`
+   *
+   * Safe to call when the pacer is already idle.
+   */
+  private _resetPacer(): void {
+    if (this._pacingTimer !== null) {
+      clearTimeout(this._pacingTimer);
+      this._pacingTimer = null;
+    }
+    this._pacingQueue.length = 0;
   }
 
   // ─── Private Helpers ─────────────────────────────────────────────────────────
 
   /**
    * Builds an immutable outbound `AudioChunk` from a provider audio delta.
+   *
+   * Duration formula for µ-law at 8 kHz:
+   *   byteLength = base64Length × 0.75   (base64 overhead)
+   *   durationMs = byteLength / sampleRate × 1000
+   *             = byteLength / 8000 × 1000  (1 byte/sample at 8 kHz)
+   *
+   * This durationMs is used both by the engine scheduler and by the pacing
+   * queue to determine the inter-send interval.
    *
    * @param base64Delta - Base64-encoded audio from the provider.
    * @param timestamp   - Wall-clock timestamp of the event.

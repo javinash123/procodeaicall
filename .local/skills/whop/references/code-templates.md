@@ -6,7 +6,7 @@ doesn't compile in the target app, adapt it instead of preserving the snippet.
 
 ## Client Setup
 
-Write `whopClient.ts` to the API server directory from `./references/whopClient.ts`.
+Write `whopClient.ts` to the API server directory from `./references/whop-client.ts`.
 It provides `getWhopClient()` and lazily fetches credentials from the Replit
 connection API.
 

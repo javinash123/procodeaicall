@@ -5,6 +5,24 @@ description: Run runDependencyAudit, runSastScan, and runHoundDogScan and return
 
 # Security Scan Skill
 
+## Opening the Security pane
+
+You can render a one-click "Open in security" button that takes the user to the Security workspace pane — vulnerability findings, dependency risks, or prior scan results. To render it, write this tag on its own line at the end of your reply (it is replaced by the button; the user clicks it to open the pane). This is navigation only; run the scanners below when the user wants a fresh scan.
+
+```
+<open-in-pane tool="security"></open-in-pane>
+```
+
+Button behavior:
+
+- Render it when the request is mainly navigation; when navigation is mixed with real work, still do the work with the appropriate tools.
+- Keep your chat reply to one concise, self-contained sentence telling the user where they can find the requested surface. Do not mention a button, shortcut, tag, or marker. Do not say the pane is already open or that you opened it.
+
+| User asks | Tag to emit |
+| --- | --- |
+| "Open security scan results." | `<open-in-pane tool="security"></open-in-pane>` |
+| "Where are my vulnerability findings?" | `<open-in-pane tool="security"></open-in-pane>` |
+
 Run three independent scanners and summarize results:
 
 - `runDependencyAudit()` for package/dependency vulnerabilities

@@ -112,6 +112,44 @@ export interface FunctionTool {
 
 export type Tool = FunctionTool;
 
+// ─── Audio Format (gpt-realtime nested schema) ────────────────────────────────
+
+/**
+ * MIME-type audio format as used by the gpt-realtime session schema.
+ * The format type string replaces the flat `input_audio_format` /
+ * `output_audio_format` fields used by the older gpt-4o-realtime-preview API.
+ *
+ * Supported values confirmed by live runtime:
+ *   'audio/pcm'  — 16-bit PCM (default 24 kHz)
+ *   'audio/pcmu' — G.711 µ-law (8 kHz telephony)
+ *   'audio/pcma' — G.711 A-law (8 kHz telephony)
+ */
+export interface RealtimeAudioFormatObject {
+  readonly type: 'audio/pcm' | 'audio/pcmu' | 'audio/pcma';
+}
+
+export interface RealtimeAudioInput {
+  readonly format?: RealtimeAudioFormatObject;
+  readonly transcription?: {
+    readonly model: string;
+    readonly language?: string | null;
+    readonly prompt?: string | null;
+  } | null;
+  readonly noise_reduction?: unknown | null;
+  readonly turn_detection?: TurnDetection | null;
+}
+
+export interface RealtimeAudioOutput {
+  readonly format?: RealtimeAudioFormatObject;
+  readonly voice?: RealtimeVoice;
+  readonly speed?: number;
+}
+
+export interface RealtimeAudioConfig {
+  readonly input?: RealtimeAudioInput;
+  readonly output?: RealtimeAudioOutput;
+}
+
 // ─── Session Resource ─────────────────────────────────────────────────────────
 
 export interface RealtimeSessionResource {
@@ -120,19 +158,20 @@ export interface RealtimeSessionResource {
   readonly object?: string;
   readonly model?: string;
   readonly instructions?: string;
-  readonly voice?: RealtimeVoice;
-  readonly input_audio_format?: RealtimeAudioFormat;
-  readonly output_audio_format?: RealtimeAudioFormat;
-  readonly input_audio_transcription?: {
-    readonly model: string;
-    readonly language?: string;
-    readonly prompt?: string;
-  } | null;
-  readonly turn_detection?: TurnDetection | null;
+  /**
+   * Nested audio configuration block used by the gpt-realtime model family.
+   * Replaces the flat `voice`, `input_audio_format`, `output_audio_format`,
+   * `input_audio_transcription`, and `turn_detection` top-level fields
+   * that were used by gpt-4o-realtime-preview.
+   */
+  readonly audio?: RealtimeAudioConfig;
   readonly tools?: readonly Tool[];
   readonly tool_choice?: 'auto' | 'none' | 'required' | string;
-  readonly temperature?: number;
-  readonly max_response_output_tokens?: number | 'inf';
+  readonly max_output_tokens?: number | 'inf';
+  readonly output_modalities?: readonly string[];
+  readonly tracing?: unknown | null;
+  readonly truncation?: string | null;
+  readonly include?: unknown | null;
 }
 
 // ─── Rate Limit Resource ──────────────────────────────────────────────────────
@@ -429,6 +468,49 @@ export interface ResponseAudioDoneEvent {
   readonly content_index: number;
 }
 
+// ─── gpt-realtime (GA) audio event aliases ────────────────────────────────────
+// The GA model renamed the four preview event types below.  The interfaces are
+// structurally identical; only the discriminant `type` literal differs.
+
+export interface ResponseOutputAudioDeltaEvent {
+  readonly type: 'response.output_audio.delta';
+  readonly event_id: string;
+  readonly response_id: string;
+  readonly item_id: string;
+  readonly output_index: number;
+  readonly content_index: number;
+  readonly delta: string;
+}
+
+export interface ResponseOutputAudioDoneEvent {
+  readonly type: 'response.output_audio.done';
+  readonly event_id: string;
+  readonly response_id: string;
+  readonly item_id: string;
+  readonly output_index: number;
+  readonly content_index: number;
+}
+
+export interface ResponseOutputAudioTranscriptDeltaEvent {
+  readonly type: 'response.output_audio_transcript.delta';
+  readonly event_id: string;
+  readonly response_id: string;
+  readonly item_id: string;
+  readonly output_index: number;
+  readonly content_index: number;
+  readonly delta: string;
+}
+
+export interface ResponseOutputAudioTranscriptDoneEvent {
+  readonly type: 'response.output_audio_transcript.done';
+  readonly event_id: string;
+  readonly response_id: string;
+  readonly item_id: string;
+  readonly output_index: number;
+  readonly content_index: number;
+  readonly transcript: string;
+}
+
 export interface ResponseFunctionCallArgumentsDeltaEvent {
   readonly type: 'response.function_call_arguments.delta';
   readonly event_id: string;
@@ -481,6 +563,10 @@ export type ServerEvent =
   | ResponseAudioTranscriptDoneEvent
   | ResponseAudioDeltaEvent
   | ResponseAudioDoneEvent
+  | ResponseOutputAudioDeltaEvent
+  | ResponseOutputAudioDoneEvent
+  | ResponseOutputAudioTranscriptDeltaEvent
+  | ResponseOutputAudioTranscriptDoneEvent
   | ResponseFunctionCallArgumentsDeltaEvent
   | ResponseFunctionCallArgumentsDoneEvent
   | RateLimitsUpdatedEvent;

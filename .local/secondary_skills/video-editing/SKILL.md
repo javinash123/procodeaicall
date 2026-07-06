@@ -1,7 +1,9 @@
 ---
 name: video-editing
-description: Edit video files with FFmpeg — trim, merge, add subtitles, effects, voiceovers, and reformat.
+description: Edit video files with FFmpeg -- trim, merge, add subtitles, effects, voiceovers, and reformat.
 ---
+
+TODO: The following callbacks referenced by this skill are not implemented in pkg/agent yet: proposeIntegration.
 
 # Video Editing
 
@@ -105,7 +107,7 @@ Edit existing video files server-side using FFmpeg. This skill covers the full e
 - User wants to create an animated video from scratch using code (use the `video-js` skill instead)
 - User wants a browser-based video editor UI (build as a `react-vite` artifact with this skill powering the backend)
 
-## User Interaction — ALWAYS Ask Before Acting
+## User Interaction -- ALWAYS Ask Before Acting
 
 **When a user uploads a video without specific instructions, you MUST ask what they want to do with it.** Do NOT assume a workflow or start processing automatically.
 
@@ -126,7 +128,7 @@ Probe the video first (to report basic info), then ask the user what they'd like
 - Convert to a different format
 - Something else
 
-**When the user specifies a platform, the full pipeline includes reframing to that platform's native format.** Do not just chunk the video and leave it in the original aspect ratio. Always deliver platform-ready output — correct aspect ratio, resolution, and duration range.
+**When the user specifies a platform, the full pipeline includes reframing to that platform's native format.** Do not just chunk the video and leave it in the original aspect ratio. Always deliver platform-ready output -- correct aspect ratio, resolution, and duration range.
 
 ### Platform Specifications
 
@@ -134,43 +136,43 @@ Probe the video first (to report basic info), then ask the user what they'd like
 
 |----------|-------------|------------|---------------|-------------|--------------|
 
-| **TikTok** | 9:16 vertical | 1080×1920 | 10–45s | 25s | 287 MB |
+| **TikTok** | 9:16 vertical | 1080--1920 | 10--45s | 25s | 287 MB |
 
-| **Instagram Reels** | 9:16 vertical | 1080×1920 | 10–30s | 20s | 250 MB |
+| **Instagram Reels** | 9:16 vertical | 1080--1920 | 10--30s | 20s | 250 MB |
 
-| **Instagram Stories** | 9:16 vertical | 1080×1920 | 1–60s | 15s | 250 MB |
+| **Instagram Stories** | 9:16 vertical | 1080--1920 | 1--60s | 15s | 250 MB |
 
-| **Instagram Feed** | 1:1 square or 4:5 portrait | 1080×1080 or 1080×1350 | 3–60s | 30s | 250 MB |
+| **Instagram Feed** | 1:1 square or 4:5 portrait | 1080--1080 or 1080--1350 | 3--60s | 30s | 250 MB |
 
-| **YouTube Shorts** | 9:16 vertical | 1080×1920 | 15–60s | 40s | 256 MB |
+| **YouTube Shorts** | 9:16 vertical | 1080--1920 | 15--60s | 40s | 256 MB |
 
-| **YouTube (standard)** | 16:9 landscape | 1920×1080 | any | any | 256 GB |
+| **YouTube (standard)** | 16:9 landscape | 1920--1080 | any | any | 256 GB |
 
-| **X / Twitter** | 16:9 landscape | 1280×720 | 10–45s | 25s | 512 MB |
+| **X / Twitter** | 16:9 landscape | 1280--720 | 10--45s | 25s | 512 MB |
 
-| **X / Twitter (square)** | 1:1 square | 720×720 | 10–45s | 25s | 512 MB |
+| **X / Twitter (square)** | 1:1 square | 720--720 | 10--45s | 25s | 512 MB |
 
-| **Facebook Reels** | 9:16 vertical | 1080×1920 | 10–30s | 20s | 250 MB |
+| **Facebook Reels** | 9:16 vertical | 1080--1920 | 10--30s | 20s | 250 MB |
 
-| **Facebook Feed** | 16:9 or 1:1 | 1920×1080 or 1080×1080 | any | 15–60s | 4 GB |
+| **Facebook Feed** | 16:9 or 1:1 | 1920--1080 or 1080--1080 | any | 15--60s | 4 GB |
 
-| **LinkedIn** | 16:9 landscape or 1:1 | 1920×1080 or 1080×1080 | 10–60s | 30s | 5 GB |
+| **LinkedIn** | 16:9 landscape or 1:1 | 1920--1080 or 1080--1080 | 10--60s | 30s | 5 GB |
 
-| **Pinterest** | 9:16 or 2:3 vertical | 1080×1920 or 1000×1500 | 6–60s | 15–30s | 2 GB |
+| **Pinterest** | 9:16 or 2:3 vertical | 1080--1920 or 1000--1500 | 6--60s | 15--30s | 2 GB |
 
-| **Snapchat Spotlight** | 9:16 vertical | 1080×1920 | 5–60s | 15–30s | 250 MB |
+| **Snapchat Spotlight** | 9:16 vertical | 1080--1920 | 5--60s | 15--30s | 250 MB |
 
 **When the user says a platform name, apply both the correct duration targets AND the correct aspect ratio/resolution.** For example:
 
-- "Make TikTok clips" → chunk to 10-45s AND reframe to 9:16 (1080×1920)
-- "Instagram feed posts" → chunk to 3-60s AND reframe to 1:1 (1080×1080) or 4:5 (1080×1350)
+- "Make TikTok clips" -- chunk to 10-45s AND reframe to 9:16 (1080--1920)
+- "Instagram feed posts" -- chunk to 3-60s AND reframe to 1:1 (1080--1080) or 4:5 (1080--1350)
 
-- "YouTube Shorts" → chunk to 15-60s AND reframe to 9:16 (1080×1920)
-- "Clips for X" → chunk to 10-45s, keep 16:9 (1280×720)
+- "YouTube Shorts" -- chunk to 15-60s AND reframe to 9:16 (1080--1920)
+- "Clips for X" -- chunk to 10-45s, keep 16:9 (1280--720)
 
 **When the user asks for clips or chunking without specifying a platform, ask which platform they're targeting** so you can apply the right duration targets and reframing.
 
-**When you deliver results, always present the output files** so the user can download and preview them. Never just describe what was done — show the files.
+**When you deliver results, always present the output files** so the user can download and preview them. Never just describe what was done -- show the files.
 
 ## Environment
 
@@ -182,7 +184,7 @@ FFmpeg 6.1.2 is pre-installed in Replit with full codec support:
 - **Image formats:** PNG, JPEG, WebP, JPEG XL (libjxl)
 - **Subtitle rendering:** libass (for styled subtitles), libfreetype + libfontconfig (for drawtext)
 
-- **Filters:** All standard filters available — scale, crop, overlay, drawtext, concat, fade, crossfade, etc.
+- **Filters:** All standard filters available -- scale, crop, overlay, drawtext, concat, fade, crossfade, etc.
 - **Tools:** `ffmpeg`,`ffprobe` (both available on PATH)
 
 No additional installation is needed for FFmpeg itself.
@@ -320,7 +322,7 @@ outputPath
 ### 4. File Management
 
 - Store uploaded/input files in a `tmp/`or`uploads/` directory
-- Store output files where the user can access them — either `public/` for web serving or a known output directory
+- Store output files where the user can access them -- either `public/` for web serving or a known output directory
 
 - Clean up temporary files after processing
 - For large files, stream the output rather than buffering in memory
@@ -365,9 +367,9 @@ This feature requires an AI integration (OpenAI or Gemini) to be set up. Set up 
 
 ### Two Scoring Modes
 
-**Mode 1: Segment scoring (find the best moments)** — For when the user says "find the best clips" or "auto-trim for virality." Detects scenes, scores small segments, and exports the top moments. Good for finding highlights in raw footage.
+**Mode 1: Segment scoring (find the best moments)** -- For when the user says "find the best clips" or "auto-trim for virality." Detects scenes, scores small segments, and exports the top moments. Good for finding highlights in raw footage.
 
-#### Mode 2: Clip scoring (rank ready-to-post clips)**— For when clips already exist (from chunking, manual trimming, etc.) and the user wants to know which ones to post first. Scores each complete clip with a richer evaluation including narrative arc and standalone quality.**This is the preferred mode when used with the chunking pipeline
+#### Mode 2: Clip scoring (rank ready-to-post clips)**-- For when clips already exist (from chunking, manual trimming, etc.) and the user wants to know which ones to post first. Scores each complete clip with a richer evaluation including narrative arc and standalone quality.**This is the preferred mode when used with the chunking pipeline
 
 ### Recommended Pipeline
 
@@ -375,7 +377,7 @@ When the user has a long video and wants social-ready clips, use this order:
 
 ```text
 
-Long Video → Dead Space Removal → Chunking (10-60s clips) → Clip-Level Scoring → Reframe for Platform → Output
+Long Video -- Dead Space Removal -- Chunking (10-60s clips) -- Clip-Level Scoring -- Reframe for Platform -- Output
 
 ```
 
@@ -385,7 +387,7 @@ For "find the best moment in this video" requests (no chunking), use the origina
 
 ```text
 
-Video → Scene Detection → Frame Extraction → Segment Scoring → Rank → Trim/Export
+Video -- Scene Detection -- Frame Extraction -- Segment Scoring -- Rank -- Trim/Export
 
 ```
 
@@ -393,10 +395,10 @@ Video → Scene Detection → Frame Extraction → Segment Scoring → Rank → 
 
 Present these three options and let the user choose each time. Do not assume a default:
 
-- **Best clip** — The single highest-scoring segment/clip, trimmed and exported
-- **Multiple clips** — Several top segments/clips exported as separate files, ranked by score
+- **Best clip** -- The single highest-scoring segment/clip, trimmed and exported
+- **Multiple clips** -- Several top segments/clips exported as separate files, ranked by score
 
-- **Highlight reel** — Top moments stitched together with crossfade transitions into one video
+- **Highlight reel** -- Top moments stitched together with crossfade transitions into one video
 
 ### Scoring Criteria
 
@@ -404,10 +406,10 @@ Present these three options and let the user choose each time. Do not assume a d
 
 **Clip scoring** adds three additional criteria for complete clips:
 
-- **Narrative completeness** (weight: 15%) — Does the clip tell a complete micro-story? Does it have a clear beginning, middle, and end? Would a viewer feel satisfied or intrigued, not confused?
-- **Hook-to-payoff flow** (weight: 10%) — Does the clip open with something that grabs attention and deliver on that promise? Or does it start slow and meander?
+- **Narrative completeness** (weight: 15%) -- Does the clip tell a complete micro-story? Does it have a clear beginning, middle, and end? Would a viewer feel satisfied or intrigued, not confused?
+- **Hook-to-payoff flow** (weight: 10%) -- Does the clip open with something that grabs attention and deliver on that promise? Or does it start slow and meander?
 
-- **Standalone quality** (weight: 10%) — Would this clip make sense to someone who hasn't seen the full video? Can it be posted without context?
+- **Standalone quality** (weight: 10%) -- Would this clip make sense to someone who hasn't seen the full video? Can it be posted without context?
 
 These three criteria reduce the weights of the original six factors proportionally so the total still sums to 100%.
 
@@ -420,18 +422,18 @@ These three criteria reduce the weights of the original six factors proportional
 
 For the complete step-by-step implementation with code examples, see:
 
-- `virality-scoring.md` — Full virality analysis pipeline, AI prompts, scoring criteria, and output assembly
+- `virality-scoring.md` -- Full virality analysis pipeline, AI prompts, scoring criteria, and output assembly
 
 ### Key Gotchas (learned from testing)
 
-- **Scene detection:** Use `ffmpeg`with`select`+`showinfo`filters and parse stderr — the`ffprobe -f lavfi` approach doesn't work reliably in Replit.
+- **Scene detection:** Use `ffmpeg`with`select`+`showinfo`filters and parse stderr -- the`ffprobe -f lavfi` approach doesn't work reliably in Replit.
 - **Content safety:** OpenAI vision may reject frames from documentary/medical/news content. Always wrap AI calls in try/catch and skip failed segments gracefully.
 
 - **Segment indexing:** Use `index: segments.length`when filtering short segments, not the loop counter`i`.
 - **Package setup:** For scripts, install `openai`directly (`pnpm add -w openai`) and create the client with`AI_INTEGRATIONS_OPENAI_BASE_URL`/`AI_INTEGRATIONS_OPENAI_API_KEY` env vars. No need for the full workspace integration library.
 
 - **Timeouts:** A 90-second video with ~13 segments takes 1-2 minutes for AI analysis. Warn the user and set generous timeouts.
-- **Minimum segment duration:** Use 2.0s minimum — segments under 2 seconds waste API calls and don't produce useful scores.
+- **Minimum segment duration:** Use 2.0s minimum -- segments under 2 seconds waste API calls and don't produce useful scores.
 
 - **Prefer clip-level scoring:** When the video has already been chunked, always score the chunks rather than re-running segment detection. The clips are what will actually be posted.
 
@@ -441,11 +443,11 @@ Automatically detect and remove silence, dead air, and filler from a video to pr
 
 ### How It Works
 
-1. **Silence detection** — Use FFmpeg's `silencedetect` filter to find all silent intervals (configurable threshold and minimum duration)
-2. **Segment extraction** — Extract all non-silent segments as individual clips
+1. **Silence detection** -- Use FFmpeg's `silencedetect` filter to find all silent intervals (configurable threshold and minimum duration)
+2. **Segment extraction** -- Extract all non-silent segments as individual clips
 
-3. **Reassembly** — Concatenate the non-silent segments back together with optional brief crossfade transitions
-4. **Optional: AI-assisted filler removal** — For more aggressive editing (removing "ums", filler words, repetitive sections), combine silence detection with AI transcription analysis
+3. **Reassembly** -- Concatenate the non-silent segments back together with optional brief crossfade transitions
+4. **Optional: AI-assisted filler removal** -- For more aggressive editing (removing "ums", filler words, repetitive sections), combine silence detection with AI transcription analysis
 
 ### When the user asks to remove dead space
 
@@ -460,23 +462,23 @@ Ask these clarifying questions if not clear from context:
 
 |--------|------------------|---------------------|----------|
 
-| Light | -40dB | 1.0s | Talks, interviews — remove obvious dead air |
+| Light | -40dB | 1.0s | Talks, interviews -- remove obvious dead air |
 
-| Medium | -35dB | 0.5s | Podcasts, tutorials — tighter pacing |
+| Medium | -35dB | 0.5s | Podcasts, tutorials -- tighter pacing |
 
-| Aggressive | -30dB | 0.3s | Fast-paced edits, social media — maximum tightness |
+| Aggressive | -30dB | 0.3s | Fast-paced edits, social media -- maximum tightness |
 
 ### Implementation
 
 For the complete FFmpeg commands and Node.js pipeline, see:
 
-- `dead-space-and-chunking.md` — See the "Dead Space Removal" section
+- `dead-space-and-chunking.md` -- See the "Dead Space Removal" section
 
 ### Quick Summary
 
 ```text
 
-Video → Silence Detection (FFmpeg silencedetect) → Identify Non-Silent Ranges → Extract Segments → Concatenate → Output
+Video -- Silence Detection (FFmpeg silencedetect) -- Identify Non-Silent Ranges -- Extract Segments -- Concatenate -- Output
 
 ```
 
@@ -486,11 +488,11 @@ Break a longer video (ad, promo, talk, presentation, livestream) into self-conta
 
 ### How It Works (2)
 
-1. **Scene detection + silence detection** — Find natural break points using both visual scene changes and audio silence gaps
-2. **Smart boundary selection** — Merge adjacent segments into clips targeting 10-60 seconds, preferring to break at silence or scene changes rather than mid-sentence
+1. **Scene detection + silence detection** -- Find natural break points using both visual scene changes and audio silence gaps
+2. **Smart boundary selection** -- Merge adjacent segments into clips targeting 10-60 seconds, preferring to break at silence or scene changes rather than mid-sentence
 
-3. **AI content analysis (optional)** — Score each potential clip with AI to identify which ones are worth posting, suggest captions, and recommend clip order
-4. **Export** — Output each clip as a separate file, numbered and ranked
+3. **AI content analysis (optional)** -- Score each potential clip with AI to identify which ones are worth posting, suggest captions, and recommend clip order
+4. **Export** -- Output each clip as a separate file, numbered and ranked
 
 ### Clip Length Guidelines
 
@@ -510,23 +512,23 @@ Break a longer video (ad, promo, talk, presentation, livestream) into self-conta
 
 Ask which platform they're targeting (or default to TikTok at 15-45s). The chunking algorithm should:
 
-- **Never cut mid-sentence** — Always break at silence gaps or natural pauses
-- **Prefer scene boundaries** — Break where the visual content changes
+- **Never cut mid-sentence** -- Always break at silence gaps or natural pauses
+- **Prefer scene boundaries** -- Break where the visual content changes
 
-- **Ensure each clip stands alone** — Each clip should have a clear beginning, not start mid-thought
-- **Target the platform's sweet spot** — Not just "under 60s" but actually the ideal range for that platform
+- **Ensure each clip stands alone** -- Each clip should have a clear beginning, not start mid-thought
+- **Target the platform's sweet spot** -- Not just "under 60s" but actually the ideal range for that platform
 
 ### Implementation (2)
 
 For the complete pipeline with code examples, see:
 
-- `dead-space-and-chunking.md` — See the "Social Media Chunking" section
+- `dead-space-and-chunking.md` -- See the "Social Media Chunking" section
 
 ### Quick Summary (2)
 
 ```text
 
-Video → Scene Detection + Silence Detection → Merge into 10-60s Clips at Natural Boundaries → (Optional) AI Scoring → Export Individual Clips
+Video -- Scene Detection + Silence Detection -- Merge into 10-60s Clips at Natural Boundaries -- (Optional) AI Scoring -- Export Individual Clips
 
 ```
 
@@ -536,7 +538,7 @@ These features work well together in a pipeline:
 
 ```text
 
-Long Video → Dead Space Removal → Chunking into Clips → Virality Scoring → Reframe for TikTok → Output
+Long Video -- Dead Space Removal -- Chunking into Clips -- Virality Scoring -- Reframe for TikTok -- Output
 
 ```
 
@@ -548,33 +550,33 @@ Add AI-generated voiceovers to videos using ElevenLabs text-to-speech, then mix 
 
 ### Prerequisites
 
-ElevenLabs is available as a Replit integration (connector). The user needs to connect their ElevenLabs account through Replit's integration system — no manual API keys needed. Search for the integration and propose it to the user:
+ElevenLabs is available as a Replit integration (connector). The user needs to connect their ElevenLabs account through Replit's integration system -- no manual API keys needed. Search for the integration and propose it to the user:
 
 ```javascript
 
-const results = await searchIntegrations("elevenlabs");
+const results = await searchIntegrations({ query: "elevenlabs" });
 
 // Then propose the connector so the user can authorize
 
-await proposeIntegration("connector:ccfg_elevenlabs_...");
+await proposeIntegration({ integrationId: "connector:ccfg_elevenlabs_..." });
 
 ```
 
-After authorization, use `addIntegration`to wire it to the project, then use`listConnections('elevenlabs')` in the code execution sandbox to get the credentials.
+After authorization, use `addIntegration`to wire it to the project, then use`listConnections('elevenlabs')` inside a `"use impure"` function in the code execution sandbox to get the credentials.
 
 ### Workflow (2)
 
-1. **Generate voiceover audio** — Send text to ElevenLabs TTS API, receive audio file
-2. **Mix into video** — Use FFmpeg to add the voiceover as a new audio track, optionally ducking (lowering volume of) existing audio
+1. **Generate voiceover audio** -- Send text to ElevenLabs TTS API, receive audio file
+2. **Mix into video** -- Use FFmpeg to add the voiceover as a new audio track, optionally ducking (lowering volume of) existing audio
 
 ### Voiceover Modes
 
 When the user asks for a voiceover, they may want one of these:
 
-- **Replace audio** — Remove existing audio entirely, use only the voiceover
-- **Mix over** — Layer voiceover on top of existing audio (with existing audio volume reduced)
+- **Replace audio** -- Remove existing audio entirely, use only the voiceover
+- **Mix over** -- Layer voiceover on top of existing audio (with existing audio volume reduced)
 
-- **Add as track** — Keep existing audio at full volume, add voiceover on top
+- **Add as track** -- Keep existing audio at full volume, add voiceover on top
 
 Ask which mode the user prefers if not clear from context.
 
@@ -582,13 +584,13 @@ Ask which mode the user prefers if not clear from context.
 
 For the complete step-by-step implementation with code examples, see:
 
-- `voiceover.md` — ElevenLabs TTS integration, voice selection, audio mixing with FFmpeg, and timed voiceover segments
+- `voiceover.md` -- ElevenLabs TTS integration, voice selection, audio mixing with FFmpeg, and timed voiceover segments
 
 ### Quick Summary (3)
 
 ```text
 
-Text Script → ElevenLabs TTS → Audio File → FFmpeg Mix with Video → Output
+Text Script -- ElevenLabs TTS -- Audio File -- FFmpeg Mix with Video -- Output
 
 ```
 
@@ -604,7 +606,7 @@ Key capabilities:
 
 ## Social Media Reframing
 
-Automatically reframe videos for different social media platforms. Each platform has a preferred aspect ratio and resolution — this feature handles the conversion intelligently.
+Automatically reframe videos for different social media platforms. Each platform has a preferred aspect ratio and resolution -- this feature handles the conversion intelligently.
 
 ### Platform Specs
 
@@ -624,10 +626,10 @@ Automatically reframe videos for different social media platforms. Each platform
 
 When converting between aspect ratios, there are three strategies:
 
-1. **Center crop** (default) — Crop from the center to fill the target ratio. Fast, works well for most content. May cut off edges.
-2. **Letterbox/pillarbox** — Add black bars (or blurred background) to fit without cropping. Preserves all content but adds empty space.
+1. **Center crop** (default) -- Crop from the center to fill the target ratio. Fast, works well for most content. May cut off edges.
+2. **Letterbox/pillarbox** -- Add black bars (or blurred background) to fit without cropping. Preserves all content but adds empty space.
 
-3. **Blurred fill** — Use a blurred, scaled-up version of the video as the background behind the original. Looks much better than black bars, especially for vertical reframing. This is the recommended approach for going from 16:9 to 9:16.
+3. **Blurred fill** -- Use a blurred, scaled-up version of the video as the background behind the original. Looks much better than black bars, especially for vertical reframing. This is the recommended approach for going from 16:9 to 9:16.
 
 When the user asks to reframe, ask which platform they're targeting. Use **blurred fill**by default for aspect ratio changes that would lose significant content (e.g., landscape to portrait). Use**center crop**when the content is center-focused. Use**letterbox** only if the user explicitly asks for it.
 
@@ -635,7 +637,7 @@ When the user asks to reframe, ask which platform they're targeting. Use **blurr
 
 For the complete FFmpeg commands for each reframing strategy, see:
 
-- `operations.md` — See the "Social Media Reframing" section
+- `operations.md` -- See the "Social Media Reframing" section
 
 ### Multi-platform Export
 
@@ -643,21 +645,21 @@ When the user wants to export for multiple platforms at once, generate all versi
 
 ```text
 
-Input (16:9) → YouTube (copy) + TikTok (9:16 blurred fill) + Instagram (1:1 center crop) + X (1280x720 copy)
+Input (16:9) -- YouTube (copy) + TikTok (9:16 blurred fill) + Instagram (1:1 center crop) + X (1280x720 copy)
 
 ```
 
-This is a common workflow — the user shoots in landscape and needs versions for every platform.
+This is a common workflow -- the user shoots in landscape and needs versions for every platform.
 
 ## Common Operations Reference
 
 For detailed FFmpeg commands and patterns for each operation type, see:
 
-- `operations.md` — Complete command reference for all supported editing operations
-- `virality-scoring.md` — AI-powered virality analysis and auto-trim pipeline
+- `operations.md` -- Complete command reference for all supported editing operations
+- `virality-scoring.md` -- AI-powered virality analysis and auto-trim pipeline
 
-- `voiceover.md` — ElevenLabs voiceover generation and audio mixing
-- `dead-space-and-chunking.md` — Dead space removal and social media chunking pipelines
+- `voiceover.md` -- ElevenLabs voiceover generation and audio mixing
+- `dead-space-and-chunking.md` -- Dead space removal and social media chunking pipelines
 
 ## Building a Video Editor UI
 
@@ -685,7 +687,7 @@ Key frontend considerations:
 These issues were discovered during real-world testing and are documented here to prevent regressions:
 
 - **Scene detection:** The `ffprobe -f lavfi`approach does NOT work in Replit. Use`ffmpeg`with`select='gt(scene,threshold)',showinfo`and parse`pts_time` from stderr.
-- **Segment indexing:** Use `index: segments.length`when building segments, NOT the loop counter`i` — filtered segments cause index mismatches.
+- **Segment indexing:** Use `index: segments.length`when building segments, NOT the loop counter`i` -- filtered segments cause index mismatches.
 
 - **Content safety:** OpenAI vision may reject frames (medical/documentary content). Always wrap AI calls in try/catch and skip gracefully.
 - **Frame extraction timestamp clamping:** Clamp the last frame timestamp to `segment.endTime - 0.1`. Without this, the last clip in a video fails because`startTime + 1.0 * duration` can exceed the actual file duration due to floating point arithmetic.
@@ -698,8 +700,8 @@ These issues were discovered during real-world testing and are documented here t
 
 ## Limitations
 
-- **No GPU acceleration** — Replit containers do not have GPU access, so hardware encoding (NVENC, VAAPI) is unavailable. Use software encoding (libx264, libx265, libvpx-vp9).
-- **Memory and CPU** — Very large files or high-resolution encoding (4K+) may be slow or hit memory limits. For large files, prefer stream-copy (`-c copy`) where possible and avoid unnecessary re-encoding.
+- **No GPU acceleration** -- Replit containers do not have GPU access, so hardware encoding (NVENC, VAAPI) is unavailable. Use software encoding (libx264, libx265, libvpx-vp9).
+- **Memory and CPU** -- Very large files or high-resolution encoding (4K+) may be slow or hit memory limits. For large files, prefer stream-copy (`-c copy`) where possible and avoid unnecessary re-encoding.
 
-- **Disk space** — Video files are large. Clean up temporary files after processing. Monitor disk usage for batch operations.
-- **No real-time preview** — FFmpeg processes offline. Users cannot preview effects in real-time during editing (unlike desktop NLEs). Generate short previews of segments instead.
+- **Disk space** -- Video files are large. Clean up temporary files after processing. Monitor disk usage for batch operations.
+- **No real-time preview** -- FFmpeg processes offline. Users cannot preview effects in real-time during editing (unlike desktop NLEs). Generate short previews of segments instead.

@@ -1,0 +1,13 @@
+[
+  {
+    "timestamp": 1783104792591,
+    "sequence": 0,
+    "component": "OpenAIRealtimeSession",
+    "event": "session.created",
+    "payloadSummary": {
+      "openAiSessionId": "sess_DxdIefiwxbZOQ04DpVXh9"
+    },
+    "success": true,
+    "skipped": false
+  }
+]

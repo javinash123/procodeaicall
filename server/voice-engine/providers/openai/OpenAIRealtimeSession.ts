@@ -107,6 +107,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
   private _ws: WebSocket | null = null;
   private _state: SessionState = 'idle';
   private _sessionId: string | null = null;
+  private _greetingSent = false;
 
   private readonly _handlers = new Map<string, Set<RealtimeEventHandler>>();
 
@@ -387,19 +388,43 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     });
   }
 
+  /**
+   * Maps an internal audio format name to the MIME type string required by
+   * the gpt-realtime session schema.
+   *
+   * Evidence: live runtime test against wss://api.openai.com/v1/realtime?model=gpt-realtime
+   *   - 'audio/pcmu' accepted for G.711 µ-law (telephony)
+   *   - 'audio/pcma' accepted for G.711 A-law (telephony)
+   *   - 'audio/pcm'  accepted for raw PCM
+   *   - 'audio/g711-ulaw' rejected (invalid_value)
+   *   - format.rate field rejected (unknown_parameter)
+   */
+  private _toAudioMime(format: string): 'audio/pcm' | 'audio/pcmu' | 'audio/pcma' {
+    switch (format) {
+      case 'g711_ulaw': return 'audio/pcmu';
+      case 'g711_alaw': return 'audio/pcma';
+      case 'pcm16':     return 'audio/pcm';
+      default:          return 'audio/pcm';
+    }
+  }
+
   private _buildSessionConfig(instructions: string): Partial<RealtimeSessionResource> {
     return {
       type: 'realtime',
       instructions,
-      voice: this._config.voice,
-      input_audio_format: this._config.inputAudioFormat,
-      output_audio_format: this._config.outputAudioFormat,
-      input_audio_transcription: this._config.enableInputTranscription
-        ? { model: this._config.transcriptionModel }
-        : null,
-      turn_detection: this._config.turnDetection,
-      temperature: this._config.temperature,
-      max_response_output_tokens: this._config.maxResponseOutputTokens,
+      audio: {
+        input: {
+          format: { type: this._toAudioMime(this._config.inputAudioFormat) },
+          transcription: this._config.enableInputTranscription
+            ? { model: this._config.transcriptionModel }
+            : null,
+          turn_detection: this._config.turnDetection,
+        },
+        output: {
+          format: { type: this._toAudioMime(this._config.outputAudioFormat) },
+          voice: this._config.voice,
+        },
+      },
     };
   }
 
@@ -421,6 +446,14 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
       case 'session.updated':
         this._record('session.updated', { openAiSessionId: this._sessionId });
         this._emit({ type: 'realtime.session_updated', timestamp: ts, eventId: event.event_id, session: event.session });
+        if (!this._greetingSent) {
+          this._greetingSent = true;
+          setTimeout(() => {
+            if (this._ws?.readyState === WebSocket.OPEN && this._state === 'connected') {
+              this._sendEvent({ type: 'response.create' });
+            }
+          }, 250);
+        }
         break;
 
       case 'response.created':
@@ -432,7 +465,8 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         this._emit({ type: 'realtime.response_started', timestamp: ts, eventId: event.event_id, responseId: event.response.id });
         break;
 
-      case 'response.audio.delta':
+      case 'response.output_audio.delta':       // gpt-realtime (GA)
+      case 'response.audio.delta':              // gpt-4o-realtime-preview (legacy)
         this._record('response.audio.delta', {
           responseId: event.response_id,
           itemId:     event.item_id,
@@ -441,11 +475,13 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         this._emit({ type: 'realtime.audio_received', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, delta: event.delta });
         break;
 
-      case 'response.audio_transcript.delta':
+      case 'response.output_audio_transcript.delta': // gpt-realtime (GA)
+      case 'response.audio_transcript.delta':        // gpt-4o-realtime-preview (legacy)
         this._emit({ type: 'realtime.transcript_delta', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, delta: event.delta });
         break;
 
-      case 'response.audio_transcript.done':
+      case 'response.output_audio_transcript.done': // gpt-realtime (GA)
+      case 'response.audio_transcript.done':        // gpt-4o-realtime-preview (legacy)
         if (this._traceFirstTranscript) {
           this._traceFirstTranscript = false;
           console.log(`[V2 TRACE] 12. First transcript received  transcript="${(event.transcript ?? '').slice(0, 80)}"`);
@@ -572,7 +608,8 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         });
         break;
 
-      case 'response.audio.done':
+      case 'response.output_audio.done':  // gpt-realtime (GA)
+      case 'response.audio.done':         // gpt-4o-realtime-preview (legacy)
         this._record('response.audio.done', {
           responseId: (event as any).response_id ?? null,
           itemId:     (event as any).item_id     ?? null,
