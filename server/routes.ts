@@ -82,17 +82,22 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Session middleware MUST be registered BEFORE routes
+  if (!process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET environment variable is required");
+  }
+
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || "nijvox-secret-key-change-in-production",
-      resave: true,
-      saveUninitialized: true,
+      secret: process.env.SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
       name: "aiagent.sid",
-      rolling: true, // Force session cookie to be set on every response
+      rolling: true, // Refresh cookie expiry on each request
       cookie: {
-        secure: false, // Changed to false for HTTP EC2 instance
+        // Secure on HTTPS (production/proxied); plain HTTP in local dev
+        secure: process.env.NODE_ENV === "production",
         httpOnly: true,
-        path: "/", // Use root path for all environments to ensure cookie is always sent
+        path: "/",
         maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
         sameSite: "lax"
       },

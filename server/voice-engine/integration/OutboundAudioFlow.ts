@@ -252,6 +252,20 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
 
     const chunk = this._buildChunk(event.base64Delta, event.timestamp);
 
+    // [DEBUG] payload trace after _buildChunk — payload is the same base64 string from bridge
+    if (process.env['NIJVOX_DEBUG_AUDIO'] === '1') {
+      const pl          = chunk.payload as string;   // always string here (payloadFormat='base64')
+      const b64Len      = pl.length;
+      const decodedBytes = Math.floor(b64Len * 0.75);
+      console.log(
+        `[AudioTrace][3a-OutboundFlow._buildChunk] seq=${chunk.sequence}` +
+        `  responseId=${event.responseId}` +
+        `  payloadType=${typeof chunk.payload}` +
+        `  b64Len=${b64Len}  decodedBytes~=${decodedBytes}` +
+        `  changed=false  concatenated=false  copied=false  merged=false`,
+      );
+    }
+
     try {
       this._audioEngine.ingestOutbound(chunk);
       recordTrace(this._sessionId, {
@@ -289,6 +303,16 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
       skipped: result.chunksToSend.length === 0,
       skipReason: result.chunksToSend.length === 0 ? 'tickOutbound produced 0 chunks — audio engine buffering or not ready' : undefined,
     });
+
+    // [DEBUG] tick result — how many chunks the engine released this tick
+    if (process.env['NIJVOX_DEBUG_AUDIO'] === '1') {
+      console.log(
+        `[AudioTrace][3b-OutboundFlow.tickOutbound] action=${result.action}` +
+        `  chunksReleased=${result.chunksToSend.length}` +
+        `  bufferDepth=${result.bufferDepth}  bufferDurationMs=${result.bufferDurationMs}` +
+        `  note="engine may hold chunks until minBufferMs satisfied"`,
+      );
+    }
 
     // Enqueue each chunk for real-time paced delivery.
     // _enqueue() starts the pacer on the first chunk of any burst; subsequent
@@ -368,6 +392,19 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
     if (chunk === undefined) {
       // Queue emptied between schedule and fire — pacer idles.
       return;
+    }
+
+    // [DEBUG] payload trace in _sendNext — same chunk object from the engine
+    if (process.env['NIJVOX_DEBUG_AUDIO'] === '1') {
+      const pl           = chunk.payload as string;
+      const b64Len       = typeof pl === 'string' ? pl.length : -1;
+      const decodedBytes = b64Len >= 0 ? Math.floor(b64Len * 0.75) : (chunk.payload as Uint8Array).byteLength;
+      console.log(
+        `[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=${chunk.sequence}` +
+        `  payloadType=${typeof chunk.payload}` +
+        `  b64Len=${b64Len}  decodedBytes~=${decodedBytes}` +
+        `  changed=false  concatenated=false  copied=false  merged=false`,
+      );
     }
 
     // Send this chunk to the transport now.

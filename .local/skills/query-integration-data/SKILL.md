@@ -102,6 +102,8 @@ Read `status` (not array length) to decide setup, and read `id` to feed the othe
 
 `listConnections` is a credential-fetch call, not a status check. Call it **only** inside a `"use impure"` function when `searchIntegrations` already reports the connection as `added` **and** you are about to use the credentials in the same `codeExecution` block. Do not call it to test whether a connection exists, to "check" status, or speculatively before you actually need to hit the API -- that decision is `searchIntegrations`'s job. The credentials stay inside the sandbox and never enter the model context.
 
+`listConnections` is injected **only** into the `"use impure"` sandbox, never the durable (top-level) scope. If you call it at the top level you get `ReferenceError: listConnections is not defined`. That means you called it **outside** `"use impure"` -- it does **not** mean the API is missing, and it is **never** a reason to `import("@replit/connectors-sdk")` or hunt for tokens/env vars. Wrap the call in a `"use impure"` function (as below) and retry.
+
 Fetch the credentials and use them in the same block -- never as a standalone "is it connected?" probe:
 
 ```javascript

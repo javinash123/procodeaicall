@@ -81,13 +81,16 @@ export interface ITransportAdapter {
   ): void;
 
   /**
-   * Encodes an outbound audio chunk into a protocol-specific wire frame.
+   * Encodes an outbound audio chunk into one or more protocol-specific wire
+   * frames.  Adapters that need to packetise large payloads (e.g. splitting a
+   * single OpenAI delta into 160-byte μ-law frames for Exotel) return multiple
+   * strings; the gateway sends them in order.
    *
    * @param chunk     - Outbound audio to transmit to the caller.
    * @param streamId  - Provider-specific stream/call identifier.
-   * @returns Serialised wire frame string ready to send over WebSocket.
+   * @returns Array of serialised wire frame strings ready to send over WebSocket.
    */
-  encodeOutboundAudio(chunk: AudioChunk, streamId: string): string;
+  encodeOutboundAudio(chunk: AudioChunk, streamId: string): string[];
 
   /**
    * Encodes a mark message (sent after audio to track playback progress).
@@ -369,13 +372,29 @@ export class TransportGateway implements ITransportGateway {
     const adapter = this._adapters.get(record.adapterName);
     if (!adapter) return;
 
-    const audioFrame = adapter.encodeOutboundAudio(chunk, streamId);
-    record.connection.send(audioFrame);
+    // [DEBUG] payload trace — chunk arrives unchanged from OutboundAudioFlow
+    if (process.env['NIJVOX_DEBUG_AUDIO'] === '1') {
+      const pl           = chunk.payload;
+      const b64Len       = typeof pl === 'string' ? pl.length : -1;
+      const decodedBytes = b64Len >= 0 ? Math.floor(b64Len * 0.75) : (pl as Uint8Array).byteLength;
+      console.log(
+        `[AudioTrace][4-TransportGateway.sendAudio] seq=${chunk.sequence}` +
+        `  payloadType=${typeof pl}` +
+        `  b64Len=${b64Len}  decodedBytes~=${decodedBytes}` +
+        `  changed=false  concatenated=false  copied=false  merged=false`,
+      );
+    }
+
+    const audioFrames = adapter.encodeOutboundAudio(chunk, streamId);
+    for (const frame of audioFrames) {
+      record.connection.send(frame);
+    }
+    const totalFrameBytes = audioFrames.reduce((s, f) => s + f.length, 0);
 
     recordTrace(sessionId, {
       component: 'TransportGateway',
       event: 'TransportGateway.sendAudio',
-      payloadSummary: { sessionId, streamId, sequence: chunk.sequence, frameBytes: audioFrame.length },
+      payloadSummary: { sessionId, streamId, sequence: chunk.sequence, packetCount: audioFrames.length, totalFrameBytes },
       success: true,
       skipped: false,
     });
@@ -383,7 +402,7 @@ export class TransportGateway implements ITransportGateway {
     recordTrace(sessionId, {
       component: 'ExotelAdapter',
       event: 'ExotelAdapter.sendMedia',
-      payloadSummary: { streamId, frameBytes: audioFrame.length, sequence: chunk.sequence },
+      payloadSummary: { streamId, packetCount: audioFrames.length, totalFrameBytes, sequence: chunk.sequence },
       success: true,
       skipped: false,
     });

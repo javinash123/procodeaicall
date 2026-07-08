@@ -49,6 +49,8 @@ import type {
 import { ProviderError, ErrorCode } from '../../errors/index.js';
 import type { ConversationSessionContext } from './ConversationSessionContext.js';
 import { recordTrace } from '../../diagnostics/CallTraceWriter.js';
+import fs   from 'fs';
+import path from 'path';
 
 type SessionState = 'idle' | 'connecting' | 'connected' | 'closing' | 'closed';
 
@@ -114,6 +116,12 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
   /** [V2 TRACE] first-only guards */
   private _traceFirstTranscript = true;
   private _traceFirstAIResponse = true;
+
+  // ── [DEBUG] one-shot audio capture ──────────────────────────────────────────
+  // Accumulates raw base64 deltas for the first response only.
+  // Written to disk on response.output_audio.done. Remove when no longer needed.
+  private _dbgAudioChunks: string[] = [];
+  private _dbgAudioSaved  = false;
 
   constructor(
     config: OpenAIRealtimeConfig,
@@ -408,6 +416,23 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     }
   }
 
+  /**
+   * Resolves the outbound (OpenAI → us) audio MIME type.
+   *
+   * Controlled ONLY by the `VOICE_OUTPUT_FORMAT` env var:
+   *   - 'pcmu' (default): request G.711 μ-law from OpenAI — passed straight
+   *     through to Exotel by ExotelAdapter, unchanged from prior behaviour.
+   *   - 'pcm': request raw 16-bit PCM from OpenAI — ExotelAdapter converts it
+   *     to G.711 μ-law before sending to Exotel.
+   * Any other/unset value falls back to the existing configured default.
+   */
+  private _resolveOutputAudioMime(): 'audio/pcm' | 'audio/pcmu' | 'audio/pcma' {
+    const mode = (process.env['VOICE_OUTPUT_FORMAT'] || 'pcmu').toLowerCase();
+    if (mode === 'pcm')  return 'audio/pcm';
+    if (mode === 'pcmu') return 'audio/pcmu';
+    return this._toAudioMime(this._config.outputAudioFormat);
+  }
+
   private _buildSessionConfig(instructions: string): Partial<RealtimeSessionResource> {
     return {
       type: 'realtime',
@@ -421,7 +446,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
           turn_detection: this._config.turnDetection,
         },
         output: {
-          format: { type: this._toAudioMime(this._config.outputAudioFormat) },
+          format: { type: this._resolveOutputAudioMime() },
           voice: this._config.voice,
         },
       },
@@ -473,6 +498,22 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
           deltaBytes: Math.round(event.delta.length * 0.75),
         });
         this._emit({ type: 'realtime.audio_received', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, delta: event.delta });
+        // [DEBUG] accumulate first-response audio deltas
+        if (!this._dbgAudioSaved) {
+          this._dbgAudioChunks.push(event.delta);
+          if (process.env['NIJVOX_DEBUG_AUDIO'] === '1') {
+            const b64Len      = event.delta.length;
+            const decodedBytes = Buffer.from(event.delta, 'base64').byteLength;
+            const runningTotal = this._dbgAudioChunks.reduce((s, c) => s + Buffer.from(c, 'base64').byteLength, 0);
+            console.log(
+              `[AudioTrace][1-OpenAISession] delta #${this._dbgAudioChunks.length}` +
+              `  responseId=${event.response_id}` +
+              `  b64Len=${b64Len}  decodedBytes=${decodedBytes}` +
+              `  runningTotal=${runningTotal}` +
+              `  changed=false  concatenated=false  copied=false  merged=false`,
+            );
+          }
+        }
         break;
 
       case 'response.output_audio_transcript.delta': // gpt-realtime (GA)
@@ -614,6 +655,53 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
           responseId: (event as any).response_id ?? null,
           itemId:     (event as any).item_id     ?? null,
         });
+        // [DEBUG] flush accumulated audio to disk (first response only)
+        // Gated by NIJVOX_DEBUG_AUDIO=1 — off by default, never runs in production.
+        if (
+          !this._dbgAudioSaved &&
+          this._dbgAudioChunks.length > 0 &&
+          process.env['NIJVOX_DEBUG_AUDIO'] === '1'
+        ) {
+          try {
+            const rawBuf = Buffer.concat(
+              this._dbgAudioChunks.map(b64 => Buffer.from(b64, 'base64')),
+            );
+            const logsDir = path.resolve('logs');
+            fs.mkdirSync(logsDir, { recursive: true });
+            const rawPath = path.join(logsDir, 'openai-audio.raw');
+            const wavPath = path.join(logsDir, 'openai-audio.wav');
+            fs.writeFileSync(rawPath, rawBuf);
+            // G.711 μ-law WAV header: AudioFormat=7, 8 kHz, mono, cbSize=0
+            // Subchunk1Size = 18 (standard for non-PCM formats)
+            const hdr = Buffer.alloc(46);
+            let o = 0;
+            hdr.write('RIFF', o, 'ascii');            o += 4;
+            hdr.writeUInt32LE(38 + rawBuf.length, o); o += 4; // ChunkSize = 38 + dataLen
+            hdr.write('WAVE', o, 'ascii');            o += 4;
+            hdr.write('fmt ', o, 'ascii');            o += 4;
+            hdr.writeUInt32LE(18,   o);  o += 4; // Subchunk1Size (18 for non-PCM)
+            hdr.writeUInt16LE(7,    o);  o += 2; // AudioFormat = MULAW
+            hdr.writeUInt16LE(1,    o);  o += 2; // NumChannels = 1
+            hdr.writeUInt32LE(8000, o);  o += 4; // SampleRate
+            hdr.writeUInt32LE(8000, o);  o += 4; // ByteRate (8000 × 1 × 1)
+            hdr.writeUInt16LE(1,    o);  o += 2; // BlockAlign
+            hdr.writeUInt16LE(8,    o);  o += 2; // BitsPerSample
+            hdr.writeUInt16LE(0,    o);  o += 2; // cbSize = 0
+            hdr.write('data', o, 'ascii'); o += 4;
+            hdr.writeUInt32LE(rawBuf.length, o);
+            const wavBuf = Buffer.concat([hdr, rawBuf]);
+            fs.writeFileSync(wavPath, wavBuf);
+            // Flag only set after both writes succeed
+            this._dbgAudioSaved = true;
+            console.log(
+              `Saved OpenAI audio:\n` +
+              `  logs/openai-audio.raw  (${rawBuf.length} bytes)\n` +
+              `  logs/openai-audio.wav  (${wavBuf.length} bytes)`,
+            );
+          } catch (err) {
+            console.error('[DEBUG] Failed to save OpenAI audio:', err);
+          }
+        }
         break;
 
       case 'rate_limits.updated':

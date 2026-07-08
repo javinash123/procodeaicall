@@ -184,7 +184,7 @@ After `addIntegration` or `viewIntegration`, the `renderedContent` contains a co
 2. **Never cache the client.** Tokens expire. The snippet exports a `getUncachable___Client()` function -- call it fresh on every request
 3. **The token refresh logic is correct as-is.** Don't simplify or remove the expiry check
 4. **The snippet uses environment variables** (`REPLIT_CONNECTORS_HOSTNAME`, `REPL_IDENTITY`, `WEB_REPL_RENEWAL`) that Replit injects automatically -- no setup needed
-5. **The snippet is for app/server code, not the CodeExecution sandbox.** A bare `import` of the connector package only resolves where the package is installed (a workspace package's `node_modules`), so it fails from the sandbox's working directory with `ERR_MODULE_NOT_FOUND`. To reach a connector from inside CodeExecution, use the `listConnections("<connector-name>")` impure global instead -- it resolves the client without the package being installed and redacts tokens at the boundary.
+5. **The snippet is for app/server code, not the CodeExecution sandbox.** A bare `import` of the connector package only resolves where the package is installed (a workspace package's `node_modules`), so it fails from the sandbox's working directory with `ERR_MODULE_NOT_FOUND`. To reach a connector from inside CodeExecution, use the `listConnections("<connector-name>")` impure global instead -- it resolves the client without the package being installed and redacts tokens at the boundary. `listConnections` exists only inside a `"use impure"` function; calling it at the top level throws `ReferenceError: listConnections is not defined`, which means "wrap it in `"use impure"`," not "the API is missing" and not "install a package."
 
 ---
 

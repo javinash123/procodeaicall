@@ -3,8 +3,6 @@ name: canvas
 description: "Create, read, and manipulate shapes on the canvas. The canvas is the primary surface for showing live UI previews via iframe embeds (using the mockup-sandbox skill), as well as static shapes, text, notes, images, and videos. Use this skill for any canvas operation — reading board state, placing shapes, or managing iframe lifecycle. You must read this skill (0-500 lines) before any canvas operation"
 ---
 
-TODO: This skill is disabled until pkg/agent registers `applyCanvasActions`, `focusCanvasShapes`, and `getCanvasState`.
-
 # Canvas Skill
 
 ## IMPORTANT: Place Building Iframes Before Building
@@ -22,15 +20,11 @@ This does **not** apply to read-only requests (e.g. "what's on the canvas?"), mo
 
 ## Overview
 
-The workspace canvas is an infinite board where you can create, position, and manipulate visual elements. It supports shapes, iframes (primarily used for design exploration), and artifacts (live-running apps such as websites or mobile apps).
+The workspace canvas is an infinite board where you can create, position, and manipulate visual elements: iframes (primarily used for design exploration), artifacts (live-running apps such as websites or mobile apps), and static shapes (rectangles, ellipses, text, notes), images, and videos for diagrams, annotations, and layouts.
 
 When users want to view frames at full size, they must click the preview button above the frame. Users can also toggle in and out of the canvas using the canvas button below the workspace-level preview window. When telling the user where to view canvas content, say "open the Preview tab and toggle on the canvas" -- there is no "Canvas tab".
 
 Artifact frames have special constraints - they cannot be deleted or freely resized (to maintain the snap back in ratio).
-
-You have the following tools:
-
-Beyond iframes, the canvas also supports static shapes (rectangles, ellipses, text, notes), images, and videos for diagrams, annotations, and layouts.
 
 ### Callbacks
 
@@ -62,6 +56,8 @@ For any request that involves showing rendered UI on the canvas, you need both t
 ### `applyCanvasActions`
 
 Modify the canvas board by applying an ordered list of actions in a single atomic batch. For new iframes that just need automatic placement, use `create-auto`; for manual x/y placement, call `getCanvasState` first to see existing shapes and find empty space.
+
+Create a shapeId once — creating an existing shapeId fails. Use `update` for all later changes (changed properties go inside `updates`), like flipping a `building` placeholder to `live`.
 
 ```json
 {
@@ -248,13 +244,7 @@ Read the current state of the canvas board. Returns shapes at three detail level
 }
 ```
 
-**Response fields:**
-
-- **focusedShapes** -- Full detail for shapes inside the viewport/focus area. Geo/text/note shapes include color, fill, text. Iframe shapes include `url`, `componentName`, `componentPath`, `state`. Image shapes include `src`, `altText`, `filepath`. Video shapes include `src`, `altText`.
-- **blurryShapes** -- Position and basic info for shapes farther away. Iframe shapes include `componentName` and `state`. Image shapes include `src` and `filepath`. Video shapes include `src`.
-- **peripheralClusters** -- Aggregated counts for distant shape groups.
-- **summary** -- Quick text description of everything on the canvas.
-- **viewport** -- The current visible region `{ x, y, w, h }`.
+Response fields are documented in "Reading the Board" below.
 
 ### `focusCanvasShapes`
 

@@ -25,6 +25,11 @@ import type { SessionContext } from './SessionContext.js';
 import type { IRuntimeIntegration } from '../integration/RuntimeIntegration.js';
 import type { OpenAIRealtimeProvider } from '../providers/openai/OpenAIRealtimeProvider.js';
 import type { TransportDisconnectedEvent } from '../transport/TransportEvents.js';
+import { attachOneCallAudioCapture } from '../diagnostics/OneCallAudioCapture.js';
+
+// ── One-shot audio capture flag ────────────────────────────────────────────────
+// Set to true after the first call so the capture is never attached twice.
+let _captureAttached = false;
 
 // ─── Public API ────────────────────────────────────────────────────────────────
 
@@ -130,6 +135,15 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
   logger.info('RuntimeIntegration started — [TURN-DIAGNOSTICS] collector is active', {
     sessionId: ctx.sessionId,
   });
+
+  // ── Step 5.5: One-shot audio capture (diagnostic) ────────────────────────────
+  // Attaches ONCE per process lifetime. Captures OpenAI output_audio.delta bytes
+  // and Exotel-bound bytes for the first call only, then writes:
+  //   logs/openai-audio.raw, logs/openai-audio.wav, logs/exotel-audio.raw
+  if (!_captureAttached) {
+    _captureAttached = true;
+    attachOneCallAudioCapture(providerSession, ctx.transportGateway, ctx.sessionId);
+  }
 
   // ── Step 6: Register cleanup on transport disconnect ─────────────────────────
   //

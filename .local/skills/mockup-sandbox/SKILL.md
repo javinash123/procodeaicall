@@ -406,7 +406,7 @@ Every mockup request -- whether handled directly or via subagents -- should show
 }
 ```
 
-Then once the component is built, set the URL and mark it live:
+Then once the component is built, `update` the placeholder's shapeId to set the URL and mark it live, with each changed property inside `updates`:
 
 ```json
 {

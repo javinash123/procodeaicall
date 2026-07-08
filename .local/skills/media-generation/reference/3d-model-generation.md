@@ -1,6 +1,8 @@
 # 3D Model Generation
 
-Use this reference only when the user explicitly asks for a 3D model or asset.
+Use this reference only when the user wants a visual 3D **asset** — a textured `.glb` mesh generated from a description, for use in games, 3D scenes, or renders.
+
+This is not CAD. The output is a `.glb` mesh with baked geometry and textures; it is not dimensionally precise, parametric, or printable, and it does not produce `.stl`/`.step`.
 
 ## Available Function
 

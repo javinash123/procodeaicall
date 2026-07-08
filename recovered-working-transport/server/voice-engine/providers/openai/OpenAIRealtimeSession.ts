@@ -1,0 +1,654 @@
+/**
+ * @module OpenAIRealtimeSession
+ *
+ * Represents ONE active OpenAI Realtime WebSocket conversation.
+ *
+ * ## Purpose
+ * Manages the lifecycle of a single WebSocket connection to the OpenAI
+ * Realtime API. Translates Voice Engine audio/text operations into the
+ * OpenAI Realtime protocol and emits strongly typed provider events.
+ *
+ * ## Ownership
+ * Created by `OpenAIRealtimeProvider.openSession()`. The caller owns the
+ * session and must call `close()` when the conversation ends.
+ *
+ * ## Thread Safety
+ * All public methods are async and must be awaited sequentially by the owner.
+ * The session does not acquire locks; the owner is responsible for sequencing.
+ *
+ * ## Lifecycle
+ * ```
+ * new OpenAIRealtimeSession()
+ *   └─► connect()        — WebSocket opens, session.created received
+ *         ├─► sendAudio()       — append PCM/G.711 chunks
+ *         ├─► sendText()        — inject text message
+ *         ├─► interrupt()       — cancel active response
+ *         ├─► updateInstructions() — update system prompt mid-call
+ *         ├─► updateTools()        — hot-swap available tools
+ *         └─► submitToolResult()   — send function call output
+ *   └─► close()          — graceful disconnect
+ * ```
+ */
+
+import { WebSocket } from 'ws';
+import type { OpenAIRealtimeConfig } from './OpenAIRealtimeConfig.js';
+import type { ILogger } from '../../logger/index.js';
+import type { IMetricsCollector } from '../../metrics/index.js';
+import type {
+  ClientEvent,
+  ServerEvent,
+  ServerEventType,
+  ServerEventMap,
+  Tool,
+  RealtimeSessionResource,
+} from './OpenAIRealtimeTypes.js';
+import type {
+  RealtimeProviderEvent,
+  RealtimeEventHandler,
+} from './OpenAIRealtimeEvents.js';
+import { ProviderError, ErrorCode } from '../../errors/index.js';
+import type { ConversationSessionContext } from './ConversationSessionContext.js';
+import { recordTrace } from '../../diagnostics/CallTraceWriter.js';
+
+type SessionState = 'idle' | 'connecting' | 'connected' | 'closing' | 'closed';
+
+/**
+ * The public interface for a single OpenAI Realtime conversation session.
+ */
+export interface IOpenAIRealtimeSession {
+  /** Whether the WebSocket connection is currently open. */
+  readonly isConnected: boolean;
+  /** The OpenAI-assigned session ID, available after `connect()` resolves. */
+  readonly sessionId: string | null;
+  /**
+   * The live conversation session context (Policy + State engines), or null
+   * when the session was opened without a `policyContext`.
+   * Use this to dispatch signals (objections, pain points, etc.) at any time.
+   */
+  readonly conversationContext: ConversationSessionContext | null;
+
+  connect(): Promise<void>;
+  sendAudio(base64Chunk: string): void;
+  sendText(text: string): Promise<void>;
+  interrupt(): Promise<void>;
+  updateInstructions(instructions: string): Promise<void>;
+  updateTools(tools: readonly Tool[]): Promise<void>;
+  submitToolResult(callId: string, output: string): Promise<void>;
+  close(): Promise<void>;
+
+  on<K extends RealtimeProviderEvent['type']>(
+    type: K,
+    handler: RealtimeEventHandler<RealtimeProviderEvent & { type: K }>
+  ): void;
+  off<K extends RealtimeProviderEvent['type']>(
+    type: K,
+    handler: RealtimeEventHandler<RealtimeProviderEvent & { type: K }>
+  ): void;
+}
+
+/**
+ * Concrete implementation of a single OpenAI Realtime WebSocket session.
+ */
+export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
+  private readonly _config: OpenAIRealtimeConfig;
+  private readonly _logger: ILogger;
+  private readonly _metrics: IMetricsCollector;
+  private readonly _initialInstructions: string;
+
+  /** Optional conversation intelligence context wired at construction time. */
+  private readonly _conversationContext: ConversationSessionContext | null;
+
+  /** Call-session ID used as key for the structured execution trace. */
+  private readonly _traceSessionId: string | null;
+
+  /** Rolling buffer of the last completed agent transcript (for question detection). */
+  private _lastAgentTranscript: string | null = null;
+
+  private _ws: WebSocket | null = null;
+  private _state: SessionState = 'idle';
+  private _sessionId: string | null = null;
+  private _greetingSent = false;
+
+  private readonly _handlers = new Map<string, Set<RealtimeEventHandler>>();
+
+  /** [V2 TRACE] first-only guards */
+  private _traceFirstTranscript = true;
+  private _traceFirstAIResponse = true;
+
+  constructor(
+    config: OpenAIRealtimeConfig,
+    initialInstructions: string,
+    logger: ILogger,
+    metrics: IMetricsCollector,
+    conversationContext?: ConversationSessionContext,
+    traceSessionId?: string
+  ) {
+    this._config = config;
+    this._conversationContext = conversationContext ?? null;
+    this._traceSessionId = traceSessionId ?? null;
+    // If a conversation context is provided, it generates the full initial
+    // instruction (policy + live state section).  Otherwise fall back to the
+    // raw string passed by the caller.
+    this._initialInstructions = conversationContext
+      ? conversationContext.buildInitialInstruction()
+      : initialInstructions;
+    this._logger = logger.child({ component: 'OpenAIRealtimeSession' });
+    this._metrics = metrics;
+  }
+
+  get isConnected(): boolean {
+    return this._state === 'connected' && this._ws?.readyState === WebSocket.OPEN;
+  }
+
+  get sessionId(): string | null {
+    return this._sessionId;
+  }
+
+  get conversationContext(): ConversationSessionContext | null {
+    return this._conversationContext;
+  }
+
+  /**
+   * Opens the WebSocket connection and waits for the `session.created` event.
+   * @throws {ProviderError} if the connection cannot be established within the configured timeout.
+   */
+  async connect(): Promise<void> {
+    console.log(`[V2 TRACE] 6. OpenAIRealtimeSession.connect()  state=${this._state}`);
+    if (this._state !== 'idle') {
+      throw new ProviderError(
+        `OpenAIRealtimeSession.connect() called in invalid state: ${this._state}`,
+        ErrorCode.PROVIDER_UNAVAILABLE,
+        'openai-realtime'
+      );
+    }
+
+    this._state = 'connecting';
+    const url = `${this._config.realtimeURL}?model=${encodeURIComponent(this._config.model)}`;
+
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new ProviderError(
+          `OpenAI Realtime WebSocket connection timed out after ${this._config.connectTimeoutMs}ms`,
+          ErrorCode.PROVIDER_TIMEOUT,
+          'openai-realtime'
+        ));
+      }, this._config.connectTimeoutMs);
+
+      const ws = new WebSocket(url, {
+        headers: {
+          Authorization: `Bearer ${this._config.apiKey}`,
+        },
+      });
+
+      this._ws = ws;
+
+      ws.on('open', () => {
+        console.log(`[V2 TRACE] 7. Realtime websocket connected  url=${url}`);
+        this._logger.debug('WebSocket open — waiting for session.created');
+      });
+
+      ws.on('message', (data: Buffer | string) => {
+        const raw = typeof data === 'string' ? data : data.toString('utf-8');
+        let event: ServerEvent;
+        try {
+          event = JSON.parse(raw) as ServerEvent;
+        } catch {
+          this._logger.warn('Failed to parse server event', { raw: raw.slice(0, 200) });
+          return;
+        }
+
+        if (process.env.VOICE_ENGINE_DEBUG === 'true') {
+          console.log('[OPENAI INBOUND]\n' + JSON.stringify(event, null, 2));
+        }
+
+        if (event.type === 'session.created') {
+          clearTimeout(timeout);
+          this._sessionId = event.session.id ?? null;
+          this._state = 'connected';
+          this._logger.info('OpenAI Realtime session created', { sessionId: this._sessionId });
+
+          this._record('session.created', { openAiSessionId: this._sessionId });
+
+          // Schema capture — writes the raw session.created payload for audit purposes
+          try {
+            require('fs').writeFileSync(
+              '/tmp/openai-session-created.json',
+              JSON.stringify(event, null, 2),
+            );
+          } catch { /* non-fatal */ }
+
+          const sessionPayload = this._buildSessionConfig(this._initialInstructions);
+          const sessionUpdateEvent = { type: 'session.update' as const, session: sessionPayload };
+          console.log('[AUDIT] session.update sent:\n' + JSON.stringify(sessionUpdateEvent, null, 2));
+          this._sendEvent(sessionUpdateEvent);
+
+          resolve();
+        }
+
+        this._handleServerEvent(event);
+      });
+
+      ws.on('error', (err: Error) => {
+        this._logger.error('WebSocket error', { message: err.message });
+        if (this._state === 'connecting') {
+          clearTimeout(timeout);
+          reject(new ProviderError(err.message, ErrorCode.PROVIDER_UNAVAILABLE, 'openai-realtime'));
+        }
+        this._emit({
+          type: 'realtime.error',
+          timestamp: Date.now(),
+          eventId: '',
+          errorType: 'websocket_error',
+          message: err.message,
+          fatal: true,
+        });
+      });
+
+      ws.on('close', (code: number, reason: Buffer) => {
+        this._state = 'closed';
+        this._emit({
+          type: 'realtime.disconnected',
+          timestamp: Date.now(),
+          eventId: '',
+          code,
+          reason: reason.toString('utf-8'),
+          wasClean: code === 1000,
+        });
+        this._logger.info('WebSocket closed', { code });
+      });
+    });
+  }
+
+  /**
+   * Appends a base64-encoded audio chunk to the input buffer.
+   * Fire-and-forget — does not wait for server acknowledgement.
+   */
+  sendAudio(base64Chunk: string): void {
+    this._sendEvent({ type: 'input_audio_buffer.append', audio: base64Chunk });
+    this._emit({
+      type: 'realtime.audio_sent',
+      timestamp: Date.now(),
+      eventId: '',
+      byteLength: base64Chunk.length,
+    });
+  }
+
+  /**
+   * Sends a text message into the conversation and triggers a response.
+   */
+  async sendText(text: string): Promise<void> {
+    this._assertConnected();
+    this._sendEvent({
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'user',
+        content: [{ type: 'input_text', text }],
+      },
+    });
+    this._sendEvent({ type: 'response.create' });
+  }
+
+  /**
+   * Cancels the current in-progress response (barge-in).
+   */
+  async interrupt(): Promise<void> {
+    this._assertConnected();
+    this._sendEvent({ type: 'response.cancel' });
+    this._sendEvent({ type: 'input_audio_buffer.clear' });
+    this._logger.debug('Sent interrupt (response.cancel + buffer clear)');
+  }
+
+  /**
+   * Hot-updates the system instructions for the current session.
+   */
+  async updateInstructions(instructions: string): Promise<void> {
+    this._assertConnected();
+    this._sendEvent({
+      type: 'session.update',
+      session: { type: 'realtime', instructions },
+    });
+  }
+
+  /**
+   * Hot-swaps the list of tools available to the model.
+   */
+  async updateTools(tools: readonly Tool[]): Promise<void> {
+    this._assertConnected();
+    this._sendEvent({
+      type: 'session.update',
+      session: { type: 'realtime', tools: tools as Tool[] },
+    });
+  }
+
+  /**
+   * Submits the result of a function call back to the session.
+   */
+  async submitToolResult(callId: string, output: string): Promise<void> {
+    this._assertConnected();
+    this._sendEvent({
+      type: 'conversation.item.create',
+      item: {
+        type: 'function_call_output',
+        call_id: callId,
+        output,
+      },
+    });
+    this._sendEvent({ type: 'response.create' });
+    this._emit({
+      type: 'realtime.tool_result',
+      timestamp: Date.now(),
+      eventId: '',
+      callId,
+      output,
+    });
+  }
+
+  /**
+   * Gracefully closes the WebSocket connection.
+   */
+  async close(): Promise<void> {
+    if (this._state === 'closed' || this._state === 'closing') return;
+    this._state = 'closing';
+    this._ws?.close(1000, 'Session closed by provider');
+    this._logger.info('OpenAI Realtime session closing');
+  }
+
+  on<K extends RealtimeProviderEvent['type']>(
+    type: K,
+    handler: RealtimeEventHandler<RealtimeProviderEvent & { type: K }>
+  ): void {
+    if (!this._handlers.has(type)) this._handlers.set(type, new Set());
+    this._handlers.get(type)!.add(handler as RealtimeEventHandler);
+  }
+
+  off<K extends RealtimeProviderEvent['type']>(
+    type: K,
+    handler: RealtimeEventHandler<RealtimeProviderEvent & { type: K }>
+  ): void {
+    this._handlers.get(type)?.delete(handler as RealtimeEventHandler);
+  }
+
+  // ─── Private ────────────────────────────────────────────────────────────────
+
+  /** Records a trace entry keyed to the call session (no-op if no traceSessionId). */
+  private _record(
+    event: string,
+    payloadSummary: Record<string, unknown>,
+    opts: { success?: boolean; skipped?: boolean; skipReason?: string } = {}
+  ): void {
+    if (!this._traceSessionId) return;
+    recordTrace(this._traceSessionId, {
+      component: 'OpenAIRealtimeSession',
+      event,
+      payloadSummary,
+      success:    opts.success    ?? true,
+      skipped:    opts.skipped    ?? false,
+      skipReason: opts.skipReason,
+    });
+  }
+
+  /**
+   * Maps an internal audio format name to the MIME type string required by
+   * the gpt-realtime session schema.
+   *
+   * Evidence: live runtime test against wss://api.openai.com/v1/realtime?model=gpt-realtime
+   *   - 'audio/pcmu' accepted for G.711 µ-law (telephony)
+   *   - 'audio/pcma' accepted for G.711 A-law (telephony)
+   *   - 'audio/pcm'  accepted for raw PCM
+   *   - 'audio/g711-ulaw' rejected (invalid_value)
+   *   - format.rate field rejected (unknown_parameter)
+   */
+  private _toAudioMime(format: string): 'audio/pcm' | 'audio/pcmu' | 'audio/pcma' {
+    switch (format) {
+      case 'g711_ulaw': return 'audio/pcmu';
+      case 'g711_alaw': return 'audio/pcma';
+      case 'pcm16':     return 'audio/pcm';
+      default:          return 'audio/pcm';
+    }
+  }
+
+  private _buildSessionConfig(instructions: string): Partial<RealtimeSessionResource> {
+    return {
+      type: 'realtime',
+      instructions,
+      audio: {
+        input: {
+          format: { type: this._toAudioMime(this._config.inputAudioFormat) },
+          transcription: this._config.enableInputTranscription
+            ? { model: this._config.transcriptionModel }
+            : null,
+          turn_detection: this._config.turnDetection,
+        },
+        output: {
+          format: { type: this._toAudioMime(this._config.outputAudioFormat) },
+          voice: this._config.voice,
+        },
+      },
+    };
+  }
+
+  private _sendEvent(event: ClientEvent): void {
+    if (this._ws?.readyState !== WebSocket.OPEN) {
+      this._logger.warn('Attempted to send event on non-open WebSocket', { type: event.type });
+      return;
+    }
+    if (process.env.VOICE_ENGINE_DEBUG === 'true') {
+      console.log('[OPENAI OUTBOUND]\n' + JSON.stringify(event, null, 2));
+    }
+    this._ws.send(JSON.stringify(event));
+  }
+
+  private _handleServerEvent(event: ServerEvent): void {
+    const ts = Date.now();
+
+    switch (event.type) {
+      case 'session.updated':
+        this._record('session.updated', { openAiSessionId: this._sessionId });
+        this._emit({ type: 'realtime.session_updated', timestamp: ts, eventId: event.event_id, session: event.session });
+        if (!this._greetingSent) {
+          this._greetingSent = true;
+          setTimeout(() => {
+            if (this._ws?.readyState === WebSocket.OPEN && this._state === 'connected') {
+              this._sendEvent({ type: 'response.create' });
+            }
+          }, 250);
+        }
+        break;
+
+      case 'response.created':
+        this._record('response.created', { responseId: event.response.id, status: event.response.status });
+        if (this._traceFirstAIResponse) {
+          this._traceFirstAIResponse = false;
+          console.log(`[V2 TRACE] 13. First AI response received  responseId=${event.response.id}`);
+        }
+        this._emit({ type: 'realtime.response_started', timestamp: ts, eventId: event.event_id, responseId: event.response.id });
+        break;
+
+      case 'response.output_audio.delta':       // gpt-realtime (GA)
+      case 'response.audio.delta':              // gpt-4o-realtime-preview (legacy)
+        this._record('response.audio.delta', {
+          responseId: event.response_id,
+          itemId:     event.item_id,
+          deltaBytes: Math.round(event.delta.length * 0.75),
+        });
+        this._emit({ type: 'realtime.audio_received', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, delta: event.delta });
+        break;
+
+      case 'response.output_audio_transcript.delta': // gpt-realtime (GA)
+      case 'response.audio_transcript.delta':        // gpt-4o-realtime-preview (legacy)
+        this._emit({ type: 'realtime.transcript_delta', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, delta: event.delta });
+        break;
+
+      case 'response.output_audio_transcript.done': // gpt-realtime (GA)
+      case 'response.audio_transcript.done':        // gpt-4o-realtime-preview (legacy)
+        if (this._traceFirstTranscript) {
+          this._traceFirstTranscript = false;
+          console.log(`[V2 TRACE] 12. First transcript received  transcript="${(event.transcript ?? '').slice(0, 80)}"`);
+        }
+        // Capture completed agent transcript for question-detection in onAgentTurnCompleted()
+        this._lastAgentTranscript = event.transcript ?? null;
+        this._emit({ type: 'realtime.transcript_completed', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, transcript: event.transcript });
+        break;
+
+      case 'response.text.delta':
+        this._emit({ type: 'realtime.response_delta', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, delta: event.delta });
+        break;
+
+      case 'response.done': {
+        const responseStatus = event.response.status as 'completed' | 'cancelled' | 'failed' | 'incomplete';
+        this._record('response.done', {
+          responseId:   event.response.id,
+          status:       responseStatus,
+          totalTokens:  event.response.usage?.total_tokens  ?? 0,
+          inputTokens:  event.response.usage?.input_tokens  ?? 0,
+          outputTokens: event.response.usage?.output_tokens ?? 0,
+        });
+        this._emit({
+          type: 'realtime.response_completed',
+          timestamp: ts,
+          eventId: event.event_id,
+          responseId: event.response.id,
+          status: responseStatus,
+          totalTokens: event.response.usage?.total_tokens ?? 0,
+          inputTokens: event.response.usage?.input_tokens ?? 0,
+          outputTokens: event.response.usage?.output_tokens ?? 0,
+        });
+
+        // ── Conversation State: record agent turn & dynamically update instructions ──
+        if (this._conversationContext && responseStatus === 'completed') {
+          const result = this._conversationContext.onAgentTurnCompleted(
+            this._lastAgentTranscript ?? undefined
+          );
+          this._lastAgentTranscript = null;
+
+          if (result.stateChanged && result.updatedInstruction) {
+            this._logger.debug(
+              'ConversationState changed — updating OpenAI session instructions',
+              { stage: result.currentStageLabel }
+            );
+            this._sendEvent({
+              type: 'session.update',
+              session: { type: 'realtime', instructions: result.updatedInstruction },
+            });
+          }
+        }
+        break;
+      }
+
+      case 'response.function_call_arguments.done':
+        this._record('response.function_call_arguments.done', {
+          responseId:   event.response_id,
+          itemId:       event.item_id,
+          callId:       event.call_id,
+          functionName: event.name,
+        });
+        this._emit({ type: 'realtime.tool_call', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, callId: event.call_id, functionName: event.name, arguments: event.arguments });
+        break;
+
+      case 'input_audio_buffer.speech_started':
+        this._record('input_audio_buffer.speech_started', { itemId: event.item_id, audioStartMs: event.audio_start_ms });
+        this._emit({ type: 'realtime.speech_started', timestamp: ts, eventId: event.event_id, itemId: event.item_id, audioStartMs: event.audio_start_ms });
+        // ── Conversation State: record barge-in interruption ──────────────────
+        if (this._conversationContext) {
+          this._conversationContext.onCustomerInterrupted();
+        }
+        break;
+
+      case 'input_audio_buffer.speech_stopped':
+        this._record('input_audio_buffer.speech_stopped', { itemId: event.item_id, audioEndMs: event.audio_end_ms });
+        this._emit({ type: 'realtime.speech_stopped', timestamp: ts, eventId: event.event_id, itemId: event.item_id, audioEndMs: event.audio_end_ms });
+        break;
+
+      case 'conversation.item.input_audio_transcription.completed':
+        this._emit({ type: 'realtime.input_transcript_completed', timestamp: ts, eventId: event.event_id, itemId: event.item_id, transcript: event.transcript });
+        break;
+
+      case 'conversation.item.input_audio_transcription.delta':
+        this._emit({ type: 'realtime.input_transcript_delta', timestamp: ts, eventId: event.event_id, itemId: event.item_id, delta: event.delta });
+        break;
+
+      case 'conversation.item.input_audio_transcription.failed':
+        this._logger.warn('Input audio transcription failed', { itemId: event.item_id, error: event.error.message });
+        this._emit({ type: 'realtime.error', timestamp: ts, eventId: event.event_id, errorType: event.error.type, errorCode: event.error.code, message: `Transcription failed: ${event.error.message}`, fatal: false });
+        break;
+
+      // ── Silent handlers: acknowledged but not surfaced upstream ──────────────
+      case 'conversation.created':
+      case 'conversation.item.created':
+      case 'input_audio_buffer.cleared':
+      case 'response.content_part.added':
+      case 'response.content_part.done':
+      case 'response.text.done':
+        break;
+
+      case 'input_audio_buffer.committed':
+        this._record('input_audio_buffer.committed', { itemId: (event as any).item_id ?? null });
+        break;
+
+      case 'response.function_call_arguments.delta':
+        this._record('response.function_call_arguments.delta', {
+          responseId: (event as any).response_id,
+          itemId:     (event as any).item_id,
+          deltaLen:   ((event as any).delta ?? '').length,
+        });
+        break;
+
+      case 'response.output_item.added':
+        this._record('response.output_item.added', {
+          itemType: (event as any).item?.type ?? null,
+          itemId:   (event as any).item?.id   ?? null,
+        });
+        break;
+
+      case 'response.output_item.done':
+        this._record('response.output_item.done', {
+          itemType: (event as any).item?.type ?? null,
+          itemId:   (event as any).item?.id   ?? null,
+        });
+        break;
+
+      case 'response.output_audio.done':  // gpt-realtime (GA)
+      case 'response.audio.done':         // gpt-4o-realtime-preview (legacy)
+        this._record('response.audio.done', {
+          responseId: (event as any).response_id ?? null,
+          itemId:     (event as any).item_id     ?? null,
+        });
+        break;
+
+      case 'rate_limits.updated':
+        this._emit({ type: 'realtime.rate_limit', timestamp: ts, eventId: event.event_id, rateLimits: event.rate_limits });
+        break;
+
+      case 'error':
+        this._logger.error('OpenAI Realtime server error', { code: event.error.code, message: event.error.message });
+        this._emit({ type: 'realtime.error', timestamp: ts, eventId: event.event_id, errorType: event.error.type, errorCode: event.error.code, message: event.error.message, fatal: false });
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  private _emit(event: RealtimeProviderEvent): void {
+    const handlers = this._handlers.get(event.type);
+    if (!handlers) return;
+    Array.from(handlers).forEach((handler) => {
+      try {
+        handler(event);
+      } catch (err) {
+        this._logger.warn('RealtimeSession event handler threw', { type: event.type, error: String(err) });
+      }
+    });
+  }
+
+  private _assertConnected(): void {
+    if (!this.isConnected) {
+      throw new ProviderError(
+        'OpenAIRealtimeSession is not connected',
+        ErrorCode.PROVIDER_UNAVAILABLE,
+        'openai-realtime'
+      );
+    }
+  }
+}

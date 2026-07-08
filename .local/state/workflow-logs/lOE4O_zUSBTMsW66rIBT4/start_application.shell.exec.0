@@ -1,0 +1,229 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+1:28:40 PM [ws] WebSocket server ready on path /stream
+1:28:40 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+1:28:42 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+1:28:44 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://db996cdf-f001-478b-af51-c9df68595804-00-1t7qcm3zg17on.sisko.replit.dev host=db996cdf-f001-478b-af51-c9df68595804-00-1t7qcm3zg17on.sisko.replit.dev
+1:28:44 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+1:28:48 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+[TEST-CALL]
+originalUrl = /test-call?phone=9893328298&campaignId=69bd5558a57e122161197eab
+-------------------------
+req.url = /test-call?phone=9893328298&campaignId=69bd5558a57e122161197eab
+-------------------------
+req.query = {"phone":"9893328298","campaignId":"69bd5558a57e122161197eab"}
+-------------------------
+campaignId = 69bd5558a57e122161197eab
+-------------------------
+phone = 9893328298
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [INFO] Creating V2 session {"campaignId":"69bd5558a57e122161197eab","phone":"9893328298","callSid":null}
+[V2 TRACE] 1. Session created  sessionId=v2s-1783430988375-000001  campaignId=69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionFactory"}] [DEBUG] Building session dependencies {"sessionId":"v2s-1783430988375-000001","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TransportGateway"}] [INFO] Transport adapter registered {"name":"exotel"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionFactory"}] [INFO] SessionContext created {"sessionId":"v2s-1783430988375-000001","campaignId":"69bd5558a57e122161197eab","callSid":null,"phone":"9893328298","mediaSession":"present"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Session registered {"sessionId":"v2s-1783430988375-000001","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Phone index updated {"sessionId":"v2s-1783430988375-000001","phone":"9893328298"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [INFO] V2 session created {"sessionId":"v2s-1783430988375-000001","campaignId":"69bd5558a57e122161197eab"}
+[test-call] V2 session created: v2s-1783430988375-000001
+Calling number: 9893328298
+[Exotel] Updating app (1213707) stream URL → wss://db996cdf-f001-478b-af51-c9df68595804-00-1t7qcm3zg17on.sisko.replit.dev/exotel-stream
+[Exotel] PUT Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] POST Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] ⚠️  Could not auto-update Exotel app stream URL.
+  → Open Exotel dashboard → App Builder → app ID 1213707
+  → Set the Stream / WebSocket URL to:
+      wss://db996cdf-f001-478b-af51-c9df68595804-00-1t7qcm3zg17on.sisko.replit.dev/exotel-stream
+CUSTOMER = 9893328298
+CALLERID = +918047359287
+[Exotel] App URL: http://my.exotel.com/nijvox1/exoml/start_voice/1213707
+[Exotel] WSS URL : wss://db996cdf-f001-478b-af51-c9df68595804-00-1t7qcm3zg17on.sisko.replit.dev/exotel-stream ← update this in Exotel dashboard
+[Exotel] Call response: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <Call>\n  <Sid>6b4c1699748c327fad6cb7458b4d1a77</Sid>\n  <ParentCallSid/>\n  <DateCreated>2026-07-07 18:59:48</DateCreated>\n  <DateUpdated>2026-07-07 18:59:48</DateUpdated>\n  <AccountSid>nijvox1</AccountSid>\n  <To>08047359287</To>\n  <From>09893328298</From>\n  <PhoneNumberSid>08047359287</PhoneNumberSid>\n  <Status>in-progress</Status>\n  <StartTime>2026-07-07 18:59:48</StartTime>\n  <EndTime/>\n  <Duration/>\n  <Price/>\n  <Direction>outbound-api</Direction>\n  <AnsweredBy/>\n  <ForwardedFrom/>\n  <CallerName/>\n  <Uri>/v1/Accounts/nijvox1/Calls/6b4c1699748c327fad6cb7458b4d1a77</Uri>\n  <RecordingUrl/>\n </Call>\n</TwilioResponse>\n"
+[Exotel] CallSid: 6b4c1699748c327fad6cb7458b4d1a77
+[test-call] callSidMap: 6b4c1699748c327fad6cb7458b4d1a77 → 69bd5558a57e122161197eab
+[test-call] phoneCallMap: 9893328298 → 69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [DEBUG] Attaching callSid {"sessionId":"v2s-1783430988375-000001","callSid":"6b4c1699748c327fad6cb7458b4d1a77"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] CallSid index updated {"sessionId":"v2s-1783430988375-000001","callSid":"6b4c1699748c327fad6cb7458b4d1a77"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [DEBUG] Attaching phone {"sessionId":"v2s-1783430988375-000001","phone":"9893328298"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Phone index updated {"sessionId":"v2s-1783430988375-000001","phone":"9893328298"}
+[test-call] V2 session v2s-1783430988375-000001 — callSid+phone attached
+1:29:59 PM [ws] [upgrade] path=/exotel-stream from=127.0.0.1 origin=none host=db996cdf-f001-478b-af51-c9df68595804-00-1t7qcm3zg17on.sisko.replit.dev
+1:29:59 PM [ws] [upgrade] routing /exotel-stream to exotel handler
+1:29:59 PM [ws] [/exotel-stream] Connection from [127.0.0.1] campaignId=none  total=1
+1:29:59 PM [ws] [V2 ROUTER] Awaiting Exotel 'start' event to resolve session
+1:29:59 PM [ws] [V2 ROUTER] 'connected' received — waiting for 'start'
+1:29:59 PM [ws] [V2 ROUTER] rawCallSid=6b4c1699748c327fad6cb7458b4d1a77 normalizedCallSid=6b4c1699748c327fad6cb7458b4d1a77 rawPhone=09893328298 normalizedPhone=9893328298 lookupMethod=callSid matchedSession=v2s-1783430988375-000001 routing=V2
+[V2 TRACE] 2. Router matched session  sessionId=v2s-1783430988375-000001
+1:29:59 PM [ws] [V2 ROUTER] Routing to V2 — sessionId=v2s-1783430988375-000001 campaignId=69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TransportGateway"}] [INFO] Transport connection accepted {"sessionId":"v2s-1783430988375-000001","callSid":"","campaignId":"69bd5558a57e122161197eab","adapterName":"exotel","remoteAddress":"127.0.0.1"}
+[V2 TRACE] 3. Transport accepted  sessionId=v2s-1783430988375-000001
+1:29:59 PM [ws] [V2 ROUTER] Socket owned by TransportGateway — sessionId=v2s-1783430988375-000001
+[V2 TRACE] 4. activateV2Session() entered  sessionId=v2s-1783430988375-000001  campaignId=69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783430988375-000001"}] [INFO] Activating V2 session — loading campaign and opening provider session {"sessionId":"v2s-1783430988375-000001","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"ExotelAdapter"}] [DEBUG] Exotel connected handshake received {"sessionId":"v2s-1783430988375-000001"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"ExotelAdapter"}] [INFO] Exotel stream started {"sessionId":"v2s-1783430988375-000001","callSid":"","streamSid":"2fc3b4c797a89a3d146ed09475591a77","encoding":"base64","sampleRate":8000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783430988375-000001"}] [INFO] Campaign instructions loaded {"campaignId":"69bd5558a57e122161197eab","chars":958}
+[V2 TRACE] 5. OpenAIRealtimeProvider.openSession()  sessionId=v2s-1783430988375-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime"}] [DEBUG] OpenAI Realtime session created (legacy mode — no policy context)
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783430988375-000001"}] [INFO] Provider session opened (unconnected — bridge will connect it) {"sessionId":"v2s-1783430988375-000001","instructionsChars":958}
+[V2 TRACE] 8. RuntimeIntegration.start()  sessionId=v2s-1783430988375-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [INFO] RuntimeIntegration starting
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [DEBUG] RuntimeIntegration: AudioEngine started
+[V2 TRACE] 9. RealtimeBridge.connect()  sessionId=v2s-1783430988375-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] RealtimeBridge connecting to provider
+[V2 TRACE] 6. OpenAIRealtimeSession.connect()  state=idle
+[V2 TRACE] 7. Realtime websocket connected  url=wss://api.openai.com/v1/realtime?model=gpt-realtime
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [DEBUG] WebSocket open — waiting for session.created
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [INFO] OpenAI Realtime session created {"sessionId":"sess_Dz0A4ATsCOXRXbjN4GcBd"}
+[AUDIT] session.update sent:
+{
+  "type": "session.update",
+  "session": {
+    "type": "realtime",
+    "instructions": "Hi {name}, this is {Philip} from Dream Homes Realty. How are you today?\n\nI’m reaching out because you previously expressed interest in property investments, and I have an exciting opportunity for you. We're offering exquisite 2BHK and 3BHK apartments at Green Valley Residency in Whitefield, Bangalore, starting from just 80 lakhs. \n\nOur project boasts top-notch amenities such as a swimming pool, gym, parking, and more, providing a luxurious lifestyle for our residents. Plus, there's a basketball and splash court to keep the weekends lively!\n\nHere’s the best part—we’re running a special offer with a 5% discount until the end of the month. It’s a fantastic chance to secure your dream home at a great price.\n\nI’d love to provide more details and see how we can help you find the perfect fit. Would you be interested in setting up a time for a quick chat or a visit to our site?\n\nThank you, {name}, and I look forward to helping you find your dream home!",
+    "audio": {
+      "input": {
+        "format": {
+          "type": "audio/pcmu"
+        },
+        "transcription": {
+          "model": "gpt-4o-transcribe"
+        },
+        "turn_detection": {
+          "type": "server_vad",
+          "threshold": 0.5,
+          "prefix_padding_ms": 300,
+          "silence_duration_ms": 800,
+          "create_response": true
+        }
+      },
+      "output": {
+        "format": {
+          "type": "audio/pcmu"
+        },
+        "voice": "alloy"
+      }
+    }
+  }
+}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TurnDiagnosticsCollector","sessionId":"v2s-1783430988375-000001"}] [DEBUG] TurnDiagnosticsCollector attached {"sessionId":"sess_Dz0A4ATsCOXRXbjN4GcBd"}
+[V2 TRACE] 10. Diagnostics attached  sessionId=v2s-1783430988375-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS] Collector attached — diagnostics active for this call {"sessionId":"v2s-1783430988375-000001","providerSessionId":"sess_Dz0A4ATsCOXRXbjN4GcBd"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] RealtimeBridge connected
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [DEBUG] RuntimeIntegration: RealtimeBridge connected
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [INFO] MediaSession initializing {"sessionId":"v2s-1783430988375-000001","callSid":""}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [INFO] MediaSession ready {"initDurationMs":12795}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [DEBUG] RuntimeIntegration: MediaSession initialised
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [INFO] MediaSession starting
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [INFO] MediaCoordinator starting orchestrator
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"READY","to":"ACTIVE"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [INFO] MediaCoordinator active
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [DEBUG] RuntimeIntegration: MediaSession started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"InboundAudioFlow","sessionId":"v2s-1783430988375-000001"}] [INFO] InboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [DEBUG] RuntimeIntegration: InboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783430988375-000001"}] [INFO] OutboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [DEBUG] RuntimeIntegration: OutboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783430988375-000001"}] [INFO] SessionSupervisor started {"heartbeatIntervalMs":5000,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [DEBUG] RuntimeIntegration: SessionSupervisor started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [INFO] RuntimeIntegration running
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783430988375-000001"}] [INFO] RuntimeIntegration started — [TURN-DIAGNOSTICS] collector is active {"sessionId":"v2s-1783430988375-000001"}
+[AudioCapture] Attached to sessionId=v2s-1783430988375-000001 — waiting for first audio delta
+[V2 TRACE] 11. First inbound audio  sessionId=v2s-1783430988375-000001  bytes=428
+[V2 TRACE] 13. First AI response received  responseId=resp_Dz0A5oX3CpYW9y44zQ0De
+[V2 TRACE] 14. First outbound audio sent  sessionId=v2s-1783430988375-000001  responseId=resp_Dz0A5oX3CpYW9y44zQ0De
+[AudioCapture] First response started  responseId=resp_Dz0A5oX3CpYW9y44zQ0De
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [DEBUG] RealtimeBridge: provider VAD speech_started, signalling interruption {"audioStartMs":1652}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783430988375-000001"}] [DEBUG] OutboundAudioFlow: barge-in detected, resetting pacing queue
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783430988375-000001"}] [DEBUG] OutboundAudioFlow: pacer reset and transport cleared
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"INTERRUPTED"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"INTERRUPTED","to":"ACTIVE"}
+Saved OpenAI audio:
+  logs/openai-audio.raw  (2000 bytes)
+  logs/openai-audio.wav  (2046 bytes)
+[V2 TRACE] 12. First transcript received  transcript="Hello Philip,"
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #0  stage=Unknown  latency=—ms  TTFT=414ms  tokens=232  cost=$0.00179 {"turnIndex":0,"sessionId":"sess_Dz0A4ATsCOXRXbjN4GcBd","stage":"Unknown","totalLatencyMs":null,"timeToFirstTokenMs":414,"sttLatencyMs":null,"audioOutputDurationMs":80,"promptSizeChars":0,"audioChunksStreamed":2,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":true,"inputTokens":210,"outputTokens":22,"totalTokens":232,"estimatedCostUsd":0.001788,"errors":[]}
+[AudioCapture] Second response started — first response audio complete
+[AudioCapture] ══════════════════════════════════════════════
+[AudioCapture] Flush reason       : second_response_started
+[AudioCapture] sessionId          : v2s-1783430988375-000001
+[AudioCapture] logs/openai-audio.raw — 2000 bytes
+[AudioCapture] logs/exotel-audio.raw — 2800 bytes
+[AudioCapture] Byte-for-byte identical: false
+[AudioCapture] ══════════════════════════════════════════════
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #2  stage=Unknown  latency=—ms  TTFT=530ms  tokens=375  cost=$0.00441 {"turnIndex":2,"sessionId":"sess_Dz0A4ATsCOXRXbjN4GcBd","stage":"Unknown","totalLatencyMs":null,"timeToFirstTokenMs":530,"sttLatencyMs":1934,"audioOutputDurationMs":1395,"promptSizeChars":0,"audioChunksStreamed":18,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":false,"inputTokens":255,"outputTokens":120,"totalTokens":375,"estimatedCostUsd":0.004410000000000001,"errors":[]}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783430988375-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":5003,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783430988375-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":10003,"inactivityTimeoutMs":30000}
+1:30:12 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://db996cdf-f001-478b-af51-c9df68595804-00-1t7qcm3zg17on.sisko.replit.dev host=db996cdf-f001-478b-af51-c9df68595804-00-1t7qcm3zg17on.sisko.replit.dev
+1:30:12 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+1:30:13 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://db996cdf-f001-478b-af51-c9df68595804-00-1t7qcm3zg17on.sisko.replit.dev host=db996cdf-f001-478b-af51-c9df68595804-00-1t7qcm3zg17on.sisko.replit.dev
+1:30:13 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783430988375-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":15003,"inactivityTimeoutMs":30000}
+1:30:18 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783430988375-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":20004,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783430988375-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":25003,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [DEBUG] RealtimeBridge: provider VAD speech_started, signalling interruption {"audioStartMs":58900}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783430988375-000001"}] [DEBUG] OutboundAudioFlow: barge-in detected, resetting pacing queue
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783430988375-000001"}] [DEBUG] OutboundAudioFlow: pacer reset and transport cleared
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"INTERRUPTED"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"INTERRUPTED","to":"ACTIVE"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783430988375-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":30004,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783430988375-000001"}] [WARN] SessionSupervisor: inactivity timeout exceeded, completing session {"idleMs":30004,"threshold":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783430988375-000001"}] [INFO] SessionSupervisor stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [INFO] MediaCoordinator requesting completion {"reason":"session_timeout"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783430988375-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"COMPLETING"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783430988375-000001"}] [ERROR] SessionSupervisor: mediaSession.complete() failed {"reason":"session_timeout","error":"Error: SessionFactory stub: getContext() not implemented","sessionId":"v2s-1783430988375-000001"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"ExotelAdapter"}] [INFO] Exotel stop received — call ended {"sessionId":"v2s-1783430988375-000001","callSid":""}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TransportGateway"}] [INFO] Transport connection closed {"sessionId":"v2s-1783430988375-000001","callSid":"","code":1006,"reason":"","clean":false}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783430988375-000001"}] [INFO] Transport disconnected — stopping RuntimeIntegration {"sessionId":"v2s-1783430988375-000001","code":1006,"reason":""}
+[V2 TRACE] 15. Runtime stopping  sessionId=v2s-1783430988375-000001  reason=transport_disconnected
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [INFO] RuntimeIntegration stopping {"reason":"transport_disconnected"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"InboundAudioFlow","sessionId":"v2s-1783430988375-000001"}] [INFO] InboundAudioFlow stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783430988375-000001"}] [INFO] OutboundAudioFlow stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] RealtimeBridge disconnecting
+[V2 TRACE] 16. Diagnostics detached  sessionId=v2s-1783430988375-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TurnDiagnosticsCollector","sessionId":"v2s-1783430988375-000001"}] [DEBUG] TurnDiagnosticsCollector detached
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS] ====================================================
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS] CALL SUMMARY
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Session ID         : v2s-1783430988375-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Provider Session   : sess_Dz0A4ATsCOXRXbjN4GcBd
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Duration           : 37.4s
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Turns              : 2
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Avg Latency (E2E)  : —
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Avg TTFT           : 472 ms
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Avg STT Latency    : 1934 ms
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Avg Response Dur   : 738 ms
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Interruptions      : 1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Stage Progression  : Unknown
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Token Usage        : in=465  out=142  total=607
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Estimated Cost     : $0.00620
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS]   Errors             : none
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS] ====================================================
+[V2 TRACE] 17. JSON diagnostics written  sessionId=v2s-1783430988375-000001  file=call_2026-07-07T13-30-38-631Z_v2s-1783430988375-000001.json
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783430988375-000001"}] [INFO] [TURN-DIAGNOSTICS] Call summary persisted to JSON {"filepath":"/home/runner/workspace/logs/call-diagnostics/call_2026-07-07T13-30-38-631Z_v2s-1783430988375-000001.json"}
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [INFO] OpenAI Realtime session closing
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783430988375-000001"}] [INFO] RuntimeIntegration stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [INFO] WebSocket closed {"code":1000}

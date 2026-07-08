@@ -65,6 +65,7 @@ import {
   encodeClearMessage,
   isValidBase64Payload,
 } from './ExotelProtocol.js';
+import { pcm16ToMulaw } from './PcmMulawCodec.js';
 
 // ─── Per-Session Audio Context ────────────────────────────────────────────────
 
@@ -264,13 +265,38 @@ export class ExotelAdapter implements ITransportAdapter {
     }
   }
 
-  encodeOutboundAudio(chunk: AudioChunk, streamId: string): string {
-    const payload =
+  encodeOutboundAudio(chunk: AudioChunk, streamId: string): string[] {
+    // Decode the incoming base64 string to raw bytes once, then re-encode the
+    // entire buffer as a single base64 string.  One OpenAI delta → one Exotel
+    // media WebSocket message.  No splitting, no pacing, no framing.
+    // This matches the official Pipecat ExotelFrameSerializer reference behaviour.
+    const raw: Buffer =
       typeof chunk.payload === 'string'
-        ? chunk.payload
-        : Buffer.from(chunk.payload).toString('base64');
+        ? Buffer.from(chunk.payload, 'base64')
+        : Buffer.from(chunk.payload as Uint8Array);
 
-    return encodeMediaMessage(streamId, payload);
+    // ── Output format switch (controlled ONLY by VOICE_OUTPUT_FORMAT) ─────────
+    // MODE 1 (pcmu, default): OpenAI already emits G.711 μ-law — pass the
+    //   decoded bytes straight through, exactly as before this switch existed.
+    // MODE 2 (pcm): OpenAI emits raw 16-bit PCM (8kHz mono) — convert to
+    //   G.711 μ-law here, since Exotel's media channel only accepts μ-law.
+    const outputFormat = (process.env['VOICE_OUTPUT_FORMAT'] || 'pcmu').toLowerCase();
+    const wireBytes: Buffer = outputFormat === 'pcm' ? pcm16ToMulaw(raw) : raw;
+
+    const outB64 = wireBytes.toString('base64');
+    const frame  = encodeMediaMessage(streamId, outB64);
+
+    if (process.env['NIJVOX_DEBUG_AUDIO'] === '1') {
+      console.log(
+        `[ExotelOutbound] seq=${chunk.sequence}` +
+        `  outputFormat=${outputFormat}` +
+        `  inputBytes=${raw.byteLength}` +
+        `  wireBytes=${wireBytes.byteLength}` +
+        `  websocketMessagesPerDelta=1`,
+      );
+    }
+
+    return [frame];
   }
 
   encodeMark(streamId: string, name: string): string {

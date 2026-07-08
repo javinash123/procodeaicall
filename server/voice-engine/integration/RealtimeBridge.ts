@@ -433,6 +433,17 @@ export class RealtimeBridge implements IRealtimeBridge {
         itemId: event.itemId,
         timestamp: event.timestamp,
       } satisfies BridgeAudioReadyEvent);
+      // [DEBUG] payload trace — base64Delta is the same string reference from OpenAI
+      if (process.env['NIJVOX_DEBUG_AUDIO'] === '1') {
+        const b64Len      = event.delta.length;
+        const decodedBytes = Math.floor(b64Len * 0.75);
+        console.log(
+          `[AudioTrace][2-RealtimeBridge] bridge.audio_ready` +
+          `  responseId=${event.responseId}` +
+          `  b64Len=${b64Len}  decodedBytes~=${decodedBytes}` +
+          `  changed=false  concatenated=false  copied=false  merged=false`,
+        );
+      }
       recordTrace(this._sessionId, {
         component: 'RealtimeBridge',
         event: 'bridge.audio_ready',
