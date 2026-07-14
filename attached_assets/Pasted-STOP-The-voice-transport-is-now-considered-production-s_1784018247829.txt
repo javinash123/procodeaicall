@@ -1,0 +1,276 @@
+STOP.
+
+The voice transport is now considered production stable.
+
+DO NOT MODIFY:
+
+- ExotelAdapter
+- TransportGateway
+- OutboundAudioFlow
+- RealtimeBridge
+- Audio codec
+- PCM / PCMU
+- Sample rate
+- Packetization
+- Pacing
+- OpenAI audio pipeline
+
+Those files are FROZEN.
+
+=========================================================
+OBJECTIVE
+=========================================================
+
+Our goal is no longer "make audio work."
+
+Our goal is:
+
+"The customer should not realise they are talking to an AI."
+
+This is now a Conversation Engine project.
+
+=========================================================
+STEP 1 — Audit current conversation architecture
+=========================================================
+
+Read every file responsible for:
+
+- prompt generation
+- campaign context
+- conversation memory
+- turn management
+- interruption
+- greeting
+- FAQ
+- tool calling
+- stage tracking
+
+Produce a complete architecture diagram.
+
+DO NOT change code yet.
+
+=========================================================
+STEP 2 — Design Conversation State Machine
+=========================================================
+
+Replace "ChatGPT style conversation" with an explicit sales conversation.
+
+Every conversation must have states.
+
+Example:
+
+INIT
+
+↓
+
+GREETING
+
+↓
+
+PERMISSION
+
+↓
+
+DISCOVERY
+
+↓
+
+QUALIFICATION
+
+↓
+
+PITCH
+
+↓
+
+OBJECTION_HANDLING
+
+↓
+
+BOOK_APPOINTMENT
+
+↓
+
+COLLECT_DETAILS
+
+↓
+
+CLOSING
+
+↓
+
+END_CALL
+
+Every response must belong to ONE state.
+
+Never skip randomly.
+
+=========================================================
+STEP 3 — Human speaking rules
+=========================================================
+
+Rewrite the system prompt.
+
+Rules:
+
+Never sound like ChatGPT.
+
+Never use:
+
+"How may I assist you?"
+
+"Certainly."
+
+"I understand your concern."
+
+"As an AI..."
+
+Never speak more than 2–3 sentences.
+
+Maximum speaking time:
+
+8 seconds.
+
+Always ask ONE question.
+
+Wait.
+
+Never ask two unrelated questions together.
+
+Use acknowledgement words naturally:
+
+"Got it."
+
+"Sure."
+
+"Right."
+
+"Makes sense."
+
+"I see."
+
+Use contractions.
+
+Use conversational English.
+
+=========================================================
+STEP 4 — Active Listening
+=========================================================
+
+If customer says:
+
+"I already use XYZ."
+
+Store it.
+
+Never ask again.
+
+If customer already answered a question,
+
+never repeat it.
+
+Maintain a conversation memory object.
+
+=========================================================
+STEP 5 — Out-of-domain questions
+=========================================================
+
+If answer exists in knowledge base:
+
+Answer naturally.
+
+If answer does NOT exist:
+
+Never hallucinate.
+
+Instead say:
+
+"I don't want to give you incorrect information.
+
+Let me note that and have our team confirm it."
+
+Then smoothly return to campaign.
+
+=========================================================
+STEP 6 — Interruptions
+=========================================================
+
+If customer interrupts:
+
+Stop speaking immediately.
+
+Respond to interruption.
+
+Resume previous topic only if still relevant.
+
+=========================================================
+STEP 7 — Emotional behaviour
+=========================================================
+
+If customer sounds:
+
+Busy
+
+Angry
+
+Happy
+
+Confused
+
+Curious
+
+Adjust tone accordingly.
+
+=========================================================
+STEP 8 — No repetition
+=========================================================
+
+Track:
+
+Last 20 assistant messages.
+
+Never repeat:
+
+same greeting
+
+same explanation
+
+same objection
+
+same sentence
+
+=========================================================
+STEP 9 — Campaign adherence
+=========================================================
+
+Campaign goal is PRIMARY.
+
+Knowledge base is SECONDARY.
+
+General LLM knowledge is LAST.
+
+Never drift away from campaign objective.
+
+=========================================================
+STEP 10 — Deliverables
+=========================================================
+
+Do NOT modify transport.
+
+Instead provide:
+
+1. Conversation architecture
+
+2. State machine
+
+3. Memory design
+
+4. Prompt improvements
+
+5. Files that need modification
+
+6. Why each change improves human conversation
+
+NO IMPLEMENTATION YET.
+
+This is a DESIGN REVIEW ONLY.

@@ -62,8 +62,12 @@ export {
   SpeakingStylePolicy,
   ActiveListeningPolicy,
   InterruptionPolicy,
+  RepetitionPolicy,
+  EmotionalAdaptationPolicy,
 } from './ResponsePolicy.js';
 export { GreetingPolicy } from './GreetingPolicy.js';
 export { QuestionStrategy } from './QuestionStrategy.js';
 export { RecoveryPolicy } from './RecoveryPolicy.js';
 export { ClosingPolicy } from './ClosingPolicy.js';
+export { StageObjectivePolicy } from './StageObjectivePolicy.js';
+export { KnowledgeBasePolicy } from './KnowledgeBasePolicy.js';

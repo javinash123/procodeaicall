@@ -26,11 +26,15 @@ import {
   SpeakingStylePolicy,
   ActiveListeningPolicy,
   InterruptionPolicy,
+  RepetitionPolicy,
+  EmotionalAdaptationPolicy,
 } from './ResponsePolicy.js';
 import { GreetingPolicy } from './GreetingPolicy.js';
 import { QuestionStrategy } from './QuestionStrategy.js';
 import { RecoveryPolicy } from './RecoveryPolicy.js';
 import { ClosingPolicy } from './ClosingPolicy.js';
+import { StageObjectivePolicy } from './StageObjectivePolicy.js';
+import { KnowledgeBasePolicy } from './KnowledgeBasePolicy.js';
 
 // ─── Sales Funnel Section ─────────────────────────────────────────────────────
 
@@ -87,10 +91,16 @@ export class SalesConversationPolicy implements ConversationPolicy {
       // Critical — identity must be first
       { priority: 'critical', section: new IdentityPolicy() },
 
+      // Critical — knowledge base and answer priority (must be near-top)
+      { priority: 'critical', section: new KnowledgeBasePolicy() },
+
       // High — core conversation behaviour
       { priority: 'high', section: salesFunnelSection },
+      { priority: 'high', section: new StageObjectivePolicy() },
       { priority: 'high', section: new ActiveListeningPolicy() },
       { priority: 'high', section: new InterruptionPolicy() },
+      { priority: 'high', section: new RepetitionPolicy() },
+      { priority: 'high', section: new EmotionalAdaptationPolicy() },
       { priority: 'high', section: new RecoveryPolicy() },
 
       // Medium — style and question strategy

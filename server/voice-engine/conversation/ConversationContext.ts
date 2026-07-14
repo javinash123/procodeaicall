@@ -84,4 +84,17 @@ export interface PolicyConversationContext {
    * Defaults to 'greeting' if not provided.
    */
   readonly initialStage?: ConversationStage;
+
+  /**
+   * Knowledge base content for this campaign — text chunks extracted from
+   * uploaded documents, manual text entries, or URL scrapes.
+   * Injected verbatim into the system prompt so the agent can answer
+   * product-specific questions without hallucinating.
+   *
+   * Priority hierarchy the agent must follow:
+   *   1. Campaign goal (always primary)
+   *   2. Knowledge base (answer from here first)
+   *   3. General LLM knowledge (last resort — flag uncertainty)
+   */
+  readonly knowledgeBase?: readonly string[];
 }

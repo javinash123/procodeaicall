@@ -94,6 +94,26 @@ function renderDynamicStateSection(state: ConversationState): string {
   const knownFacts =
     memLines.length > 0 ? memLines.join('\n') : '  (nothing captured yet)';
 
+  // ── DO NOT ASK AGAIN block ──────────────────────────────────────────────────
+  const doNotAskLines: string[] = [];
+  if (mem.customerName) doNotAskLines.push(`  • Their name (it's ${mem.customerName})`);
+  if (mem.company) doNotAskLines.push(`  • Their company (it's ${mem.company})`);
+  if (mem.intent) doNotAskLines.push(`  • Their intent (already stated)`);
+  if (mem.painPoints.length > 0) {
+    mem.painPoints.forEach((p) => doNotAskLines.push(`  • Pain point already given: "${p}"`));
+  }
+  if (mem.budget) doNotAskLines.push(`  • Their budget (it's ${mem.budget})`);
+  if (mem.timeline) doNotAskLines.push(`  • Their timeline (it's ${mem.timeline})`);
+  if (mem.isDecisionMaker !== undefined) {
+    doNotAskLines.push(
+      `  • Whether they're the decision-maker (answer: ${mem.isDecisionMaker ? 'Yes' : 'No'})`
+    );
+  }
+  const doNotAskSection =
+    doNotAskLines.length > 0
+      ? `⛔ DO NOT ASK AGAIN — the caller already provided:\n${doNotAskLines.join('\n')}`
+      : '  (no facts captured yet — nothing to guard)';
+
   // ── Objections ──────────────────────────────────────────────────────────────
   const unresolvedObjLines = mem.unresolvedObjections.map(
     (o) => `  • [UNRESOLVED] ${o.topic}${o.verbatim ? ` — "${o.verbatim}"` : ''}`
@@ -134,6 +154,8 @@ function renderDynamicStateSection(state: ConversationState): string {
     ``,
     `Known Customer Facts:`,
     knownFacts,
+    ``,
+    doNotAskSection,
     ``,
     `Objections:`,
     objSection,

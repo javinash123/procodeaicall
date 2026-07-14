@@ -1,0 +1,1853 @@
+[
+  {
+    "timestamp": 1784020148066,
+    "sequence": 0,
+    "component": "OpenAIRealtimeSession",
+    "event": "session.created",
+    "payloadSummary": {
+      "openAiSessionId": "sess_E1TQRVExacO7yJ7VBYquT"
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020148314,
+    "sequence": 1,
+    "component": "OpenAIRealtimeSession",
+    "event": "session.updated",
+    "payloadSummary": {
+      "openAiSessionId": "sess_E1TQRVExacO7yJ7VBYquT"
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020148806,
+    "sequence": 2,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.created",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "status": "in_progress"
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149194,
+    "sequence": 3,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.output_item.added",
+    "payloadSummary": {
+      "itemType": "message",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN"
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149344,
+    "sequence": 4,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 4800
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149344,
+    "sequence": 5,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 4800
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149344,
+    "sequence": 6,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149345,
+    "sequence": 7,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 0
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149345,
+    "sequence": 8,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149345,
+    "sequence": 9,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020149347,
+    "sequence": 10,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 0,
+      "packetCount": 1,
+      "totalFrameBytes": 2191
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149347,
+    "sequence": 11,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 2191,
+      "sequence": 0
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149347,
+    "sequence": 12,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 4800
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149438,
+    "sequence": 13,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 7200
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149438,
+    "sequence": 14,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 7200
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149438,
+    "sequence": 15,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149438,
+    "sequence": 16,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149438,
+    "sequence": 17,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149438,
+    "sequence": 18,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 7200
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149446,
+    "sequence": 19,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020149447,
+    "sequence": 20,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 1,
+      "packetCount": 1,
+      "totalFrameBytes": 3043
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149447,
+    "sequence": 21,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 3043,
+      "sequence": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149473,
+    "sequence": 22,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149473,
+    "sequence": 23,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149473,
+    "sequence": 24,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149473,
+    "sequence": 25,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 2
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149473,
+    "sequence": 26,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149473,
+    "sequence": 27,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149570,
+    "sequence": 28,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149570,
+    "sequence": 29,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149570,
+    "sequence": 30,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149570,
+    "sequence": 31,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 3
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149570,
+    "sequence": 32,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149571,
+    "sequence": 33,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149596,
+    "sequence": 34,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020149598,
+    "sequence": 35,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 2,
+      "packetCount": 1,
+      "totalFrameBytes": 5603
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149598,
+    "sequence": 36,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5603,
+      "sequence": 2
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149669,
+    "sequence": 37,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149670,
+    "sequence": 38,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149670,
+    "sequence": 39,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149670,
+    "sequence": 40,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 4
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149670,
+    "sequence": 41,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149670,
+    "sequence": 42,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149698,
+    "sequence": 43,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149698,
+    "sequence": 44,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149698,
+    "sequence": 45,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149698,
+    "sequence": 46,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 5
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149698,
+    "sequence": 47,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149698,
+    "sequence": 48,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149715,
+    "sequence": 49,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149715,
+    "sequence": 50,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149715,
+    "sequence": 51,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149715,
+    "sequence": 52,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 6
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149715,
+    "sequence": 53,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149715,
+    "sequence": 54,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149849,
+    "sequence": 55,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020149849,
+    "sequence": 56,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 3,
+      "packetCount": 1,
+      "totalFrameBytes": 5175
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149849,
+    "sequence": 57,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5175,
+      "sequence": 3
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149850,
+    "sequence": 58,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149850,
+    "sequence": 59,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149850,
+    "sequence": 60,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149850,
+    "sequence": 61,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 7
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149850,
+    "sequence": 62,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149850,
+    "sequence": 63,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149895,
+    "sequence": 64,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149895,
+    "sequence": 65,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149895,
+    "sequence": 66,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149895,
+    "sequence": 67,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 8
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149895,
+    "sequence": 68,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149895,
+    "sequence": 69,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149936,
+    "sequence": 70,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149936,
+    "sequence": 71,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149936,
+    "sequence": 72,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149936,
+    "sequence": 73,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 9
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149936,
+    "sequence": 74,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149936,
+    "sequence": 75,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149979,
+    "sequence": 76,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149979,
+    "sequence": 77,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149979,
+    "sequence": 78,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149979,
+    "sequence": 79,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 10
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149979,
+    "sequence": 80,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020149980,
+    "sequence": 81,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150024,
+    "sequence": 82,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150024,
+    "sequence": 83,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150024,
+    "sequence": 84,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150025,
+    "sequence": 85,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 11
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150025,
+    "sequence": 86,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150025,
+    "sequence": 87,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150062,
+    "sequence": 88,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150062,
+    "sequence": 89,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150062,
+    "sequence": 90,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150062,
+    "sequence": 91,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 12
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150062,
+    "sequence": 92,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150063,
+    "sequence": 93,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150100,
+    "sequence": 94,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020150100,
+    "sequence": 95,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 4,
+      "packetCount": 1,
+      "totalFrameBytes": 5603
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150100,
+    "sequence": 96,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5603,
+      "sequence": 4
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150105,
+    "sequence": 97,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150105,
+    "sequence": 98,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150105,
+    "sequence": 99,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150105,
+    "sequence": 100,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 13
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150105,
+    "sequence": 101,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150105,
+    "sequence": 102,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 12000
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150140,
+    "sequence": 103,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.delta",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 26400
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150140,
+    "sequence": 104,
+    "component": "RealtimeBridge",
+    "event": "realtime.audio_received",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 26400
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150140,
+    "sequence": 105,
+    "component": "OutboundAudioFlow",
+    "event": "OutboundAudioFlow._handleAudioReady",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "engineRunning": true
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150140,
+    "sequence": 106,
+    "component": "AudioEngine",
+    "event": "AudioEngine.ingestOutbound",
+    "payloadSummary": {
+      "sequence": 14
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150140,
+    "sequence": 107,
+    "component": "AudioEngine",
+    "event": "AudioEngine.tickOutbound",
+    "payloadSummary": {
+      "chunksToSend": 1
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150140,
+    "sequence": 108,
+    "component": "RealtimeBridge",
+    "event": "bridge.audio_ready",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN",
+      "deltaBytes": 26400
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150162,
+    "sequence": 109,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.audio.done",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN"
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150168,
+    "sequence": 110,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.output_item.done",
+    "payloadSummary": {
+      "itemType": "message",
+      "itemId": "item_E1TQSdjGewaOkCEqkjDxN"
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150169,
+    "sequence": 111,
+    "component": "OpenAIRealtimeSession",
+    "event": "response.done",
+    "payloadSummary": {
+      "responseId": "resp_E1TQSfidnp3gghh60Oe4l",
+      "status": "completed",
+      "totalTokens": 4139,
+      "inputTokens": 4032,
+      "outputTokens": 107
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150351,
+    "sequence": 112,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020150352,
+    "sequence": 113,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 5,
+      "packetCount": 1,
+      "totalFrameBytes": 5175
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150352,
+    "sequence": 114,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5175,
+      "sequence": 5
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150416,
+    "sequence": 115,
+    "component": "OpenAIRealtimeSession",
+    "event": "session.updated",
+    "payloadSummary": {
+      "openAiSessionId": "sess_E1TQRVExacO7yJ7VBYquT"
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150603,
+    "sequence": 116,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020150604,
+    "sequence": 117,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 6,
+      "packetCount": 1,
+      "totalFrameBytes": 5603
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150604,
+    "sequence": 118,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5603,
+      "sequence": 6
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150854,
+    "sequence": 119,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020150855,
+    "sequence": 120,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 7,
+      "packetCount": 1,
+      "totalFrameBytes": 5175
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020150855,
+    "sequence": 121,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5175,
+      "sequence": 7
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020151105,
+    "sequence": 122,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020151106,
+    "sequence": 123,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 8,
+      "packetCount": 1,
+      "totalFrameBytes": 5603
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020151106,
+    "sequence": 124,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5603,
+      "sequence": 8
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020151356,
+    "sequence": 125,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020151357,
+    "sequence": 126,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 9,
+      "packetCount": 1,
+      "totalFrameBytes": 5175
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020151357,
+    "sequence": 127,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5175,
+      "sequence": 9
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020151607,
+    "sequence": 128,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020151608,
+    "sequence": 129,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 10,
+      "packetCount": 1,
+      "totalFrameBytes": 5603
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020151608,
+    "sequence": 130,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5603,
+      "sequence": 10
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020151858,
+    "sequence": 131,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020151859,
+    "sequence": 132,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 11,
+      "packetCount": 1,
+      "totalFrameBytes": 5175
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020151859,
+    "sequence": 133,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5175,
+      "sequence": 11
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020152109,
+    "sequence": 134,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020152109,
+    "sequence": 135,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 12,
+      "packetCount": 1,
+      "totalFrameBytes": 5603
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020152109,
+    "sequence": 136,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5603,
+      "sequence": 12
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020152360,
+    "sequence": 137,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020152360,
+    "sequence": 138,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 13,
+      "packetCount": 1,
+      "totalFrameBytes": 5175
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020152360,
+    "sequence": 139,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 5175,
+      "sequence": 13
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020152611,
+    "sequence": 140,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "recordFound": true,
+      "connected": true,
+      "streamId": ""
+    },
+    "success": false,
+    "skipped": true,
+    "skipReason": "streamId is empty — Exotel start message not yet received"
+  },
+  {
+    "timestamp": 1784020152611,
+    "sequence": 141,
+    "component": "TransportGateway",
+    "event": "TransportGateway.sendAudio",
+    "payloadSummary": {
+      "sessionId": "v2s-1784020134165-000001",
+      "streamId": "",
+      "sequence": 14,
+      "packetCount": 1,
+      "totalFrameBytes": 12003
+    },
+    "success": true,
+    "skipped": false
+  },
+  {
+    "timestamp": 1784020152611,
+    "sequence": 142,
+    "component": "ExotelAdapter",
+    "event": "ExotelAdapter.sendMedia",
+    "payloadSummary": {
+      "streamId": "",
+      "packetCount": 1,
+      "totalFrameBytes": 12003,
+      "sequence": 14
+    },
+    "success": true,
+    "skipped": false
+  }
+]

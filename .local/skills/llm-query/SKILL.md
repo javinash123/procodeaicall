@@ -1,6 +1,6 @@
 ---
 name: llm-query
-description: Ask an internal LLM a focused question about large text or structured content using the query_with_llm CodeExecution callback. Use when content is too large or noisy to inspect manually and you need a concise answer with line citations.
+description: Ask an internal LLM a focused question about large text or structured content using the queryWithLLM CodeExecution callback. Use when content is too large or noisy to inspect manually and you need a concise answer with line citations.
 ---
 
 # LLM Query Skill
@@ -13,7 +13,7 @@ description: Ask an internal LLM a focused question about large text or structur
 
 ## Available Functions
 
-### `query_with_llm({ content, query, truncationStrategy? })`
+### `queryWithLLM({ content, query, truncationStrategy? })`
 
 Ask an internal LLM a narrow question about provided content.
 
@@ -28,7 +28,7 @@ Ask an internal LLM a narrow question about provided content.
 **Example:**
 
 ```javascript
-const answer = await query_with_llm({
+const answer = await queryWithLLM({
   content: largeLogText,
   query: 'What is the first error and likely root cause?',
 });
@@ -38,7 +38,7 @@ console.log(answer);
 **Structured example:**
 
 ```javascript
-const answer = await query_with_llm({
+const answer = await queryWithLLM({
   content: { files: changedFiles, diagnostics },
   query: 'Which diagnostic should be fixed first?',
   truncationStrategy: 'head_tail',
