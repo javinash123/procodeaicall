@@ -1,2 +1,3 @@
-- [Exotel echo spiral fix](exotel-echo-spiral.md) — TTS buffering causes echo loops; fixed with postSpeechCooldown + echo detection + prompt/stage fixes.
+ - [Exotel echo spiral fix](exotel-echo-spiral.md) — TTS buffering causes echo loops; fixed with postSpeechCooldown + echo detection + prompt/stage fixes.
 - [V2 call activation gap](v2-call-activation.md) — RuntimeIntegration.start() was never called in the live V2 path; fixed with V2CallActivator.ts.
+- [V2 chipmunk audio fix](v2-chipmunk-audio.md) — gpt-realtime ignores audio/pcmu; must use VOICE_OUTPUT_FORMAT=pcm + encoding-aware durationMs.

@@ -14,11 +14,41 @@ Use `externalApi__quiver_ai` in `codeExecution`.
 
 Authorization is handled automatically by Replit. Do not pass an `Authorization` header.
 
-## Quickstart
+## Skill
 
-1. Call the callback with a `path` and `method` exactly as listed under Allowed operations — do not add or remove version prefixes (e.g. `/scrape`, not `/v1/scrape`).
-2. For GET, put URL params in `query`. For POST/PUT/PATCH, pass a JSON object as `body` (it is serialized for you).
-3. Inspect `result.body`.
+## Quiver AI quickstart
+
+Generate SVG icons and illustrations from a text prompt through
+Quiver AI passthrough billing. Send the required fields as an
+object in `body` (it is serialized for you — do not
+pre-stringify). Supported models: `arrow-1`, `arrow-1.1`,
+`arrow-1.1-max`.
+
+```javascript
+const result = await externalApi__quiver_ai({
+  path: '/svgs/generations',
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: {model: 'arrow-1.1', prompt: 'a minimalist unicorn icon'},
+})
+
+const svg = result.body.data?.[0]?.svg
+
+// File writes and imports are impure — keep them inside the
+// "use impure" boundary; pass the (serializable) SVG markup in.
+await (async function (markup, out) {
+  "use impure";
+  const fs = await import('node:fs/promises')
+  await fs.mkdir('attached_assets', {recursive: true})
+  await fs.writeFile(out, markup)
+})(svg, 'attached_assets/icon.svg')
+```
+
+To vectorize an existing raster image to SVG, POST to
+`/svgs/vectorizations` with `body: {model, image: {url}}`. Both
+endpoints return the SVG markup at `body.data[0].svg`.
+Authorization is managed by passthrough billing. Do not set an
+`Authorization` header manually.
 
 ## Example
 

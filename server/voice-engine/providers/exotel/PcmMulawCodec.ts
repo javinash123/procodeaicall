@@ -22,6 +22,34 @@
  * does not replace, any other codec used elsewhere in the codebase.
  */
 
+/**
+ * Downsample a Buffer of 16-bit little-endian PCM samples from `srcRate` to
+ * `dstRate` using linear interpolation.
+ *
+ * Works cleanly for integer-ratio pairs (e.g. 24000→8000, 3:1).
+ * Input and output are raw PCM16 LE Buffers (2 bytes per sample).
+ */
+export function resamplePCM16(pcm: Buffer, srcRate: number, dstRate: number): Buffer {
+  if (srcRate === dstRate) return pcm;
+  const sampleCount = Math.floor(pcm.length / 2);
+  const samples = new Int16Array(sampleCount);
+  for (let i = 0; i < sampleCount; i++) {
+    samples[i] = pcm.readInt16LE(i * 2);
+  }
+  const ratio = srcRate / dstRate;
+  const outLength = Math.floor(sampleCount / ratio);
+  const out = Buffer.allocUnsafe(outLength * 2);
+  for (let i = 0; i < outLength; i++) {
+    const pos  = i * ratio;
+    const lo   = Math.floor(pos);
+    const hi   = Math.min(lo + 1, sampleCount - 1);
+    const frac = pos - lo;
+    const s    = Math.round(samples[lo] * (1 - frac) + samples[hi] * frac);
+    out.writeInt16LE(s, i * 2);
+  }
+  return out;
+}
+
 const MULAW_BIAS = 0x84; // 132 — standard G.711 μ-law bias
 const MULAW_CLIP = 32635; // standard G.711 μ-law clip ceiling
 

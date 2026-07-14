@@ -45,3 +45,9 @@ waitForPort = 5000
 [agent]
 mockupState = "FULLSTACK"
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+VOICE_OUTPUT_FORMAT = "pcm"
+NIJVOX_DEBUG_AUDIO = "1"

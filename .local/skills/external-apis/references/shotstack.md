@@ -17,8 +17,47 @@ Use `externalApi__shotstack` in `codeExecution`.
 
 Authorization is handled automatically by Replit. Do not pass an `Authorization` header.
 
-## Quickstart
+## Skill
 
-1. Call the callback with a `path` and `method` exactly as listed under Allowed operations — do not add or remove version prefixes (e.g. `/scrape`, not `/v1/scrape`).
-2. For GET, put URL params in `query`. For POST/PUT/PATCH, pass a JSON object as `body` (it is serialized for you).
-3. Inspect `result.body`.
+## Shotstack quickstart
+
+Render videos, images, and audio from a JSON timeline through
+Shotstack passthrough billing. Submit a render, poll its status,
+then download the finished file. Send the edit as an object in
+`body` (it is serialized for you — do not pre-stringify).
+
+```javascript
+const submit = await externalApi__shotstack({
+  path: '/edit/v1/render',
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: {
+    timeline: {
+      tracks: [
+        {clips: [{asset: {type: 'text', text: 'Hello from Replit'}, start: 0, length: 5}]},
+      ],
+    },
+    output: {format: 'mp4', resolution: 'sd'},
+  },
+})
+
+const renderId = submit.body.response.id
+let url
+for (let attempt = 0; attempt < 60; attempt++) {
+  await new Promise((resolve) => setTimeout(resolve, 5000))
+  const status = await externalApi__shotstack({
+    path: '/edit/v1/render/' + renderId,
+    method: 'GET',
+  })
+  if (status.body.response.status === 'done') {
+    url = status.body.response.url
+    break
+  }
+  if (status.body.response.status === 'failed') throw new Error('Shotstack render failed')
+}
+
+console.log(url)
+```
+
+Authorization is managed by passthrough billing. Do not set an
+`Authorization` header manually.

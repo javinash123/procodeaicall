@@ -127,6 +127,34 @@ Resume work on an IMPLEMENTED task. Call this before making further changes to a
 await markTaskInProgress({ taskRef: "#1" });
 ```
 
+### markTaskComplete(...)
+
+When an assigned project task is done, call `markTaskComplete({...})` as the final callback in CodeExecution. Do not call it while creating or editing task plans.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `commit_message` | str | No | Message for the task's merge commit. |
+| `skip_validation_reason` | str | No | Audited reason for skipping configured validation. Only use when validation genuinely cannot run. |
+| `pull_request_url` | str | No | Canonical GitHub, GitLab, or Bitbucket PR URL. Required when PR workflow is enabled. |
+| `drift_reason` | str | No | Explain how the result differs from the original plan, such as partial scope or a changed approach. |
+| `request_fresh_code_review` | bool | No | Force a new completion code review even if a previous review approved the task. |
+
+**Returns:** `{ kind: "markTaskComplete", outcome, text }`. If `outcome` is not `"completed"`, read `text`, address the issue, and call `markTaskComplete` again when ready.
+
+**Examples:**
+
+```javascript
+await markTaskComplete({
+  commit_message: "Implement payment webhook handling",
+});
+
+await markTaskComplete({
+  skip_validation_reason: "Requires external Stripe credentials that are not available in this environment.",
+});
+```
+
 ### searchProjectTasks(query, locale=None, limit=None)
 
 Search project tasks by text query, ordered by relevance.

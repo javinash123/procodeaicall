@@ -169,6 +169,25 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
   private _pacingTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
+   * Wall-clock time (Date.now()) when the most recent chunk was sent to the
+   * transport.  Used by `_enqueue` to enforce real-time pacing even when the
+   * queue drains to zero between consecutive OpenAI audio deltas.
+   *
+   * Root cause of the fast-forward bug this solves:
+   *   Node.js processes each OpenAI delta completely (synchronously) before the
+   *   next one arrives on the event loop.  This means `_pacingQueue` is ALWAYS
+   *   empty when `_enqueue` is called for a new delta — so `_sendNext` fires
+   *   immediately every time, bypassing the durationMs timer entirely and
+   *   sending all chunks at full network speed.  Exotel receives 19 s of audio
+   *   in 0.5 s → fast-forward / chipmunk playback.
+   *
+   * Fix: `_enqueue` now computes `waitMs = lastSendAt + lastDurationMs - now`
+   *   and schedules the send after `waitMs` even when the queue is empty.
+   */
+  private _lastSendAt = 0;
+  private _lastDurationMs = 0;
+
+  /**
    * Pre-bound handler references retained for clean `off()` equality.
    */
   private readonly _onAudioReady: (event: BridgeAudioReadyEvent) => void;
@@ -368,11 +387,26 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
   private _enqueue(chunk: AudioChunk): void {
     this._pacingQueue.push(chunk);
 
-    if (this._pacingTimer === null) {
-      // Pacer is idle — send the head immediately and start the timer chain.
-      this._sendNext();
+    if (this._pacingTimer !== null) {
+      // Pacer already running — the timer will reach this chunk in order.
+      return;
     }
-    // Else: pacer already running — the timer will reach this chunk in order.
+
+    // Pacer is idle.  Enforce the real-time rate even if the queue drained to
+    // zero between this delta and the previous one (see _lastSendAt comment).
+    const elapsed = Date.now() - this._lastSendAt;
+    const waitMs  = Math.max(0, this._lastDurationMs - elapsed);
+
+    if (waitMs <= 0) {
+      // Enough time has passed — send immediately.
+      this._sendNext();
+    } else {
+      // Still within the previous chunk's playback window — wait out the rest.
+      this._pacingTimer = setTimeout(() => {
+        this._pacingTimer = null;
+        this._sendNext();
+      }, waitMs);
+    }
   }
 
   /**
@@ -407,11 +441,17 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
       );
     }
 
+    // Record when this chunk was sent so _enqueue can rate-limit the next one
+    // even if the queue drains to zero before it arrives.
+    this._lastSendAt     = Date.now();
+    this._lastDurationMs = chunk.durationMs;
+
     // Send this chunk to the transport now.
     this._transport.sendAudio(this._sessionId, chunk);
 
     if (this._pacingQueue.length === 0) {
-      // Queue drained — pacer idles until next audio burst arrives.
+      // Queue drained — pacer idles.  _enqueue will re-engage the rate limiter
+      // using _lastSendAt + _lastDurationMs when the next chunk arrives.
       // _pacingTimer remains null.
       return;
     }
@@ -426,12 +466,14 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
   }
 
   /**
-   * Cancels the active pacing timer and discards all queued chunks.
+   * Cancels the active pacing timer, discards all queued chunks, and resets
+   * the rate-limiter state so the next burst starts without an artificial delay.
    *
    * This is the single teardown path for both normal stop and all
    * interruption scenarios (barge-in, disconnect, error). After this call:
    * - `_pacingTimer === null`
    * - `_pacingQueue.length === 0`
+   * - `_lastSendAt === 0`, `_lastDurationMs === 0`
    *
    * Safe to call when the pacer is already idle.
    */
@@ -441,6 +483,8 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
       this._pacingTimer = null;
     }
     this._pacingQueue.length = 0;
+    this._lastSendAt     = 0;
+    this._lastDurationMs = 0;
   }
 
   // ─── Private Helpers ─────────────────────────────────────────────────────────
@@ -448,10 +492,14 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
   /**
    * Builds an immutable outbound `AudioChunk` from a provider audio delta.
    *
-   * Duration formula for µ-law at 8 kHz:
-   *   byteLength = base64Length × 0.75   (base64 overhead)
-   *   durationMs = byteLength / sampleRate × 1000
-   *             = byteLength / 8000 × 1000  (1 byte/sample at 8 kHz)
+   * Duration formula — encoding-aware:
+   *   byteLength     = base64Length × 0.75             (base64 overhead)
+   *   bytesPerSample = 2 for PCM16/linear16, 1 for µ-law/alaw/opus
+   *   byteRate       = sampleRate × bytesPerSample     (bytes/sec of stream)
+   *   durationMs     = byteLength / byteRate × 1000
+   *
+   *   µ-law 8 kHz  → bytesPerSample=1, byteRate=8 000  → byteLength/8  ms
+   *   PCM16 8 kHz  → bytesPerSample=2, byteRate=16 000 → byteLength/16 ms
    *
    * This durationMs is used both by the engine scheduler and by the pacing
    * queue to determine the inter-send interval.
@@ -462,8 +510,11 @@ export class OutboundAudioFlow implements IOutboundAudioFlow {
   private _buildChunk(base64Delta: string, timestamp: number): Readonly<AudioChunk> {
     const { sampleRate, encoding } = this._config.audioFormat;
     const byteLength = Math.floor(base64Delta.length * 0.75);
-    const durationMs = sampleRate > 0
-      ? Math.round((byteLength / sampleRate) * 1000)
+    // PCM16 variants carry 2 bytes per sample; all others (µ-law, a-law, opus) carry 1.
+    const bytesPerSample = (encoding === 'pcm16' || encoding === 'linear16' || encoding === 'pcm') ? 2 : 1;
+    const byteRate = sampleRate * bytesPerSample;
+    const durationMs = byteRate > 0
+      ? Math.round((byteLength / byteRate) * 1000)
       : 0;
 
     return createAudioChunk({

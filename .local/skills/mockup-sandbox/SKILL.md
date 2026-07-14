@@ -77,6 +77,7 @@ await restartWorkflow({ workflowName: "artifacts/mockup-sandbox: Component Previ
 
 The dev server must be running first so that component files are picked up by the Vite plugin and preview URLs resolve correctly. Preview URLs use path-based routing: `https://${REPLIT_DOMAINS}/__mockup/preview/{folder}/{ComponentName}` -- no port number needed.
 
+
 ### Step 2: Create mockup components
 
 **Verify the component directory first.** Before creating any files, list `artifacts/mockup-sandbox/` to confirm that `src/components/mockups/` exists. Use the verified path for all component creation and subagent delegation.
@@ -93,6 +94,7 @@ export function Minimal() {
   );
 }
 ```
+
 
 ### Step 3: Embed on the canvas
 
@@ -114,6 +116,7 @@ Example -- a pricing card is a "Card / Panel", so use a snug iframe (see [Iframe
   }
 }
 ```
+
 ### Step 4: Layout and focus
 
 Before embedding iframes, call `getCanvasState()` to see what already exists on the board and find empty space. Then place your iframes in an unoccupied region.
@@ -179,7 +182,7 @@ artifacts/mockup-sandbox/                              # Isolated from main app
     --   -- mockup-components.ts      # Auto-generated component registry
     -- components/
     --   -- ui/                       # 50+ shadcn/ui components (pre-installed)
-    --   -- mockups/                  # YOUR MOCKUP COMPONENTS GO HERE
+    --   -- mockups/                  # YOUR MOCKUP COMPONENTS GO HERE (built-in default look)
     -- lib/
     --   -- utils.ts
     -- hooks/

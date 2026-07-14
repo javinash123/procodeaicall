@@ -1,0 +1,141 @@
+STOP.
+
+The transport layer is now considered STABLE.
+
+DO NOT modify:
+
+- ExotelAdapter
+- TransportGateway
+- OutboundAudioFlow
+- Audio codec
+- Sample rate
+- Packetization
+- PCM/PCMU handling
+
+The remaining issues are conversation quality and latency.
+
+I want to optimize ONLY the OpenAI Realtime conversation.
+
+Tasks:
+
+==================================================
+STEP 1 — Measure latency
+==================================================
+
+For every turn, record:
+
+T1 = provider VAD speech_stopped
+T2 = response.created
+T3 = first response.output_audio.delta
+T4 = first websocket.send() to Exotel
+
+Print:
+
+VAD→Response
+Response→FirstAudio
+FirstAudio→ExotelSend
+Total end-to-end latency
+
+Do not add permanent logging.
+Print only one summary per turn.
+
+==================================================
+STEP 2 — Prompt optimization
+==================================================
+
+Review the system prompt built in V2CallActivator.
+
+Rewrite it for spoken conversation.
+
+Rules:
+
+- Never sound like ChatGPT.
+- Never say "How may I assist you today?"
+- Use short spoken sentences.
+- One question at a time.
+- Avoid paragraphs.
+- Wait for the customer after every question.
+- Handle interruptions naturally.
+- Don't repeat information.
+- Use campaign goal as the primary objective.
+- Use the knowledge base only when needed.
+- Keep answers under 12 seconds unless explaining something complex.
+
+==================================================
+STEP 3 — Greeting
+==================================================
+
+Make the first greeting conversational.
+
+Instead of:
+
+"Hello, I am calling regarding..."
+
+Generate greetings like a real salesperson.
+
+Examples:
+
+"Hi Rahul, this is Priya from ABC Solar. Did I catch you at a bad time?"
+
+or
+
+"Hi Rahul, I'm calling because you recently showed interest in..."
+
+No robotic introductions.
+
+==================================================
+STEP 4 — Turn-taking
+==================================================
+
+After every assistant turn:
+
+DO NOT immediately continue speaking.
+
+Wait for customer input.
+
+Only continue automatically if the campaign explicitly requires a scripted sequence.
+
+==================================================
+STEP 5 — Interruption handling
+==================================================
+
+If the customer starts speaking:
+
+- stop audio immediately
+- cancel current response
+- flush pending audio
+- begin listening immediately
+
+No stale audio should continue playing.
+
+==================================================
+STEP 6 — Remove generic AI behaviour
+==================================================
+
+Audit every instruction that encourages:
+
+- long answers
+- AI disclaimers
+- repeated greetings
+- unnecessary confirmations
+- assistant-style wording
+
+Replace them with conversational phone-sales behaviour.
+
+==================================================
+STEP 7 — Report
+==================================================
+
+Do not modify transport.
+
+Only report:
+
+1. files changed
+2. exact prompt differences
+3. latency before
+4. latency after
+5. expected conversational improvements
+
+No architecture changes.
+No codec changes.
+No transport changes.

@@ -65,7 +65,7 @@ import {
   encodeClearMessage,
   isValidBase64Payload,
 } from './ExotelProtocol.js';
-import { pcm16ToMulaw } from './PcmMulawCodec.js';
+import { pcm16ToMulaw, resamplePCM16 } from './PcmMulawCodec.js';
 
 // ─── Per-Session Audio Context ────────────────────────────────────────────────
 
@@ -98,6 +98,22 @@ export class ExotelAdapter implements ITransportAdapter {
     TransportSession,
     SessionAudioContext
   >();
+
+  /**
+   * Exotel requires outbound PCM16 LE chunks to be exact multiples of 320 bytes
+   * (= 20 ms @ 8 kHz, one standard telephony frame).  OpenAI's audio deltas
+   * are variable-length, so after the 24kHz→8kHz downsample we often land on
+   * non-aligned byte counts (e.g. 2400 or 4000 bytes, neither divisible by 320).
+   *
+   * This map accumulates leftover bytes from each delta and prepends them to
+   * the next one, ensuring every frame we put on the wire is ≥ 320 bytes and
+   * always an exact multiple of 320.
+   *
+   * Keyed by Exotel streamId (a stable per-call UUID).  Entries are deleted on
+   * session clear (barge-in / call end) so stale audio never leaks across turns.
+   */
+  private readonly _accumulators = new Map<string, Buffer>();
+  private static readonly ALIGN_BYTES = 320; // 20 ms @ 8 kHz PCM16 LE
 
   constructor(logger: ILogger) {
     this._logger = logger.child({ component: 'ExotelAdapter' });
@@ -278,12 +294,70 @@ export class ExotelAdapter implements ITransportAdapter {
     // ── Output format switch (controlled ONLY by VOICE_OUTPUT_FORMAT) ─────────
     // MODE 1 (pcmu, default): OpenAI already emits G.711 μ-law — pass the
     //   decoded bytes straight through, exactly as before this switch existed.
-    // MODE 2 (pcm): OpenAI emits raw 16-bit PCM (8kHz mono) — convert to
-    //   G.711 μ-law here, since Exotel's media channel only accepts μ-law.
+    // MODE 2 (pcm): OpenAI emits PCM16 at 24kHz (gpt-realtime minimum rate).
+    //   Exotel expects Linear PCM16 LE @ 8kHz (confirmed in exotelStreamHandler.ts
+    //   line 268: "Exotel expects Linear PCM16 LE @ 8 kHz").
+    //   Step 1 — downsample 24kHz → 8kHz (3:1 linear interpolation).
+    //   Step 2 — align to multiples of 320 bytes (20 ms telephony frames).
+    //   DO NOT apply μ-law encoding — Exotel wants raw PCM16 LE, not G.711.
+    //   Sending μ-law when Exotel expects PCM16 causes 2× fast-forward because
+    //   Exotel reads every 2 μ-law bytes as one PCM16 sample (half the samples
+    //   → double the playback speed).
     const outputFormat = (process.env['VOICE_OUTPUT_FORMAT'] || 'pcmu').toLowerCase();
-    const wireBytes: Buffer = outputFormat === 'pcm' ? pcm16ToMulaw(raw) : raw;
 
-    const outB64 = wireBytes.toString('base64');
+    if (outputFormat === 'pcm') {
+      // 1. Downsample 24kHz PCM16 → 8kHz PCM16 LE.
+      const pcm8k = resamplePCM16(raw, 24000, 8000);
+
+      // 2. Accumulate with any leftover bytes from the previous delta.
+      const prev     = this._accumulators.get(streamId) ?? Buffer.alloc(0);
+      const combined = prev.length > 0 ? Buffer.concat([prev, pcm8k]) : pcm8k;
+
+      // 3. Keep only complete 320-byte frames; carry the rest forward.
+      const align      = ExotelAdapter.ALIGN_BYTES;
+      const sendable   = Math.floor(combined.length / align) * align;
+      const remainder  = combined.subarray(sendable);
+
+      if (remainder.length > 0) {
+        this._accumulators.set(streamId, Buffer.from(remainder));
+      } else {
+        this._accumulators.delete(streamId);
+      }
+
+      if (sendable === 0) {
+        // Not enough data yet — wait for the next delta.
+        if (process.env['NIJVOX_DEBUG_AUDIO'] === '1') {
+          console.log(
+            `[ExotelOutbound] seq=${chunk.sequence}` +
+            `  outputFormat=${outputFormat}` +
+            `  inputBytes=${raw.byteLength}` +
+            `  wireBytes=0  buffering=${combined.length}/${align}`,
+          );
+        }
+        return [];
+      }
+
+      // 4. Encode the aligned block as a single Exotel media frame.
+      const wireBytes = combined.subarray(0, sendable);
+      const outB64    = wireBytes.toString('base64');
+      const frame     = encodeMediaMessage(streamId, outB64);
+
+      if (process.env['NIJVOX_DEBUG_AUDIO'] === '1') {
+        console.log(
+          `[ExotelOutbound] seq=${chunk.sequence}` +
+          `  outputFormat=${outputFormat}` +
+          `  inputBytes=${raw.byteLength}` +
+          `  wireBytes=${wireBytes.length}` +
+          `  remainder=${remainder.length}` +
+          `  websocketMessagesPerDelta=1`,
+        );
+      }
+
+      return [frame];
+    }
+
+    // MODE 1: pcmu — passthrough.
+    const outB64 = raw.toString('base64');
     const frame  = encodeMediaMessage(streamId, outB64);
 
     if (process.env['NIJVOX_DEBUG_AUDIO'] === '1') {
@@ -291,7 +365,7 @@ export class ExotelAdapter implements ITransportAdapter {
         `[ExotelOutbound] seq=${chunk.sequence}` +
         `  outputFormat=${outputFormat}` +
         `  inputBytes=${raw.byteLength}` +
-        `  wireBytes=${wireBytes.byteLength}` +
+        `  wireBytes=${raw.byteLength}` +
         `  websocketMessagesPerDelta=1`,
       );
     }
@@ -304,6 +378,9 @@ export class ExotelAdapter implements ITransportAdapter {
   }
 
   encodeClear(streamId: string): string {
+    // Discard any partial PCM frame buffered for this stream so stale bytes
+    // from the interrupted response never prepend to the next one.
+    this._accumulators.delete(streamId);
     return encodeClearMessage(streamId);
   }
 

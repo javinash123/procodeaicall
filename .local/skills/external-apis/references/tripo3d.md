@@ -13,11 +13,48 @@ Use `externalApi__tripo3d` in `codeExecution`.
 
 Authorization is handled automatically by Replit. Do not pass an `Authorization` header.
 
-## Quickstart
+## Skill
 
-1. Call the callback with a `path` and `method` exactly as listed under Allowed operations — do not add or remove version prefixes (e.g. `/scrape`, not `/v1/scrape`).
-2. For GET, put URL params in `query`. For POST/PUT/PATCH, pass a JSON object as `body` (it is serialized for you).
-3. Inspect `result.body`.
+## Tripo3D quickstart
+
+Generate 3D models through Tripo3D passthrough billing. Submit a
+generation task, poll it, then download the model. Send the
+required fields as an object in `body` (it is serialized for you
+— do not pre-stringify).
+
+```javascript
+const submit = await externalApi__tripo3d({
+  path: '/task',
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: {type: 'text_to_model', prompt: 'a low-poly wooden chair'},
+})
+
+const taskId = submit.body.data.task_id
+let modelUrl
+for (let attempt = 0; attempt < 60; attempt++) {
+  await new Promise((resolve) => setTimeout(resolve, 5000))
+  const task = await externalApi__tripo3d({
+    path: '/task/' + taskId,
+    method: 'GET',
+  })
+  if (task.body.data.status === 'success') {
+    modelUrl = task.body.data.output.pbr_model ?? task.body.data.output.model
+    break
+  }
+  if (['failed', 'banned', 'expired', 'cancelled', 'unknown'].includes(task.body.data.status)) {
+    throw new Error('Tripo3D task did not succeed')
+  }
+}
+
+if (!modelUrl) throw new Error('Tripo3D task did not finish in time')
+
+console.log(modelUrl)
+```
+
+Model download URLs expire a few minutes after the task completes
+— fetch them promptly. Authorization is managed by passthrough
+billing. Do not set an `Authorization` header manually.
 
 ## Example
 

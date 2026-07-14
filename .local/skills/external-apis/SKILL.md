@@ -29,14 +29,12 @@ Responses are capped (~1 MB); larger media cannot be returned in-band yet. Prefe
 ## Available APIs
 
 - [Brave](references/brave.md) - Search real web image results through Brave passthrough billing.
-- [Browserbase](references/browserbase.md)
+- [Browserbase](references/browserbase.md) - Web search and managed-browser page fetches through Browserbase passthrough billing.
 - [ElevenLabs](references/elevenlabs.md) - Text-to-speech, music, and audio tools through ElevenLabs passthrough billing.
 - [Exa](references/exa.md) - Semantic web search through Exa passthrough billing.
 - [fal.ai](references/falai.md) - Bria RMBG background removal through fal.ai passthrough billing.
 - [Firecrawl](references/firecrawl.md) - Scrape, crawl, and search the web through Firecrawl passthrough billing.
-- [LlamaIndex](references/llamaindex.md)
-- [Mindee](references/mindee.md)
-- [Quiver AI](references/quiver-ai.md)
-- [Shotstack](references/shotstack.md)
-- [Tripo3D](references/tripo3d.md)
+- [Quiver AI](references/quiver-ai.md) - Generate SVG icons and illustrations from a text prompt through Quiver AI passthrough billing.
+- [Shotstack](references/shotstack.md) - Render videos, images, and audio from a JSON timeline through Shotstack passthrough billing.
+- [Tripo3D](references/tripo3d.md) - Generate 3D models through Tripo3D passthrough billing.
 - [X (Twitter)](references/x.md) - Read-only X API v2 access through passthrough billing.

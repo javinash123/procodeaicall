@@ -48,11 +48,27 @@ Use this skill when:
 
 ## Available Functions
 
-The TypeScript runtime currently registers `configureWorkflow`, `restartWorkflow`, and `removeWorkflow`. Do not call `listWorkflows` or `getWorkflowStatus`; they are not registered callbacks.
-
-To inspect workflow status or logs, use available shell/process tools or the Replit workflow UI. If a workflow restart fails, use the returned error plus normal project logs and commands to diagnose the application.
+The TypeScript runtime registers `listWorkflows`, `getWorkflowStatus`, `configureWorkflow`, `restartWorkflow`, and `removeWorkflow`.
 
 The functions below are `CodeExecution` callbacks. Outside a `CodeExecution` script, use the direct `WorkflowsRestart` tool for workflow starts and restarts.
+
+### listWorkflows()
+
+List configured workflows with their `name`, `command`, and `state` (`not_started`, `running`, `finished`, or `failed`).
+
+```javascript
+const workflows = await listWorkflows({});
+console.log(workflows);
+```
+
+### getWorkflowStatus({ name, maxScrollbackLines })
+
+Get one workflow's state, command, open ports, configured port, and recent output. `maxScrollbackLines` defaults to 100 and is capped at 1000; set it to 0 to skip output.
+
+```javascript
+const status = await getWorkflowStatus({ name: "Start application" });
+console.log(status);
+```
 
 ### configureWorkflow({ name, command, waitForPort, outputType, autoStart, isCanvasWorkflow })
 
@@ -66,7 +82,7 @@ Configure or create a workflow. This is the primary way to set up background pro
 - `command` (str, required): Shell command to execute
 - `waitForPort` (int, optional): Port the process listens on
 - `outputType` (str, default "webview"): "webview", "console", or "vnc"
-- `autoStart` (bool, default True): Auto-start after configuration
+- `autoStart` (bool, default false): Start the workflow after configuration
 - `isCanvasWorkflow` (bool, default false): Whether this workflow serves canvas iframe content
 
 **Output Type Rules:**
@@ -85,7 +101,8 @@ await configureWorkflow({
     name: "Start application",
     command: "npm run dev",
     waitForPort: 5000,
-    outputType: "webview"
+    outputType: "webview",
+    autoStart: true
 });
 
 // Backend API
@@ -93,14 +110,16 @@ await configureWorkflow({
     name: "Backend API",
     command: "python api.py",
     waitForPort: 8000,
-    outputType: "console"
+    outputType: "console",
+    autoStart: true
 });
 
 // Desktop application
 await configureWorkflow({
     name: "Desktop App",
     command: "python gui_app.py",
-    outputType: "vnc"
+    outputType: "vnc",
+    autoStart: true
 });
 ```
 
@@ -191,7 +210,8 @@ await configureWorkflow({
     name: "Start application",
     command: "npm run dev",
     waitForPort: 5000,
-    outputType: "webview"
+    outputType: "webview",
+    autoStart: true
 });
 
 // After making code changes, restart the application

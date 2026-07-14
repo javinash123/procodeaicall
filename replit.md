@@ -125,7 +125,15 @@ Created via `npm run db:seed`:
 
 ## Environment Variables
 Required secrets (configured in Replit Secrets):
-- `MONGODB_URI` - MongoDB connection string
+- `MONGODB_URI` - MongoDB connection string (primary database)
+- `SESSION_SECRET` - session cookie signing secret
+- `OPENAI_API_KEY` - powers the AI voice engine (script generation, Realtime API calls)
+
+Note: `DATABASE_URL` (Postgres, auto-provisioned by Replit) exists in this environment but is unused at runtime — only `drizzle.config.ts` references it, and there's no active Postgres schema/usage in the app code.
+
+## Running on Replit
+- The `Start application` workflow runs `npm run dev`, serving the app on port 5000.
+- Exotel and Gupshup credentials are optional and configured per-user inside the app's Admin Settings UI, not as environment secrets.
 
 ## Development Scripts
 ```bash

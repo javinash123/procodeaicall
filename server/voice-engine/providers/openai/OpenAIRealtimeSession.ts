@@ -117,6 +117,14 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
   private _traceFirstTranscript = true;
   private _traceFirstAIResponse = true;
 
+  // ── Per-turn latency timestamps ──────────────────────────────────────────────
+  // T1 = VAD speech_stopped, T2 = response.created, T3 = first audio delta.
+  // Reset at the start of each new customer turn (speech_stopped).
+  private _latT1SpeechStopped  = 0;
+  private _latT2ResponseCreated = 0;
+  private _latT3FirstAudioDelta = 0;
+  private _latAudioDeltaSeen    = false;
+
   // ── [DEBUG] one-shot audio capture ──────────────────────────────────────────
   // Accumulates raw base64 deltas for the first response only.
   // Written to disk on response.output_audio.done. Remove when no longer needed.
@@ -446,7 +454,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
           turn_detection: this._config.turnDetection,
         },
         output: {
-          format: { type: this._resolveOutputAudioMime() },
+          format: { type: this._resolveOutputAudioMime(), rate: 24000 },
           voice: this._config.voice,
         },
       },
@@ -487,6 +495,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
           this._traceFirstAIResponse = false;
           console.log(`[V2 TRACE] 13. First AI response received  responseId=${event.response.id}`);
         }
+        this._latT2ResponseCreated = ts;
         this._emit({ type: 'realtime.response_started', timestamp: ts, eventId: event.event_id, responseId: event.response.id });
         break;
 
@@ -497,6 +506,21 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
           itemId:     event.item_id,
           deltaBytes: Math.round(event.delta.length * 0.75),
         });
+        // T3 — first audio delta this turn: print one latency summary line
+        if (!this._latAudioDeltaSeen) {
+          this._latAudioDeltaSeen    = true;
+          this._latT3FirstAudioDelta = ts;
+          const t1 = this._latT1SpeechStopped;
+          const t2 = this._latT2ResponseCreated;
+          const t3 = ts;
+          const vadToResponse      = t2 && t1 ? t2 - t1 : -1;
+          const responseToAudio    = t2 && t3 ? t3 - t2 : -1;
+          const total              = t1 && t3 ? t3 - t1 : -1;
+          console.log(
+            `[LATENCY] VAD→Response=${vadToResponse}ms  Response→FirstAudio=${responseToAudio}ms` +
+            `  FirstAudio→ExotelSend≈0ms  Total=${total}ms`
+          );
+        }
         this._emit({ type: 'realtime.audio_received', timestamp: ts, eventId: event.event_id, responseId: event.response_id, itemId: event.item_id, delta: event.delta });
         // [DEBUG] accumulate first-response audio deltas
         if (!this._dbgAudioSaved) {
@@ -598,6 +622,11 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
       case 'input_audio_buffer.speech_stopped':
         this._record('input_audio_buffer.speech_stopped', { itemId: event.item_id, audioEndMs: event.audio_end_ms });
+        // T1 — reset latency counters for this new turn
+        this._latT1SpeechStopped  = ts;
+        this._latT2ResponseCreated = 0;
+        this._latT3FirstAudioDelta = 0;
+        this._latAudioDeltaSeen    = false;
         this._emit({ type: 'realtime.speech_stopped', timestamp: ts, eventId: event.event_id, itemId: event.item_id, audioEndMs: event.audio_end_ms });
         break;
 

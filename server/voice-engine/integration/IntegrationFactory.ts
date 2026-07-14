@@ -124,15 +124,30 @@ export const IntegrationFactory = Object.freeze({
     });
 
     // Build the outbound flow — Bridge → AudioEngine → Transport.
+    //
+    // The audioFormat here must describe what the AI PROVIDER actually sends,
+    // not what Exotel expects.  VOICE_OUTPUT_FORMAT controls both what OpenAI
+    // is asked to emit (in OpenAIRealtimeSession._buildSessionConfig) and what
+    // ExotelAdapter does with the bytes:
+    //   'pcmu' (default) — OpenAI asked for audio/pcmu (G.711 µ-law 8 kHz);
+    //                       ExotelAdapter passes bytes through unchanged.
+    //   'pcm'            — OpenAI asked for audio/pcm  (PCM16 8 kHz mono);
+    //                       ExotelAdapter calls pcm16ToMulaw() before sending.
+    // The encoding here feeds _buildChunk's durationMs formula, which must
+    // account for 2 bytes/sample (PCM16) vs 1 byte/sample (µ-law).
+    const voiceOutputFormat = (process.env['VOICE_OUTPUT_FORMAT'] || 'pcmu').toLowerCase();
+    // gpt-realtime requires rate >= 24000; it outputs 24kHz PCM16 in pcm mode.
+    // ExotelAdapter downsamples 24kHz → 8kHz before µ-law encoding.
+    const defaultAudioFormat: OutboundAudioFormat = voiceOutputFormat === 'pcm'
+      ? { sampleRate: 24000, encoding: 'pcm16' }
+      : { sampleRate: 8000, encoding: 'mulaw' };
     const outboundFlow = new OutboundAudioFlow({
       bridge,
       audioEngine,
       transport,
       sessionId,
       logger,
-      config: outboundAudioFormat
-        ? { audioFormat: { sampleRate: 8000, encoding: 'mulaw', ...outboundAudioFormat } }
-        : undefined,
+      config: { audioFormat: { ...defaultAudioFormat, ...outboundAudioFormat } },
     });
 
     // Build the supervisor — monitors timeouts, disconnects, failures.

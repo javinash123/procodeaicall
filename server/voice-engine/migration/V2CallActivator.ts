@@ -68,17 +68,75 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
     campaignId: ctx.campaignId,
   });
 
-  // ── Step 1: Load campaign for system instructions ───────────────────────────
+  // ── Step 1: Load campaign and build system instructions ─────────────────────
+  //
+  // V1 (exotelStreamHandler) builds a rich system prompt from goal,
+  // additionalContext, knowledge_base, and ai_generated_script.  V2 must do
+  // the same — passing only ai_generated_script left callers with a generic
+  // "how can I assist you" experience because the model had no campaign context.
   let instructions = '';
   try {
     const campaign = await storage.getCampaign(ctx.campaignId);
     if (campaign) {
-      instructions = (campaign as any).ai_generated_script
-        || (campaign as any).script
-        || '';
-      logger.info('Campaign instructions loaded', {
-        campaignId: ctx.campaignId,
-        chars: instructions.length,
+      const c = campaign as any;
+
+      const goal              = (c.goal              || '') as string;
+      const additionalContext = (c.additionalContext  || '') as string;
+      const script            = (c.ai_generated_script || c.script || '') as string;
+      const knowledgeBase: string = [
+        ...(c.knowledgeBaseTexts || []),
+        ...(c.knowledgeBaseFiles || []).map((f: any) => f.extractedText).filter(Boolean),
+      ].join('\n\n');
+
+      const isSupport = goal.toLowerCase().includes('support');
+      const agentRole = isSupport ? 'customer support agent' : 'sales agent';
+
+      // Spoken-conversation system prompt — short, direct, phone-sales style.
+      // No markdown, no bullet glyphs, no AI-assistant phrasing.
+      instructions = [
+        `You are a ${agentRole} on a live outbound phone call. Speak in short, natural sentences. Every word you say goes directly to a real person on the phone — no formatting, no lists, no markdown.`,
+        '',
+        goal              ? `Campaign goal: ${goal}` : '',
+        additionalContext ? `Business info: ${additionalContext}` : '',
+        knowledgeBase     ? `KNOWLEDGE BASE — use these facts when relevant:\n${knowledgeBase.slice(0, 3000)}\nEND KNOWLEDGE BASE` : '',
+        script            ? `Talking points — adapt to the conversation, never recite verbatim:\n${script}` : '',
+        '',
+        'GREETING — your very first message must sound like a real salesperson, not a robot.',
+        'Good examples:',
+        '  "Hi [Name], this is Priya from [Company]. Did I catch you at a bad time?"',
+        '  "Hi [Name], I\'m calling because you recently showed interest in [product]. Got a minute?"',
+        'Never open with "Hello, I am calling regarding..." — that sounds scripted and robotic.',
+        '',
+        'CONVERSATION RULES:',
+        'Speak one short thought or question per turn, then stop and wait for the customer.',
+        'Never ask two questions in one message.',
+        'When the customer says yes, sure, ok, or agreed — ask one qualifying question. Do not pitch yet.',
+        'From turn three onwards — share one specific benefit, then ask one question.',
+        'From turn five onwards — offer a concrete next step: a callback, a site visit, or a brochure.',
+        'If the customer wants to schedule something — confirm the time, get their name, stop selling.',
+        'If the customer asks a direct question — answer it with a specific fact. Never deflect or stall.',
+        'If the customer interrupts — stop speaking, acknowledge briefly, and listen.',
+        'Keep every response under 30 words. Complex explanations may go up to 50 words — no more.',
+        '',
+        'FORMAT:',
+        'Plain spoken English only. No bullet points, no markdown, no numbered lists.',
+        'Do not open turns with filler words like "Great!", "Absolutely!", "Of course!", or "Certainly!".',
+        'Do not re-introduce yourself after the greeting.',
+        '',
+        'FORBIDDEN:',
+        '"How may I assist you today?" or any similar phrase — you already know why you are calling.',
+        '"You\'re welcome" — unless the customer explicitly said thank you.',
+        '"Have a great day", "Goodbye", or any farewell — you do not end the call.',
+        '"I can\'t access websites" or "I don\'t have access to the internet" — you are a human agent who knows this product.',
+        'Any mention of being an AI, a bot, a language model, or an assistant.',
+      ].filter(Boolean).join('\n');
+
+      logger.info('Campaign instructions built', {
+        campaignId:      ctx.campaignId,
+        goal:            goal || '(none)',
+        hasKB:           knowledgeBase.length > 0,
+        hasScript:       script.length > 0,
+        totalChars:      instructions.length,
       });
     } else {
       logger.warn('Campaign not found — proceeding with empty instructions', {

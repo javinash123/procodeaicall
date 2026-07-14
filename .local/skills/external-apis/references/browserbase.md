@@ -8,7 +8,7 @@ Use `externalApi__browserbase` in `codeExecution`.
 
 ## Allowed operations
 
-- `POST` `/v1/fetch` - Fetch a URL via a managed headless browser. Billed per call; rate depends on the `proxies` flag and the configured tier.
+- `POST` `/v1/fetch` - Fetch a URL via a managed headless browser. Billed per call; rate depends on the `proxies` flag and whether `format` selects Fetch Extract (markdown/json) vs normal Fetch (raw).
 - `POST` `/v1/search` - Web Search (Open Web Tools) — flat per-call rate; numResults (1–25) does not affect price.
 - `POST` `/v1/sessions` - Create a browser session. Billed by Browser Minute + Proxy MB observed via polling GET /v1/sessions/{id} until terminal status or expiresAt passes.
 - `POST` `/v1/sessions:id(/[^/]+)` - Close a browser session (REQUEST_RELEASE). No charge — session duration is billed on creation.
@@ -16,11 +16,42 @@ Use `externalApi__browserbase` in `codeExecution`.
 
 Authorization is handled automatically by Replit. Do not pass an `Authorization` header.
 
-## Quickstart
+## Skill
 
-1. Call the callback with a `path` and `method` exactly as listed under Allowed operations — do not add or remove version prefixes (e.g. `/scrape`, not `/v1/scrape`).
-2. For GET, put URL params in `query`. For POST/PUT/PATCH, pass a JSON object as `body` (it is serialized for you).
-3. Inspect `result.body`.
+## Browserbase quickstart
+
+Web search and managed-browser page fetches through Browserbase
+passthrough billing. Send the required fields as an object in
+`body` (it is serialized for you — do not pre-stringify).
+
+```javascript
+const search = await externalApi__browserbase({
+  path: '/v1/search',
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: {query: 'replit deployments', numResults: 5},
+})
+
+const top = search.body.results?.[0]
+if (top) console.log(top.title, top.url)
+
+const page = await externalApi__browserbase({
+  path: '/v1/fetch',
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: {url: 'https://docs.replit.com', format: 'markdown'},
+})
+
+console.log(page.body.content)
+```
+
+`/v1/search` returns ranked results under `body.results`;
+`/v1/fetch` returns the page body as a string in `body.content`.
+Authorization is managed by passthrough billing. Do not set an
+`Authorization` header manually.
+
+Each search and fetch is billed and adds latency. Fetch only the
+few most relevant URLs rather than every search result.
 
 ## Example
 

@@ -1,0 +1,1138 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+9:30:33 AM [ws] WebSocket server ready on path /stream
+9:30:33 AM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+9:30:34 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+9:30:38 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev host=9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev
+9:30:38 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+9:30:40 AM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}
+[TEST-CALL]
+originalUrl = /test-call?phone=9893328298&campaignId=69bd5558a57e122161197eab
+-------------------------
+req.url = /test-call?phone=9893328298&campaignId=69bd5558a57e122161197eab
+-------------------------
+req.query = {"phone":"9893328298","campaignId":"69bd5558a57e122161197eab"}
+-------------------------
+campaignId = 69bd5558a57e122161197eab
+-------------------------
+phone = 9893328298
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [INFO] Creating V2 session {"campaignId":"69bd5558a57e122161197eab","phone":"9893328298","callSid":null}
+[V2 TRACE] 1. Session created  sessionId=v2s-1783935108886-000001  campaignId=69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionFactory"}] [DEBUG] Building session dependencies {"sessionId":"v2s-1783935108886-000001","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TransportGateway"}] [INFO] Transport adapter registered {"name":"exotel"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionFactory"}] [INFO] SessionContext created {"sessionId":"v2s-1783935108886-000001","campaignId":"69bd5558a57e122161197eab","callSid":null,"phone":"9893328298","mediaSession":"present"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Session registered {"sessionId":"v2s-1783935108886-000001","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Phone index updated {"sessionId":"v2s-1783935108886-000001","phone":"9893328298"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [INFO] V2 session created {"sessionId":"v2s-1783935108886-000001","campaignId":"69bd5558a57e122161197eab"}
+[test-call] V2 session created: v2s-1783935108886-000001
+Calling number: 9893328298
+[Exotel] Updating app (1213707) stream URL → wss://9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev/exotel-stream
+[Exotel] PUT Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] POST Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] ⚠️  Could not auto-update Exotel app stream URL.
+  → Open Exotel dashboard → App Builder → app ID 1213707
+  → Set the Stream / WebSocket URL to:
+      wss://9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev/exotel-stream
+CUSTOMER = 9893328298
+CALLERID = +918047359287
+[Exotel] App URL: http://my.exotel.com/nijvox1/exoml/start_voice/1213707
+[Exotel] WSS URL : wss://9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev/exotel-stream ← update this in Exotel dashboard
+[Exotel] Call response: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <Call>\n  <Sid>a704d02702415bd14e937d42a90b1a7d</Sid>\n  <ParentCallSid/>\n  <DateCreated>2026-07-13 15:01:49</DateCreated>\n  <DateUpdated>2026-07-13 15:01:49</DateUpdated>\n  <AccountSid>nijvox1</AccountSid>\n  <To>08047359287</To>\n  <From>09893328298</From>\n  <PhoneNumberSid>08047359287</PhoneNumberSid>\n  <Status>in-progress</Status>\n  <StartTime>2026-07-13 15:01:49</StartTime>\n  <EndTime/>\n  <Duration/>\n  <Price/>\n  <Direction>outbound-api</Direction>\n  <AnsweredBy/>\n  <ForwardedFrom/>\n  <CallerName/>\n  <Uri>/v1/Accounts/nijvox1/Calls/a704d02702415bd14e937d42a90b1a7d</Uri>\n  <RecordingUrl/>\n </Call>\n</TwilioResponse>\n"
+[Exotel] CallSid: a704d02702415bd14e937d42a90b1a7d
+[test-call] callSidMap: a704d02702415bd14e937d42a90b1a7d → 69bd5558a57e122161197eab
+[test-call] phoneCallMap: 9893328298 → 69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [DEBUG] Attaching callSid {"sessionId":"v2s-1783935108886-000001","callSid":"a704d02702415bd14e937d42a90b1a7d"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] CallSid index updated {"sessionId":"v2s-1783935108886-000001","callSid":"a704d02702415bd14e937d42a90b1a7d"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [DEBUG] Attaching phone {"sessionId":"v2s-1783935108886-000001","phone":"9893328298"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Phone index updated {"sessionId":"v2s-1783935108886-000001","phone":"9893328298"}
+[test-call] V2 session v2s-1783935108886-000001 — callSid+phone attached
+9:31:59 AM [ws] [upgrade] path=/exotel-stream from=127.0.0.1 origin=none host=9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev
+9:31:59 AM [ws] [upgrade] routing /exotel-stream to exotel handler
+9:31:59 AM [ws] [/exotel-stream] Connection from [127.0.0.1] campaignId=none  total=1
+9:31:59 AM [ws] [V2 ROUTER] Awaiting Exotel 'start' event to resolve session
+9:31:59 AM [ws] [V2 ROUTER] 'connected' received — waiting for 'start'
+9:31:59 AM [ws] [V2 ROUTER] rawCallSid=a704d02702415bd14e937d42a90b1a7d normalizedCallSid=a704d02702415bd14e937d42a90b1a7d rawPhone=09893328298 normalizedPhone=9893328298 lookupMethod=callSid matchedSession=v2s-1783935108886-000001 routing=V2
+[V2 TRACE] 2. Router matched session  sessionId=v2s-1783935108886-000001
+9:31:59 AM [ws] [V2 ROUTER] Routing to V2 — sessionId=v2s-1783935108886-000001 campaignId=69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TransportGateway"}] [INFO] Transport connection accepted {"sessionId":"v2s-1783935108886-000001","callSid":"","campaignId":"69bd5558a57e122161197eab","adapterName":"exotel","remoteAddress":"127.0.0.1"}
+[V2 TRACE] 3. Transport accepted  sessionId=v2s-1783935108886-000001
+9:31:59 AM [ws] [V2 ROUTER] Socket owned by TransportGateway — sessionId=v2s-1783935108886-000001
+[V2 TRACE] 4. activateV2Session() entered  sessionId=v2s-1783935108886-000001  campaignId=69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783935108886-000001"}] [INFO] Activating V2 session — loading campaign and opening provider session {"sessionId":"v2s-1783935108886-000001","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"ExotelAdapter"}] [DEBUG] Exotel connected handshake received {"sessionId":"v2s-1783935108886-000001"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"ExotelAdapter"}] [INFO] Exotel stream started {"sessionId":"v2s-1783935108886-000001","callSid":"","streamSid":"4bf187f08232d7dceee9d786d6401a7d","encoding":"base64","sampleRate":8000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783935108886-000001"}] [INFO] Campaign instructions built {"campaignId":"69bd5558a57e122161197eab","goal":"sales","hasKB":true,"hasScript":true,"totalChars":3034}
+[V2 TRACE] 5. OpenAIRealtimeProvider.openSession()  sessionId=v2s-1783935108886-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime"}] [DEBUG] OpenAI Realtime session created (legacy mode — no policy context)
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783935108886-000001"}] [INFO] Provider session opened (unconnected — bridge will connect it) {"sessionId":"v2s-1783935108886-000001","instructionsChars":3034}
+[V2 TRACE] 8. RuntimeIntegration.start()  sessionId=v2s-1783935108886-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [INFO] RuntimeIntegration starting
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RuntimeIntegration: AudioEngine started
+[V2 TRACE] 9. RealtimeBridge.connect()  sessionId=v2s-1783935108886-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] RealtimeBridge connecting to provider
+[V2 TRACE] 6. OpenAIRealtimeSession.connect()  state=idle
+[V2 TRACE] 7. Realtime websocket connected  url=wss://api.openai.com/v1/realtime?model=gpt-realtime
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [DEBUG] WebSocket open — waiting for session.created
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [INFO] OpenAI Realtime session created {"sessionId":"sess_E17J2dfALkoM3tZAF2brz"}
+[AUDIT] session.update sent:
+{
+  "type": "session.update",
+  "session": {
+    "type": "realtime",
+    "instructions": "You are a professional human sales agent on a LIVE outbound phone call. Every word you say is spoken aloud — no text formatting, no lists, no markdown.\n\nCampaign goal: sales\nBusiness info: We are selling 2BHK and 3BHK apartments in Bangalore starting from 80 lakhs. The project has amenities like swimming pool, gym, and clubhouse. We are offering limited time discounts.\n━━━ KNOWLEDGE BASE — your authoritative source of facts ━━━\nProject Name: Green Valley Residency\r\nLocation: Whitefield, Bangalore\r\nPrice: 2BHK - 80L, 3BHK - 1.1Cr\r\nAmenities: Pool, Gym, Parking, Splash court, Basketball.\r\nOffer: 5% discount till month end\n━━━ END KNOWLEDGE BASE ━━━\nReference talking points (do NOT recite verbatim — adapt to the conversation):\nHi {name}, this is {Philip} from Dream Homes Realty. How are you today?\n\nI’m reaching out because you previously expressed interest in property investments, and I have an exciting opportunity for you. We're offering exquisite 2BHK and 3BHK apartments at Green Valley Residency in Whitefield, Bangalore, starting from just 80 lakhs. \n\nOur project boasts top-notch amenities such as a swimming pool, gym, parking, and more, providing a luxurious lifestyle for our residents. Plus, there's a basketball and splash court to keep the weekends lively!\n\nHere’s the best part—we’re running a special offer with a 5% discount until the end of the month. It’s a fantastic chance to secure your dream home at a great price.\n\nI’d love to provide more details and see how we can help you find the perfect fit. Would you be interested in setting up a time for a quick chat or a visit to our site?\n\nThank you, {name}, and I look forward to helping you find your dream home!\n\n━━━ ABSOLUTE RULES ━━━\n\nRULE 1 — LENGTH:\n• Caller said yes / sure / ok / agreed / great → EXACTLY 1 short sentence.\n• All other inputs → MAXIMUM 2 SHORT sentences.\n• ONE topic per turn. Never combine multiple details in one reply.\n\nRULE 2 — FORMAT:\n• Plain spoken English only. No bullets, no lists, no markdown.\n• Do NOT start with filler openers: \"Great!\", \"Absolutely!\", \"Of course!\", \"Certainly!\".\n• Never re-introduce yourself — the greeting already did this.\n\nRULE 3 — FORBIDDEN PHRASES:\n• Never say \"You're welcome\" unless the caller explicitly said \"thank you\".\n• Never say farewell phrases (\"Have a great day\", \"Goodbye\") — you do not end the call.\n• Never say \"How can I assist / help you?\" — you already know why you're calling.\n• Never say \"I can't access websites\" or \"I don't have access to the internet\" — you are a human agent who knows this product.\n\nRULE 4 — CONVERSATION FLOW:\n• First caller response (usually \"yes\"/\"sure\") → ask ONE qualifying question. Do NOT pitch yet.\n• Turns 2-4 → answer their questions with ONE specific fact from the knowledge base, then ask ONE question.\n• Turns 5+ → offer a concrete next step (site visit, callback, brochure).\n• If the caller wants to schedule → confirm the time, ask for their name, stop pitching.\n• If the caller asks a direct question → ANSWER it with facts. Never deflect.",
+    "audio": {
+      "input": {
+        "format": {
+          "type": "audio/pcmu"
+        },
+        "transcription": {
+          "model": "gpt-4o-transcribe"
+        },
+        "turn_detection": {
+          "type": "server_vad",
+          "threshold": 0.5,
+          "prefix_padding_ms": 300,
+          "silence_duration_ms": 800,
+          "create_response": true
+        }
+      },
+      "output": {
+        "format": {
+          "type": "audio/pcm",
+          "rate": 24000
+        },
+        "voice": "alloy"
+      }
+    }
+  }
+}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TurnDiagnosticsCollector","sessionId":"v2s-1783935108886-000001"}] [DEBUG] TurnDiagnosticsCollector attached {"sessionId":"sess_E17J2dfALkoM3tZAF2brz"}
+[V2 TRACE] 10. Diagnostics attached  sessionId=v2s-1783935108886-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] Collector attached — diagnostics active for this call {"sessionId":"v2s-1783935108886-000001","providerSessionId":"sess_E17J2dfALkoM3tZAF2brz"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] RealtimeBridge connected
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RuntimeIntegration: RealtimeBridge connected
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [INFO] MediaSession initializing {"sessionId":"v2s-1783935108886-000001","callSid":""}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [INFO] MediaSession ready {"initDurationMs":11768}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RuntimeIntegration: MediaSession initialised
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [INFO] MediaSession starting
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [INFO] MediaCoordinator starting orchestrator
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"READY","to":"ACTIVE"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [INFO] MediaCoordinator active
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RuntimeIntegration: MediaSession started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"InboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [INFO] InboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RuntimeIntegration: InboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [INFO] OutboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RuntimeIntegration: OutboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935108886-000001"}] [INFO] SessionSupervisor started {"heartbeatIntervalMs":5000,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RuntimeIntegration: SessionSupervisor started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [INFO] RuntimeIntegration running
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783935108886-000001"}] [INFO] RuntimeIntegration started — [TURN-DIAGNOSTICS] collector is active {"sessionId":"v2s-1783935108886-000001"}
+[AudioCapture] Attached to sessionId=v2s-1783935108886-000001 — waiting for first audio delta
+[V2 TRACE] 11. First inbound audio  sessionId=v2s-1783935108886-000001  bytes=428
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RealtimeBridge: provider VAD speech_started, signalling interruption {"audioStartMs":0}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: barge-in detected, resetting pacing queue
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: pacer reset and transport cleared
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"INTERRUPTED"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"INTERRUPTED","to":"ACTIVE"}
+[V2 TRACE] 13. First AI response received  responseId=resp_E17J3UKGUkx2mwQwnGRLR
+[V2 TRACE] 14. First outbound audio sent  sessionId=v2s-1783935108886-000001  responseId=resp_E17J3UKGUkx2mwQwnGRLR
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=0  responseId=resp_E17J3UKGUkx2mwQwnGRLR  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=0  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][6-OneCallCapture.sendAudio] seq=0  payloadType=string  b64Len=6400  capturedBytes=4800  runningExotelTotal=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=0  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=0  outputFormat=pcm  inputBytes=4800  wireBytes=1600  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioCapture] First response started  responseId=resp_E17J3UKGUkx2mwQwnGRLR
+[AudioTrace][1-OpenAISession] delta #1  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=6400  decodedBytes=4800  runningTotal=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=1  responseId=resp_E17J3UKGUkx2mwQwnGRLR  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=1  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][6-OneCallCapture.sendAudio] seq=1  payloadType=string  b64Len=9600  capturedBytes=7200  runningExotelTotal=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=1  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=1  outputFormat=pcm  inputBytes=7200  wireBytes=2240  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #2  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=9600  decodedBytes=7200  runningTotal=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=2  responseId=resp_E17J3UKGUkx2mwQwnGRLR  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #3  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes=12000  runningTotal=24000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=3  responseId=resp_E17J3UKGUkx2mwQwnGRLR  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #4  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes=12000  runningTotal=36000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=4  responseId=resp_E17J3UKGUkx2mwQwnGRLR  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #5  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes=12000  runningTotal=48000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=2  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][6-OneCallCapture.sendAudio] seq=2  payloadType=string  b64Len=16000  capturedBytes=12000  runningExotelTotal=24000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=2  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=2  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=5  responseId=resp_E17J3UKGUkx2mwQwnGRLR  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #6  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes=12000  runningTotal=60000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=6  responseId=resp_E17J3UKGUkx2mwQwnGRLR  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #7  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes=12000  runningTotal=72000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=7  responseId=resp_E17J3UKGUkx2mwQwnGRLR  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #8  responseId=resp_E17J3UKGUkx2mwQwnGRLR  b64Len=16000  decodedBytes=12000  runningTotal=84000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=3  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][6-OneCallCapture.sendAudio] seq=3  payloadType=string  b64Len=16000  capturedBytes=12000  runningExotelTotal=36000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=3  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=3  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+Saved OpenAI audio:
+  logs/openai-audio.raw  (84000 bytes)
+  logs/openai-audio.wav  (84046 bytes)
+[V2 TRACE] 12. First transcript received  transcript="Hello! Are you currently looking for a 2BHK or a 3B"
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #1  stage=Unknown  latency=1138ms  TTFT=-545ms  tokens=807  cost=$0.00625 {"turnIndex":1,"sessionId":"sess_E17J2dfALkoM3tZAF2brz","stage":"Unknown","totalLatencyMs":1138,"timeToFirstTokenMs":-545,"sttLatencyMs":31,"audioOutputDurationMs":456,"promptSizeChars":0,"audioChunksStreamed":8,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":false,"inputTokens":729,"outputTokens":78,"totalTokens":807,"estimatedCostUsd":0.006246,"errors":[]}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RealtimeBridge: provider VAD speech_started, signalling interruption {"audioStartMs":2484}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: barge-in detected, resetting pacing queue
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: pacer reset and transport cleared
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"INTERRUPTED"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"INTERRUPTED","to":"ACTIVE"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #2  (no transcript) {"turnIndex":2,"sessionId":"sess_E17J2dfALkoM3tZAF2brz","stage":"Unknown","totalLatencyMs":null,"timeToFirstTokenMs":null,"sttLatencyMs":null,"audioOutputDurationMs":null,"promptSizeChars":0,"audioChunksStreamed":0,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":true,"inputTokens":0,"outputTokens":0,"totalTokens":0,"estimatedCostUsd":0,"errors":[]}
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=8  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=8  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][6-OneCallCapture.sendAudio] seq=8  payloadType=string  b64Len=6400  capturedBytes=4800  runningExotelTotal=40800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=8  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=8  outputFormat=pcm  inputBytes=4800  wireBytes=1600  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioCapture] Second response started — first response audio complete
+[AudioCapture] ══════════════════════════════════════════════
+[AudioCapture] Flush reason       : second_response_started
+[AudioCapture] sessionId          : v2s-1783935108886-000001
+[AudioCapture] logs/openai-audio.raw — 84000 bytes
+[AudioCapture] logs/exotel-audio.raw — 40800 bytes
+[AudioCapture] Byte-for-byte identical: false
+[AudioCapture] ══════════════════════════════════════════════
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=9  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=10  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=9  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=9  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=9  outputFormat=pcm  inputBytes=7200  wireBytes=2240  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=11  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=12  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=10  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=10  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=10  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=13  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=14  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=15  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=11  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=11  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=11  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=16  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=17  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=18  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=19  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=20  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=12  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=12  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=12  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=21  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=22  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=23  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=13  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=13  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=13  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=24  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=25  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=26  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=27  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=28  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=29  responseId=resp_E17J5m6yZOsNX3igJbaFm  payloadType=string  b64Len=32000  decodedBytes~=24000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J5m6yZOsNX3igJbaFm  b64Len=32000  decodedBytes~=24000  changed=false  concatenated=false  copied=false  merged=false
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #3  stage=Unknown  latency=—ms  TTFT=484ms  tokens=1024  cost=$0.00886 {"turnIndex":3,"sessionId":"sess_E17J2dfALkoM3tZAF2brz","stage":"Unknown","totalLatencyMs":null,"timeToFirstTokenMs":484,"sttLatencyMs":1680,"audioOutputDurationMs":1178,"promptSizeChars":0,"audioChunksStreamed":22,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":false,"inputTokens":873,"outputTokens":151,"totalTokens":1024,"estimatedCostUsd":0.008862,"errors":[]}
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=14  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=14  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=14  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RealtimeBridge: provider VAD speech_started, signalling interruption {"audioStartMs":7924}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: barge-in detected, resetting pacing queue
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: pacer reset and transport cleared
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"INTERRUPTED"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"INTERRUPTED","to":"ACTIVE"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #4  (no transcript) {"turnIndex":4,"sessionId":"sess_E17J2dfALkoM3tZAF2brz","stage":"Unknown","totalLatencyMs":null,"timeToFirstTokenMs":null,"sttLatencyMs":null,"audioOutputDurationMs":null,"promptSizeChars":0,"audioChunksStreamed":0,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":false,"inputTokens":873,"outputTokens":151,"totalTokens":1024,"estimatedCostUsd":0.008862,"errors":[]}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935108886-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":5000,"inactivityTimeoutMs":30000}
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=30  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=30  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=30  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=30  outputFormat=pcm  inputBytes=4800  wireBytes=1600  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=31  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=32  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=31  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=31  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=31  outputFormat=pcm  inputBytes=7200  wireBytes=2240  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=33  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=34  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=32  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=32  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=32  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=35  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=36  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=37  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=33  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=33  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=33  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=38  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=39  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=40  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=41  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=34  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=34  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=34  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=42  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=43  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=44  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=45  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=35  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=35  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=35  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=46  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=47  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=48  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=49  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=50  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=51  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=36  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=36  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=36  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=52  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=53  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=54  responseId=resp_E17J7n56l68nBdr3r9Mfj  payloadType=string  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17J7n56l68nBdr3r9Mfj  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #5  stage=Unknown  latency=—ms  TTFT=336ms  tokens=1148  cost=$0.00984 {"turnIndex":5,"sessionId":"sess_E17J2dfALkoM3tZAF2brz","stage":"Unknown","totalLatencyMs":null,"timeToFirstTokenMs":336,"sttLatencyMs":1726,"audioOutputDurationMs":1376,"promptSizeChars":0,"audioChunksStreamed":25,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":false,"inputTokens":984,"outputTokens":164,"totalTokens":1148,"estimatedCostUsd":0.009840000000000002,"errors":[]}
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=37  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=37  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=37  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=38  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=38  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=38  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=39  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=39  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=39  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=40  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=40  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=40  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=41  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=41  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=41  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=42  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=42  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=42  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=43  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=43  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=43  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=44  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=44  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=44  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=45  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=45  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=45  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=46  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=46  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=46  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=47  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=47  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=47  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=48  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=48  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=48  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=49  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=49  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=49  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=50  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=50  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=50  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935108886-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":10001,"inactivityTimeoutMs":30000}
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=51  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=51  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=51  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=52  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=52  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=52  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=53  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=53  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=53  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=54  payloadType=string  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=54  payloadType=string  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=54  outputFormat=pcm  inputBytes=28800  wireBytes=9600  remainder=160  websocketMessagesPerDelta=1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RealtimeBridge: provider VAD speech_started, signalling interruption {"audioStartMs":24276}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: barge-in detected, resetting pacing queue
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: pacer reset and transport cleared
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"INTERRUPTED"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"INTERRUPTED","to":"ACTIVE"}
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=55  responseId=resp_E17JGuDUW5h1IfOBz5UyQ  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=55  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=55  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=55  outputFormat=pcm  inputBytes=4800  wireBytes=1600  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JGuDUW5h1IfOBz5UyQ  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=56  responseId=resp_E17JGuDUW5h1IfOBz5UyQ  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JGuDUW5h1IfOBz5UyQ  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RealtimeBridge: provider VAD speech_started, signalling interruption {"audioStartMs":28084}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: barge-in detected, resetting pacing queue
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: pacer reset and transport cleared
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"INTERRUPTED"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"INTERRUPTED","to":"ACTIVE"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #6  stage=Unknown  latency=1886ms  TTFT=369ms  tokens=1088  cost=$0.00689 {"turnIndex":6,"sessionId":"sess_E17J2dfALkoM3tZAF2brz","stage":"Unknown","totalLatencyMs":1886,"timeToFirstTokenMs":369,"sttLatencyMs":431,"audioOutputDurationMs":36,"promptSizeChars":0,"audioChunksStreamed":2,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":true,"inputTokens":1068,"outputTokens":20,"totalTokens":1088,"estimatedCostUsd":0.006888000000000001,"errors":[]}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935108886-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":15001,"inactivityTimeoutMs":30000}
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=57  responseId=resp_E17JHDQBJCUyqYJnlhTkI  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=57  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=57  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=57  outputFormat=pcm  inputBytes=4800  wireBytes=1600  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JHDQBJCUyqYJnlhTkI  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=58  responseId=resp_E17JHDQBJCUyqYJnlhTkI  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JHDQBJCUyqYJnlhTkI  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=59  responseId=resp_E17JHDQBJCUyqYJnlhTkI  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JHDQBJCUyqYJnlhTkI  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=58  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=58  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=58  outputFormat=pcm  inputBytes=7200  wireBytes=2240  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=60  responseId=resp_E17JHDQBJCUyqYJnlhTkI  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JHDQBJCUyqYJnlhTkI  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=61  responseId=resp_E17JHDQBJCUyqYJnlhTkI  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JHDQBJCUyqYJnlhTkI  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=59  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=59  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=59  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RealtimeBridge: provider VAD speech_started, signalling interruption {"audioStartMs":30420}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: barge-in detected, resetting pacing queue
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: pacer reset and transport cleared
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"INTERRUPTED"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"INTERRUPTED","to":"ACTIVE"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #7  stage=Unknown  latency=—ms  TTFT=437ms  tokens=1019  cost=$0.00694 {"turnIndex":7,"sessionId":"sess_E17J2dfALkoM3tZAF2brz","stage":"Unknown","totalLatencyMs":null,"timeToFirstTokenMs":437,"sttLatencyMs":704,"audioOutputDurationMs":207,"promptSizeChars":0,"audioChunksStreamed":5,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":true,"inputTokens":973,"outputTokens":46,"totalTokens":1019,"estimatedCostUsd":0.006942,"errors":[]}
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=62  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=62  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=62  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=62  outputFormat=pcm  inputBytes=4800  wireBytes=1600  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=63  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=64  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=63  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=63  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=63  outputFormat=pcm  inputBytes=7200  wireBytes=2240  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=65  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=66  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=64  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=64  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=64  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=67  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=68  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=69  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=70  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=65  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=65  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=65  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=71  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=72  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=73  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=74  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=75  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=66  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=66  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=66  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=76  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=77  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=78  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=79  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=80  responseId=resp_E17JIIYxHogTzsf6YzgCD  payloadType=string  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JIIYxHogTzsf6YzgCD  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #8  stage=Unknown  latency=—ms  TTFT=382ms  tokens=1158  cost=$0.00932 {"turnIndex":8,"sessionId":"sess_E17J2dfALkoM3tZAF2brz","stage":"Unknown","totalLatencyMs":null,"timeToFirstTokenMs":382,"sttLatencyMs":1321,"audioOutputDurationMs":921,"promptSizeChars":0,"audioChunksStreamed":19,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":false,"inputTokens":1026,"outputTokens":132,"totalTokens":1158,"estimatedCostUsd":0.009324,"errors":[]}
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=67  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=67  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=67  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=68  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=68  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=68  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=69  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=69  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=69  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=70  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=70  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=70  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=71  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=71  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=71  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=72  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=72  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=72  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=73  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=73  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=73  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=74  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=74  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=74  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=75  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=75  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=75  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=76  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=76  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=76  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=77  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=77  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=77  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935108886-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":20001,"inactivityTimeoutMs":30000}
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=78  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=78  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=78  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=79  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=79  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=79  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=80  payloadType=string  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=80  payloadType=string  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=80  outputFormat=pcm  inputBytes=28800  wireBytes=9600  remainder=160  websocketMessagesPerDelta=1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [DEBUG] RealtimeBridge: provider VAD speech_started, signalling interruption {"audioStartMs":45300}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: barge-in detected, resetting pacing queue
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [DEBUG] OutboundAudioFlow: pacer reset and transport cleared
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"INTERRUPTED"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"INTERRUPTED","to":"ACTIVE"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935108886-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":25001,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935108886-000001"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":30001,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935108886-000001"}] [WARN] SessionSupervisor: inactivity timeout exceeded, completing session {"idleMs":30001,"threshold":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935108886-000001"}] [INFO] SessionSupervisor stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [INFO] MediaCoordinator requesting completion {"reason":"session_timeout"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935108886-000001","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"COMPLETING"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935108886-000001"}] [ERROR] SessionSupervisor: mediaSession.complete() failed {"reason":"session_timeout","error":"Error: SessionFactory stub: getContext() not implemented","sessionId":"v2s-1783935108886-000001"}
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=81  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=81  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=81  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=81  outputFormat=pcm  inputBytes=4800  wireBytes=1600  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=82  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=83  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=82  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=82  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=82  outputFormat=pcm  inputBytes=7200  wireBytes=2240  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=84  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=85  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=83  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=83  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=83  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=86  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=87  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=88  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=89  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=90  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=84  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=84  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=84  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=91  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=92  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=93  responseId=resp_E17JWeqbAOLku4UeKlsmf  payloadType=string  b64Len=35200  decodedBytes~=26400  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17JWeqbAOLku4UeKlsmf  b64Len=35200  decodedBytes~=26400  changed=false  concatenated=false  copied=false  merged=false
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] TURN #9  stage=Unknown  latency=7591ms  TTFT=508ms  tokens=1355  cost=$0.00980 {"turnIndex":9,"sessionId":"sess_E17J2dfALkoM3tZAF2brz","stage":"Unknown","totalLatencyMs":7591,"timeToFirstTokenMs":508,"sttLatencyMs":1138,"audioOutputDurationMs":610,"promptSizeChars":0,"audioChunksStreamed":13,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":false,"inputTokens":1262,"outputTokens":93,"totalTokens":1355,"estimatedCostUsd":0.009804,"errors":[]}
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=85  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=85  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=85  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=86  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=86  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=86  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=87  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=87  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=87  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=88  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=88  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=88  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=89  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=89  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=89  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=90  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=90  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=90  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=91  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=91  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=91  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=92  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=92  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=92  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=93  payloadType=string  b64Len=35200  decodedBytes~=26400  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=93  payloadType=string  b64Len=35200  decodedBytes~=26400  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=93  outputFormat=pcm  inputBytes=26400  wireBytes=8960  remainder=0  websocketMessagesPerDelta=1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"ExotelAdapter"}] [INFO] Exotel stop received — call ended {"sessionId":"v2s-1783935108886-000001","callSid":""}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TransportGateway"}] [INFO] Transport connection closed {"sessionId":"v2s-1783935108886-000001","callSid":"","code":1006,"reason":"","clean":false}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783935108886-000001"}] [INFO] Transport disconnected — stopping RuntimeIntegration {"sessionId":"v2s-1783935108886-000001","code":1006,"reason":""}
+[V2 TRACE] 15. Runtime stopping  sessionId=v2s-1783935108886-000001  reason=transport_disconnected
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [INFO] RuntimeIntegration stopping {"reason":"transport_disconnected"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"InboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [INFO] InboundAudioFlow stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935108886-000001"}] [INFO] OutboundAudioFlow stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] RealtimeBridge disconnecting
+[V2 TRACE] 16. Diagnostics detached  sessionId=v2s-1783935108886-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TurnDiagnosticsCollector","sessionId":"v2s-1783935108886-000001"}] [DEBUG] TurnDiagnosticsCollector detached
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] ====================================================
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] CALL SUMMARY
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Session ID         : v2s-1783935108886-000001
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Provider Session   : sess_E17J2dfALkoM3tZAF2brz
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Duration           : 53.6s
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Turns              : 9
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Avg Latency (E2E)  : 3538 ms
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Avg TTFT           : 282 ms
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Avg STT Latency    : 1004 ms
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Avg Response Dur   : 683 ms
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Interruptions      : 3
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Stage Progression  : Unknown
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Token Usage        : in=7,788  out=835  total=8,623
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Estimated Cost     : $0.06677
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS]   Errors             : none
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] ====================================================
+[V2 TRACE] 17. JSON diagnostics written  sessionId=v2s-1783935108886-000001  file=call_2026-07-13T09-32-54-279Z_v2s-1783935108886-000001.json
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935108886-000001"}] [INFO] [TURN-DIAGNOSTICS] Call summary persisted to JSON {"filepath":"/home/runner/workspace/logs/call-diagnostics/call_2026-07-13T09-32-54-279Z_v2s-1783935108886-000001.json"}
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [INFO] OpenAI Realtime session closing
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935108886-000001"}] [INFO] RuntimeIntegration stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [INFO] WebSocket closed {"code":1000}
+[TEST-CALL]
+originalUrl = /test-call?phone=9893328298&campaignId=69bd5558a57e122161197eab
+-------------------------
+req.url = /test-call?phone=9893328298&campaignId=69bd5558a57e122161197eab
+-------------------------
+req.query = {"phone":"9893328298","campaignId":"69bd5558a57e122161197eab"}
+-------------------------
+campaignId = 69bd5558a57e122161197eab
+-------------------------
+phone = 9893328298
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [INFO] Creating V2 session {"campaignId":"69bd5558a57e122161197eab","phone":"9893328298","callSid":null}
+[V2 TRACE] 1. Session created  sessionId=v2s-1783935176571-000002  campaignId=69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionFactory"}] [DEBUG] Building session dependencies {"sessionId":"v2s-1783935176571-000002","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TransportGateway"}] [INFO] Transport adapter registered {"name":"exotel"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionFactory"}] [INFO] SessionContext created {"sessionId":"v2s-1783935176571-000002","campaignId":"69bd5558a57e122161197eab","callSid":null,"phone":"9893328298","mediaSession":"present"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Session registered {"sessionId":"v2s-1783935176571-000002","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Phone index updated {"sessionId":"v2s-1783935176571-000002","phone":"9893328298"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [INFO] V2 session created {"sessionId":"v2s-1783935176571-000002","campaignId":"69bd5558a57e122161197eab"}
+[test-call] V2 session created: v2s-1783935176571-000002
+Calling number: 9893328298
+[Exotel] Updating app (1213707) stream URL → wss://9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev/exotel-stream
+[Exotel] PUT Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] POST Apps/1213707 failed: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <RestException>\n  <Status>405</Status>\n  <Message>Method not allowed because no such controller</Message>\n </RestException>\n</TwilioResponse>\n"
+[Exotel] ⚠️  Could not auto-update Exotel app stream URL.
+  → Open Exotel dashboard → App Builder → app ID 1213707
+  → Set the Stream / WebSocket URL to:
+      wss://9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev/exotel-stream
+CUSTOMER = 9893328298
+CALLERID = +918047359287
+[Exotel] App URL: http://my.exotel.com/nijvox1/exoml/start_voice/1213707
+[Exotel] WSS URL : wss://9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev/exotel-stream ← update this in Exotel dashboard
+[Exotel] Call response: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TwilioResponse>\n <Call>\n  <Sid>de153d0fe18e02442d381395077c1a7d</Sid>\n  <ParentCallSid/>\n  <DateCreated>2026-07-13 15:02:57</DateCreated>\n  <DateUpdated>2026-07-13 15:02:57</DateUpdated>\n  <AccountSid>nijvox1</AccountSid>\n  <To>08047359287</To>\n  <From>09893328298</From>\n  <PhoneNumberSid>08047359287</PhoneNumberSid>\n  <Status>in-progress</Status>\n  <StartTime>2026-07-13 15:02:57</StartTime>\n  <EndTime/>\n  <Duration/>\n  <Price/>\n  <Direction>outbound-api</Direction>\n  <AnsweredBy/>\n  <ForwardedFrom/>\n  <CallerName/>\n  <Uri>/v1/Accounts/nijvox1/Calls/de153d0fe18e02442d381395077c1a7d</Uri>\n  <RecordingUrl/>\n </Call>\n</TwilioResponse>\n"
+[Exotel] CallSid: de153d0fe18e02442d381395077c1a7d
+[test-call] callSidMap: de153d0fe18e02442d381395077c1a7d → 69bd5558a57e122161197eab
+[test-call] phoneCallMap: 9893328298 → 69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [DEBUG] Attaching callSid {"sessionId":"v2s-1783935176571-000002","callSid":"de153d0fe18e02442d381395077c1a7d"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] CallSid index updated {"sessionId":"v2s-1783935176571-000002","callSid":"de153d0fe18e02442d381395077c1a7d"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2SessionCoordinator"}] [DEBUG] Attaching phone {"sessionId":"v2s-1783935176571-000002","phone":"9893328298"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionRegistry"}] [DEBUG] Phone index updated {"sessionId":"v2s-1783935176571-000002","phone":"9893328298"}
+[test-call] V2 session v2s-1783935176571-000002 — callSid+phone attached
+9:33:05 AM [ws] [upgrade] path=/exotel-stream from=127.0.0.1 origin=none host=9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev
+9:33:05 AM [ws] [upgrade] routing /exotel-stream to exotel handler
+9:33:05 AM [ws] [/exotel-stream] Connection from [127.0.0.1] campaignId=none  total=1
+9:33:05 AM [ws] [V2 ROUTER] Awaiting Exotel 'start' event to resolve session
+9:33:05 AM [ws] [V2 ROUTER] 'connected' received — waiting for 'start'
+9:33:05 AM [ws] [V2 ROUTER] rawCallSid=de153d0fe18e02442d381395077c1a7d normalizedCallSid=de153d0fe18e02442d381395077c1a7d rawPhone=09893328298 normalizedPhone=9893328298 lookupMethod=callSid matchedSession=v2s-1783935176571-000002 routing=V2
+[V2 TRACE] 2. Router matched session  sessionId=v2s-1783935176571-000002
+9:33:05 AM [ws] [V2 ROUTER] Routing to V2 — sessionId=v2s-1783935176571-000002 campaignId=69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TransportGateway"}] [INFO] Transport connection accepted {"sessionId":"v2s-1783935176571-000002","callSid":"","campaignId":"69bd5558a57e122161197eab","adapterName":"exotel","remoteAddress":"127.0.0.1"}
+[V2 TRACE] 3. Transport accepted  sessionId=v2s-1783935176571-000002
+9:33:05 AM [ws] [V2 ROUTER] Socket owned by TransportGateway — sessionId=v2s-1783935176571-000002
+[V2 TRACE] 4. activateV2Session() entered  sessionId=v2s-1783935176571-000002  campaignId=69bd5558a57e122161197eab
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783935176571-000002"}] [INFO] Activating V2 session — loading campaign and opening provider session {"sessionId":"v2s-1783935176571-000002","campaignId":"69bd5558a57e122161197eab"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"ExotelAdapter"}] [DEBUG] Exotel connected handshake received {"sessionId":"v2s-1783935176571-000002"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"ExotelAdapter"}] [INFO] Exotel stream started {"sessionId":"v2s-1783935176571-000002","callSid":"","streamSid":"37cc51ff60045610c11f80a9bc391a7d","encoding":"base64","sampleRate":8000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783935176571-000002"}] [INFO] Campaign instructions built {"campaignId":"69bd5558a57e122161197eab","goal":"sales","hasKB":true,"hasScript":true,"totalChars":3034}
+[V2 TRACE] 5. OpenAIRealtimeProvider.openSession()  sessionId=v2s-1783935176571-000002
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime"}] [DEBUG] OpenAI Realtime session created (legacy mode — no policy context)
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783935176571-000002"}] [INFO] Provider session opened (unconnected — bridge will connect it) {"sessionId":"v2s-1783935176571-000002","instructionsChars":3034}
+[V2 TRACE] 8. RuntimeIntegration.start()  sessionId=v2s-1783935176571-000002
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [INFO] RuntimeIntegration starting
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [DEBUG] RuntimeIntegration: AudioEngine started
+[V2 TRACE] 9. RealtimeBridge.connect()  sessionId=v2s-1783935176571-000002
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] RealtimeBridge connecting to provider
+[V2 TRACE] 6. OpenAIRealtimeSession.connect()  state=idle
+[V2 TRACE] 7. Realtime websocket connected  url=wss://api.openai.com/v1/realtime?model=gpt-realtime
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [DEBUG] WebSocket open — waiting for session.created
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [INFO] OpenAI Realtime session created {"sessionId":"sess_E17K66GvzjzCWtRjc7Ehi"}
+[AUDIT] session.update sent:
+{
+  "type": "session.update",
+  "session": {
+    "type": "realtime",
+    "instructions": "You are a professional human sales agent on a LIVE outbound phone call. Every word you say is spoken aloud — no text formatting, no lists, no markdown.\n\nCampaign goal: sales\nBusiness info: We are selling 2BHK and 3BHK apartments in Bangalore starting from 80 lakhs. The project has amenities like swimming pool, gym, and clubhouse. We are offering limited time discounts.\n━━━ KNOWLEDGE BASE — your authoritative source of facts ━━━\nProject Name: Green Valley Residency\r\nLocation: Whitefield, Bangalore\r\nPrice: 2BHK - 80L, 3BHK - 1.1Cr\r\nAmenities: Pool, Gym, Parking, Splash court, Basketball.\r\nOffer: 5% discount till month end\n━━━ END KNOWLEDGE BASE ━━━\nReference talking points (do NOT recite verbatim — adapt to the conversation):\nHi {name}, this is {Philip} from Dream Homes Realty. How are you today?\n\nI’m reaching out because you previously expressed interest in property investments, and I have an exciting opportunity for you. We're offering exquisite 2BHK and 3BHK apartments at Green Valley Residency in Whitefield, Bangalore, starting from just 80 lakhs. \n\nOur project boasts top-notch amenities such as a swimming pool, gym, parking, and more, providing a luxurious lifestyle for our residents. Plus, there's a basketball and splash court to keep the weekends lively!\n\nHere’s the best part—we’re running a special offer with a 5% discount until the end of the month. It’s a fantastic chance to secure your dream home at a great price.\n\nI’d love to provide more details and see how we can help you find the perfect fit. Would you be interested in setting up a time for a quick chat or a visit to our site?\n\nThank you, {name}, and I look forward to helping you find your dream home!\n\n━━━ ABSOLUTE RULES ━━━\n\nRULE 1 — LENGTH:\n• Caller said yes / sure / ok / agreed / great → EXACTLY 1 short sentence.\n• All other inputs → MAXIMUM 2 SHORT sentences.\n• ONE topic per turn. Never combine multiple details in one reply.\n\nRULE 2 — FORMAT:\n• Plain spoken English only. No bullets, no lists, no markdown.\n• Do NOT start with filler openers: \"Great!\", \"Absolutely!\", \"Of course!\", \"Certainly!\".\n• Never re-introduce yourself — the greeting already did this.\n\nRULE 3 — FORBIDDEN PHRASES:\n• Never say \"You're welcome\" unless the caller explicitly said \"thank you\".\n• Never say farewell phrases (\"Have a great day\", \"Goodbye\") — you do not end the call.\n• Never say \"How can I assist / help you?\" — you already know why you're calling.\n• Never say \"I can't access websites\" or \"I don't have access to the internet\" — you are a human agent who knows this product.\n\nRULE 4 — CONVERSATION FLOW:\n• First caller response (usually \"yes\"/\"sure\") → ask ONE qualifying question. Do NOT pitch yet.\n• Turns 2-4 → answer their questions with ONE specific fact from the knowledge base, then ask ONE question.\n• Turns 5+ → offer a concrete next step (site visit, callback, brochure).\n• If the caller wants to schedule → confirm the time, ask for their name, stop pitching.\n• If the caller asks a direct question → ANSWER it with facts. Never deflect.",
+    "audio": {
+      "input": {
+        "format": {
+          "type": "audio/pcmu"
+        },
+        "transcription": {
+          "model": "gpt-4o-transcribe"
+        },
+        "turn_detection": {
+          "type": "server_vad",
+          "threshold": 0.5,
+          "prefix_padding_ms": 300,
+          "silence_duration_ms": 800,
+          "create_response": true
+        }
+      },
+      "output": {
+        "format": {
+          "type": "audio/pcm",
+          "rate": 24000
+        },
+        "voice": "alloy"
+      }
+    }
+  }
+}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TurnDiagnosticsCollector","sessionId":"v2s-1783935176571-000002"}] [DEBUG] TurnDiagnosticsCollector attached {"sessionId":"sess_E17K66GvzjzCWtRjc7Ehi"}
+[V2 TRACE] 10. Diagnostics attached  sessionId=v2s-1783935176571-000002
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS] Collector attached — diagnostics active for this call {"sessionId":"v2s-1783935176571-000002","providerSessionId":"sess_E17K66GvzjzCWtRjc7Ehi"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] RealtimeBridge connected
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [DEBUG] RuntimeIntegration: RealtimeBridge connected
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935176571-000002","callSid":""}] [INFO] MediaSession initializing {"sessionId":"v2s-1783935176571-000002","callSid":""}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935176571-000002","callSid":""}] [INFO] MediaSession ready {"initDurationMs":10557}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [DEBUG] RuntimeIntegration: MediaSession initialised
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935176571-000002","callSid":""}] [INFO] MediaSession starting
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935176571-000002","callSid":""}] [INFO] MediaCoordinator starting orchestrator
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935176571-000002","callSid":""}] [DEBUG] MediaSession state transition {"from":"READY","to":"ACTIVE"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935176571-000002","callSid":""}] [INFO] MediaCoordinator active
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [DEBUG] RuntimeIntegration: MediaSession started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"InboundAudioFlow","sessionId":"v2s-1783935176571-000002"}] [INFO] InboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [DEBUG] RuntimeIntegration: InboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935176571-000002"}] [INFO] OutboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [DEBUG] RuntimeIntegration: OutboundAudioFlow started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935176571-000002"}] [INFO] SessionSupervisor started {"heartbeatIntervalMs":5000,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [DEBUG] RuntimeIntegration: SessionSupervisor started
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [INFO] RuntimeIntegration running
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783935176571-000002"}] [INFO] RuntimeIntegration started — [TURN-DIAGNOSTICS] collector is active {"sessionId":"v2s-1783935176571-000002"}
+[V2 TRACE] 11. First inbound audio  sessionId=v2s-1783935176571-000002  bytes=428
+[V2 TRACE] 13. First AI response received  responseId=resp_E17K7JgicOLvanrk1nV7r
+[V2 TRACE] 14. First outbound audio sent  sessionId=v2s-1783935176571-000002  responseId=resp_E17K7JgicOLvanrk1nV7r
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=0  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=0  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=0  payloadType=string  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=0  outputFormat=pcm  inputBytes=4800  wireBytes=1600  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=6400  decodedBytes~=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #1  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=6400  decodedBytes=4800  runningTotal=4800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=1  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #2  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=9600  decodedBytes=7200  runningTotal=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=1  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=1  payloadType=string  b64Len=9600  decodedBytes~=7200  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=1  outputFormat=pcm  inputBytes=7200  wireBytes=2240  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=2  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #3  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=24000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=3  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #4  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=36000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=4  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #5  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=48000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=2  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=2  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=2  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=5  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #6  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=60000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=6  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #7  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=72000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=7  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #8  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=84000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=3  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=3  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=3  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=8  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #9  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=96000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=9  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #10  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=108000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=10  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #11  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=120000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=11  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #12  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=132000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=12  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #13  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=144000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=13  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #14  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=156000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=4  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=4  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=4  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=14  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #15  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=168000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=15  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #16  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=180000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=16  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #17  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=192000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=17  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #18  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=204000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=5  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=5  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=5  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=18  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #19  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=216000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=19  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #20  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=228000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=20  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #21  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=240000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=21  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #22  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=252000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=22  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #23  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=264000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=23  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #24  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=276000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=24  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #25  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=288000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=6  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=6  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=6  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=25  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #26  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=300000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=26  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #27  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=16000  decodedBytes=12000  runningTotal=312000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3a-OutboundFlow._buildChunk] seq=27  responseId=resp_E17K7JgicOLvanrk1nV7r  payloadType=string  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][3b-OutboundFlow.tickOutbound] action=send_now  chunksReleased=1  bufferDepth=0  bufferDurationMs=0  note="engine may hold chunks until minBufferMs satisfied"
+[AudioTrace][2-RealtimeBridge] bridge.audio_ready  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][1-OpenAISession] delta #28  responseId=resp_E17K7JgicOLvanrk1nV7r  b64Len=38400  decodedBytes=28800  runningTotal=340800  changed=false  concatenated=false  copied=false  merged=false
+Saved OpenAI audio:
+  logs/openai-audio.raw  (340800 bytes)
+  logs/openai-audio.wav  (340846 bytes)
+[V2 TRACE] 12. First transcript received  transcript="Hello, thank you for taking the call. Are you currently looking for a 2BHK or a "
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS] TURN #0  stage=Unknown  latency=—ms  TTFT=251ms  tokens=912  cost=$0.00877 {"turnIndex":0,"sessionId":"sess_E17K66GvzjzCWtRjc7Ehi","stage":"Unknown","totalLatencyMs":null,"timeToFirstTokenMs":251,"sttLatencyMs":null,"audioOutputDurationMs":1364,"promptSizeChars":0,"audioChunksStreamed":28,"stageAdvanced":false,"objectionDetected":false,"memoryUpdated":false,"interruptionOccurred":false,"inputTokens":729,"outputTokens":183,"totalTokens":912,"estimatedCostUsd":0.008766,"errors":[]}
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=7  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=7  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=7  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=8  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=8  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=8  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=9  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=9  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=9  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=10  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=10  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=10  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=11  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=11  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=11  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=12  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=12  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=12  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=13  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=13  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=13  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=14  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=14  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=14  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=15  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=15  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=15  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=16  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=16  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=16  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935176571-000002"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":5000,"inactivityTimeoutMs":30000}
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=17  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=17  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=17  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=18  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=18  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=18  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=19  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=19  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=19  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=20  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=20  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=20  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=21  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=21  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=21  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=22  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=22  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=22  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=23  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=23  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=23  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=24  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=24  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=24  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=25  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=25  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=25  outputFormat=pcm  inputBytes=12000  wireBytes=3840  remainder=160  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=26  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=26  payloadType=string  b64Len=16000  decodedBytes~=12000  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=26  outputFormat=pcm  inputBytes=12000  wireBytes=4160  remainder=0  websocketMessagesPerDelta=1
+[AudioTrace][3c-OutboundFlow._sendNext→transport] seq=27  payloadType=string  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[AudioTrace][4-TransportGateway.sendAudio] seq=27  payloadType=string  b64Len=38400  decodedBytes~=28800  changed=false  concatenated=false  copied=false  merged=false
+[ExotelOutbound] seq=27  outputFormat=pcm  inputBytes=28800  wireBytes=9600  remainder=0  websocketMessagesPerDelta=1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935176571-000002"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":10000,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935176571-000002"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":15000,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935176571-000002"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":20000,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935176571-000002"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":25000,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935176571-000002"}] [DEBUG] SessionSupervisor heartbeat {"sessionState":"ACTIVE","idleMs":30000,"inactivityTimeoutMs":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935176571-000002"}] [WARN] SessionSupervisor: inactivity timeout exceeded, completing session {"idleMs":30000,"threshold":30000}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935176571-000002"}] [INFO] SessionSupervisor stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935176571-000002","callSid":""}] [INFO] MediaCoordinator requesting completion {"reason":"session_timeout"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"MediaSession","sessionId":"v2s-1783935176571-000002","callSid":""}] [DEBUG] MediaSession state transition {"from":"ACTIVE","to":"COMPLETING"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"SessionSupervisor","sessionId":"v2s-1783935176571-000002"}] [ERROR] SessionSupervisor: mediaSession.complete() failed {"reason":"session_timeout","error":"Error: SessionFactory stub: getContext() not implemented","sessionId":"v2s-1783935176571-000002"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"ExotelAdapter"}] [INFO] Exotel stop received — call ended {"sessionId":"v2s-1783935176571-000002","callSid":""}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TransportGateway"}] [INFO] Transport connection closed {"sessionId":"v2s-1783935176571-000002","callSid":"","code":1006,"reason":"","clean":false}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"V2CallActivator","sessionId":"v2s-1783935176571-000002"}] [INFO] Transport disconnected — stopping RuntimeIntegration {"sessionId":"v2s-1783935176571-000002","code":1006,"reason":""}
+[V2 TRACE] 15. Runtime stopping  sessionId=v2s-1783935176571-000002  reason=transport_disconnected
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [INFO] RuntimeIntegration stopping {"reason":"transport_disconnected"}
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"InboundAudioFlow","sessionId":"v2s-1783935176571-000002"}] [INFO] InboundAudioFlow stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"OutboundAudioFlow","sessionId":"v2s-1783935176571-000002"}] [INFO] OutboundAudioFlow stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] RealtimeBridge disconnecting
+[V2 TRACE] 16. Diagnostics detached  sessionId=v2s-1783935176571-000002
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"TurnDiagnosticsCollector","sessionId":"v2s-1783935176571-000002"}] [DEBUG] TurnDiagnosticsCollector detached
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS] ====================================================
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS] CALL SUMMARY
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Session ID         : v2s-1783935176571-000002
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Provider Session   : sess_E17K66GvzjzCWtRjc7Ehi
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Duration           : 40.0s
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Turns              : 1
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Avg Latency (E2E)  : —
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Avg TTFT           : 251 ms
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Avg STT Latency    : —
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Avg Response Dur   : 1364 ms
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Interruptions      : 0
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Stage Progression  : Unknown
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Token Usage        : in=729  out=183  total=912
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Estimated Cost     : $0.00877
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS]   Errors             : none
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS] ====================================================
+[V2 TRACE] 17. JSON diagnostics written  sessionId=v2s-1783935176571-000002  file=call_2026-07-13T09-33-47-165Z_v2s-1783935176571-000002.json
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RealtimeBridge","sessionId":"v2s-1783935176571-000002"}] [INFO] [TURN-DIAGNOSTICS] Call summary persisted to JSON {"filepath":"/home/runner/workspace/logs/call-diagnostics/call_2026-07-13T09-33-47-165Z_v2s-1783935176571-000002.json"}
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [INFO] OpenAI Realtime session closing
+[V2Migration {"subsystem":"V2SessionCoordinator","component":"RuntimeIntegration","sessionId":"v2s-1783935176571-000002"}] [INFO] RuntimeIntegration stopped
+[V2Migration {"subsystem":"V2SessionCoordinator","provider":"openai-realtime","component":"OpenAIRealtimeSession"}] [INFO] WebSocket closed {"code":1000}
+10:38:39 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev host=9821a93b-1cc1-4644-993e-d65604dc4af5-00-sd2uzxu1rwqk.sisko.replit.dev
+10:38:39 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:38:42 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
