@@ -103,6 +103,8 @@ Read the code-templates reference file for full code file templates to use durin
     await initStripe();
     ```
 
+    Reading `process.env.REPLIT_DOMAINS` here is correct because it runs inside the app at runtime: in a deployment it resolves to the production domain, and in the dev workspace it registers a dev-domain webhook for local testing. Do not copy this pattern into shell commands or agent-side logic to discover the production URL — use `getDeploymentInfo()` from the deployment skill for that.
+
 4. Register Webhook Route in index.ts
 
     **Critical:** Register the webhook route BEFORE `express.json()` middleware. See the indexTemplate for the correct pattern:

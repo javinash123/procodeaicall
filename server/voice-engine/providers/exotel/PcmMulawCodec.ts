@@ -78,6 +78,31 @@ export function encodeMulawSample(sample: number): number {
 }
 
 /**
+ * Decodes a buffer of G.711 μ-law bytes (as received from Exotel) into a
+ * buffer of raw 16-bit little-endian PCM samples — two output bytes per
+ * input byte.
+ *
+ * Standard ITU-T G.711 μ-law expansion:
+ *   1. Complement all bits (μ-law convention stores inverted bits).
+ *   2. Extract sign, 3-bit exponent, and 4-bit mantissa.
+ *   3. Reconstruct the linear PCM value and restore the sign.
+ */
+export function mulawToPcm16(mulaw: Buffer): Buffer {
+  const out = Buffer.allocUnsafe(mulaw.length * 2);
+  for (let i = 0; i < mulaw.length; i++) {
+    const byte     = ~mulaw[i] & 0xff;
+    const sign     = byte & 0x80;
+    const exponent = (byte >> 4) & 0x07;
+    const mantissa = byte & 0x0f;
+    let sample     = ((mantissa << 1) + 33) << exponent;
+    sample        -= 33;
+    const s16 = sign ? -sample : sample;
+    out.writeInt16LE(Math.max(-32768, Math.min(32767, s16)), i * 2);
+  }
+  return out;
+}
+
+/**
  * Converts a buffer of raw 16-bit little-endian PCM samples (as emitted by
  * OpenAI in `audio/pcm` mode) into a buffer of G.711 μ-law bytes — one
  * output byte per input sample.

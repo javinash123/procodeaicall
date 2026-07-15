@@ -1,6 +1,6 @@
 ---
 name: workflows
-description: Manage application workflows including configuration, restart, and removal.
+description: Manage application workflows including configuration, start, stop, restart, and removal.
 ---
 
 ## Overview
@@ -48,7 +48,7 @@ Use this skill when:
 
 ## Available Functions
 
-The TypeScript runtime registers `listWorkflows`, `getWorkflowStatus`, `configureWorkflow`, `restartWorkflow`, and `removeWorkflow`.
+The TypeScript runtime registers `listWorkflows`, `getWorkflowStatus`, `configureWorkflow`, `restartWorkflow`, `stopWorkflow`, and `removeWorkflow`.
 
 The functions below are `CodeExecution` callbacks. Outside a `CodeExecution` script, use the direct `WorkflowsRestart` tool for workflow starts and restarts.
 
@@ -123,6 +123,14 @@ await configureWorkflow({
 });
 ```
 
+
+### stopWorkflow({ name })
+
+Stop a running workflow without removing its configuration. Use this when the user asks to pause or turn off a workflow that they may want to start again later.
+
+```javascript
+await stopWorkflow({ name: "Backend API" });
+```
 
 ### removeWorkflow(name)
 

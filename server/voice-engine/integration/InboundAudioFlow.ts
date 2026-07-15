@@ -34,7 +34,9 @@ import type { ITransportGateway } from '../transport/TransportGateway.js';
 import type { TransportAudioReceivedEvent } from '../transport/TransportEvents.js';
 import type { IRealtimeBridge } from './RealtimeBridge.js';
 import { MediaSessionState } from '../media/MediaSessionState.js';
+import { CallTrace } from '../debug/CallTrace.js';
 import { createAudioChunk } from '../audio-engine/AudioChunk.js';
+import { mulawToPcm16, resamplePCM16 } from '../providers/exotel/PcmMulawCodec.js';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -211,11 +213,18 @@ export class InboundAudioFlow implements IInboundAudioFlow {
 
     const result = this._audioEngine.tickInbound(null);
 
-    // Forward each scheduled chunk to the AI provider
+    // Forward each scheduled chunk to the AI provider.
+    // Exotel sends G.711 μ-law (8 kHz, 1 byte/sample). OpenAI Realtime expects
+    // PCM16 LE. Decode mulaw → PCM16 here so the VAD receives valid audio.
     for (const scheduled of result.chunksToSend) {
       const base64 = this._toBase64(scheduled.payload);
       if (base64.length > 0) {
-        this._bridge.forwardAudio(base64);
+        const mulawBuf  = Buffer.from(base64, 'base64');
+        const pcm8kBuf  = mulawToPcm16(mulawBuf);
+        const pcm16Buf  = resamplePCM16(pcm8kBuf, 8000, 24000); // OpenAI requires >= 24 kHz
+        const pcm16B64  = pcm16Buf.toString('base64');
+        this._bridge.forwardAudio(pcm16B64);
+        CallTrace.recordChunkForwarded(this._sessionId);
       }
     }
   }

@@ -1,0 +1,14 @@
+{
+  "sessionId": "v2s-1784101346677-000001",
+  "firstMissingStep": null,
+  "lastSuccessfulStep": {
+    "event": "session.created",
+    "sequence": 0
+  },
+  "responseCreated": false,
+  "audioReceived": false,
+  "audioForwarded": false,
+  "audioSentToExotel": false,
+  "totalEvents": 1,
+  "totalErrors": 0
+}

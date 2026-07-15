@@ -6,7 +6,7 @@ description: Run automated UI tests against your application using a Playwright-
 
 # Testing Skill
 
-A `subagent` with `config: { $kind: "testing" }` is a specialized Playwright-based testing subagent that drives your application in a real browser, watches both browser and backend logs, and reports back with screenshot evidence and technical diagnostics. End-to-end testing through it can uncover bugs not discoverable through conventional methods like `curl` or unit tests.
+A `subagent` with `config: { $kind: "testing" }` is a specialized Playwright-based testing subagent that drives your application in a real browser, watches both browser and backend logs, and reports back with screenshot evidence and technical diagnostics. End-to-end testing through it can uncover bugs not discoverable through conventional methods like `curl` or unit tests. If needed, it can even restart workflows with an arbitary environment variable overrides for testing purposes.
 
 Each tester is a persistent conversation partner: it keeps its history, seeded data, and (usually) its browser state and logged-in sessions, so a follow-up (`sendFollowup`) can build on earlier work instead of starting from scratch. One caveat: the browser may have died or been restarted since the last message, so treat open pages and logged-in sessions as best-effort -- a follow-up that depends on them should say what to do if that state is gone (e.g. "if you're no longer logged in, log in again as test@example.com first").
 
@@ -21,7 +21,7 @@ See delegation skill for more information about the subagent callback in general
 **Parameters:**
 
 - `name` (str, required): The tester's name, alphanumeric and `-` only (e.g. "checkout"). A fresh tester is created under this name. Use the returned `name` for follow-ups (a collision auto-renames).
-- `task` (str, required): What you want from the tester -- a test plan, or a question about something. Put all detail here.
+- `task` (str, required): What you want from the tester -- a test plan, or a question about something. Put all relevant detail here, but be concise.
 - `config.$kind` (required): `"testing"`.
 
 To continue a tester (keeping its history and browser state), call `sendFollowup({ name, message })` with the returned `name`. A follow-up to a tester that no longer exists (never created, or recycled at capacity) errors; start a fresh `subagent` instead.
@@ -198,3 +198,9 @@ If the application uses a database and you need to inject data, set roles, or ve
 ## External Services
 
 If the application connects to external services, be mindful of side effects. Clean up resources created during tests, and limit notifications sent to third parties. Balance thorough testing with responsible use of external services.
+
+## Replit Auth
+
+If the application uses Replit's OIDC auth — typically indicated by `javascript_log_in_with_replit` or `python_log_in_with_replit` in `.replit`, the presence of `replitAuth.ts` / `replit_auth.py`, `@workspace/replit-auth-web`, references to `replit.com/oidc`, or any other use of Replit's OIDC service — you *must* read `replit-auth.md` (in the same directory as this file) for how to handle programmatic login in test plans. Failing to do so when Replit Auth is part of the test flow will cause auth-related test failures and user frustration.
+
+

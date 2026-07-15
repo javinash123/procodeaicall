@@ -66,6 +66,7 @@ import {
   isValidBase64Payload,
 } from './ExotelProtocol.js';
 import { pcm16ToMulaw, resamplePCM16 } from './PcmMulawCodec.js';
+import { CallTrace } from '../../debug/CallTrace.js';
 
 // ─── Per-Session Audio Context ────────────────────────────────────────────────
 
@@ -209,6 +210,7 @@ export class ExotelAdapter implements ITransportAdapter {
           sequence: seq,
           trackId: extractTrackId(media),
         });
+        CallTrace.recordMediaPacket(sessionId, payload.length);
         break;
       }
 

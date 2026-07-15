@@ -47,6 +47,7 @@ import type {
   RealtimeEventHandler,
 } from './OpenAIRealtimeEvents.js';
 import { ProviderError, ErrorCode } from '../../errors/index.js';
+import { CallTrace } from '../../debug/CallTrace.js';
 import type { ConversationSessionContext } from './ConversationSessionContext.js';
 import { recordTrace } from '../../diagnostics/CallTraceWriter.js';
 import fs   from 'fs';
@@ -261,6 +262,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
       });
 
       ws.on('close', (code: number, reason: Buffer) => {
+        CallTrace.printAndDestroy(this._traceSessionId);
         this._state = 'closed';
         this._emit({
           type: 'realtime.disconnected',
@@ -281,6 +283,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
    */
   sendAudio(base64Chunk: string): void {
     this._sendEvent({ type: 'input_audio_buffer.append', audio: base64Chunk });
+    CallTrace.recordAppend(this._traceSessionId, base64Chunk.length);
     this._emit({
       type: 'realtime.audio_sent',
       timestamp: Date.now(),
@@ -447,7 +450,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
       instructions,
       audio: {
         input: {
-          format: { type: this._toAudioMime(this._config.inputAudioFormat) },
+          format: { type: 'audio/pcm' as const, rate: 24000 }, // PCM16 at 24 kHz — mulaw decoded+upsampled in InboundAudioFlow
           transcription: this._config.enableInputTranscription
             ? { model: this._config.transcriptionModel }
             : null,
@@ -491,6 +494,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
       case 'response.created':
         this._record('response.created', { responseId: event.response.id, status: event.response.status });
+        CallTrace.recordOpenAIEvent(this._traceSessionId, event.type);
         if (this._traceFirstAIResponse) {
           this._traceFirstAIResponse = false;
           console.log(`[V2 TRACE] 13. First AI response received  responseId=${event.response.id}`);
@@ -501,6 +505,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
       case 'response.output_audio.delta':       // gpt-realtime (GA)
       case 'response.audio.delta':              // gpt-4o-realtime-preview (legacy)
+        CallTrace.recordOpenAIEvent(this._traceSessionId, event.type);
         this._record('response.audio.delta', {
           responseId: event.response_id,
           itemId:     event.item_id,
@@ -561,6 +566,13 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         break;
 
       case 'response.done': {
+        // Tracer: first response.done = greeting complete; subsequent = customer turn complete
+        if (!CallTrace.isGreetingDone(this._traceSessionId)) {
+          CallTrace.greetingDone(this._traceSessionId);
+        } else {
+          CallTrace.recordOpenAIEvent(this._traceSessionId, event.type);
+        }
+
         const responseStatus = event.response.status as 'completed' | 'cancelled' | 'failed' | 'incomplete';
         this._record('response.done', {
           responseId:   event.response.id,
@@ -613,6 +625,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
       case 'input_audio_buffer.speech_started':
         this._record('input_audio_buffer.speech_started', { itemId: event.item_id, audioStartMs: event.audio_start_ms });
+        CallTrace.recordOpenAIEvent(this._traceSessionId, event.type);
         this._emit({ type: 'realtime.speech_started', timestamp: ts, eventId: event.event_id, itemId: event.item_id, audioStartMs: event.audio_start_ms });
         // ── Conversation State: record barge-in interruption ──────────────────
         if (this._conversationContext) {
@@ -622,6 +635,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
       case 'input_audio_buffer.speech_stopped':
         this._record('input_audio_buffer.speech_stopped', { itemId: event.item_id, audioEndMs: event.audio_end_ms });
+        CallTrace.recordOpenAIEvent(this._traceSessionId, event.type);
         // T1 — reset latency counters for this new turn
         this._latT1SpeechStopped  = ts;
         this._latT2ResponseCreated = 0;
@@ -654,6 +668,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
       case 'input_audio_buffer.committed':
         this._record('input_audio_buffer.committed', { itemId: (event as any).item_id ?? null });
+        CallTrace.recordOpenAIEvent(this._traceSessionId, event.type);
         break;
 
       case 'response.function_call_arguments.delta':

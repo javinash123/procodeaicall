@@ -39,6 +39,7 @@ import type { TransportDisconnectedEvent } from '../transport/TransportEvents.js
 import { attachOneCallAudioCapture } from '../diagnostics/OneCallAudioCapture.js';
 import type { PolicyConversationContext, CallerMetadata } from '../conversation/index.js';
 import { normalizePhoneNumber } from '../../phoneUtils.js';
+import { CallTrace } from '../debug/CallTrace.js';
 
 // ── One-shot audio capture flag ────────────────────────────────────────────────
 // Set to true after the first call so the capture is never attached twice.
@@ -65,6 +66,7 @@ let _captureAttached = false;
  */
 export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIntegration> {
   console.log(`[V2 TRACE] 4. activateV2Session() entered  sessionId=${ctx.sessionId}  campaignId=${ctx.campaignId}`);
+  CallTrace.create(ctx.sessionId);
 
   if (!ctx.mediaSession) {
     throw new Error(

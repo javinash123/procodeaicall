@@ -1,6 +1,6 @@
 ---
 name: deployment
-description: Use when the user asks to publish, deploy, or configure deployment settings, deployment geography or regions, or when the user reports their deployed app is broken, asks about production errors, or wants to check server logs.
+description: Use when the user asks to publish, deploy, or configure deployment settings, deployment geography or regions, when the user reports their deployed app is broken, asks about production errors, or wants to check server logs, or whenever you need the app's production/published URL.
 ---
 
 # Deployment Skill
@@ -67,12 +67,14 @@ Configure how the project should be deployed to production.
 
 **Parameters:**
 
-- `deploymentTarget` (str, required): "autoscale", "vm", "scheduled", or "static"
+- `deploymentTarget` (str, required): "autoscale", "vm", "scheduled", or "static". Pass the current target unchanged unless the user's ask is actually about changing where the app runs.
 - `run` (list[str], optional): Production run command. First entry is binary/script, rest are arguments
 - `build` (list[str], optional): Build/compile command before deployment
 - `publicDir` (str, required for "static"): Directory containing static files
 
 **Returns:** Dict with `success`, `message`, and configuration details
+
+Changes apply to the **next publish**. If the repl is already published, the live deployment keeps its current target and settings until the user republishes — after fixing config, tell the user to republish.
 
 **Example:**
 

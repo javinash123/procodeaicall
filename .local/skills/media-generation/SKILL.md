@@ -1,11 +1,11 @@
 ---
 name: media-generation
-description: "Generate AI images. Use this skill for visual content creation. For AI video clips, read `media-generation/video-generation.md`; for 3D model assets, read `media-generation/reference/3d-model-generation.md`; for music, sound effects, and text-to-speech audio, read `media-generation/audio-generation.md`"
+description: "Generate AI images. Use this skill for visual content creation. For AI video clips, read `media-generation/video-generation.md`; for 3D model assets, read `media-generation/reference/3d-model-generation.md`"
 ---
 
 # Media Generation Skill
 
-Generate custom images, videos, 3D models, music, sound effects, and text-to-speech audio. The TypeScript runtime currently registers `generateImage`, `generateVideo`, `generate3DModel`, `generateMusic`, `generateSoundEffect`, `searchVoices`, and `textToSpeech`.
+Generate custom images, videos, and 3D models. The TypeScript runtime currently registers `generateImage`, `generateVideo`, and `generate3DModel`.
 
 ## Available Functions
 
