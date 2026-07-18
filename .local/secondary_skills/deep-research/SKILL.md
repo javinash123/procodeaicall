@@ -507,7 +507,8 @@ After the launch block above, await all subagent futures, then proceed to Phase 
 ## Limitations
 
 - Cannot access paywalled academic journals or subscription databases
-- Cannot access social media content (LinkedIn, Twitter, Reddit)
+- Cannot access social media content (LinkedIn, Reddit)
+- X/Twitter is the exception: read posts, users, and trends with the `externalApi__x` callback -- read `.local/skills/external-apis/references/x.md`
 
 - Web sources may have varying levels of reliability
 - Research is a snapshot in time -- findings may change

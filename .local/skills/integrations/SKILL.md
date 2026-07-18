@@ -23,6 +23,8 @@ Use this skill when:
 
 ## When NOT to Use
 
+For any request involving payments, billing, checkout, subscriptions, paywalls, ecommerce, or monetization, read the `monetization` skill before searching for or proposing integrations. The `monetization` skill is the source of truth for provider selection and which providers may appear in a shortlist. Do not build a payment-provider shortlist from generic `searchIntegrations` results or add other payment connectors that happen to match a broad search.
+
 As a web search (use web-search skill if available), searching files within the project, media generation (use media-generation skill, including image generation APIs), fetching data to respond to a user's question (use query-integration-data skill).
 
 ---
@@ -153,7 +155,7 @@ if (!result.success && result.requiresConfirmation) {
 
 ---
 
-### ProposeIntegration({ integrationId })
+### ProposeIntegration({ proposal })
 
 Propose a connector to the user. This is a **model tool**, not a code execution callback. It exits the agent loop immediately and waits for the user to complete OAuth or confirm setup. Nothing after this call will execute in the current loop.
 
@@ -166,7 +168,7 @@ Propose a connector to the user. This is a **model tool**, not a code execution 
 - Connections with `status: added` if runtime fails with "not connected" (re-binds / refreshes)
 - Blueprints where `addIntegration` returns `requiresConfirmation: True`
 
-Always explain to the user what is about to happen, then call the `ProposeIntegration` tool with `{ integrationId: "connector:ccfg_google-sheet_E42A9F6CA62546F68A1FECA0E8" }`.
+Always explain to the user what is about to happen, then call the `ProposeIntegration` tool with `{ proposal: [{ integrationId: "connector:ccfg_google-sheet_E42A9F6CA62546F68A1FECA0E8" }] }`.
 
 **Notes:**
 

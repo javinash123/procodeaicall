@@ -69,6 +69,18 @@ export interface PolicyConversationContext {
   readonly campaignGoal: string;
 
   /**
+   * Campaign type — controls persona and funnel style.
+   * @default 'sales'
+   */
+  readonly campaignType?: 'sales' | 'support' | 'survey';
+
+  /**
+   * Language the agent must speak throughout the call.
+   * @default 'English'
+   */
+  readonly language?: string;
+
+  /**
    * Optional pre-written call script or talking points to incorporate.
    * If provided the policy will blend it naturally into the instructions.
    */

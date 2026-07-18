@@ -74,6 +74,18 @@ export interface IOpenAIRealtimeSession {
   sendAudio(base64Chunk: string): void;
   sendText(text: string): Promise<void>;
   interrupt(): Promise<void>;
+  /**
+   * Manually closes the current inbound audio buffer and signals the model
+   * that the caller has finished speaking. Returns `true` if the local buffer
+   * had data and the commit was sent; `false` if the buffer was empty (server
+   * VAD may have already consumed it). Only call `createResponse()` when true.
+   */
+  commitBuffer(): boolean;
+  /**
+   * Triggers a model response immediately. Must be called after `commitBuffer()`
+   * when server VAD is disabled.
+   */
+  createResponse(): void;
   updateInstructions(instructions: string): Promise<void>;
   updateTools(tools: readonly Tool[]): Promise<void>;
   submitToolResult(callId: string, output: string): Promise<void>;
@@ -131,6 +143,13 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
   // Written to disk on response.output_audio.done. Remove when no longer needed.
   private _dbgAudioChunks: string[] = [];
   private _dbgAudioSaved  = false;
+
+  /**
+   * Tracks bytes appended to the input buffer since the last commit/clear.
+   * Used by `commitBuffer()` to detect whether the server VAD has already
+   * consumed (silently cleared) the buffer before our manual commit fires.
+   */
+  private _inputBufferBytesSent = 0;
 
   constructor(
     config: OpenAIRealtimeConfig,
@@ -228,7 +247,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
           // Schema capture — writes the raw session.created payload for audit purposes
           try {
-            require('fs').writeFileSync(
+            fs.writeFileSync(
               '/tmp/openai-session-created.json',
               JSON.stringify(event, null, 2),
             );
@@ -283,6 +302,8 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
    */
   sendAudio(base64Chunk: string): void {
     this._sendEvent({ type: 'input_audio_buffer.append', audio: base64Chunk });
+    // Track approximate decoded bytes so commitBuffer() can detect empty-buffer situations
+    this._inputBufferBytesSent += Math.floor((base64Chunk.length * 3) / 4);
     CallTrace.recordAppend(this._traceSessionId, base64Chunk.length);
     this._emit({
       type: 'realtime.audio_sent',
@@ -315,7 +336,37 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     this._assertConnected();
     this._sendEvent({ type: 'response.cancel' });
     this._sendEvent({ type: 'input_audio_buffer.clear' });
+    this._inputBufferBytesSent = 0; // buffer was cleared, reset counter
     this._logger.debug('Sent interrupt (response.cancel + buffer clear)');
+  }
+
+  /**
+   * Manually closes the inbound audio buffer (signals end-of-speech).
+   * Returns `true` if the local buffer had data and the commit was sent,
+   * `false` if the buffer was empty (e.g. server VAD already consumed it).
+   * Callers should only call `createResponse()` when this returns `true`.
+   */
+  commitBuffer(): boolean {
+    if (this._ws?.readyState !== WebSocket.OPEN) return false;
+    const hadData = this._inputBufferBytesSent > 0;
+    const bytesSnap = this._inputBufferBytesSent;
+    this._inputBufferBytesSent = 0;
+    if (!hadData) {
+      console.log('[CommitBuffer] Skipped — local buffer counter is 0 (server VAD likely cleared it)');
+      return false;
+    }
+    console.log(`[CommitBuffer] Committing ${bytesSnap} bytes from local counter`);
+    this._sendEvent({ type: 'input_audio_buffer.commit' });
+    return true;
+  }
+
+  /**
+   * Triggers a model response immediately.
+   * Use after `commitBuffer()` when managing turns manually.
+   */
+  createResponse(): void {
+    if (this._ws?.readyState !== WebSocket.OPEN) return;
+    this._sendEvent({ type: 'response.create' });
   }
 
   /**
@@ -448,13 +499,39 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     return {
       type: 'realtime',
       instructions,
+      // NOTE: `format.rate` is omitted — the API rejects it as unknown_parameter.
+      // turn_detection is explicitly null here — client-side VAD (energy-based
+      // silence detection) is implemented in RealtimeBridge and is more reliable
+      // for Exotel 8kHz→24kHz upsampled phone audio than OpenAI's server VAD,
+      // which silently ignores the nested audio.input.turn_detection config.
       audio: {
         input: {
-          format: { type: 'audio/pcm' as const, rate: 24000 }, // PCM16 at 24 kHz — mulaw decoded+upsampled in InboundAudioFlow
+          format: { type: 'audio/pcm' as const, rate: 24000 },
           transcription: this._config.enableInputTranscription
             ? { model: this._config.transcriptionModel }
             : null,
-          turn_detection: this._config.turnDetection,
+          // Server VAD is intentionally configured with a very high threshold and
+          // a long silence window so it almost never auto-commits the buffer.
+          //
+          // Root cause of the "buffer too small: 0.00ms" errors:
+          //   The default silence_duration_ms=200 causes the server to silently
+          //   clear the buffer every 200ms of audio that doesn't meet the 0.5
+          //   speech threshold.  Narrowband phone audio upsampled from 8→24 kHz
+          //   never meets that threshold.  By the time our client VAD fires its
+          //   manual commitBuffer(), the server has already cleared the buffer.
+          //
+          // Fix: threshold=0.9 + silence_duration_ms=30000 + create_response=false
+          //   • threshold=0.9  — won't trigger on low-energy narrowband audio
+          //   • silence_duration_ms=30000 — even if triggered, won't auto-commit
+          //     until 30s of silence (our client VAD commits at 700ms)
+          //   • create_response=false — no double-response if VAD somehow fires
+          turn_detection: {
+            type: 'server_vad' as const,
+            threshold: 0.9,
+            silence_duration_ms: 10000, // API max is 10000ms; 10s >> our 700ms client VAD window
+            prefix_padding_ms: 300,
+            create_response: false,
+          },
         },
         output: {
           format: { type: this._resolveOutputAudioMime(), rate: 24000 },
@@ -479,8 +556,17 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     const ts = Date.now();
 
     switch (event.type) {
-      case 'session.updated':
+      case 'session.updated': {
         this._record('session.updated', { openAiSessionId: this._sessionId });
+        // Diagnostic: print what the server actually applied so we can confirm
+        // turn_detection and audio formats are recognised.
+        const s = event.session as any;
+        console.log('[SESSION.UPDATED] Applied config from OpenAI:', JSON.stringify({
+          turn_detection:    s?.audio?.input?.turn_detection ?? s?.turn_detection ?? 'MISSING',
+          input_audio_fmt:   s?.audio?.input?.format        ?? s?.input_audio_format ?? 'MISSING',
+          output_audio_fmt:  s?.audio?.output?.format       ?? s?.output_audio_format ?? 'MISSING',
+          voice:             s?.audio?.output?.voice        ?? s?.voice ?? 'MISSING',
+        }, null, 2));
         this._emit({ type: 'realtime.session_updated', timestamp: ts, eventId: event.event_id, session: event.session });
         if (!this._greetingSent) {
           this._greetingSent = true;
@@ -491,6 +577,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
           }, 250);
         }
         break;
+      }
 
       case 'response.created':
         this._record('response.created', { responseId: event.response.id, status: event.response.status });

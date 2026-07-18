@@ -17,7 +17,24 @@ on it and import its theme and components directly.
 - `src/components/ui/` — the shadcn component library, themed by the tokens,
   exported as `./components/*`.
 - `src/lib/` (`cn`) and `src/hooks/` — exported as `./lib/*` and `./hooks/*`.
-- `src/App.tsx` — a living style guide that previews the tokens and components.
+- `src/App.tsx` — the entry point for the living style guide.
+- `src/preview/DesignSystemBrowser.tsx` — the persistent grouped navigation,
+  branded header, search, deep links, and active page shell.
+- `src/preview/registry.tsx` — preview metadata (`DESIGN_SYSTEM` title,
+  description) and ordered navigation. Overview comes
+  first; Brand/Colors/Fonts/Layout precede Components; Content/Charts/Motion/
+  Applied examples follow when applicable. Each group is a nav section whose
+  entries are its nested pages. Empty optional groups stay hidden.
+- `src/preview/foundations.tsx` — token-driven Overview, Colors, Fonts, and Layout
+  pages.
+- `src/preview/parts.tsx` — shared page helpers, including `Guidelines` for design
+  and composition do's/don'ts (colour/component usage, hierarchy, voice and tone —
+  not technical/implementation notes). Populate it only with guidance derived from
+  the source; the scaffold ships none, so omit it when the source documents no
+  usage rules.
+- `src/preview/demos/<component>.tsx` — component stories. The scaffold seeds
+  Button and Select as examples; design-system creation fills in stories for the
+  artifact's final component set.
 
 Every source file in this package is a `.tsx` file (even token/util/hook
 modules with no JSX), so every export below is a single `*.tsx` glob. Do not
@@ -54,9 +71,15 @@ package's theme and components, so previews match the real product.
 
 Edit `tokens.json` ONLY, then run `pnpm tokens` (the dev server also
 regenerates on change). `src/index.css` and `src/generated/tokens.tsx` are
-generated — never hand-edit them. If you add a component beyond the default set,
-put it under `src/components/ui/`, theme it only with the token CSS vars, preview
-it in `src/App.tsx`, and note it in "What's here" above.
+generated — never hand-edit them. Every user-facing component under
+`src/components/ui/` must have a story in `src/preview/demos/` that covers its
+variants, sizes, and important states, plus an entry in
+`src/preview/registry.tsx`. If you add, remove, or change a component, update its
+story and registry entry in the same change, and note meaningful additions or
+customizations in "What's here" above. Keep `DESIGN_SYSTEM.title` and
+`DESIGN_SYSTEM.description` accurate, and update `NAV_GROUPS` whenever the system
+gains or loses a foundation, content guideline, chart, motion rule, or applied
+example.
 
 ---
 

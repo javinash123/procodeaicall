@@ -558,7 +558,7 @@ const results = await searchIntegrations({ query: "elevenlabs" });
 
 // Then propose the connector so the user can authorize
 
-await proposeIntegration({ integrationId: "connector:ccfg_elevenlabs_..." });
+ProposeIntegration({ proposal: [{ integrationId: "connector:ccfg_elevenlabs_..." }] });
 
 ```
 

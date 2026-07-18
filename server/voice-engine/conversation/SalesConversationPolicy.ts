@@ -23,6 +23,7 @@ import { formatSectionHeading, formatRuleList } from './ConversationRules.js';
 import type { PolicyConversationContext } from './ConversationContext.js';
 import {
   IdentityPolicy,
+  LanguagePolicy,
   SpeakingStylePolicy,
   ActiveListeningPolicy,
   InterruptionPolicy,
@@ -88,11 +89,15 @@ export class SalesConversationPolicy implements ConversationPolicy {
     context: PolicyConversationContext
   ): readonly WeightedPolicySection[] {
     return [
-      // Critical — identity must be first
+      // Critical — identity and language constraints must come first
       { priority: 'critical', section: new IdentityPolicy() },
+      { priority: 'critical', section: new LanguagePolicy() },
 
       // Critical — knowledge base and answer priority (must be near-top)
       { priority: 'critical', section: new KnowledgeBasePolicy() },
+
+      // Critical — greeting rules must override any script reference
+      { priority: 'critical', section: new GreetingPolicy() },
 
       // High — core conversation behaviour
       { priority: 'high', section: salesFunnelSection },
@@ -106,7 +111,6 @@ export class SalesConversationPolicy implements ConversationPolicy {
       // Medium — style and question strategy
       { priority: 'medium', section: new SpeakingStylePolicy() },
       { priority: 'medium', section: new QuestionStrategy() },
-      { priority: 'medium', section: new GreetingPolicy() },
 
       // Low — closing courtesies
       { priority: 'low', section: new ClosingPolicy() },

@@ -1,0 +1,18 @@
+{
+  "sessionId": "v2s-1784290023155-000001",
+  "firstMissingStep": {
+    "event": "TransportGateway.sendAudio",
+    "skipReason": "streamId is empty — Exotel start message not yet received",
+    "sequence": 9
+  },
+  "lastSuccessfulStep": {
+    "event": "ExotelAdapter.sendMedia",
+    "sequence": 923
+  },
+  "responseCreated": true,
+  "audioReceived": true,
+  "audioForwarded": true,
+  "audioSentToExotel": true,
+  "totalEvents": 924,
+  "totalErrors": 0
+}

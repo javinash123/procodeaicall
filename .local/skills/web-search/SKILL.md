@@ -94,7 +94,8 @@ if (searchResult.resultPages.length > 0) {
 
 ## Limitations
 
-- Cannot access social media platforms (LinkedIn, Twitter, Instagram, Facebook, Reddit, YouTube)
+- Cannot access social media platforms (LinkedIn, Instagram, Facebook, Reddit, YouTube)
+- X/Twitter is the exception: read posts, users, and trends with the `externalApi__x` callback — read `.local/skills/external-apis/references/x.md`
 - Cannot download media files (images, videos, audio)
 - Paywalled or authenticated content may be inaccessible
 

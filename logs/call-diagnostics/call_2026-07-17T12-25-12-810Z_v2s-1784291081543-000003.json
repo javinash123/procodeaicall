@@ -1,0 +1,19 @@
+{
+  "sessionId": "v2s-1784291081543-000003",
+  "providerSessionId": "sess_E2buUjcf23N5jeXOI3MOE",
+  "callStartedAt": "2026-07-17T12:24:50.929Z",
+  "callEndedAt": "2026-07-17T12:25:12.811Z",
+  "callDurationMs": 21881,
+  "turnCount": 0,
+  "interruptions": 0,
+  "stageProgression": [],
+  "avgLatencyMs": null,
+  "avgTtftMs": null,
+  "avgSttLatencyMs": null,
+  "avgResponseDurMs": null,
+  "totalInputTokens": 0,
+  "totalOutputTokens": 0,
+  "totalTokens": 0,
+  "estimatedCostUsd": 0,
+  "errors": []
+}

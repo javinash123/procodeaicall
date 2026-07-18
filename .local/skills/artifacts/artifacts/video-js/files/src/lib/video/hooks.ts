@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 declare global {
   interface Window {
+    __replitVideoPlayerMounted?: boolean;
     startRecording?: () => Promise<void>;
     stopRecording?: () => void;
   }
@@ -41,7 +42,12 @@ export function useVideoPlayer(
 
   // Start recording on mount
   useEffect(() => {
+    window.__replitVideoPlayerMounted = true;
     window.startRecording?.();
+
+    return () => {
+      window.__replitVideoPlayerMounted = false;
+    };
   }, []);
 
   // Scene advancement -- loops independently of recording

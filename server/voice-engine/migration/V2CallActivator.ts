@@ -104,9 +104,26 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
       const c = campaign as any;
 
       // ── Campaign fields ──────────────────────────────────────────────────────
-      const goal              = ((c.goal || '') as string).trim();
+      const goalType          = ((c.goal || 'sales') as string).trim().toLowerCase();
+      const campaignName      = ((c.name || '') as string).trim();
       const additionalContext = ((c.additionalContext || '') as string).trim();
-      const script            = ((c.ai_generated_script || c.script || '') as string).trim();
+      // Use only the human-written script (not ai_generated_script) as the
+      // reference — the AI-generated one is a verbose pitch meant for human
+      // agents and causes the AI to open the call with a full sales monologue.
+      const script            = ((c.script || '') as string).trim();
+
+      // Build a meaningful campaign goal from available fields.
+      // goal (c.goal) is the TYPE ("sales"/"support"/"survey") not a description.
+      // Use name + additionalContext + scriptContent to compose a real goal.
+      const goalDescription = additionalContext
+        ? `${campaignName ? campaignName + ': ' : ''}${additionalContext}`
+        : campaignName || 'speak with the prospect';
+
+      // Campaign type for persona shaping
+      const campaignType = goalType as 'sales' | 'support' | 'survey';
+
+      // Language — default English; can be extended per-campaign later
+      const language = ((c.language || 'English') as string).trim() || 'English';
 
       // Knowledge base — all text chunks as individual strings for the KB policy
       const kbChunks: string[] = [
@@ -118,14 +135,15 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
 
       // ── User (agent) data ────────────────────────────────────────────────────
       let agentName   = 'Alex';
-      let companyName = 'our company';
+      let companyName = campaignName || 'NIJVOX';
       try {
         const userId = c.userId?.toString?.() || '';
         if (userId) {
           const user = await storage.getUser(userId);
           if (user) {
             agentName   = (user as any).firstName?.trim() || agentName;
-            companyName = (user as any).companyName?.trim() || companyName;
+            // Use campaign name as fallback if user hasn't set their company name
+            companyName = (user as any).companyName?.trim() || campaignName || 'NIJVOX';
           }
         }
       } catch (userErr) {
@@ -173,8 +191,10 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
       policyContext = {
         agentName,
         companyName,
-        productDescription: additionalContext || goal || 'our product',
-        campaignGoal:       goal || 'speak with the prospect',
+        productDescription: additionalContext || campaignName || 'our product',
+        campaignGoal:       goalDescription,
+        campaignType,
+        language,
         existingScript:     script || undefined,
         caller:             callerMeta,
         knowledgeBase:      kbChunks.length > 0 ? kbChunks : undefined,
@@ -184,6 +204,8 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
         agentName,
         companyName,
         campaignGoal:  policyContext.campaignGoal,
+        campaignType,
+        language,
         hasScript:     !!policyContext.existingScript,
         kbChunks:      kbChunks.length,
         hasCaller:     !!callerMeta,

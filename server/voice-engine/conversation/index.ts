@@ -59,6 +59,7 @@ export { SalesConversationPolicy } from './SalesConversationPolicy.js';
 // ─── Individual Section Policies (for custom composition) ─────────────────────
 export {
   IdentityPolicy,
+  LanguagePolicy,
   SpeakingStylePolicy,
   ActiveListeningPolicy,
   InterruptionPolicy,

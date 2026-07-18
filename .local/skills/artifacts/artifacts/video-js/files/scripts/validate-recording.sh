@@ -22,6 +22,12 @@ if ! grep -Fq 'window.startRecording?.()' "$SRC_DIR/lib/video/hooks.ts" 2>/dev/n
   errors=$((errors + 1))
 fi
 
+if ! grep -Fq 'window.__replitVideoPlayerMounted = true' "$SRC_DIR/lib/video/hooks.ts" 2>/dev/null; then
+  echo "ERROR: src/lib/video/hooks.ts is missing the window.__replitVideoPlayerMounted marker."
+  echo "  This file should not be modified. Restore it from the template."
+  errors=$((errors + 1))
+fi
+
 if ! grep -Fq 'window.stopRecording?.()' "$SRC_DIR/lib/video/hooks.ts" 2>/dev/null; then
   echo "ERROR: src/lib/video/hooks.ts is missing the window.stopRecording?.() call."
   echo "  This file should not be modified. Restore it from the template."

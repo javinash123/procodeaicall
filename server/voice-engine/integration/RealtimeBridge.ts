@@ -219,6 +219,38 @@ export class RealtimeBridge implements IRealtimeBridge {
 
   private readonly _handlers = new Map<BridgeEventType, Set<BridgeEventHandler>>();
 
+  // ── Client-side VAD (fallback) ────────────────────────────────────────────────
+  // The model's built-in server VAD (session.created default: server_vad,
+  // silence_duration_ms=200) is the primary turn detector.  We keep a client-
+  // side energy-based VAD here as a fallback in case server VAD misses speech
+  // (e.g. low-volume phone audio below the 0.5 threshold).
+  //
+  // State machine:
+  //   waiting_greeting  → (first response_completed)   → listening
+  //   listening         → (energy > threshold)          → in_speech
+  //   in_speech         → (silence >= 700ms)            → responding  [commits+responds]
+  //   in_speech         → (server speech_started fires) → responding  [server takes over]
+  //   responding        → (response_completed)          → listening
+  //   in_speech         → (speech >= 14s, no silence)   → responding  [force commit]
+  private _vadState: 'waiting_greeting' | 'listening' | 'in_speech' | 'responding' =
+    'waiting_greeting';
+  /** Accumulated ms of above-threshold energy in the current speech segment. */
+  private _vadSpeechMs  = 0;
+  /** Accumulated ms of silence after the last above-threshold chunk. */
+  private _vadSilenceMs = 0;
+  /**
+   * Set to true when the server's own VAD fires (speech_started received).
+   * Prevents the client VAD from double-committing the same audio turn.
+   */
+  private _serverVadActive = false;
+
+  // Tuning constants — matched to V1's VAD_THRESHOLD=200 on 8 kHz audio.
+  // At 24 kHz PCM16 the same amplitude produces similar RMS values.
+  private static readonly VAD_SPEECH_RMS       = 150;   // RMS above this = speech
+  private static readonly VAD_MIN_SPEECH_MS    = 120;   // min speech before it counts
+  private static readonly VAD_SILENCE_MS       = 700;   // silence after speech → commit
+  private static readonly VAD_MAX_TURN_MS      = 14000; // force commit if speaker goes too long
+
   /** Diagnostics collector — created in connect(), detached in disconnect(). */
   private _diagnosticsCollector: TurnDiagnosticsCollector | null = null;
   /** Per-call stats accumulated by the onTurnComplete callback. */
@@ -336,12 +368,96 @@ export class RealtimeBridge implements IRealtimeBridge {
   }
 
   /**
-   * Forwards caller audio to the AI provider.
+   * Forwards caller audio to the AI provider and runs the client-side VAD.
    * Fire-and-forget; silently ignored when not connected.
    */
   forwardAudio(base64: string): void {
     if (!this.isConnected || this._destroyed) return;
     this._provider.sendAudio(base64);
+    // Client VAD — skipped while greeting plays or AI is responding
+    if (this._vadState === 'listening' || this._vadState === 'in_speech') {
+      this._processClientVAD(base64);
+    }
+  }
+
+  // ── Client VAD helpers ────────────────────────────────────────────────────────
+
+  private _processClientVAD(base64: string): void {
+    const pcm = Buffer.from(base64, 'base64');
+    const sampleCount = Math.floor(pcm.length / 2);
+    if (sampleCount === 0) return;
+
+    // RMS energy
+    let sum = 0;
+    for (let i = 0; i < sampleCount; i++) {
+      const s = pcm.readInt16LE(i * 2);
+      sum += s * s;
+    }
+    const rms = Math.sqrt(sum / sampleCount);
+
+    // Chunk duration in ms at 24 kHz PCM16
+    const chunkMs = Math.round((sampleCount / 24000) * 1000);
+    const isSpeech = rms >= RealtimeBridge.VAD_SPEECH_RMS;
+
+    if (this._vadState === 'listening') {
+      if (isSpeech) {
+        this._vadState    = 'in_speech';
+        this._vadSpeechMs = chunkMs;
+        this._vadSilenceMs = 0;
+        console.log(`[ClientVAD] Speech detected  rms=${Math.round(rms)}  sessionId=${this._sessionId}`);
+      }
+      return;
+    }
+
+    // _vadState === 'in_speech'
+    if (isSpeech) {
+      this._vadSpeechMs  += chunkMs;
+      this._vadSilenceMs  = 0;
+      if (this._vadSpeechMs >= RealtimeBridge.VAD_MAX_TURN_MS) {
+        this._commitTurn('max_turn_duration');
+      }
+    } else {
+      this._vadSilenceMs += chunkMs;
+      if (this._vadSilenceMs >= RealtimeBridge.VAD_SILENCE_MS) {
+        if (this._vadSpeechMs >= RealtimeBridge.VAD_MIN_SPEECH_MS) {
+          this._commitTurn('silence_after_speech');
+        } else {
+          // Noise burst — too short, reset to listening
+          this._vadState     = 'listening';
+          this._vadSpeechMs  = 0;
+          this._vadSilenceMs = 0;
+        }
+      }
+    }
+  }
+
+  private _commitTurn(reason: string): void {
+    // Guard: if server VAD already took control of this turn, don't double-commit
+    if (this._serverVadActive) {
+      this._vadState     = 'responding';
+      this._vadSpeechMs  = 0;
+      this._vadSilenceMs = 0;
+      return;
+    }
+    this._vadState     = 'responding';
+    const speechMs     = this._vadSpeechMs;
+    this._vadSpeechMs  = 0;
+    this._vadSilenceMs = 0;
+    console.log(`[ClientVAD] Committing turn (${reason})  speechMs=${speechMs}  sessionId=${this._sessionId}`);
+
+    // commitBuffer() returns false when the local byte counter is zero —
+    // meaning server VAD silently cleared the buffer before we got here.
+    // In that case, skip createResponse() entirely: responding without audio
+    // produces context-guessing replies that make the call sound broken.
+    const committed = this._provider.commitBuffer();
+    if (!committed) {
+      console.log(`[ClientVAD] Buffer was empty at commit — holding response  sessionId=${this._sessionId}`);
+      // Return to listening so the next speech segment can try again
+      this._vadState = 'listening';
+      return;
+    }
+
+    this._provider.createResponse();
   }
 
   /**
@@ -457,7 +573,7 @@ export class RealtimeBridge implements IRealtimeBridge {
       });
     });
 
-    // Server VAD detected caller speech → barge-in signal
+    // Server VAD detected caller speech → barge-in signal + advance client VAD state
     this._provider.on('realtime.speech_started', (event) => {
       if (this._destroyed) return;
       const now = Date.now() as Timestamp;
@@ -465,6 +581,15 @@ export class RealtimeBridge implements IRealtimeBridge {
       this._logger.debug('RealtimeBridge: provider VAD speech_started, signalling interruption', {
         audioStartMs: event.audioStartMs,
       });
+
+      // Server VAD took over — disable client VAD for this turn so we don't double-commit
+      this._serverVadActive = true;
+      if (this._vadState === 'listening' || this._vadState === 'in_speech') {
+        this._vadState     = 'responding';
+        this._vadSpeechMs  = 0;
+        this._vadSilenceMs = 0;
+        console.log(`[ClientVAD] Server VAD fired — client VAD yielding  sessionId=${this._sessionId}`);
+      }
 
       this._emit({
         type: 'bridge.speech_detected',
@@ -478,6 +603,25 @@ export class RealtimeBridge implements IRealtimeBridge {
           error: String(err),
         });
       });
+    });
+
+    // AI response completed — advance client VAD state machine
+    this._provider.on('realtime.response_completed', () => {
+      if (this._destroyed) return;
+      this._serverVadActive = false; // server VAD resets each turn
+      if (this._vadState === 'waiting_greeting') {
+        // First response.done = greeting finished — activate client VAD
+        this._vadState     = 'listening';
+        this._vadSpeechMs  = 0;
+        this._vadSilenceMs = 0;
+        console.log(`[ClientVAD] Greeting done — client VAD active  sessionId=${this._sessionId}`);
+      } else if (this._vadState === 'responding') {
+        // AI finished speaking — listen for next caller turn
+        this._vadState     = 'listening';
+        this._vadSpeechMs  = 0;
+        this._vadSilenceMs = 0;
+        console.log(`[ClientVAD] AI response done — listening  sessionId=${this._sessionId}`);
+      }
     });
 
     // Provider WebSocket disconnected

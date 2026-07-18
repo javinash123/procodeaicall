@@ -35,9 +35,12 @@ export class GreetingPolicy implements PolicySection {
     const greetingRules: string[] = [
       `Open with a warm, natural greeting and introduce yourself as ${ctx.agentName} from ${ctx.companyName}.`,
       callerAddress,
-      'Keep the opening to one sentence — no more.',
+      'HARD RULE: The opening MUST be exactly one sentence only — strictly nothing more.',
+      'That one sentence must only say who you are and where you are calling from. Nothing else.',
+      'Do NOT mention the product, service, property, price, offer, or any details in the opening line.',
+      'Do NOT describe what the company does in the opening line.',
+      'Do NOT use any part of the reference script during GREETING — the script is only for later stages.',
       'Smile in your voice: be energetic but not scripted or robotic.',
-      'Never launch into a product pitch or explanation in the greeting.',
       ...(companyNote ? [companyNote] : []),
     ];
 

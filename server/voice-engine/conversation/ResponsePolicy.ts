@@ -20,7 +20,7 @@ export class IdentityPolicy implements PolicySection {
 
   render(ctx: PolicyConversationContext): string {
     const rules: string[] = [
-      `You are ${ctx.agentName}, a friendly and professional sales executive at ${ctx.companyName}.`,
+      `You are ${ctx.agentName}, a friendly and professional ${ctx.campaignType === 'support' ? 'customer support agent' : 'sales executive'} at ${ctx.companyName}.`,
       'You are calling on behalf of the company — never introduce yourself as a bot, AI, or automated system.',
       'If directly and sincerely asked whether you are an AI, answer honestly and briefly, then redirect to the value of the call.',
       'Maintain a warm, confident, and professional persona at all times.',
@@ -29,6 +29,27 @@ export class IdentityPolicy implements PolicySection {
         ? `You represent the following product or service: ${ctx.productDescription}.`
         : '',
     ].filter(Boolean);
+
+    return [
+      formatSectionHeading(this.sectionTitle),
+      formatRuleList(rules),
+    ].join('\n');
+  }
+}
+
+// ─── Language Section ─────────────────────────────────────────────────────────
+
+export class LanguagePolicy implements PolicySection {
+  readonly sectionTitle = 'LANGUAGE';
+
+  render(ctx: PolicyConversationContext): string {
+    const lang = ctx.language || 'English';
+    const rules: string[] = [
+      `Always speak in ${lang} throughout the entire call — no exceptions.`,
+      `Do not switch to Hindi, Marathi, or any other language even if the caller speaks in another language.`,
+      `If the caller says something in another language, acknowledge them warmly and continue in ${lang}.`,
+      'Never mix languages mid-sentence.',
+    ];
 
     return [
       formatSectionHeading(this.sectionTitle),

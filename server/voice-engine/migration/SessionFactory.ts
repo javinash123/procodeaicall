@@ -149,7 +149,7 @@ function buildRuntimeStub(): ConversationRuntime {
     destroy:        () => { /* no-op */ },
     getState:       () => RuntimeState.CREATED,
     getSession:     () => { throw new Error('SessionFactory stub: getSession() not implemented'); },
-    getContext:     () => { throw new Error('SessionFactory stub: getContext() not implemented'); },
+    getContext:     () => null as any,  // stub — real impl injected at mediaSession.initialize()
   };
 }
 

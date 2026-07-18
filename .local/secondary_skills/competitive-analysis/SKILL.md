@@ -423,7 +423,7 @@ The React web artifact renders the same report data as an HTML version that **vi
 - Cannot access paid CI tools (Klue, Crayon, Kompyte) or PitchBook
 - Pricing pages lie — enterprise pricing is almost never public
 
-- **webFetch and webSearch fail for:** JS-rendered SPAs (use curl), social media URLs (LinkedIn, Instagram, Twitter — blocked by robots), sites behind Cloudflare or login walls, and any product with <1k English web mentions
+- **webFetch and webSearch fail for:** JS-rendered SPAs (use curl), social media URLs (LinkedIn, Instagram — blocked by robots; for X/Twitter posts, profiles, and follower counts use the `externalApi__x` callback — read `.local/skills/external-apis/references/x.md`), sites behind Cloudflare or login walls, and any product with <1k English web mentions
 - **Regional/emerging market blind spot:** G2, Product Hunt, Crunchbase have minimal coverage of LatAm, Caribbean, SEA, MENA, and African markets. Local competitors in these markets will often have zero results in standard research tools — always fall back to local-language search, App Store regional search, and direct curl analysis
 
 - **Monitoring channel assumptions:** Slack RSS setup requires the native Slack RSS app to be installed in the workspace (free, but needs a workspace admin in some orgs). Teams RSS connector requires a Teams channel with Connectors enabled. If neither is available, fall back to Google Alerts → email without requiring any third-party tools or admin permissions.

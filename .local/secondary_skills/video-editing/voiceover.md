@@ -31,7 +31,7 @@ console.log(results);
 
 // Propose the connector to the user (they'll complete OAuth)
 
-await proposeIntegration({ integrationId: "connector:ccfg_elevenlabs_..." });
+ProposeIntegration({ proposal: [{ integrationId: "connector:ccfg_elevenlabs_..." }] });
 
 ```
 

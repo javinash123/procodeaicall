@@ -30,7 +30,8 @@ Authorization is handled automatically by Replit. Do not pass an `Authorization`
 ## ElevenLabs quickstart
 
 Text-to-speech, music, and audio tools through ElevenLabs
-passthrough billing. Replace path parameters like `:voice_id`
+passthrough billing, subject to the ElevenLabs prohibited-use
+policy. Replace path parameters like `:voice_id`
 with real values — never send the pattern syntax literally. Send
 required fields as an object in `body` (it is serialized for you
 — do not pre-stringify).
@@ -68,3 +69,62 @@ which is easiest to save from a callback.
 
 Authorization is managed by passthrough billing. Do not set an
 `Authorization` header manually.
+
+---
+
+## Prohibited uses
+
+Every ElevenLabs call is subject to the ElevenLabs Prohibited
+Use Policy (https://elevenlabs.io/use-policy). If a request
+falls under it, do not call `externalApi__elevenlabs` —
+briefly explain why and continue with the parts of the task
+that are allowed. Judge the real purpose of the requested
+audio, not only the literal text to be spoken.
+
+Never generate:
+
+- Child sexual content, sexualization or grooming of minors,
+  or content targeting minors with sexual, violent, or mature
+  themes.
+- Illegal activity: IP infringement, privacy violations, or
+  facilitating illegal goods or services.
+- Fraud or deception: phishing, scams, evading guardrails such
+  as voice CAPTCHAs, unauthorized robocalls, or spam.
+- Voice impersonation: replicating a real person's voice
+  without consent or legal right, or using a replicated voice
+  to harass or harm someone or to hide that it is
+  AI-generated. Never clone a minor's voice.
+- Elections: voter suppression, impersonating candidates or
+  elected officials (even with authorization), or
+  election-related campaigning, including soliciting votes or
+  donations. Ordinary issue advocacy unconnected to an
+  election is fine.
+- Network attacks and surveillance: hacking, malware, spyware,
+  or unauthorized monitoring of individuals.
+- Non-fictional violence, hate, or harassment: threats,
+  extremism, discrimination against protected groups,
+  promoting self-harm, medical misinformation, or abusive debt
+  collection. A villain's monologue in a game or audiobook is
+  fine; so is news reporting on these topics.
+
+Allowed only with conditions — flag or gate these:
+
+- Professional financial, legal, or medical advice or
+  services: requires qualified-professional review before
+  output reaches consumers plus clear AI disclosure.
+- Regulated goods (alcohol, tobacco, prescription meds,
+  controlled substances, supplements, medical devices): use,
+  acquisition, or exchange requires ElevenLabs' prior written
+  authorization.
+- Not permitted: real-money gambling, payday lending, or
+  high-stakes automated decisions affecting individuals.
+- AI voice agents must clearly disclose they are AI, not
+  human.
+
+Do not sell or distribute generated sound effects on a
+standalone basis (isolated files or a sound-effects library).
+
+The full policy summary, including platform rules (age limits
+and teen consent, government entities, machine-learning use of
+outputs), is in
+`.local/skills/media-generation/elevenlabs-prohibited-uses.md`.

@@ -23,22 +23,74 @@ function getSlideIndex(pathname: string): number {
   return slides.findIndex((s) => s.position === position);
 }
 
+const PARENT_OWNS_NAVIGATION =
+  new URLSearchParams(window.location.search).get('replitNav') === 'parent' ||
+  window.parent !== window.parent.parent;
+
 function SlideEditor() {
   const [location, navigate] = useLocation();
   const currentIndex = getSlideIndex(location);
 
-  // In the workspace, the slide iframe is nested inside another iframe,
-  // so window.parent !== window.parent.parent. In the deployed SlideViewer,
-  // the parent is the top-level window, so they're equal. Disable local
-  // navigation only in the workspace — the parent owns it there.
-  const navigationDisabledRef = useRef(window.parent !== window.parent.parent);
+  const navigationDisabledRef = useRef(PARENT_OWNS_NAVIGATION);
   const touchHandledRefStable = useRef(false);
 
   useEffect(() => {
     if (currentIndex === -1) return;
 
+    const INTERACTIVE =
+      'a,button,video,audio,input,select,textarea,details,summary,iframe,svg,canvas,' +
+      '[role="button"],[contenteditable]:not([contenteditable="false"])';
+
+    const isInteractive = (target: EventTarget | null) =>
+      (target as HTMLElement | null)?.closest?.(INTERACTIVE);
+
+    const ARROW_KEY_CONSUMERS =
+      'input:not([type="button"]):not([type="submit"]):not([type="reset"]),' +
+      'select,textarea,audio,video';
+
+    const consumesArrowKeys = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      return (
+        target.isContentEditable || !!target.closest(ARROW_KEY_CONSUMERS)
+      );
+    };
+
+    const postNav = (type: 'advanceSlide' | 'retreatSlide') => {
+      window.parent.postMessage({ type, source: 'keyboard' }, '*');
+    };
+
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (navigationDisabledRef.current) return;
+      if (navigationDisabledRef.current) {
+        if (event.defaultPrevented) return;
+        if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+          return;
+        }
+        if (event.key === ' ') {
+          const focused = isInteractive(event.target);
+          const role = focused?.getAttribute('role');
+          const isPlainLink =
+            !!focused &&
+            focused.tagName === 'A' &&
+            (!role ||
+              role === 'link' ||
+              role === 'none' ||
+              role === 'presentation');
+          if (focused && !isPlainLink) return;
+          event.preventDefault();
+          postNav('advanceSlide');
+          return;
+        }
+        if (consumesArrowKeys(event.target)) return;
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+          event.preventDefault();
+          postNav('retreatSlide');
+        }
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+          event.preventDefault();
+          postNav('advanceSlide');
+        }
+        return;
+      }
       if (event.key === ' ') {
         event.preventDefault();
       }
@@ -57,13 +109,6 @@ function SlideEditor() {
         navigate(`/slide${slides[currentIndex + 1].position}`);
       }
     };
-
-    const INTERACTIVE =
-      'a,button,video,audio,input,select,textarea,details,summary,iframe,svg,canvas,' +
-      '[role="button"],[contenteditable="true"]';
-
-    const isInteractive = (target: EventTarget | null) =>
-      (target as HTMLElement | null)?.closest?.(INTERACTIVE);
 
     const touchHandledRef = touchHandledRefStable;
 
