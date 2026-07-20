@@ -147,6 +147,14 @@ export class RuntimeIntegration implements IRuntimeIntegration {
 
   private _state: IntegrationState = IntegrationState.IDLE;
 
+  /**
+   * Bound activity-ping handlers kept here so they can be removed in stop().
+   * Both bridge.speech_detected and bridge.audio_ready count as "session is
+   * alive" — they reset the SessionSupervisor inactivity timer.
+   */
+  private readonly _onBridgeSpeech = (): void => this._supervisor.recordActivity();
+  private readonly _onBridgeAudio  = (): void => this._supervisor.recordActivity();
+
   constructor(deps: Readonly<RuntimeIntegrationDependencies>) {
     this._sessionId = deps.sessionId;
     this._mediaSession = deps.mediaSession;
@@ -221,6 +229,13 @@ export class RuntimeIntegration implements IRuntimeIntegration {
       this._supervisor.start();
       this._logger.debug('RuntimeIntegration: SessionSupervisor started');
 
+      // Step 8 — Wire bridge activity events → supervisor.recordActivity() so
+      // the inactivity timer resets whenever the caller speaks or the AI responds.
+      // Without this, _lastActivityAt stays at supervisor.start() time and the
+      // 30-second timeout fires while the call is still alive.
+      this._bridge.on('bridge.speech_detected', this._onBridgeSpeech);
+      this._bridge.on('bridge.audio_ready',     this._onBridgeAudio);
+
     } catch (err) {
       this._logger.error('RuntimeIntegration: start failed, initiating shutdown', {
         error: String(err),
@@ -260,6 +275,8 @@ export class RuntimeIntegration implements IRuntimeIntegration {
 
     // Steps 1–3 are synchronous — stop before any async calls.
     this._supervisor.stop();
+    this._bridge.off('bridge.speech_detected', this._onBridgeSpeech);
+    this._bridge.off('bridge.audio_ready',     this._onBridgeAudio);
     this._inboundFlow.stop();
     this._outboundFlow.stop();
 
@@ -300,6 +317,8 @@ export class RuntimeIntegration implements IRuntimeIntegration {
 
     // All synchronous teardown paths — no awaiting.
     try { this._supervisor.stop(); } catch { /* swallow */ }
+    try { this._bridge.off('bridge.speech_detected', this._onBridgeSpeech); } catch { /* swallow */ }
+    try { this._bridge.off('bridge.audio_ready',     this._onBridgeAudio); } catch { /* swallow */ }
     try { this._inboundFlow.stop(); } catch { /* swallow */ }
     try { this._outboundFlow.stop(); } catch { /* swallow */ }
     try { this._mediaSession.destroy(); } catch { /* swallow */ }

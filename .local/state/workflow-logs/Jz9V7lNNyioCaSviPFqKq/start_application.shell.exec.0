@@ -1,0 +1,41 @@
+[1G[0K⠙[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K⠙[1G[0K[1G[0K⠙[1G[0K⠹[1G[0K⠸[1G[0KMongoDB connected successfully
+6:37:00 AM [ws] WebSocket server ready on path /stream
+6:37:00 AM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+6:37:02 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+6:37:05 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5741351b-5da5-4920-84d2-d9da4419d9c8-00-1f8e1fptha9hh.sisko.replit.dev host=5741351b-5da5-4920-84d2-d9da4419d9c8-00-1f8e1fptha9hh.sisko.replit.dev
+6:37:05 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+6:37:12 AM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+9:47:58 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5741351b-5da5-4920-84d2-d9da4419d9c8-00-1f8e1fptha9hh.sisko.replit.dev host=5741351b-5da5-4920-84d2-d9da4419d9c8-00-1f8e1fptha9hh.sisko.replit.dev
+9:47:58 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+9:48:37 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5741351b-5da5-4920-84d2-d9da4419d9c8-00-1f8e1fptha9hh.sisko.replit.dev host=5741351b-5da5-4920-84d2-d9da4419d9c8-00-1f8e1fptha9hh.sisko.replit.dev
+9:48:37 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+9:48:42 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:21:04 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5741351b-5da5-4920-84d2-d9da4419d9c8-00-1f8e1fptha9hh.sisko.replit.dev host=5741351b-5da5-4920-84d2-d9da4419d9c8-00-1f8e1fptha9hh.sisko.replit.dev
+11:21:04 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:21:06 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}

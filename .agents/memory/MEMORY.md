@@ -3,3 +3,4 @@
 - [V2 chipmunk audio fix](v2-chipmunk-audio.md) — gpt-realtime ignores audio/pcmu; must use VOICE_OUTPUT_FORMAT=pcm + encoding-aware durationMs.
 - [Inbound mulaw transcoding](inbound-mulaw-transcoding.md) — OpenAI ignores audio/pcmu input format, defaults to pcm16; must decode mulaw→PCM16 in InboundAudioFlow before forwarding.
 - [V2 VAD never fires after greeting](v2-vad-turn-detection.md) — turn_detection must be at the TOP LEVEL of session.update; nested under audio.input is silently ignored.
+- [V2 input buffer desync](v2-buffer-desync.md) — _inputBufferBytesSent must be zeroed after session.update + on server committed event; always send full session config in updates.

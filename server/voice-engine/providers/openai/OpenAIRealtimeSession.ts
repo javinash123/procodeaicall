@@ -82,6 +82,13 @@ export interface IOpenAIRealtimeSession {
    */
   commitBuffer(): boolean;
   /**
+   * Discards the current input audio buffer on OpenAI's side and resets the
+   * local byte counter to zero. Call this whenever a clean slate is needed —
+   * e.g. right after the AI finishes speaking so accumulated echo/noise from
+   * the playback period is never submitted as "user input".
+   */
+  clearInputBuffer(): void;
+  /**
    * Triggers a model response immediately. Must be called after `commitBuffer()`
    * when server VAD is disabled.
    */
@@ -258,6 +265,17 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
           console.log('[AUDIT] session.update sent:\n' + JSON.stringify(sessionUpdateEvent, null, 2));
           this._sendEvent(sessionUpdateEvent);
 
+          // Greeting fallback: fire response.create after 1 s if session.updated
+          // hasn't already triggered it.  This prevents a session.update error
+          // (wrong field, rejected param, etc.) from silencing the entire call.
+          setTimeout(() => {
+            if (!this._greetingSent && this._ws?.readyState === WebSocket.OPEN && this._state === 'connected') {
+              console.log('[GREETING-FALLBACK] session.updated not received in 1s — firing greeting directly');
+              this._greetingSent = true;
+              this._sendEvent({ type: 'response.create' });
+            }
+          }, 1000);
+
           resolve();
         }
 
@@ -361,6 +379,18 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
   }
 
   /**
+   * Discards the current input audio buffer on OpenAI's side and resets the
+   * local byte counter. Use to flush accumulated echo / background noise
+   * that built up during AI playback, so the next caller turn starts clean.
+   */
+  clearInputBuffer(): void {
+    if (this._ws?.readyState !== WebSocket.OPEN) return;
+    this._sendEvent({ type: 'input_audio_buffer.clear' });
+    this._inputBufferBytesSent = 0;
+    console.log('[InputBuffer] Cleared — echo/noise flushed before next caller turn');
+  }
+
+  /**
    * Triggers a model response immediately.
    * Use after `commitBuffer()` when managing turns manually.
    */
@@ -371,13 +401,18 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
 
   /**
    * Hot-updates the system instructions for the current session.
+   * Sends the full session config (not just instructions) so that
+   * turn_detection: null is always explicitly applied and never reverts
+   * to OpenAI's default server_vad on a partial update.
    */
   async updateInstructions(instructions: string): Promise<void> {
     this._assertConnected();
     this._sendEvent({
       type: 'session.update',
-      session: { type: 'realtime', instructions },
+      session: this._buildSessionConfig(instructions),
     });
+    // Full session.update may flush the input audio buffer on OpenAI's side.
+    this._inputBufferBytesSent = 0;
   }
 
   /**
@@ -499,38 +534,37 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     return {
       type: 'realtime',
       instructions,
-      // NOTE: `format.rate` is omitted — the API rejects it as unknown_parameter.
-      // turn_detection is explicitly null here — client-side VAD (energy-based
-      // silence detection) is implemented in RealtimeBridge and is more reliable
-      // for Exotel 8kHz→24kHz upsampled phone audio than OpenAI's server VAD,
-      // which silently ignores the nested audio.input.turn_detection config.
+      // turn_detection is nested under audio.input — this is the only accepted
+      // placement for gpt-realtime.  Top-level 'session.turn_detection' is
+      // rejected as unknown_parameter, which also prevents session.updated from
+      // firing and silences the greeting entirely.
+      //
+      // threshold=0.2  — below default 0.5; Exotel resampled 8→24 kHz audio
+      //                   has lower amplitude characteristics
+      // silence_duration_ms=600 — slightly longer than default (200ms) so the
+      //                   VAD doesn't cut the caller off mid-sentence on a phone
+      // create_response=true   — server VAD auto-commits AND creates a response
+      // interrupt_response=true — server VAD handles barge-in automatically
+      //
+      // RealtimeBridge adds an 8 s timeout fallback: if server VAD does not
+      // fire within 8 s of the AI finishing, the buffer is committed and a
+      // response is created.  This prevents silence when server VAD misses a
+      // caller turn.  Energy-based client VAD (VAD_SPEECH_RMS=15000) is kept
+      // but effectively disabled for phone noise.
       audio: {
         input: {
+          // rate is required by the API — omitting it causes missing_required_parameter error.
           format: { type: 'audio/pcm' as const, rate: 24000 },
           transcription: this._config.enableInputTranscription
             ? { model: this._config.transcriptionModel }
             : null,
-          // Server VAD is intentionally configured with a very high threshold and
-          // a long silence window so it almost never auto-commits the buffer.
-          //
-          // Root cause of the "buffer too small: 0.00ms" errors:
-          //   The default silence_duration_ms=200 causes the server to silently
-          //   clear the buffer every 200ms of audio that doesn't meet the 0.5
-          //   speech threshold.  Narrowband phone audio upsampled from 8→24 kHz
-          //   never meets that threshold.  By the time our client VAD fires its
-          //   manual commitBuffer(), the server has already cleared the buffer.
-          //
-          // Fix: threshold=0.9 + silence_duration_ms=30000 + create_response=false
-          //   • threshold=0.9  — won't trigger on low-energy narrowband audio
-          //   • silence_duration_ms=30000 — even if triggered, won't auto-commit
-          //     until 30s of silence (our client VAD commits at 700ms)
-          //   • create_response=false — no double-response if VAD somehow fires
           turn_detection: {
             type: 'server_vad' as const,
-            threshold: 0.9,
-            silence_duration_ms: 10000, // API max is 10000ms; 10s >> our 700ms client VAD window
+            threshold: 0.2,
             prefix_padding_ms: 300,
-            create_response: false,
+            silence_duration_ms: 600,
+            create_response: true,
+            interrupt_response: true,
           },
         },
         output: {
@@ -691,10 +725,18 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
               'ConversationState changed — updating OpenAI session instructions',
               { stage: result.currentStageLabel }
             );
+            // Send full session config (not just instructions) so that
+            // turn_detection: null is re-applied on every update.  A partial
+            // session.update (instructions-only) can cause OpenAI to revert
+            // turn_detection to its default (server_vad, 200ms silence) which
+            // would auto-commit the buffer and desync our _inputBufferBytesSent.
             this._sendEvent({
               type: 'session.update',
-              session: { type: 'realtime', instructions: result.updatedInstruction },
+              session: this._buildSessionConfig(result.updatedInstruction),
             });
+            // session.update may flush/reset the input audio buffer on OpenAI's
+            // side — zero our counter so commitBuffer() doesn't fire on stale bytes.
+            this._inputBufferBytesSent = 0;
           }
         }
         break;
@@ -756,6 +798,9 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
       case 'input_audio_buffer.committed':
         this._record('input_audio_buffer.committed', { itemId: (event as any).item_id ?? null });
         CallTrace.recordOpenAIEvent(this._traceSessionId, event.type);
+        // Server committed the buffer (server VAD or our own commit was acknowledged).
+        // Reset the local counter so the next commitBuffer() doesn't fire on stale bytes.
+        this._inputBufferBytesSent = 0;
         break;
 
       case 'response.function_call_arguments.delta':

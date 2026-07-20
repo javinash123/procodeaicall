@@ -1,0 +1,34 @@
+{
+  "sessionId": "v2s-1784486765286-000001",
+  "providerSessionId": "sess_E3QoirdaPuegGInJyOJEt",
+  "callStartedAt": "2026-07-19T18:46:16.452Z",
+  "callEndedAt": "2026-07-19T18:47:49.247Z",
+  "callDurationMs": 92795,
+  "turnCount": 10,
+  "interruptions": 0,
+  "stageProgression": [
+    "Greeting",
+    "Rapport",
+    "Discovery",
+    "Qualification"
+  ],
+  "avgLatencyMs": null,
+  "avgTtftMs": 347,
+  "avgSttLatencyMs": null,
+  "avgResponseDurMs": 1413,
+  "totalInputTokens": 46915,
+  "totalOutputTokens": 1806,
+  "totalTokens": 48721,
+  "estimatedCostUsd": 0.324834,
+  "errors": [
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio."
+  ]
+}

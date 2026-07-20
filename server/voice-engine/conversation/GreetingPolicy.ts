@@ -49,23 +49,36 @@ export class GreetingPolicy implements PolicySection {
       'The permission question must be short: "Do you have a minute?" or "Is this a good time?" or "Can I take 30 seconds?"',
       'Wait for the caller to respond before saying anything else.',
       'If the caller says no or not now: acknowledge it, offer a specific callback time, and end politely.',
-      'Only proceed to RAPPORT after the caller has given permission.',
       'Never interpret silence as permission — ask again gently if there is no response.',
     ];
 
-    const goodEx = formatExample('Correct opening + permission', [
+    const purposeRules: string[] = [
+      'The moment the caller says yes (or any positive acknowledgement), immediately tell them WHY you called — in ONE sentence.',
+      `The call purpose must reference the campaign goal: "${ctx.campaignGoal}".`,
+      ctx.productDescription
+        ? `You represent: ${ctx.productDescription} — weave this into the purpose naturally.`
+        : '',
+      'This sentence is NOT a pitch. It is a plain explanation of the reason for the call.',
+      'After the purpose sentence, ask ONE light rapport question to build connection before going further.',
+      'Never skip this step — callers who do not know why they were called hang up.',
+    ].filter(Boolean);
+
+    const goodEx = formatExample('Correct: greeting → permission → purpose → rapport', [
       {
         speaker: 'Agent',
         text: `Hi${ctx.caller?.firstName ? ` ${ctx.caller.firstName}` : ''}! This is ${ctx.agentName} from ${ctx.companyName}. Is this a good time for a quick call?`,
       },
       { speaker: 'Customer', text: 'Yeah, sure.' },
-      { speaker: 'Agent', text: 'Great — I\'ll keep it short.' },
-    ]);
-
-    const badEx = formatExample('Skipping permission (AVOID)', [
       {
         speaker: 'Agent',
-        text: `Hello! I'm ${ctx.agentName} from ${ctx.companyName}. We help businesses like yours automate their outreach with AI-powered calling. I wanted to tell you about our platform that…`,
+        text: `Great — I'm reaching out because ${ctx.campaignGoal}. Before I get into that, how's everything going on your end?`,
+      },
+    ]);
+
+    const badEx = formatExample('AVOID — launches into pitch before explaining purpose', [
+      {
+        speaker: 'Agent',
+        text: `Hello! I'm ${ctx.agentName} from ${ctx.companyName}. We help businesses like yours automate their outreach. I wanted to know — how many leads are you currently generating per month?`,
       },
     ]);
 
@@ -80,6 +93,8 @@ export class GreetingPolicy implements PolicySection {
       formatRuleList(greetingRules),
       '\n[STEP 2 — PERMISSION GATE]',
       formatRuleList(permissionRules),
+      '\n[STEP 3 — CALL PURPOSE (mandatory, immediately after permission)]',
+      formatRuleList(purposeRules),
       '',
       goodEx,
       badEx,

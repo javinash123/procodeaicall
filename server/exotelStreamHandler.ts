@@ -194,11 +194,15 @@ export function buildWav(pcm: Int16Array, sampleRate: number, channels = 1): Buf
 /**
  * Transcribe accumulated μ-law audio (8 kHz mono) to text using OpenAI Whisper.
  *
+ * @param mulawChunks  Raw PCM16 LE buffers at 8 kHz (from Exotel).
+ * @param campaignHint Optional short phrase describing the call topic —
+ *                     injected as Whisper's `prompt` to anchor vocabulary and
+ *                     reduce hallucination on phone-quality audio.
+ *
  * TODO: Swap this function with a different STT provider (e.g. Deepgram, Google STT)
- *       by replacing the implementation while keeping the same signature:
- *         transcribeAudio(mulawChunks: Buffer[]): Promise<string>
+ *       by replacing the implementation while keeping the same signature.
  */
-export async function transcribeAudio(mulawChunks: Buffer[]): Promise<string> {
+export async function transcribeAudio(mulawChunks: Buffer[], campaignHint?: string): Promise<string> {
   if (mulawChunks.length === 0) return "";
 
   const raw = Buffer.concat(mulawChunks);
@@ -218,14 +222,19 @@ export async function transcribeAudio(mulawChunks: Buffer[]): Promise<string> {
   const wavFile = await toFile(wav, "audio.wav", { type: "audio/wav" });
 
   // Use verbose_json so we get per-segment no_speech_prob.
-  // The prompt anchors Whisper to real-estate vocabulary which reduces the chance
-  // of hallucinating unrelated words ("vaccine", "Wi-Fi") on phone echo/noise.
+  // The prompt anchors Whisper to domain-relevant vocabulary, reducing hallucination
+  // on phone-quality audio. Falls back to a generic sales-call hint when no campaign
+  // context is available.
+  const whisperPrompt = campaignHint
+    ? `Phone call. ${campaignHint}.`
+    : "Outbound phone call. Sales or customer support conversation.";
+
   const result: any = await openai.audio.transcriptions.create({
     model:           "whisper-1",
     file:            wavFile,
     language:        "en",
     response_format: "verbose_json" as any,
-    prompt:          "Real estate property sales call about apartments.",
+    prompt:          whisperPrompt,
   });
 
   // Drop the transcript if Whisper itself signals low confidence that speech occurred.
@@ -617,8 +626,23 @@ async function processAudio(ws: WebSocket, session: ExotelSession): Promise<void
   log(`[exotel:${session.streamSid}] ▶ processAudio — ${chunks.length} chunks, ${totalBytes} B`, "ws");
 
   try {
-    // ── Step 1: Transcribe caller audio (Whisper) ─────────────────────────────
-    const userText = await transcribeAudio(chunks);
+    // ── Step 1: Load campaign data first so it can inform STT ────────────────
+    // Cache on session to avoid a DB round-trip every turn.
+    if (!session.campaignCache) {
+      session.campaignCache = await loadCampaignData(session.campaignId);
+    }
+    const campaignData = session.campaignCache;
+
+    // Build a short campaign hint for Whisper vocabulary anchoring.
+    // Uses campaign name + goal + a snippet of additional context (if any).
+    const campaignHint = [
+      campaignData.name,
+      campaignData.goal,
+      campaignData.additionalContext?.slice(0, 80),
+    ].filter(Boolean).join(". ");
+
+    // ── Step 2: Transcribe caller audio (Whisper) ─────────────────────────────
+    const userText = await transcribeAudio(chunks, campaignHint || undefined);
     log(`[exotel:${session.streamSid}] ▶ STT: "${userText}"`, "ws");
     if (!userText) {
       log(`[exotel:${session.streamSid}] ▶ Empty STT — skipping`, "ws");
@@ -634,11 +658,10 @@ async function processAudio(ws: WebSocket, session: ExotelSession): Promise<void
       return;
     }
 
-    // ── Step 2: Parallel — optional filler TTS + GPT response ───────────────
+    // ── Step 3: Parallel — optional filler TTS + GPT response ───────────────
     // Fire GPT immediately.  Only generate + play a filler phrase on ~40% of
     // turns — and NEVER for very short inputs (Yes/No/OK/Sure) where the
     // caller expects an immediate response and a filler just adds dead air.
-    const campaignData = await loadCampaignData(session.campaignId);
     session.conversationHistory.push({ role: "user", content: userText });
 
     const isShortInput = userText.trim().split(/\s+/).length <= 3; // "Yes", "Sure", "Go ahead", etc.
@@ -654,7 +677,7 @@ async function processAudio(ws: WebSocket, session: ExotelSession): Promise<void
     );
     const fillerTtsPromise = useFiller ? encodeReplyForExotel(filler) : null;
 
-    // ── Step 3: Play filler (if chosen) while waiting for GPT ────────────────
+    // ── Step 4: Play filler (if chosen) while waiting for GPT ────────────────
     if (fillerTtsPromise) {
       const fillerChunks = await fillerTtsPromise;
       session.isSpeaking = true;

@@ -244,12 +244,37 @@ export class RealtimeBridge implements IRealtimeBridge {
    */
   private _serverVadActive = false;
 
+  /**
+   * Epoch ms until which inbound audio must NOT be forwarded to OpenAI.
+   * Set when the AI finishes speaking to suppress Exotel echo packets that
+   * arrive for ~200ms after playback ends. Also active during the entire
+   * responding/waiting_greeting states so the AI's own voice is never fed
+   * back as caller input.
+   */
+  private _muteUntilMs = 0;
+
+  /**
+   * Fallback timer: if server VAD has not fired within CALLER_RESPONSE_TIMEOUT_MS
+   * after the AI finishes speaking, we commit the buffer and create a response.
+   * This prevents complete silence when server VAD misses a caller turn on phone
+   * audio.  Cancelled immediately when speech_started or response_completed fires.
+   */
+  private _callerResponseTimer: ReturnType<typeof setTimeout> | null = null;
+
   // Tuning constants — matched to V1's VAD_THRESHOLD=200 on 8 kHz audio.
   // At 24 kHz PCM16 the same amplitude produces similar RMS values.
-  private static readonly VAD_SPEECH_RMS       = 150;   // RMS above this = speech
+  // VAD_SPEECH_RMS is set well above Exotel phone line noise floor (~4500–7500 RMS).
+  // Phone audio after 8→24 kHz resampling has persistent background noise that
+  // makes energy-based VAD unreliable — threshold 150 caused the VAD to always
+  // detect "speech" and force-commit 14 s of noise every turn.
+  // Client VAD now acts only as a buffer-drain safety net; server VAD (OpenAI)
+  // drives all actual response creation via create_response=true.
+  private static readonly VAD_SPEECH_RMS       = 15000; // above phone noise floor — effectively disables energy VAD
   private static readonly VAD_MIN_SPEECH_MS    = 120;   // min speech before it counts
   private static readonly VAD_SILENCE_MS       = 700;   // silence after speech → commit
-  private static readonly VAD_MAX_TURN_MS      = 14000; // force commit if speaker goes too long
+  private static readonly VAD_MAX_TURN_MS      = 14000; // drain buffer if speaker goes too long (no createResponse)
+  /** If server VAD fires no speech event within this window after AI finishes, create a response anyway. */
+  private static readonly CALLER_RESPONSE_TIMEOUT_MS = 8000;
 
   /** Diagnostics collector — created in connect(), detached in disconnect(). */
   private _diagnosticsCollector: TurnDiagnosticsCollector | null = null;
@@ -370,11 +395,26 @@ export class RealtimeBridge implements IRealtimeBridge {
   /**
    * Forwards caller audio to the AI provider and runs the client-side VAD.
    * Fire-and-forget; silently ignored when not connected.
+   *
+   * Audio is suppressed (not sent to OpenAI) while the AI is speaking
+   * (`responding` / `waiting_greeting` states) and for a short cooldown
+   * after playback ends. This prevents Exotel phone echo — which arrives
+   * on the inbound stream while and just after the AI speaks — from being
+   * detected as caller speech and triggering a self-response.
    */
   forwardAudio(base64: string): void {
     if (!this.isConnected || this._destroyed) return;
+
+    // Mute gate: suppress audio during AI playback and post-playback cooldown.
+    const isMuted =
+      this._vadState === 'responding' ||
+      this._vadState === 'waiting_greeting' ||
+      Date.now() < this._muteUntilMs;
+
+    if (isMuted) return;
+
     this._provider.sendAudio(base64);
-    // Client VAD — skipped while greeting plays or AI is responding
+    // Client VAD — only runs while actively listening for caller speech
     if (this._vadState === 'listening' || this._vadState === 'in_speech') {
       this._processClientVAD(base64);
     }
@@ -445,19 +485,51 @@ export class RealtimeBridge implements IRealtimeBridge {
     this._vadSilenceMs = 0;
     console.log(`[ClientVAD] Committing turn (${reason})  speechMs=${speechMs}  sessionId=${this._sessionId}`);
 
-    // commitBuffer() returns false when the local byte counter is zero —
-    // meaning server VAD silently cleared the buffer before we got here.
-    // In that case, skip createResponse() entirely: responding without audio
-    // produces context-guessing replies that make the call sound broken.
+    // commitBuffer() drains the accumulated audio and returns false when the
+    // local byte counter is zero (server VAD already cleared the buffer).
     const committed = this._provider.commitBuffer();
     if (!committed) {
       console.log(`[ClientVAD] Buffer was empty at commit — holding response  sessionId=${this._sessionId}`);
-      // Return to listening so the next speech segment can try again
       this._vadState = 'listening';
       return;
     }
 
-    this._provider.createResponse();
+    // For max_turn_duration commits: do NOT call createResponse().
+    // These are safety-net drains only — the buffer almost certainly contains
+    // phone noise, not real caller speech. Server VAD (create_response=true)
+    // handles all genuine response creation. Calling createResponse() here was
+    // the direct cause of the AI "answering itself" — it would generate a full
+    // response with no user input, then fabricate an answer to its own question.
+    //
+    // For silence_after_speech commits: the caller genuinely spoke and paused,
+    // so we call createResponse() as a fallback for when server VAD misses it.
+    if (reason === 'silence_after_speech' || reason === 'silence_timeout') {
+      // Genuine turn end: either real silence after speech (energy VAD), or the
+      // 8 s fallback timer fired because server VAD missed the caller's response.
+      this._provider.createResponse();
+    } else {
+      // max_turn_duration drain — buffer flushed, but no response forced.
+      // Server VAD's create_response=true will handle it if speech was detected.
+      console.log(`[ClientVAD] Buffer drained (${reason}) — no createResponse, server VAD handles  sessionId=${this._sessionId}`);
+      this._vadState = 'listening';
+    }
+  }
+
+  private _startCallerResponseTimer(): void {
+    this._clearCallerResponseTimer();
+    this._callerResponseTimer = setTimeout(() => {
+      if (this._destroyed || this._vadState !== 'listening') return;
+      if (this._serverVadActive) return; // server VAD is already handling this turn
+      console.log(`[FallbackTimer] No server VAD event in ${RealtimeBridge.CALLER_RESPONSE_TIMEOUT_MS}ms — committing buffer and creating response  sessionId=${this._sessionId}`);
+      this._commitTurn('silence_timeout');
+    }, RealtimeBridge.CALLER_RESPONSE_TIMEOUT_MS);
+  }
+
+  private _clearCallerResponseTimer(): void {
+    if (this._callerResponseTimer !== null) {
+      clearTimeout(this._callerResponseTimer);
+      this._callerResponseTimer = null;
+    }
   }
 
   /**
@@ -478,6 +550,7 @@ export class RealtimeBridge implements IRealtimeBridge {
     if (this._destroyed) return;
     this._destroyed = true;
     this._connected = false;
+    this._clearCallerResponseTimer();
 
     this._logger.info('RealtimeBridge disconnecting');
 
@@ -582,7 +655,8 @@ export class RealtimeBridge implements IRealtimeBridge {
         audioStartMs: event.audioStartMs,
       });
 
-      // Server VAD took over — disable client VAD for this turn so we don't double-commit
+      // Server VAD took over — cancel the fallback timer and disable client VAD
+      this._clearCallerResponseTimer();
       this._serverVadActive = true;
       if (this._vadState === 'listening' || this._vadState === 'in_speech') {
         this._vadState     = 'responding';
@@ -610,17 +684,28 @@ export class RealtimeBridge implements IRealtimeBridge {
       if (this._destroyed) return;
       this._serverVadActive = false; // server VAD resets each turn
       if (this._vadState === 'waiting_greeting') {
-        // First response.done = greeting finished — activate client VAD
+        // First response.done = greeting finished — activate client VAD.
+        // Apply a 400ms cooldown so any Exotel echo of the greeting audio
+        // dissipates before we start forwarding inbound audio to OpenAI.
+        this._provider.clearInputBuffer();
+        this._muteUntilMs  = Date.now() + 400;
         this._vadState     = 'listening';
         this._vadSpeechMs  = 0;
         this._vadSilenceMs = 0;
-        console.log(`[ClientVAD] Greeting done — client VAD active  sessionId=${this._sessionId}`);
+        console.log(`[ClientVAD] Greeting done — mute cooldown 400ms, then listening  sessionId=${this._sessionId}`);
+        this._startCallerResponseTimer();
       } else if (this._vadState === 'responding') {
-        // AI finished speaking — listen for next caller turn
+        // AI finished speaking — apply a 400ms cooldown before resuming audio
+        // forwarding. Exotel echo of the AI's voice can arrive for ~200ms after
+        // playback ends; without the cooldown it hits the fresh buffer and is
+        // detected as caller speech, triggering a self-response.
+        this._provider.clearInputBuffer();
+        this._muteUntilMs  = Date.now() + 400;
         this._vadState     = 'listening';
         this._vadSpeechMs  = 0;
         this._vadSilenceMs = 0;
-        console.log(`[ClientVAD] AI response done — listening  sessionId=${this._sessionId}`);
+        console.log(`[ClientVAD] AI response done — mute cooldown 400ms, then listening  sessionId=${this._sessionId}`);
+        this._startCallerResponseTimer();
       }
     });
 

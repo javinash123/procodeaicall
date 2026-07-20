@@ -61,8 +61,8 @@ export const OpenAIRealtimeConfigSchema = z.object({
   /** Model to use for realtime conversations. Must be a GA Realtime model. */
   model: z.string().default('gpt-realtime'),
 
-  /** Voice used for audio output. */
-  voice: RealtimeVoiceSchema.default('alloy'),
+  /** Voice used for audio output. 'coral' — warm, conversational, natural for phone sales. */
+  voice: RealtimeVoiceSchema.default('coral'),
 
   /** Sampling temperature. */
   temperature: z.number().min(0).max(2).default(0.8),

@@ -1,0 +1,33 @@
+[1G[0K⠙[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K⠙[1G[0K[1G[0K⠙[1G[0K⠹[1G[0KMongoDB connected successfully
+5:28:43 PM [ws] WebSocket server ready on path /stream
+5:28:43 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+5:28:44 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+5:28:47 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://5741351b-5da5-4920-84d2-d9da4419d9c8-00-1f8e1fptha9hh.sisko.replit.dev host=5741351b-5da5-4920-84d2-d9da4419d9c8-00-1f8e1fptha9hh.sisko.replit.dev
+5:28:47 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+5:28:49 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}

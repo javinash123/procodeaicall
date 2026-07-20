@@ -1,0 +1,27 @@
+{
+  "sessionId": "v2s-1784413651301-000001",
+  "providerSessionId": "sess_E37nR9mfc7DaXEPwODvK8",
+  "callStartedAt": "2026-07-18T22:27:42.077Z",
+  "callEndedAt": "2026-07-18T22:28:50.046Z",
+  "callDurationMs": 67968,
+  "turnCount": 4,
+  "interruptions": 0,
+  "stageProgression": [
+    "Greeting",
+    "Rapport",
+    "Discovery"
+  ],
+  "avgLatencyMs": null,
+  "avgTtftMs": 387,
+  "avgSttLatencyMs": null,
+  "avgResponseDurMs": 1159,
+  "totalInputTokens": 18186,
+  "totalOutputTokens": 604,
+  "totalTokens": 18790,
+  "estimatedCostUsd": 0.123612,
+  "errors": [
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio."
+  ]
+}

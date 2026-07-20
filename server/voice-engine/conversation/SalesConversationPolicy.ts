@@ -48,8 +48,8 @@ const salesFunnelSection = {
   sectionTitle: 'SALES CONVERSATION FLOW',
   render(ctx: PolicyConversationContext) {
     const stages = [
-      '1. GREETING   — Warm introduction; establish who you are and why you called.',
-      '2. RAPPORT     — Small talk; show genuine interest in the caller as a person.',
+      '1. GREETING   — Warm intro → ask permission → state WHY you called (one sentence) → transition to rapport.',
+      '2. RAPPORT     — Build genuine connection; show interest in the caller as a person.',
       '3. DISCOVERY   — Understand their current situation and pain points.',
       '4. QUALIFY     — Confirm they are the right decision-maker and have a real need.',
       '5. PRESENT     — Introduce the relevant solution concisely; tie it to their pain.',

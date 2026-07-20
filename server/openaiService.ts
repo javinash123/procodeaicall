@@ -143,7 +143,7 @@ RULES (failure to follow any rule = wrong answer):
  * Conversation arc:
  *   Turn 1-2  → Qualify (ask 1 short question to understand their situation)
  *   Turn 3-5  → Pitch specifics from knowledge base / script
- *   Turn 6+   → Drive to close (visit, callback, next step)
+ *   Turn 6+   → Drive to close (callback, next step, commitment)
  *
  * Hard constraints enforced in prompt:
  *   - Max 1 sentence for confirmations / affirmatives
@@ -157,6 +157,7 @@ export async function generateAIResponse(
   campaignData: CampaignData
 ): Promise<AIResponse> {
   const {
+    name: campaignName,
     goal,
     additionalContext,
     ai_generated_script,
@@ -171,98 +172,94 @@ export async function generateAIResponse(
 
   const kb = knowledge_base || knowledgeBaseText || "";
   const isSupport = (goal || "").toLowerCase().includes("support");
-  const turnCount = conversationHistory.length; // includes the user turn we're replying to
 
   // Classify what the user just said
   const u = userInput.trim().toLowerCase();
-  const isAffirmative   = /^(yes|yeah|yep|sure|ok|okay|go ahead|please|yea|mhm|of course|absolutely|definitely|fine|alright|right|correct|exactly|totally|sounds good|great|perfect)[\s.!,]*$/i.test(u);
-  const wantsSchedule   = /schedul|book|visit|appointment|meet|come over|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{1,2}\s*(am|pm|:)/i.test(u);
-  const wantsInfo       = /tell me more|more about|details|how much|price|cost|location|where|ameniti|size|bhk|bedroom|floor|parking|gym|pool|lift|elevator|square|sq|area/i.test(u);
-  const asksQuestion    = u.endsWith("?");
-  const isShort         = userInput.trim().split(/\s+/).length <= 4;
+  const isAffirmative = /^(yes|yeah|yep|sure|ok|okay|go ahead|please|yea|mhm|of course|absolutely|definitely|fine|alright|right|correct|exactly|totally|sounds good|great|perfect)[\s.!,]*$/i.test(u);
+  const wantsSchedule = /schedul|book|appointment|meet|call back|callback|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{1,2}\s*(am|pm|:)/i.test(u);
+  const wantsInfo     = /tell me more|more about|details|how much|price|cost|what is|how does|explain|describe|what are/i.test(u);
+  const asksQuestion  = u.endsWith("?");
 
   // Count actual user turns (not AI turns) to determine stage
   const userTurnCount = conversationHistory.filter(m => m.role === "user").length;
 
+  // Campaign context for stage instructions
+  const campaignContext = additionalContext || campaignName || goal || "our product or service";
+
   // Pick the right instruction for this turn
   let stageInstruction: string;
   if (userTurnCount <= 1) {
-    // First user message is usually just "yes" / "sure" — permission to proceed.
-    // Respond by asking ONE qualifying question only. No product pitch yet.
-    stageInstruction = `STAGE — QUALIFY (caller's first response):
-The caller just gave permission to continue (e.g. "yes", "sure"). Do NOT pitch product details yet.
-Ask exactly ONE short open question to understand their situation.
-Good examples: "Are you looking for a 2BHK or 3BHK?" / "Is this for yourself or as an investment?" / "What area are you considering?"
-Do NOT ask about scheduling a visit at this stage — that comes much later.`;
+    stageInstruction = `STAGE — UNDERSTAND (caller's first response):
+The caller just gave permission to continue. Do NOT pitch details yet.
+Ask exactly ONE short open question to understand their current situation or needs related to: ${campaignContext}.
+Keep the question short, natural, and conversational — like you'd ask a friend.
+Do NOT suggest scheduling anything at this stage.`;
   } else if (userTurnCount <= 4) {
-    stageInstruction = `STAGE — DISCOVER & PITCH SPECIFICS:
-Answer their question directly with ONE specific fact from the knowledge base.
-Then ask ONE question that advances the conversation.
-Do NOT combine multiple topics in one reply — one piece of information per turn.
+    stageInstruction = `STAGE — INFORM & EXPLORE:
+Answer their point or question directly using ONE specific fact from the knowledge base.
+Then ask ONE natural follow-up question to advance the conversation.
+Do NOT combine multiple topics — one thing per turn.
 Do NOT pitch everything at once.`;
   } else if (userTurnCount <= 7) {
     stageInstruction = `STAGE — BUILD INTEREST:
-The caller has engaged for several turns — they are interested.
-Offer a concrete next step: suggest a site visit, a callback, or a brochure.
-Keep it conversational — do NOT pressure.`;
+The caller has been engaged for several turns — they are interested.
+Offer ONE concrete next step tied to the campaign goal: ${campaignContext}.
+Keep it casual and low-pressure — suggest, don't push.`;
   } else {
-    stageInstruction = `STAGE — CLOSE:
-Drive toward a specific commitment: book a visit, confirm a callback time, or get their name.
+    stageInstruction = `STAGE — COMMIT:
+Steer toward a specific commitment that fits the campaign goal: ${campaignContext}.
 If they mention a day/time, confirm it immediately and ask for their name.
-Do not introduce new product details — focus only on the next step.`;
+Do not introduce new details — focus only on the next step.`;
   }
 
-  // Special override instructions for detected intent.
-  // On userTurnCount === 1 the caller just gave permission ("yes/sure") —
-  // skip the affirmative override so it doesn't conflict with the QUALIFY stage.
+  // Special override instructions for detected intent
   let intentInstruction = "";
   if (wantsSchedule) {
-    intentInstruction = `\n⚡ SCHEDULE INTENT DETECTED: The caller wants to book a visit or appointment.
-Confirm the time they mentioned, ask for their name, and commit. This is the BEST outcome of the call.
-Example: "Monday 11am works perfectly — may I get your name to confirm the booking?"`;
+    intentInstruction = `\n⚡ SCHEDULE INTENT: The caller wants to set up a meeting or callback.
+Confirm the time they mentioned, ask for their name, and lock it in. This is the best outcome.
+Example: "Tuesday at 3 works perfectly — can I get your name to confirm?"`;
   } else if (isAffirmative && !asksQuestion && userTurnCount > 1) {
-    // Only activate affirmative shortcut after the first real exchange;
-    // on turn 1 the "yes" just means "go ahead" and the QUALIFY stage handles it.
-    intentInstruction = `\n⚡ AFFIRMATIVE RESPONSE: They said yes / agreed to your last offer or question.
-Immediately deliver the next piece of information — do NOT ask "are you sure?" or repeat yourself.`;
+    intentInstruction = `\n⚡ AFFIRMATIVE RESPONSE: They agreed. Immediately deliver the next relevant piece of information — do NOT re-ask or repeat yourself.`;
   } else if (wantsInfo) {
-    intentInstruction = `\n⚡ INFO REQUEST: Give 1-2 specific facts from the knowledge base right now. Do not deflect — actually answer the question.`;
+    intentInstruction = `\n⚡ INFO REQUEST: Answer directly using a specific fact from the knowledge base. If the KB doesn't cover it exactly, say what you DO know and offer to have someone follow up — never dodge the question with a different question.`;
   }
 
-  const systemPrompt = `You are a professional human ${isSupport ? "customer support agent" : "sales agent"} on a LIVE outbound phone call. Every word you say is spoken aloud — no text formatting, no lists, no markdown.
+  const systemPrompt = `You are a professional human ${isSupport ? "customer support representative" : "sales agent"} on a LIVE outbound phone call. Every word you say is spoken aloud — no text formatting, no lists, no markdown.
 
 ${goal ? `Campaign goal: ${goal}` : ""}
-${additionalContext ? `Business info: ${additionalContext}` : ""}
-${kb ? `━━━ PROPERTY KNOWLEDGE BASE — your authoritative source of facts ━━━\n${kb.slice(0, 2500)}\n━━━ END KNOWLEDGE BASE ━━━` : ""}
-${resolvedScript ? `Reference talking points (do NOT recite verbatim — adapt to the conversation):\n${resolvedScript}` : ""}
+${additionalContext ? `About the business / product: ${additionalContext}` : ""}
+${kb ? `━━━ KNOWLEDGE BASE — use this to answer questions accurately ━━━\n${kb.slice(0, 2500)}\n━━━ END KNOWLEDGE BASE ━━━` : ""}
+${resolvedScript ? `Reference talking points (adapt naturally — do NOT read verbatim):\n${resolvedScript}` : ""}
 
 ━━━ ABSOLUTE RULES — violating ANY of these is an error ━━━
 
 RULE 1 — LENGTH (hardest constraint):
 • Caller said yes / sure / ok / agreed / great → EXACTLY 1 short sentence — no more.
 • All other inputs → MAXIMUM 2 SHORT sentences. Count before you output.
-• ONE topic per turn. Never combine price + location + amenities in one reply.
-• Never exceed 2 sentences. Ever. The model will be penalised for exceeding this.
+• ONE topic per turn. Never combine multiple facts in one reply.
+• Never exceed 2 sentences. Ever.
 
-RULE 2 — FORMAT:
-• Plain spoken English only. No bullets, no lists, no dashes as list items, no markdown.
-• Do NOT start with filler openers: "Great!", "Absolutely!", "Of course!", "Certainly!", "Sure!".
+RULE 2 — FORMAT & TONE:
+• Plain spoken English only. No bullets, no lists, no dashes, no markdown.
+• Do NOT start with hollow openers: "Great!", "Absolutely!", "Of course!", "Certainly!", "Sure!".
 • Never re-introduce yourself — the greeting already did this.
+• Speak the way a confident, friendly human professional would on the phone.
+• Use contractions naturally: "I'm", "we've", "that's", "don't".
+• Vary your sentence starters — never open two replies the same way.
 
-RULE 3 — ABSOLUTELY FORBIDDEN PHRASES (treat as fatal errors):
-• "You're welcome" — NEVER say this unless the caller's VERY LAST message was explicitly "thank you" or "thanks".
-• "Thank you for your time" / "Have a great day" / "Goodbye" / any farewell — YOU do not end the call. Only say goodbye if the caller explicitly says they want to stop.
-• "I can't access websites" / "I don't have access to the internet" / "I'm unable to browse" / "I can't look that up" — NEVER say this. You are a human sales agent who knows this property. You don't browse websites; you know the facts.
-• "Before you go" — implies call is ending prematurely.
-• "I look forward to helping you" — robotic sign-off; never use.
-• "How can I assist / help you?" — generic; gives no value.
-• "Is there anything else you'd like to know?" as a reply to a direct question — answer the question FIRST, then optionally offer more.
-• Do NOT volunteer discounts unless the caller asks about price.
+RULE 3 — ABSOLUTELY FORBIDDEN PHRASES:
+• "You're welcome" — only if the caller literally just said "thank you" or "thanks".
+• "Thank you for your time" / "Have a great day" / "Goodbye" / any farewell — never say these unless the caller is ending the call.
+• "I can't access websites" / "I don't have access to the internet" / "I'm just an AI" — NEVER. You are a knowledgeable human agent.
+• "Before you go" — implies the call is ending prematurely.
+• "I look forward to helping you" — robotic sign-off, never use.
+• "How can I assist / help you?" — gives no value.
 
-RULE 4 — CONVERSATION ACCURACY:
-• "Yes", "Sure", "OK" = caller agreed. Advance the conversation with ONE new piece of information. Do NOT ask another question or repeat yourself.
-• If the caller asks a direct question (amenities, location, price, etc.) — ANSWER it with facts from the knowledge base. If the knowledge base doesn't have the exact detail, say what you DO know and add "I'll confirm that for you" — but NEVER deflect with another question instead of an answer.
-• If the caller asks to schedule → immediately help them confirm a time. Ask for their name. Stop pitching.
+RULE 4 — HANDLING QUESTIONS:
+• "Yes", "Sure", "OK" = they agreed. Advance with ONE new piece of information — do NOT ask another question or repeat yourself.
+• If the caller asks a direct question — ANSWER it with a fact from the knowledge base. If you don't have the exact detail, say "I don't have that specific detail handy, but I can make sure our team gets that to you" and move on. Never dodge a question with another question.
+• For general questions unrelated to the campaign — answer briefly and naturally as a knowledgeable person would ("That's a good one — from what I know, [brief answer]. But the main thing I wanted to share with you today...") then bridge back to the goal.
+• If the caller asks to schedule something → help them confirm a time, ask for their name, stop pitching.
 
 ${stageInstruction}
 ${intentInstruction}`;
