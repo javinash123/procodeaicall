@@ -1,22 +1,19 @@
 /// <reference types="node" />
-import { readdirSync, readFileSync } from 'fs';
-import { access } from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { readdirSync, readFileSync } from "fs";
+import { access } from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import {
   safeParseSlidesManifest,
   type SlideEntry,
-} from '../src/data/slidesManifestSchema';
+} from "../src/data/slidesManifestSchema";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectRoot = path.resolve(__dirname, '..');
-const slidesDir = path.join(projectRoot, 'src/pages/slides');
-const slidesManifestPath = path.join(
-  projectRoot,
-  'src/data/slides-manifest.json',
-);
+const projectRoot = path.resolve(__dirname, "..");
+const slidesDir = path.join(projectRoot, "src/pages/slides");
+const slidesManifestPath = path.join(projectRoot, "src/data/slides-manifest.json");
 
 type ValidationIssue = {
   message: string;
@@ -25,18 +22,18 @@ type ValidationIssue = {
 let slides: SlideEntry[] = [];
 
 function relativeToProject(filePath: string): string {
-  return path.relative(projectRoot, filePath).replaceAll(path.sep, '/');
+  return path.relative(projectRoot, filePath).replaceAll(path.sep, "/");
 }
 
 function formatIssuePath(issuePath: PropertyKey[]): string {
   if (issuePath.length === 0) {
-    return 'manifest';
+    return "manifest";
   }
-  return issuePath.map((segment) => String(segment)).join('.');
+  return issuePath.map((segment) => String(segment)).join(".");
 }
 
 function getSlideFilenames(): string[] {
-  return readdirSync(slidesDir).filter((name) => name.endsWith('.tsx'));
+  return readdirSync(slidesDir).filter((name) => name.endsWith(".tsx"));
 }
 
 function validateDuplicatePositions(issues: ValidationIssue[]) {
@@ -50,7 +47,7 @@ function validateDuplicatePositions(issues: ValidationIssue[]) {
   for (const [position, titles] of positions) {
     if (titles.length > 1) {
       issues.push({
-        message: `Duplicate position ${position} found for slides: ${titles.join(', ')}`,
+        message: `Duplicate position ${position} found for slides: ${titles.join(", ")}`,
       });
     }
   }
@@ -67,7 +64,7 @@ function validateDuplicateIds(issues: ValidationIssue[]) {
   for (const [id, titles] of ids) {
     if (titles.length > 1) {
       issues.push({
-        message: `Duplicate ID ${id} found for slides: ${titles.join(', ')}`,
+        message: `Duplicate ID ${id} found for slides: ${titles.join(", ")}`,
       });
     }
   }
@@ -93,7 +90,7 @@ function validateFilepaths(issues: ValidationIssue[]) {
     const filename = path.basename(slide.filepath);
     const expectedFilepath = `src/pages/slides/${filename}`;
 
-    if (!filename.endsWith('.tsx')) {
+    if (!filename.endsWith(".tsx")) {
       issues.push({
         message: `Invalid filepath extension for slide "${slide.title}": ${slide.filepath} (must end with .tsx)`,
       });
@@ -119,9 +116,7 @@ function validateFilepaths(issues: ValidationIssue[]) {
 
 function validateOrphanedSlideFiles(issues: ValidationIssue[]) {
   const manifestSet = new Set(
-    slides.map((slide) =>
-      path.normalize(path.resolve(projectRoot, slide.filepath)),
-    ),
+    slides.map((slide) => path.normalize(path.resolve(projectRoot, slide.filepath))),
   );
 
   const files = getSlideFilenames().map((name) => path.join(slidesDir, name));
@@ -142,8 +137,8 @@ async function main() {
     await access(slidesManifestPath);
   } catch {
     console.error(
-      'Slide manifest validation failed (1 issue):\n' +
-        '- Missing required manifest file: src/data/slides-manifest.json',
+      "Slide manifest validation failed (1 issue):\n" +
+        "- Missing required manifest file: src/data/slides-manifest.json",
     );
     process.exitCode = 1;
     return;
@@ -151,13 +146,11 @@ async function main() {
 
   let rawManifest: unknown;
   try {
-    rawManifest = JSON.parse(
-      readFileSync(slidesManifestPath, 'utf8'),
-    ) as unknown;
+    rawManifest = JSON.parse(readFileSync(slidesManifestPath, "utf8")) as unknown;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(
-      'Slide manifest validation failed (1 issue):\n' +
+      "Slide manifest validation failed (1 issue):\n" +
         `- Failed to parse src/data/slides-manifest.json: ${message}`,
     );
     process.exitCode = 1;
@@ -186,9 +179,7 @@ async function main() {
   validateOrphanedSlideFiles(issues);
 
   if (issues.length > 0) {
-    console.error(
-      `Slide manifest validation failed (${issues.length} issue(s)):\n`,
-    );
+    console.error(`Slide manifest validation failed (${issues.length} issue(s)):\n`);
     for (const issue of issues) {
       console.error(`- ${issue.message}`);
     }

@@ -30,5 +30,4 @@ initial_open_files:
   - src/index.css
 
 additional_skills:
-  - references/building.md
   - media-generation

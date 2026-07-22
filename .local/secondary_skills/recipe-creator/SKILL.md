@@ -140,7 +140,7 @@ All recipes are stored in a **database** and served through an **API**, displaye
 1. Implement API routes
 1. Seed the database with user's requested recipes (structured data, not components)
 
-1. Generate hero images for each recipe using the `media-generation` skill
+1. Generate hero images for each recipe using `generateImage`
 1. Test end-to-end
 
 ### Adding New Recipes (Ongoing)
@@ -159,7 +159,7 @@ No new components need to be written. The recipe is just data.
 
 ### Recipe Card Features
 
-1. **Generated hero image** — Use the `media-generation` skill to create a photorealistic hero image. Style: overhead or 45-degree angle, natural lighting, styled surface.
+1. **Generated hero image** — Use `generateImage` to create a photorealistic hero image. Style: overhead or 45-degree angle, natural lighting, styled surface.
 1. **Step images** — For key technique steps, generate images showing what that step should look like.
 
 1. **Serving size adjuster with smart scaling** — Dynamic recalculation with intelligent unit conversion:

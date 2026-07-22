@@ -163,6 +163,10 @@ export class ConversationStateMachine {
         this._progress.recordQuestion(this._currentStage);
         break;
 
+      case 'CUSTOMER_TURN_COMPLETED':
+        this._progress.recordCustomerTurn(this._currentStage);
+        break;
+
       case 'CUSTOMER_INTERRUPTED':
         this._progress.recordInterruption(this._currentStage);
         break;
@@ -189,8 +193,12 @@ export class ConversationStateMachine {
         this._memory.addCommitment(signal.description);
         break;
 
-      // Signals that are pure transition triggers — no side effects on data
       case 'CUSTOMER_RESPONDED':
+        // Also count legacy CUSTOMER_RESPONDED as a customer turn
+        this._progress.recordCustomerTurn(this._currentStage);
+        break;
+
+      // Signals that are pure transition triggers — no side effects on data
       case 'CUSTOMER_SILENT':
       case 'ADVANCE_STAGE':
       case 'FORCE_STAGE':

@@ -102,6 +102,16 @@ export class ConversationState {
   }
 
   /**
+   * Number of completed customer turns in the current stage.
+   * A customer turn is counted when the server VAD commits the customer's audio buffer.
+   * Stage advancement is gated on this being >= 1 to prevent the AI from
+   * talking to itself before the customer has responded.
+   */
+  get customerTurnsInCurrentStage(): number {
+    return this.progress.customerTurnsInStage(this.currentStage);
+  }
+
+  /**
    * Number of questions asked in the current stage.
    */
   get questionsInCurrentStage(): number {
@@ -114,6 +124,15 @@ export class ConversationState {
   get hasMetMinimumTurns(): boolean {
     const min = STAGE_METADATA[this.currentStage].minTurns;
     return this.turnsInCurrentStage >= min;
+  }
+
+  /**
+   * Whether the customer has spoken at least once in the current stage.
+   * This is a hard gate for stage advancement — the AI must never advance
+   * a stage before the customer has actually responded.
+   */
+  get customerHasRespondedThisStage(): boolean {
+    return this.customerTurnsInCurrentStage >= 1;
   }
 
   /**
@@ -135,6 +154,8 @@ export class ConversationState {
       snapshotAt: this.snapshotAt,
       isTerminal: this.isTerminal,
       turnsInCurrentStage: this.turnsInCurrentStage,
+      customerTurnsInCurrentStage: this.customerTurnsInCurrentStage,
+      customerHasRespondedThisStage: this.customerHasRespondedThisStage,
       questionsInCurrentStage: this.questionsInCurrentStage,
       hasMetMinimumTurns: this.hasMetMinimumTurns,
       hasUnresolvedObjections: this.hasUnresolvedObjections,

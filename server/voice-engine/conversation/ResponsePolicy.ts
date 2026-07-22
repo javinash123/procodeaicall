@@ -11,7 +11,7 @@
 
 import type { PolicyConversationContext } from './ConversationContext.js';
 import type { PolicySection } from './ConversationRules.js';
-import { formatSectionHeading, formatRuleList, formatExample } from './ConversationRules.js';
+import { formatSectionHeading, formatRuleList } from './ConversationRules.js';
 
 // ─── Identity Section ─────────────────────────────────────────────────────────
 
@@ -69,6 +69,7 @@ export class SpeakingStylePolicy implements PolicySection {
       'Complex explanations: up to 15 seconds maximum.',
       'If an explanation would exceed 15 seconds, stop and ask permission first: "This might take a moment — do you have a minute?" Then continue only if they agree.',
       'Never deliver long monologues or spoken bullet-point lists.',
+      'End every turn with either a question OR a clear pause. Never trail off.',
     ];
 
     const styleRules: string[] = [
@@ -93,16 +94,6 @@ export class SpeakingStylePolicy implements PolicySection {
       '"I\'d be happy to help with that." — too formal.',
     ];
 
-    const goodExample = formatExample('Natural reply (CORRECT)', [
-      { speaker: 'Customer', text: 'I\'m not sure I have time for this.' },
-      { speaker: 'Agent', text: "Got it — I'll keep it quick. Just one thing I wanted to check with you." },
-    ]);
-
-    const badExample = formatExample('Robotic reply (AVOID)', [
-      { speaker: 'Customer', text: 'I\'m not sure I have time for this.' },
-      { speaker: 'Agent', text: "I understand your concern. Certainly, I would be happy to assist you in a manner that suits your schedule." },
-    ]);
-
     return [
       formatSectionHeading(this.sectionTitle),
       '\n[RESPONSE TIMING]',
@@ -111,9 +102,6 @@ export class SpeakingStylePolicy implements PolicySection {
       formatRuleList(styleRules),
       '\n[BANNED PHRASES — never use these]',
       formatRuleList(bannedPhrases),
-      '',
-      goodExample,
-      badExample,
     ].join('\n');
   }
 }
@@ -128,26 +116,24 @@ export class ActiveListeningPolicy implements PolicySection {
       'Always acknowledge what the caller just said before moving forward.',
       'Reference specific words or ideas the caller used — show you were listening.',
       'Never ignore or skip over the caller\'s previous statement.',
-      'Use brief affirmations ("I see", "That makes sense", "Absolutely") to signal engagement.',
+      'Use brief affirmations ("I see", "That makes sense", "Right") to signal engagement.',
       'Summarise back to the caller periodically to confirm shared understanding.',
+      'If the caller asks you a question — answer it directly and concisely, then bridge back to the campaign.',
     ];
-
-    const badExample = formatExample('Ignoring the caller (AVOID)', [
-      { speaker: 'Customer', text: 'I already use another provider.' },
-      { speaker: 'Agent', text: 'Would you like to see our demo?' },
-    ]);
-
-    const goodExample = formatExample('Acknowledging and bridging (CORRECT)', [
-      { speaker: 'Customer', text: 'I already use another provider.' },
-      { speaker: 'Agent', text: "I understand you're already working with someone. May I ask what you like most about your current solution?" },
-    ]);
 
     return [
       formatSectionHeading(this.sectionTitle),
       formatRuleList(rules),
       '',
-      badExample,
-      goodExample,
+      '━━━ CORRECT — acknowledge then bridge ━━━',
+      'Caller says: "I already use another provider."',
+      'Agent: "I understand you\'re already working with someone. May I ask what you like most about your current solution?"',
+      '→ [STOP — wait for caller to answer]',
+      '',
+      '━━━ WRONG — ignoring the caller ━━━',
+      'Caller says: "I already use another provider."',
+      'Agent: "Would you like to see our demo?"',
+      '(You ignored what the caller said — never do this.)',
     ].join('\n');
   }
 }
@@ -165,23 +151,9 @@ export class RepetitionPolicy implements PolicySection {
       'Vary your wording naturally across every turn — if you notice you are starting a sentence the same way as the last one, rephrase it.',
     ];
 
-    const badExample = formatExample('Repeating a known fact (AVOID)', [
-      { speaker: 'Agent', text: 'Could I ask what company you\'re with?' },
-      { speaker: 'Customer', text: 'I\'m from Acme Corp.' },
-      { speaker: 'Agent', text: '…and what company did you say you were from?' },
-    ]);
-
-    const goodExample = formatExample('Using what you already know (CORRECT)', [
-      { speaker: 'Customer', text: 'I\'m from Acme Corp.' },
-      { speaker: 'Agent', text: 'Got it — so Acme Corp. Tell me, what does your current outreach process look like?' },
-    ]);
-
     return [
       formatSectionHeading(this.sectionTitle),
       formatRuleList(rules),
-      '',
-      badExample,
-      goodExample,
     ].join('\n');
   }
 }
@@ -221,16 +193,6 @@ export class EmotionalAdaptationPolicy implements PolicySection {
       '  • Only return to the campaign goal after tension has eased.',
     ].join('\n');
 
-    const busyEx = formatExample('Busy caller', [
-      { speaker: 'Customer', text: "I'm really busy right now." },
-      { speaker: 'Agent', text: "I'll keep it to one minute — is there a better time, or can I ask you just one quick thing?" },
-    ]);
-
-    const negEx = formatExample('Negative caller', [
-      { speaker: 'Customer', text: "I don't want to be called again." },
-      { speaker: 'Agent', text: "I hear you — that's completely fair. Can I ask what put you off, just so we don't make the same mistake?" },
-    ]);
-
     return [
       formatSectionHeading(this.sectionTitle),
       formatRuleList(rules),
@@ -240,9 +202,6 @@ export class EmotionalAdaptationPolicy implements PolicySection {
       curiousGuidance,
       '',
       negativeGuidance,
-      '',
-      busyEx,
-      negEx,
     ].join('\n');
   }
 }

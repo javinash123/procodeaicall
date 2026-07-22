@@ -534,6 +534,13 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
     return {
       type: 'realtime',
       instructions,
+      // Cap each AI response to ~250 tokens (≈ 3-4 short sentences).
+      // Without this limit the model can generate an unlimited-length response
+      // and talk through multiple conversation turns in one shot — asking a
+      // question AND producing a hypothetical customer answer AND responding
+      // to that answer, all in a single audio clip.  250 tokens is generous
+      // enough for a complete sales response while preventing runaway monologues.
+      max_output_tokens: 250,
       // turn_detection is nested under audio.input — this is the only accepted
       // placement for gpt-realtime.  Top-level 'session.turn_detection' is
       // rejected as unknown_parameter, which also prevents session.updated from
@@ -562,7 +569,7 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
             type: 'server_vad' as const,
             threshold: 0.2,
             prefix_padding_ms: 300,
-            silence_duration_ms: 600,
+            silence_duration_ms: 1500,
             create_response: true,
             interrupt_response: true,
           },
@@ -801,6 +808,27 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         // Server committed the buffer (server VAD or our own commit was acknowledged).
         // Reset the local counter so the next commitBuffer() doesn't fire on stale bytes.
         this._inputBufferBytesSent = 0;
+        // Record that the customer has completed a turn.  This unlocks stage
+        // advancement in the ConversationEvaluator — without it, the evaluator
+        // would advance stages based on agent turns alone, causing the AI to
+        // race through the funnel while talking to itself.
+        if (this._conversationContext) {
+          const result = this._conversationContext.onCustomerTurnCompleted();
+          // On the first customer turn in a stage, the context returns an updated
+          // instruction (so the prompt changes from "Customer Responded: NO" to
+          // "Customer Responded: YES" before the model generates its next response).
+          if (result.stateChanged && result.updatedInstruction) {
+            this._logger.debug(
+              'First customer turn in stage — updating session instructions',
+              { stage: result.currentStageLabel }
+            );
+            this._sendEvent({
+              type: 'session.update',
+              session: this._buildSessionConfig(result.updatedInstruction),
+            });
+            this._inputBufferBytesSent = 0;
+          }
+        }
         break;
 
       case 'response.function_call_arguments.delta':

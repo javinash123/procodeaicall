@@ -1,0 +1,51 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+5:59:48 PM [ws] WebSocket server ready on path /stream
+5:59:48 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+5:59:49 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+5:59:59 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev host=bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev
+5:59:59 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+6:00:08 PM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}
+6:03:44 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev host=bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev
+6:03:44 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+6:03:51 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+7:34:27 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev host=bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev
+7:34:27 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:34:27 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev host=bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev
+7:34:27 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:34:31 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev host=bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev
+7:34:31 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:34:32 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev host=bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev
+7:34:32 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:34:34 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+7:34:34 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Unauthorized","redirectTo":"/login"}
+7:48:06 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev host=bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev
+7:48:06 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:48:09 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev host=bc816758-6087-4330-9510-07bbc1c1f88f-00-3usczbtu5lyki.worf.replit.dev
+7:48:09 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:48:11 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}

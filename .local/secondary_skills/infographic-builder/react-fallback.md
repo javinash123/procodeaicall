@@ -104,19 +104,13 @@ Screenshot the component using the correct path format:
 
 screenshot({
 
-source: {
-
-type: "appPreview",
-
-artifactDirName: "mockup-sandbox",
+artifact_dir_name: "mockup-sandbox",
 
 path: "/preview/infographics/ComponentName",
 
-viewportSize: { width: 1050, height: 1600 },
+viewport_size: [1050, 1600],
 
-},
-
-saveTo: "exports/infographic-name.jpg"
+save_to: "exports/infographic-name.jpg"
 
 });
 

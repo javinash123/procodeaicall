@@ -15,17 +15,17 @@ export function ReplitLoadingScene() {
         className="flex flex-col items-center gap-8"
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+        transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
       >
         <motion.div
           animate={{
             scale: [1, 1.05, 1],
-            opacity: [1, 0.8, 1],
+            opacity: [1, 0.8, 1]
           }}
           transition={{
             duration: 2,
             repeat: Infinity,
-            ease: 'easeInOut',
+            ease: "easeInOut"
           }}
         >
           <ReplitLogo size={120} />
@@ -53,13 +53,7 @@ export function ReplitLoadingScene() {
   );
 }
 
-function ReplitLogo({
-  size = 64,
-  className = '',
-}: {
-  size?: number;
-  className?: string;
-}) {
+function ReplitLogo({ size = 64, className = '' }: { size?: number; className?: string }) {
   return (
     <svg
       width={size}
@@ -100,7 +94,7 @@ function LoadingDots() {
             duration: 1,
             repeat: Infinity,
             delay: i * 0.2,
-            ease: 'easeInOut',
+            ease: "easeInOut",
           }}
         />
       ))}

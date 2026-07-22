@@ -9,13 +9,10 @@
  * pure recommendation with no side effects.  The caller (orchestrator) is
  * responsible for acting on the recommendation.
  *
- * ## What it decides
- * - Should the agent ask another question?
- * - Should the agent explain / clarify?
- * - Should the agent summarise what has been learned?
- * - Should the agent attempt to close?
- * - Should the agent handle an objection?
- * - Should the agent advance to the next stage?
+ * ## Hard gate: customer must respond before stage advances
+ * Stage advancement is ALWAYS blocked until `state.customerHasRespondedThisStage`
+ * is true.  This prevents the AI from racing through stages while talking to
+ * itself before the customer has said a single word.
  *
  * ## Design principle
  * Pure function — no mutations, no I/O, no AI imports.
@@ -89,6 +86,9 @@ export class ConversationEvaluator {
   /**
    * Evaluates the current conversation state and returns a recommended action.
    * Pure — no mutations, no async.
+   *
+   * HARD RULE: No stage advancement is ever recommended unless the customer
+   * has spoken at least once in the current stage.
    */
   evaluate(state: ConversationState, now: number = Date.now()): AgentAction {
     // ── Terminal — wrap up ────────────────────────────────────────────────────
@@ -108,7 +108,6 @@ export class ConversationEvaluator {
 
     const timeInStage = state.timeInCurrentStage(now);
     const questionsInStage = state.questionsInCurrentStage;
-    const minTurns = STAGE_METADATA[state.currentStage].minTurns;
 
     // ── Stage-specific evaluation ─────────────────────────────────────────────
     switch (state.currentStage) {
@@ -145,10 +144,14 @@ export class ConversationEvaluator {
 
   private _evaluateGreeting(state: ConversationState): AgentAction {
     if (state.turnsInCurrentStage === 0) {
-      return this._action('ASK_QUESTION', 1, 'No turns yet — open with greeting and ice-breaker question.', false);
+      return this._action('ASK_QUESTION', 1, 'No turns yet — open with greeting and ask permission to continue.', false);
+    }
+    // HARD GATE: customer must have responded before we advance
+    if (!state.customerHasRespondedThisStage) {
+      return this._action('ASK_QUESTION', 0.7, 'Waiting for customer to respond to greeting — do not advance yet.', false);
     }
     if (state.hasMetMinimumTurns) {
-      return this._action('ADVANCE_STAGE', 0.9, 'Greeting complete — advance to rapport.', true);
+      return this._action('ADVANCE_STAGE', 0.9, 'Greeting complete and customer has responded — advance to rapport.', true);
     }
     return this._action('ASK_QUESTION', 0.8, 'Continue greeting — minimum turns not yet met.', false);
   }
@@ -158,8 +161,12 @@ export class ConversationEvaluator {
     timeInStage: number,
     questionsInStage: number
   ): AgentAction {
-    if (questionsInStage >= 2 || timeInStage > 30_000) {
-      return this._action('ADVANCE_STAGE', 0.85, 'Rapport established — transition to discovery.', true);
+    // HARD GATE: customer must have responded before we advance
+    if (!state.customerHasRespondedThisStage) {
+      return this._action('ASK_QUESTION', 0.9, 'Waiting for customer rapport response — do not advance yet.', false);
+    }
+    if (questionsInStage >= 2 || timeInStage > 45_000) {
+      return this._action('ADVANCE_STAGE', 0.85, 'Rapport established and customer has engaged — transition to discovery.', true);
     }
     return this._action('ASK_QUESTION', 0.9, 'Build rapport with an open question about the customer.', false);
   }
@@ -171,6 +178,10 @@ export class ConversationEvaluator {
     const painPoints = state.memory.painPoints.length;
     const atLimit = questionsInStage >= this.config.maxQuestionsPerStage;
 
+    // HARD GATE: customer must have responded before we advance
+    if (!state.customerHasRespondedThisStage) {
+      return this._action('ASK_QUESTION', 0.92, 'Waiting for customer discovery response — do not advance yet.', false);
+    }
     if (painPoints >= this.config.minPainPointsForPresentation && state.hasMetMinimumTurns) {
       return this._action('ADVANCE_STAGE', 0.88, `${painPoints} pain point(s) found — ready for qualification.`, true);
     }
@@ -193,6 +204,10 @@ export class ConversationEvaluator {
     const qualified = budget !== undefined && timeline !== undefined && isDecisionMaker !== undefined;
     const atLimit = questionsInStage >= this.config.maxQuestionsPerStage;
 
+    // HARD GATE: customer must have responded before we advance
+    if (!state.customerHasRespondedThisStage) {
+      return this._action('ASK_QUESTION', 0.95, 'Waiting for customer qualification response — do not advance yet.', false);
+    }
     if (qualified) {
       return this._action('ADVANCE_STAGE', 0.9, 'All qualification data gathered — advance to presentation.', true);
     }
@@ -220,6 +235,10 @@ export class ConversationEvaluator {
   ): AgentAction {
     if (state.turnsInCurrentStage === 0) {
       return this._action('EXPLAIN', 0.95, 'Present the solution tied to the discovered pain.', false);
+    }
+    // HARD GATE: customer must have responded before we advance
+    if (!state.customerHasRespondedThisStage) {
+      return this._action('ASK_QUESTION', 0.8, 'Waiting for customer reaction to presentation — do not advance yet.', false);
     }
     if (questionsInStage >= 1 && state.hasMetMinimumTurns) {
       return this._action('ATTEMPT_CLOSE', 0.8, 'Presentation delivered and reaction gauged — attempt close.', true);

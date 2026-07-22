@@ -18,7 +18,7 @@
 
 import type { PolicyConversationContext } from './ConversationContext.js';
 import type { PolicySection } from './ConversationRules.js';
-import { formatSectionHeading, formatRuleList, formatExample } from './ConversationRules.js';
+import { formatSectionHeading, formatRuleList } from './ConversationRules.js';
 
 export class GreetingPolicy implements PolicySection {
   readonly sectionTitle = 'GREETING & PERMISSION';
@@ -47,7 +47,7 @@ export class GreetingPolicy implements PolicySection {
     const permissionRules: string[] = [
       'Immediately after the greeting, ask for permission to continue — every single call, no exceptions.',
       'The permission question must be short: "Do you have a minute?" or "Is this a good time?" or "Can I take 30 seconds?"',
-      'Wait for the caller to respond before saying anything else.',
+      'After asking — STOP SPEAKING. Wait for the caller to respond. Do NOT generate a hypothetical answer.',
       'If the caller says no or not now: acknowledge it, offer a specific callback time, and end politely.',
       'Never interpret silence as permission — ask again gently if there is no response.',
     ];
@@ -60,32 +60,9 @@ export class GreetingPolicy implements PolicySection {
         : '',
       'This sentence is NOT a pitch. It is a plain explanation of the reason for the call.',
       'After the purpose sentence, ask ONE light rapport question to build connection before going further.',
+      'After asking the rapport question — STOP. Wait for the caller to answer.',
       'Never skip this step — callers who do not know why they were called hang up.',
     ].filter(Boolean);
-
-    const goodEx = formatExample('Correct: greeting → permission → purpose → rapport', [
-      {
-        speaker: 'Agent',
-        text: `Hi${ctx.caller?.firstName ? ` ${ctx.caller.firstName}` : ''}! This is ${ctx.agentName} from ${ctx.companyName}. Is this a good time for a quick call?`,
-      },
-      { speaker: 'Customer', text: 'Yeah, sure.' },
-      {
-        speaker: 'Agent',
-        text: `Great — I'm reaching out because ${ctx.campaignGoal}. Before I get into that, how's everything going on your end?`,
-      },
-    ]);
-
-    const badEx = formatExample('AVOID — launches into pitch before explaining purpose', [
-      {
-        speaker: 'Agent',
-        text: `Hello! I'm ${ctx.agentName} from ${ctx.companyName}. We help businesses like yours automate their outreach. I wanted to know — how many leads are you currently generating per month?`,
-      },
-    ]);
-
-    const noTimeEx = formatExample('Caller has no time', [
-      { speaker: 'Customer', text: "I'm in a meeting." },
-      { speaker: 'Agent', text: "No problem at all — when's a better time? I can call back tomorrow morning if that works." },
-    ]);
 
     return [
       formatSectionHeading(this.sectionTitle),
@@ -93,12 +70,19 @@ export class GreetingPolicy implements PolicySection {
       formatRuleList(greetingRules),
       '\n[STEP 2 — PERMISSION GATE]',
       formatRuleList(permissionRules),
-      '\n[STEP 3 — CALL PURPOSE (mandatory, immediately after permission)]',
+      '\n[STEP 3 — CALL PURPOSE (mandatory, immediately after caller says yes)]',
       formatRuleList(purposeRules),
       '',
-      goodEx,
-      badEx,
-      noTimeEx,
+      '━━━ EXAMPLE — CORRECT greeting flow ━━━',
+      `Agent: "Hi${ctx.caller?.firstName ? ` ${ctx.caller.firstName}` : ''}! This is ${ctx.agentName} from ${ctx.companyName}. Is this a good time for a quick call?"`,
+      `→ [YOU STOP HERE and wait for the caller to speak]`,
+      `→ [Caller says yes]`,
+      `Agent: "Great — I'm reaching out because ${ctx.campaignGoal}. Before I get into that, how's everything going on your end?"`,
+      `→ [YOU STOP HERE and wait for the caller to speak]`,
+      '',
+      '━━━ AVOID — never do this ━━━',
+      `WRONG: "Hi! This is ${ctx.agentName}. Is this a good time? Yes? Great! So I wanted to talk to you about..."`,
+      `(You generated the customer's "Yes" — never do this. Wait for the actual voice response.)`,
     ].join('\n');
   }
 }

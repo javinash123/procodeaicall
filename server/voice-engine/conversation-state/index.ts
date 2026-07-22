@@ -61,6 +61,7 @@ export type {
   AgentTurnCompletedSignal,
   QuestionAskedSignal,
   CustomerRespondedSignal,
+  CustomerTurnCompletedSignal,
   CustomerInterruptedSignal,
   CustomerSilentSignal,
   ObjectionRaisedSignal,

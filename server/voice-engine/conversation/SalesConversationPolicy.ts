@@ -36,6 +36,7 @@ import { RecoveryPolicy } from './RecoveryPolicy.js';
 import { ClosingPolicy } from './ClosingPolicy.js';
 import { StageObjectivePolicy } from './StageObjectivePolicy.js';
 import { KnowledgeBasePolicy } from './KnowledgeBasePolicy.js';
+import { TurnControlPolicy } from './TurnControlPolicy.js';
 
 // ─── Sales Funnel Section ─────────────────────────────────────────────────────
 
@@ -44,6 +45,48 @@ import { KnowledgeBasePolicy } from './KnowledgeBasePolicy.js';
  * Defined here rather than in a separate file because it is specific to
  * SalesConversationPolicy and tightly coupled to its stage ordering.
  */
+/**
+ * Strips dialogue lines that belong to the customer/caller from a raw script.
+ *
+ * Many scripts are written in play-style format:
+ *   Agent: Hello, is this...
+ *   Customer: Yes, who is this?
+ *   Agent: Great, I'm calling because...
+ *
+ * Embedding these verbatim causes the model to see a "Customer:" label and
+ * try to continue the dialogue — generating hypothetical customer responses
+ * instead of stopping to wait for the real caller to speak.
+ *
+ * This function keeps only the AGENT lines and converts them to plain prose
+ * so the model treats the script as talking-points, not a full conversation.
+ */
+function sanitizeScriptForPrompt(script: string): string {
+  const lines = script.split('\n');
+  const sanitized: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      sanitized.push('');
+      continue;
+    }
+    // Drop any line whose label belongs to the other party.
+    // Matches: "Customer:", "Caller:", "User:", "Client:", "Prospect:", "Lead:"
+    // — case-insensitive, with or without leading whitespace.
+    if (/^(customer|caller|user|client|prospect|lead)\s*:/i.test(trimmed)) {
+      continue;
+    }
+    // Strip "Agent:" / "You:" prefix and keep just the text.
+    const agentStripped = trimmed.replace(/^(agent|you|rep|sales\s*rep|ai)\s*:\s*/i, '');
+    sanitized.push(agentStripped);
+  }
+
+  return sanitized
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n') // collapse multiple blank lines
+    .trim();
+}
+
 const salesFunnelSection = {
   sectionTitle: 'SALES CONVERSATION FLOW',
   render(ctx: PolicyConversationContext) {
@@ -62,12 +105,17 @@ const salesFunnelSection = {
       'Do not pitch the product before completing DISCOVERY and QUALIFY.',
       `Campaign objective for this call: ${ctx.campaignGoal}.`,
       ctx.existingScript
-        ? 'A pre-written script has been provided below — use it as a guide, not a script to read verbatim. Adapt it conversationally.'
+        ? 'Talking-points from the reference script are provided below — use them as inspiration, not a script to recite. Speak naturally.'
         : 'No pre-written script — use the funnel and your knowledge of the product to guide the conversation.',
     ];
 
-    const scriptBlock = ctx.existingScript
-      ? `\n[REFERENCE SCRIPT — adapt naturally, do not read verbatim]\n${ctx.existingScript}`
+    // Sanitize the script before embedding: remove any Customer:/Caller: lines
+    // so the model never sees a "Customer says X" pattern and tries to replicate it.
+    const rawScript = ctx.existingScript?.trim() ?? '';
+    const cleanScript = rawScript ? sanitizeScriptForPrompt(rawScript) : '';
+
+    const scriptBlock = cleanScript
+      ? `\n[TALKING-POINTS — agent lines only; customer dialogue has been removed]\n${cleanScript}`
       : '';
 
     return [
@@ -89,6 +137,9 @@ export class SalesConversationPolicy implements ConversationPolicy {
     context: PolicyConversationContext
   ): readonly WeightedPolicySection[] {
     return [
+      // Critical — turn control must be the very first thing the model reads
+      { priority: 'critical', section: new TurnControlPolicy() },
+
       // Critical — identity and language constraints must come first
       { priority: 'critical', section: new IdentityPolicy() },
       { priority: 'critical', section: new LanguagePolicy() },

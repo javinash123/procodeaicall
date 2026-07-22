@@ -75,18 +75,12 @@ const { data } = await getCustomer({
 
 ## Functions
 
-### Media assets
-
-- `createMediaAsset(options)` → `CreateMediaAsset` - Upload a media asset
-
 ### Paywalls
 
 - `listPaywalls(options)` → `ListPaywalls` - Get a list of paywalls
 - `createPaywall(options)` → `CreatePaywall` - Create a paywall
 - `deletePaywall(options)` → `DeletePaywall` - Delete a paywall
 - `getPaywall(options)` → `GetPaywall` - Get a paywall
-- `updatePaywall(options)` → `UpdatePaywall` - Update a paywall draft
-- `createPaywallVersion(options)` → `CreatePaywallVersion` - Create a paywall version
 
 ### Apps
 
@@ -117,12 +111,10 @@ const { data } = await getCustomer({
 - `createCustomer(options)` → `CreateCustomer` - Create a customer
 - `deleteCustomer(options)` → `DeleteCustomer` - Delete a customer
 - `getCustomer(options)` → `GetCustomer` - Get a customer
-- `getCustomerCenterConfig(options)` → `GetCustomerCenterConfig` - Get customer center configuration
 - `transferCustomerData(options)` → `TransferCustomerData` - Transfer customer's subscriptions and one-time purchases to another customer
 - `grantCustomerEntitlement(options)` → `GrantCustomerEntitlement` - Grant an entitlement to a customer
 - `revokeCustomerGrantedEntitlement(options)` → `RevokeCustomerGrantedEntitlement` - Revoke a granted entitlement from a customer
 - `assignCustomerOffering(options)` → `AssignCustomerOffering` - Assign or clear an offering override for a customer
-- `restorePurchaseByOrderId(options)` → `RestorePurchaseByOrderId` - Restore a Google Play purchase by order ID
 - `listSubscriptions(options)` → `ListSubscriptions` - Get a list of subscriptions associated with a customer
 - `listPurchases(options)` → `ListPurchases` - Get a list of purchases associated with a customer
 - `listCustomerActiveEntitlements(options)` → `ListCustomerActiveEntitlements` - Get a list of customer's active entitlements
@@ -157,7 +149,6 @@ const { data } = await getCustomer({
 - `setProductStoreState(options)` → `SetProductStoreState` - Set a product store state
 - `getProductStoreStateOperation(options)` → `GetProductStoreStateOperation` - Get a product store state operation
 - `uploadProductStoreStateScreenshot(options)` → `UploadProductStoreStateScreenshot` - Reserve a product store state screenshot upload
-- `equalizeSubscriptionPrices(options)` → `EqualizeSubscriptionPrices` - Equalize subscription prices for missing territories
 
 ### Virtual currencies
 
@@ -207,12 +198,11 @@ const { data } = await getCustomer({
 
 - `getSubscription(options)` → `GetSubscription` - Get a subscription
 - `getPlayStoreOrAppStoreSubscriptionTransactions(options)` → `GetPlayStoreOrAppStoreSubscriptionTransactions` - Get a Play Store or App Store subscription's transactions
-- `refundPlayStoreOrGalaxySubscriptionTransaction(options)` → `RefundPlayStoreOrGalaxySubscriptionTransaction` - Refund a Play Store or Galaxy subscription's transaction
+- `refundPlayStoreSubscriptionTransaction(options)` → `RefundPlayStoreSubscriptionTransaction` - Refund a Play Store subscription's transaction
 - `listSubscriptionEntitlements(options)` → `ListSubscriptionEntitlements` - Get a list of entitlements associated with a subscription
 - `cancelSubscription(options)` → `CancelSubscription` - Cancel an active Web Billing subscription
-- `extendSubscription(options)` → `ExtendSubscription` - Extend the current billing period of a subscription
 - `refundSubscription(options)` → `RefundSubscription` - Refund an active Web Billing subscription
-- `getAuthorizedSubscriptionManagementUrl(options)` → `GetAuthorizedSubscriptionManagementUrl` - Get an authenticated subscription management URL
+- `getAuthorizedSubscriptionManagementUrl(options)` → `GetAuthorizedSubscriptionManagementUrl` - Get an authenticated Web Billing customer portal URL
 - `searchSubscriptions(options)` → `SearchSubscriptions` - Search subscriptions by store subscription identifier
 
 ### Purchases
@@ -225,7 +215,6 @@ const { data } = await getCustomer({
 ### Metrics
 
 - `getOverviewMetrics(options)` → `GetOverviewMetrics` - Get overview metrics for a project
-- `getRevenueMetric(options)` → `GetRevenueMetric` - Get revenue for a project
 
 ### Charts
 
@@ -242,6 +231,7 @@ They can be accessed directly using the client's HTTP methods (`get`, `post`, et
 `POST /projects/{project_id}/products/{product_id}/test_store_prices`
 
 Request Body:
+
 ```json
 {
   "prices": [
@@ -252,6 +242,7 @@ Request Body:
 ```
 
 Usage:
+
 ```ts
 const { data } = await client.post({
   url: '/projects/{project_id}/products/{product_id}/test_store_prices',
@@ -270,6 +261,7 @@ const { data } = await client.post({
 `GET /projects/{project_id}/products/{product_id}/test_store_prices`
 
 Usage:
+
 ```ts
 const { data } = await client.get({
   url: '/projects/{project_id}/products/{product_id}/test_store_prices',
@@ -278,6 +270,7 @@ const { data } = await client.get({
 ```
 
 Response:
+
 ```json
 [
   { "amount": 599, "amount_micros": 5990000, "currency": "USD" },

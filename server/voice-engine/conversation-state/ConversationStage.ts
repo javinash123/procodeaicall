@@ -41,15 +41,15 @@ export interface StageMetadata {
 export const STAGE_METADATA: Readonly<Record<ConversationStage, StageMetadata>> = {
   [ConversationStage.GREETING]: {
     label: 'Greeting',
-    minTurns: 1,
+    minTurns: 2,
     isTerminal: false,
-    description: 'Warm introduction and opening question.',
+    description: 'Warm introduction, permission question, and call purpose. Requires at least 2 agent turns (greeting + purpose after customer says yes).',
   },
   [ConversationStage.RAPPORT]: {
     label: 'Rapport',
-    minTurns: 1,
+    minTurns: 2,
     isTerminal: false,
-    description: 'Build genuine connection before any business discussion.',
+    description: 'Build genuine connection before any business discussion. Requires 2 agent turns so at least one rapport exchange happens.',
   },
   [ConversationStage.DISCOVERY]: {
     label: 'Discovery',
@@ -59,9 +59,9 @@ export const STAGE_METADATA: Readonly<Record<ConversationStage, StageMetadata>> 
   },
   [ConversationStage.QUALIFICATION]: {
     label: 'Qualification',
-    minTurns: 1,
+    minTurns: 2,
     isTerminal: false,
-    description: 'Confirm budget, authority, need, and timeline.',
+    description: 'Confirm budget, authority, need, and timeline. Requires at least 2 turns to cover multiple qualification areas.',
   },
   [ConversationStage.PRESENTATION]: {
     label: 'Presentation',

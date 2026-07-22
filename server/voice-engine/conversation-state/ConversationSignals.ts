@@ -23,6 +23,7 @@ export type SignalType =
   | 'AGENT_TURN_COMPLETED'
   | 'QUESTION_ASKED'
   | 'CUSTOMER_RESPONDED'
+  | 'CUSTOMER_TURN_COMPLETED'
   | 'CUSTOMER_INTERRUPTED'
   | 'CUSTOMER_SILENT'
   | 'OBJECTION_RAISED'
@@ -48,13 +49,22 @@ export interface QuestionAskedSignal {
   type: 'QUESTION_ASKED';
 }
 
-/** Customer produced a meaningful utterance. */
+/** Customer produced a meaningful utterance (legacy — use CUSTOMER_TURN_COMPLETED). */
 export interface CustomerRespondedSignal {
   type: 'CUSTOMER_RESPONDED';
   /** Approximate sentiment of the response. */
   sentiment?: 'positive' | 'neutral' | 'negative';
   /** True if the response indicated readiness to advance. */
   showedIntent?: boolean;
+}
+
+/**
+ * Fired when the customer's audio buffer is committed by the server VAD —
+ * meaning the customer has actually finished speaking a turn.
+ * This is the authoritative signal that a real customer response was received.
+ */
+export interface CustomerTurnCompletedSignal {
+  type: 'CUSTOMER_TURN_COMPLETED';
 }
 
 /** Customer interrupted the agent mid-response. */
@@ -131,6 +141,7 @@ export type ConversationSignal =
   | AgentTurnCompletedSignal
   | QuestionAskedSignal
   | CustomerRespondedSignal
+  | CustomerTurnCompletedSignal
   | CustomerInterruptedSignal
   | CustomerSilentSignal
   | ObjectionRaisedSignal
@@ -157,6 +168,9 @@ export const Signals = {
     type: 'CUSTOMER_RESPONDED',
     sentiment,
     showedIntent,
+  }),
+  customerTurnCompleted: (): CustomerTurnCompletedSignal => ({
+    type: 'CUSTOMER_TURN_COMPLETED',
   }),
   customerInterrupted: (): CustomerInterruptedSignal => ({ type: 'CUSTOMER_INTERRUPTED' }),
   customerSilent: (durationMs: number): CustomerSilentSignal => ({ type: 'CUSTOMER_SILENT', durationMs }),

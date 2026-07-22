@@ -4,9 +4,9 @@
  * Tracks quantitative progress metrics for the current conversation.
  *
  * ## Purpose
- * Maintains per-stage and overall counters — agent turns, questions asked,
- * interruptions, and time spent — so the evaluator and state machine can
- * make data-driven decisions (e.g. "has the minimum turn count been met?").
+ * Maintains per-stage and overall counters — agent turns, customer turns,
+ * questions asked, interruptions, and time spent — so the evaluator and
+ * state machine can make data-driven decisions.
  *
  * ## Ownership
  * Created alongside `ConversationState` and mutated by the state machine
@@ -23,6 +23,8 @@ import type { ConversationStage } from './ConversationStage.js';
 export interface StageStats {
   /** Number of completed agent turns in this stage. */
   agentTurns: number;
+  /** Number of completed customer turns in this stage (buffer committed by VAD). */
+  customerTurns: number;
   /** Number of questions the agent asked in this stage. */
   questionsAsked: number;
   /** Number of times the customer interrupted the agent in this stage. */
@@ -43,6 +45,9 @@ export class ConversationProgress {
 
   /** Total agent turns across all stages. */
   private _totalAgentTurns = 0;
+
+  /** Total customer turns across all stages. */
+  private _totalCustomerTurns = 0;
 
   /** Total questions asked across all stages. */
   private _totalQuestionsAsked = 0;
@@ -65,6 +70,7 @@ export class ConversationProgress {
     if (!this._stageStats.has(stage)) {
       this._stageStats.set(stage, {
         agentTurns: 0,
+        customerTurns: 0,
         questionsAsked: 0,
         interruptions: 0,
         enteredAt: now,
@@ -95,6 +101,16 @@ export class ConversationProgress {
   }
 
   /**
+   * Records one completed customer turn in the given stage.
+   * Called when the server VAD commits the customer's audio buffer.
+   */
+  recordCustomerTurn(stage: ConversationStage): void {
+    const stats = this._ensureStage(stage);
+    stats.customerTurns += 1;
+    this._totalCustomerTurns += 1;
+  }
+
+  /**
    * Records a question asked by the agent in the given stage.
    */
   recordQuestion(stage: ConversationStage): void {
@@ -115,6 +131,7 @@ export class ConversationProgress {
   // ─── Readers ────────────────────────────────────────────────────────────────
 
   get totalAgentTurns(): number { return this._totalAgentTurns; }
+  get totalCustomerTurns(): number { return this._totalCustomerTurns; }
   get totalQuestionsAsked(): number { return this._totalQuestionsAsked; }
   get totalInterruptions(): number { return this._totalInterruptions; }
 
@@ -130,6 +147,13 @@ export class ConversationProgress {
    */
   turnsInStage(stage: ConversationStage): number {
     return this._stageStats.get(stage)?.agentTurns ?? 0;
+  }
+
+  /**
+   * Number of completed customer turns in a specific stage.
+   */
+  customerTurnsInStage(stage: ConversationStage): number {
+    return this._stageStats.get(stage)?.customerTurns ?? 0;
   }
 
   /**
@@ -178,6 +202,7 @@ export class ConversationProgress {
       conversationStartedAt: this.conversationStartedAt,
       totalElapsedMs: this.totalElapsedMs(now),
       totalAgentTurns: this._totalAgentTurns,
+      totalCustomerTurns: this._totalCustomerTurns,
       totalQuestionsAsked: this._totalQuestionsAsked,
       totalInterruptions: this._totalInterruptions,
       stages: stageBreakdown,

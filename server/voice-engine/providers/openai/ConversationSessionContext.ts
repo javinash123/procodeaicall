@@ -59,7 +59,7 @@ import type {
  * Appended to the base policy instruction so OpenAI always has an up-to-date
  * view of stage, facts, objections, and next goal.
  */
-function renderDynamicStateSection(state: ConversationState): string {
+function renderDynamicStateSection(state: ConversationState, ctx: PolicyConversationContext): string {
   const now = Date.now();
   const ts = new Date(now).toISOString().slice(11, 19); // HH:MM:SS
   const mem = state.memory;
@@ -138,19 +138,23 @@ function renderDynamicStateSection(state: ConversationState): string {
   const turnsTotal = prog.totalAgentTurns;
   const turnsStage = state.turnsInCurrentStage;
   const questionsStage = state.questionsInCurrentStage;
+  const customerTurnsStage = state.customerTurnsInCurrentStage;
+  const customerHasResponded = state.customerHasRespondedThisStage;
 
   // ── Build section ───────────────────────────────────────────────────────────
   return [
     `\n${bar}`,
     `## LIVE CONVERSATION STATE  [updated ${ts}]`,
     bar,
-    `Current Stage:    ${stageLabel}`,
-    `Previous Stage:   ${prevLabel}`,
-    `Stage History:    ${historyStr}`,
-    `Time in Stage:    ${timeInStage}s`,
-    `Agent Turns:      ${turnsTotal} total, ${turnsStage} this stage`,
-    `Questions Asked:  ${questionsStage} this stage`,
-    `Min Turns Met:    ${state.hasMetMinimumTurns ? 'Yes' : 'No'}`,
+    `Current Stage:         ${stageLabel}`,
+    `Previous Stage:        ${prevLabel}`,
+    `Stage History:         ${historyStr}`,
+    `Time in Stage:         ${timeInStage}s`,
+    `Agent Turns:           ${turnsTotal} total, ${turnsStage} this stage`,
+    `Customer Turns:        ${customerTurnsStage} this stage`,
+    `Customer Responded:    ${customerHasResponded ? 'YES — customer has spoken this stage' : 'NO — customer has NOT spoken yet this stage'}`,
+    `Questions Asked:       ${questionsStage} this stage`,
+    `Min Turns Met:         ${state.hasMetMinimumTurns ? 'Yes' : 'No'}`,
     ``,
     `Known Customer Facts:`,
     knownFacts,
@@ -167,55 +171,145 @@ function renderDynamicStateSection(state: ConversationState): string {
     ``,
     `## YOUR IMMEDIATE NEXT GOAL`,
     bar,
-    _renderNextGoal(state),
+    _renderNextGoal(state, ctx),
     bar,
   ].join('\n');
 }
 
-function _renderNextGoal(state: ConversationState): string {
+/**
+ * Renders a campaign-specific, actionable instruction for the AI's very next
+ * response.  This is the single most important line the model reads on every
+ * turn — it must be concrete, refer to the actual campaign, and end with
+ * a hard "STOP and wait" reminder so the model never fills silence itself.
+ */
+function _renderNextGoal(state: ConversationState, ctx: PolicyConversationContext): string {
   const stage = state.currentStage;
-  const mem = state.memory;
+  const mem   = state.memory;
+
+  // Short name for the person being called — personalises instructions
+  const callerName = mem.customerName || ctx.caller?.firstName || 'the caller';
+  // What we're selling / what the company does
+  const product    = ctx.productDescription || ctx.companyName || 'our solution';
+  // The overall campaign mission
+  const goal       = ctx.campaignGoal || 'complete the call objective';
 
   switch (stage) {
-    case ConversationStage.GREETING:
-      return 'Greet the caller warmly, introduce yourself, and ask one open question to break the ice.';
 
+    // ── GREETING ──────────────────────────────────────────────────────────────
+    // Rule: one sentence intro, then permission question, then STOP.
+    case ConversationStage.GREETING: {
+      const nameFragment = ctx.caller?.firstName ? ` ${ctx.caller.firstName}` : '';
+      return [
+        `Say: "Hi${nameFragment}! This is ${ctx.agentName} from ${ctx.companyName}.`,
+        `Is this a good time for a quick call?"`,
+        `Then STOP immediately. Do not say another word.`,
+        `Wait for the caller to answer — DO NOT generate their reply.`,
+      ].join(' ');
+    }
+
+    // ── RAPPORT ───────────────────────────────────────────────────────────────
+    // Rule: one human question — NOT about the product or campaign goal yet.
     case ConversationStage.RAPPORT:
-      return 'Build a genuine human connection. Show interest in the caller before any business discussion.';
+      return [
+        `Build a genuine human connection with ${callerName} before any business talk.`,
+        `Ask ONE light, personal question — about their day, their role, or something they mentioned.`,
+        `Do NOT mention ${product} or the campaign goal ("${goal}") at this stage.`,
+        `After asking — STOP and wait for their answer.`,
+      ].join(' ');
 
-    case ConversationStage.DISCOVERY:
-      return mem.painPoints.length === 0
-        ? 'Ask open-ended questions to understand the caller\'s current challenges. Do NOT pitch yet.'
-        : `You have identified ${mem.painPoints.length} pain point(s). Continue exploring or advance to Qualification when ready.`;
+    // ── DISCOVERY ─────────────────────────────────────────────────────────────
+    // Rule: ask campaign-specific open questions to uncover real pain points.
+    case ConversationStage.DISCOVERY: {
+      if (mem.painPoints.length === 0) {
+        return [
+          `Ask ${callerName} ONE open question to understand their current challenges`,
+          `as they relate to: "${goal}".`,
+          `The question must be about THEIR situation — not about ${product}.`,
+          `Example angles: how they currently handle the relevant process,`,
+          `what frustrates them about it, what they wish were different.`,
+          `After asking — STOP. Do not answer the question yourself.`,
+        ].join(' ');
+      }
+      const painList = mem.painPoints.map((p, i) => `${i + 1}. "${p}"`).join('; ');
+      return [
+        `You have captured ${mem.painPoints.length} pain point(s): ${painList}.`,
+        `Either dig deeper with a follow-up question, or confirm understanding and`,
+        `move to Qualification when you are confident you understand their real need.`,
+      ].join(' ');
+    }
 
-    case ConversationStage.QUALIFICATION:
-      const missing: string[] = [];
-      if (mem.isDecisionMaker === undefined) missing.push('decision-making authority');
-      if (!mem.budget) missing.push('budget');
-      if (!mem.timeline) missing.push('timeline');
-      return missing.length > 0
-        ? `Qualify the caller — still need: ${missing.join(', ')}.`
-        : 'Qualification complete — you may advance to Presentation.';
+    // ── QUALIFICATION ─────────────────────────────────────────────────────────
+    // Rule: one qualifying question at a time — confirm authority, budget, timeline.
+    case ConversationStage.QUALIFICATION: {
+      const missingQuestions: string[] = [];
+      if (mem.isDecisionMaker === undefined)
+        missingQuestions.push(`"Are you the right person to decide on something like this, or would others be involved?"`);
+      if (!mem.budget)
+        missingQuestions.push(`"Do you have a budget in mind for solving this?"`);
+      if (!mem.timeline)
+        missingQuestions.push(`"What's your timeline — is this something you're looking to solve soon?"`);
 
-    case ConversationStage.PRESENTATION:
-      return 'Present the solution that directly addresses the pain points you discovered. Keep it concise and tied to their specific needs.';
+      if (missingQuestions.length === 0) {
+        return `Qualification complete. Advance to Presentation when ready.`;
+      }
+      return [
+        `Ask the SINGLE most important qualifying question:`,
+        missingQuestions[0],
+        `After asking — STOP and wait for ${callerName} to answer.`,
+        `Do not ask multiple questions at once.`,
+      ].join(' ');
+    }
 
-    case ConversationStage.OBJECTION_HANDLING:
+    // ── PRESENTATION ──────────────────────────────────────────────────────────
+    // Rule: tie the product directly to their stated pain — one capability, not a feature list.
+    case ConversationStage.PRESENTATION: {
+      const topPain = mem.painPoints[0] ?? 'their stated challenge';
+      return [
+        `Present ${product} as the direct answer to: "${topPain}".`,
+        `ONE sentence: what it does — then link it to exactly what ${callerName} told you.`,
+        `Do NOT list features. Connect ONE capability to their specific pain.`,
+        `Then ask a confirming question: "Does that sound like it would help you?"`,
+        `— then STOP and wait for their reaction.`,
+      ].join(' ');
+    }
+
+    // ── OBJECTION HANDLING ────────────────────────────────────────────────────
+    case ConversationStage.OBJECTION_HANDLING: {
       const unresolved = mem.unresolvedObjections;
-      return unresolved.length > 0
-        ? `Address the objection: "${unresolved[0].topic}". Acknowledge → reframe → ask if resolved.`
-        : 'All objections resolved — advance to Closing or return to Presentation.';
+      if (unresolved.length > 0) {
+        return [
+          `Address objection: "${unresolved[0].topic}".`,
+          `Pattern: Acknowledge ("I understand...") → Reframe with evidence → Ask "Does that make sense?"`,
+          `Then STOP and wait.`,
+        ].join(' ');
+      }
+      return `All objections resolved — advance to Closing.`;
+    }
 
-    case ConversationStage.CLOSING:
-      return !mem.nextAction
-        ? 'Summarise the conversation and propose a concrete next step (e.g. demo date, follow-up call).'
-        : `Confirm the agreed next step: "${mem.nextAction}" and thank the caller.`;
+    // ── CLOSING ───────────────────────────────────────────────────────────────
+    case ConversationStage.CLOSING: {
+      if (!mem.nextAction) {
+        // Make the next-step suggestion specific to the campaign goal
+        const demoAngle  = /demo|product|platform|tool|software|app|system/i.test(goal);
+        const callAngle  = /speak|call|discuss|chat|connect/i.test(goal);
+        const nextStepQ  = demoAngle
+          ? `"Would you like to schedule a quick demo so you can see it for yourself?"`
+          : callAngle
+            ? `"Can we schedule a follow-up call at a time that suits you?"`
+            : `"What would be the right next step from here?"`;
+        return [
+          `Wrap up by proposing a concrete next step: ${nextStepQ}`,
+          `After asking — STOP and wait for ${callerName}'s answer.`,
+        ].join(' ');
+      }
+      return `Confirm: "${mem.nextAction}". Thank ${callerName} by name and close warmly.`;
+    }
 
     case ConversationStage.CALL_COMPLETED:
-      return 'The conversation has ended. Wrap up gracefully.';
+      return `Say a warm goodbye to ${callerName} and end the call.`;
 
     default:
-      return 'Continue the conversation following the sales funnel.';
+      return `Continue following the campaign goal: "${goal}".`;
   }
 }
 
@@ -292,7 +386,7 @@ export class ConversationSessionContext {
   buildInitialInstruction(): string {
     const baseInstruction = this._builder.build(this._policyContext);
     const state = this._bundle.machine.getState();
-    const full = baseInstruction + renderDynamicStateSection(state);
+    const full = baseInstruction + renderDynamicStateSection(state, this._policyContext);
     this._lastInstructionSizeChars = full.length;
     return full;
   }
@@ -356,6 +450,46 @@ export class ConversationSessionContext {
   }
 
   /**
+   * Called when the server VAD has committed the customer's audio buffer —
+   * meaning the customer has finished a complete turn.
+   *
+   * This is the authoritative signal that a real customer response was received
+   * and is used to gate stage advancement.  Without this, the evaluator would
+   * advance stages based purely on agent turns, causing the AI to race through
+   * the conversation funnel while talking to itself.
+   *
+   * When the customer speaks for the first time in a stage, we force a
+   * session.update so the model's live state section changes from
+   * "Customer Responded: NO" to "Customer Responded: YES" before the model
+   * generates its next response.
+   */
+  onCustomerTurnCompleted(): StateUpdateResult {
+    const stageBeforeDispatch = this._bundle.machine.currentStage;
+    const customerTurnsBefore = this._bundle.machine.getState().customerTurnsInCurrentStage;
+
+    const state = this._bundle.machine.dispatch(
+      Signals.customerTurnCompleted()
+    );
+
+    const customerTurnsAfter = state.customerTurnsInCurrentStage;
+    const isFirstCustomerTurn = customerTurnsBefore === 0 && customerTurnsAfter === 1;
+
+    // Force a session.update on the first customer turn in each stage so the
+    // model immediately sees "Customer Responded: YES" in its live state section.
+    if (isFirstCustomerTurn) {
+      const updatedInstruction = this._builder.build(this._policyContext) + renderDynamicStateSection(state, this._policyContext);
+      this._lastInstructionSizeChars = updatedInstruction.length;
+      return {
+        stateChanged: true,
+        updatedInstruction,
+        currentStageLabel: STAGE_METADATA[state.currentStage].label,
+      };
+    }
+
+    return this._buildResult(stageBeforeDispatch, state);
+  }
+
+  /**
    * Dispatches any signal directly to the state machine.
    * Use this to inject objections, pain points, qualification data, etc.
    * Returns an updated instruction if the state changed.
@@ -398,7 +532,7 @@ export class ConversationSessionContext {
     const stateChanged = stageChanged || memChanged;
     let updatedInstruction: string | null = null;
     if (stateChanged) {
-      updatedInstruction = this._builder.build(this._policyContext) + renderDynamicStateSection(state);
+      updatedInstruction = this._builder.build(this._policyContext) + renderDynamicStateSection(state, this._policyContext);
       // Track size for diagnostics — no behaviour change
       this._lastInstructionSizeChars = updatedInstruction.length;
     }

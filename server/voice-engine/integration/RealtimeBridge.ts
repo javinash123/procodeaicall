@@ -685,22 +685,25 @@ export class RealtimeBridge implements IRealtimeBridge {
       this._serverVadActive = false; // server VAD resets each turn
       if (this._vadState === 'waiting_greeting') {
         // First response.done = greeting finished — activate client VAD.
-        // Apply a 400ms cooldown so any Exotel echo of the greeting audio
+        // Apply a 1200ms cooldown so any Exotel echo of the greeting audio
         // dissipates before we start forwarding inbound audio to OpenAI.
+        // 400ms was too short — phone round-trip latency plus caller think-time
+        // meant the VAD would fire before the caller had time to respond.
         this._provider.clearInputBuffer();
-        this._muteUntilMs  = Date.now() + 400;
+        this._muteUntilMs  = Date.now() + 1200;
         this._vadState     = 'listening';
         this._vadSpeechMs  = 0;
         this._vadSilenceMs = 0;
         console.log(`[ClientVAD] Greeting done — mute cooldown 400ms, then listening  sessionId=${this._sessionId}`);
         this._startCallerResponseTimer();
       } else if (this._vadState === 'responding') {
-        // AI finished speaking — apply a 400ms cooldown before resuming audio
+        // AI finished speaking — apply a 1200ms cooldown before resuming audio
         // forwarding. Exotel echo of the AI's voice can arrive for ~200ms after
-        // playback ends; without the cooldown it hits the fresh buffer and is
-        // detected as caller speech, triggering a self-response.
+        // playback ends; phone latency + caller think-time means 400ms was far
+        // too short and caused the VAD to fire before the caller started speaking,
+        // triggering the AI to respond to silence with another turn.
         this._provider.clearInputBuffer();
-        this._muteUntilMs  = Date.now() + 400;
+        this._muteUntilMs  = Date.now() + 1200;
         this._vadState     = 'listening';
         this._vadSpeechMs  = 0;
         this._vadSilenceMs = 0;

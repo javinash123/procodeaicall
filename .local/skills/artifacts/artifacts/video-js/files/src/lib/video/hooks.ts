@@ -1,10 +1,9 @@
 // Video player hook - handles recording lifecycle, scene advancement, and looping
 
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 declare global {
   interface Window {
-    __replitVideoPlayerMounted?: boolean;
     startRecording?: () => Promise<void>;
     stopRecording?: () => void;
   }
@@ -27,9 +26,7 @@ export interface UseVideoPlayerReturn {
   hasEnded: boolean;
 }
 
-export function useVideoPlayer(
-  options: UseVideoPlayerOptions,
-): UseVideoPlayerReturn {
+export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerReturn {
   const { durations, onVideoEnd, loop = true } = options;
 
   // Captured once on mount -- durations must be a static object
@@ -42,12 +39,7 @@ export function useVideoPlayer(
 
   // Start recording on mount
   useEffect(() => {
-    window.__replitVideoPlayerMounted = true;
     window.startRecording?.();
-
-    return () => {
-      window.__replitVideoPlayerMounted = false;
-    };
   }, []);
 
   // Scene advancement -- loops independently of recording
@@ -68,7 +60,7 @@ export function useVideoPlayer(
           setCurrentScene(0);
         }
       } else {
-        setCurrentScene((prev) => prev + 1);
+        setCurrentScene(prev => prev + 1);
       }
     }, currentDuration);
 
@@ -83,14 +75,12 @@ export function useVideoPlayer(
   };
 }
 
-export function useSceneTimer(
-  events: Array<{ time: number; callback: () => void }>,
-) {
+export function useSceneTimer(events: Array<{ time: number; callback: () => void }>) {
   const firedRef = useRef<Set<number>>(new Set());
   const callbacksRef = useRef<Array<() => void>>([]);
 
   useEffect(() => {
-    callbacksRef.current = events.map((e) => e.callback);
+    callbacksRef.current = events.map(e => e.callback);
   }, [events]);
 
   const scheduleKey = events.map((event, i) => `${i}:${event.time}`).join('|');
@@ -108,7 +98,7 @@ export function useSceneTimer(
     });
 
     return () => {
-      timers.forEach((timer) => clearTimeout(timer));
+      timers.forEach(timer => clearTimeout(timer));
     };
   }, [scheduleKey]);
 }

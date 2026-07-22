@@ -2,11 +2,17 @@
 name: whop
 description: Guidelines for using Whop to integrate commerce, payment plans, checkout, and subscription management
 ---
+
+## Read the monetization skill first
+
+Before using anything in this skill, read the `monetization` skill and follow its routing instructions. It is the single source of truth for choosing a payment provider on Replit. Only continue with this Whop skill once the monetization skill has confirmed that Whop is the right provider (either because the user explicitly named Whop, the project already has Whop wired up, or the routing question resolved to Whop).
+
+
 IMPORTANT: You have everything you need. Do NOT ask the user for Whop Company ID, Plan ID, or API key — retrieve them yourself (Step 1 and Step 3 below). Use Whop's hosted checkout (redirect-based) for payments (Step 4). For access control, verify the user's Whop account and ask Whop whether that account has access; do not treat a redirect, email string, or client state as proof of purchase. Execute the steps directly — do not plan or re-read references before acting.
 
 ## Helper scripts — write these first
 
-Write these two files to the project root using the sources in `./references/`. Run the CLI helpers via `shell_exec`. The proxy injects `api_key` automatically — no credentials needed.
+Write these two files to the project root using the sources in `./references/`. Run via `shell_exec` (NOT `code_execution` — `process.env` is unavailable there). The proxy injects `api_key` automatically — no credentials needed.
 
 **whop-mcp.mjs** (source: `./references/whop-mcp.mjs`) — for MCP tools:
 ```bash
@@ -34,7 +40,7 @@ Always run `--schema <tool>` before calling an unfamiliar MCP tool.
 
 ## Step 2: Write server code
 
-Write **whopClient.ts** to the API server directory (source: `./references/whop-client.ts`). This provides `getWhopClient()` which lazily fetches credentials from the Replit connection API. Never import it in frontend code.
+Write **whopClient.ts** to the API server directory (source: `./references/whopClient.ts`). This provides `getWhopClient()` which lazily fetches credentials from the Replit connection API. Never import it in frontend code.
 
 Install: `pnpm add @whop/sdk`
 
@@ -61,7 +67,7 @@ Use the app's existing server and auth patterns. Read `./references/code-templat
 ### Reference files
 
 - ./references/code-templates.md -- Example routes and checkout flow using the Whop SDK
-- ./references/whop-client.ts -- Server-side Whop SDK client that fetches credentials from the Replit connection API
+- ./references/whopClient.ts -- Server-side Whop SDK client that fetches credentials from the Replit connection API
 - ./references/whop-mcp.mjs -- Helper script for calling Whop MCP tools via the OpenInt proxy
 - ./references/whop-api.mjs -- Helper script for direct Whop REST API calls (plans, checkout configs, payments)
 

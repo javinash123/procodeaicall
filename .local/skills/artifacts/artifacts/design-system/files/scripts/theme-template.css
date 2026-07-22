@@ -4,13 +4,6 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
-/* Register this package's own components so any consumer that imports this
- * stylesheet (via `@import "<pkg>/styles.css"`) gets their utility classes
- * generated -- Tailwind does not scan node_modules by default. Resolved
- * relative to this file, so it points at this package's components whether it
- * runs in the design system's own preview or inside a consuming app/sandbox. */
-@source "./components";
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

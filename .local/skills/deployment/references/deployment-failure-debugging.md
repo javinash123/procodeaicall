@@ -86,7 +86,7 @@ These existing callbacks are useful during debugging:
 - `fetchDeploymentLogs({ afterTimestamp?, beforeTimestamp?, message? })` — fetch runtime/production logs (see `references/deployment-logs.md`). Use to check what happens after the app starts in production.
 - `viewEnvVars({ environment: "development" | "production" })` — compare env var names between dev and prod (from `environment-secrets` skill). Use to find missing production secrets.
 - `deployConfig({ deploymentTarget, run?, build?, publicDir? })` — reconfigure deployment settings (from the main deployment skill). Use to fix run commands and build commands.
-- `SuggestUserAction({ action: "deploy", message: "The app is ready to publish." })` — prompt the user to click Publish after making fixes.
+- `suggestDeploy()` — prompt the user to click Publish after making fixes. **Only works in the main repl context** — in task-agent/subrepl sessions this callback returns `success: false`. If you are in a task agent, skip this call and instead remind the user to publish from the main version after merging.
 
 ## Diagnostic Procedure
 
@@ -144,6 +144,9 @@ A deployment goes through these phases in order: **build** → **promote** → *
 **Build logs show a clear error in the build phase** (compilation error, missing dependency, command not found):
 → Fix the code or configuration directly. See Common Failure Modes below.
 
+**Build logs show an HTTP 403 `Blocked by Security Policy` from `package-firewall.replit.local`** (typically during an `npm ci`/`npm install`/`pip install` step):
+→ This is the supply-chain firewall blocking a flagged package — not a transient error. Do not retry the same publish. See "Supply-chain firewall block" under Common Failure Modes below, and the `package-management` and `security_scan` skills.
+
 **Build phase succeeded but the promote step failed** (build logs mention health check, startup probe, container failing to start, the process exiting, or the deployment never became ready):
 → First check the deployment target in `.replit`'s `[deployment]` section — the right diagnosis depends on it.
 → For **`autoscale` and HTTP-serving `vm`**: the app is failing the startup probe. The default probe is `GET /`. The probe can fail because the app crash-loops on startup, the probe path returns non-200, or the app binds to the wrong host/port. See "Health check / promote step failure" and "Application crashes on startup" below.
@@ -165,7 +168,8 @@ Read `.replit`'s `[deployment]` section. Verify run command, build command, and 
 
 After making code or configuration fixes:
 
-- Call `SuggestUserAction({ action: "deploy", message: "The app is ready to publish." })` to prompt the user to re-publish.
+- **Main repl context:** Call `suggestDeploy()` to prompt the user to re-publish.
+- **Task-agent / subrepl context:** Do **not** call `suggestDeploy()` — it will fail. Instead, remind the user to publish from the main version of the project after the task branch is merged.
 
 ## Common Failure Modes
 
@@ -177,13 +181,20 @@ After making code or configuration fixes:
 - **Look for:** Uncaught exceptions, import errors, missing modules, missing environment variables (e.g. `DISCORD_TOKEN`), syntax errors, or repeated restarts in runtime logs (`fetchDeploymentLogs`).
 - **Fix:** Read the stack trace and fix the code error so the app starts cleanly and stays up. Confirm by running the production `run` command locally:
   - For HTTP services: it must start without crashing **and** respond 200 on the probe path (`GET /` by default).
-  - For bots/workers/jobs: it must start without crashing and stay running (or, for `scheduled`, run to completion with exit code 0). If the crash is from a missing secret, use `requestSecrets()` to ask the user to add it to production.
+  - For bots/workers/jobs: it must start without crashing and stay running (or, for `scheduled`, run to completion with exit code 0). If the crash is from a missing secret, use `requestEnvVar()` to ask the user to add it to production.
 
 ### Build command failure
 
 - **Indicators:** Build status `failed`, build logs show non-zero exit from build command.
 - **Look for:** TypeScript compilation errors, missing dependencies not in package.json/requirements.txt, build scripts that reference dev-only paths.
 - **Fix:** Ensure the build command succeeds locally before deploying. Check that all dependencies are listed in the manifest.
+
+### Supply-chain firewall block (HTTP 403 from `package-firewall.replit.local`)
+
+- **Indicators:** Build status `failed` during the **build phase**, with a build log line like `npm error 403 Forbidden - GET http://package-firewall.replit.local/npm/<pkg>/-/<pkg>-<ver>.tgz - Blocked by Security Policy` (or the equivalent for another package manager). This usually comes from a build/install step — `npm ci`, `npm install`, `npm update`, `pip install`, etc. — that the build runs before promoting the app.
+- **Why it happens:** Replit runs a supply-chain security firewall that blocks packages flagged as malicious or otherwise risky. The build's install step routes package fetches through this firewall, so a flagged dependency that installs fine in dev can still fail at publish time. The block is on the **package**, not the build — retrying the same publish will fail again.
+- **Look up the package:** Identify the blocked package and version from the firewall log line, then check its public security advisories and reputation (e.g. the package's page on a vulnerability/supply-chain database for its ecosystem) to understand why it was flagged. See the `security_scan` skill for the broader scanning workflow — both it and the `package-management` skill document that a 403 from `package-firewall.replit.local` is a security block that must not be blindly retried.
+- **Fix:** Remediate the flagged dependency rather than retrying the publish. Upgrade it to a version that isn't flagged, or replace/remove it if it's unused. Use the `package-management` skill (`installLanguagePackages` / `uninstallLanguagePackages`) to update dependencies so the manifest and lockfile change. If the install is driven by a custom build/run command, fix that command. Then re-publish (`suggestDeploy()` in the main repl).
 
 ### Run command failure or misconfiguration
 
@@ -215,7 +226,7 @@ After making code or configuration fixes:
 ### Missing or different environment variables
 
 - **Indicators:** App works in dev but fails in prod with connection errors, auth failures, or undefined config.
-- **Fix:** Use `viewEnvVars({ environment: "development" })` and `viewEnvVars({ environment: "production" })` to compare. Use `requestSecrets()` to ask the user to provide missing production secrets.
+- **Fix:** Use `viewEnvVars({ environment: "development" })` and `viewEnvVars({ environment: "production" })` to compare. Use `requestEnvVar()` to ask the user to provide missing production secrets.
 
 ### Autoscale-specific issues (stateless footguns)
 
@@ -238,5 +249,5 @@ If the app needs any of the above, inform the user that they should switch to Re
 1. **Don't diagnose infrastructure problems.** If the error appears to be on Replit's side (e.g., transient cloud provider issues, `UnknownError` from the deployer), suggest the user retry the deployment or contact Replit support.
 2. **Changing deployment type.** The deployment type (autoscale, vm, scheduled, static) is set in the Deployments pane, not in code. If it needs to change, tell the user to update it themselves.
 3. **Use production terminology.** In user-facing messages, say "publish" not "deploy" — that's the Replit product terminology.
-4. **You cannot trigger a deployment.** Call `SuggestUserAction({ action: "deploy", message: "The app is ready to publish." })` to prompt the user to click the Publish button.
+4. **You cannot trigger a deployment.** In the main repl, call `suggestDeploy()` to prompt the user to click the Publish button. In task-agent/subrepl sessions, `suggestDeploy()` is unavailable — remind the user to publish from the main version after merging.
 5. **Production config lives in `.replit`.** Deployment settings (run command, build command, deployment target) are in the `.replit` file's `[deployment]` section.

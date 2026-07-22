@@ -74,6 +74,7 @@ For dependencies that can't transfer cleanly:
 Every `@/` import must point to a file that exists under `mockup/src/`. If the imported file doesn't exist in the sandbox, either copy it there or inline it. `@/components/ui/*` imports work without changes (shadcn/ui is pre-installed).
 
 ### Step 5: Create `_group.css` and the mockup component
+
 The main app's global styles are invisible to Step 2's import trace — they live in `index.html` `<link>` tags and global CSS, not in any `import` statement. Collect them into a group-level stylesheet that every component in this group will explicitly import.
 
 Create `mockup/src/components/mockups/{group}/_group.css` with everything the app applies globally:
@@ -98,7 +99,7 @@ The `_group.css` import loads after the plugin's base `index.css` import, so its
 
 Use a descriptive group name (e.g., `navbar-redesign/`). Export a single component per file; named or default exports both work. Use `min-h-screen` on the root element.
 
-### Step 6: Type-check, embed, and create variants (default-entry path)
+### Step 6: Type-check, embed, and create variants
 
 Type-check with `cd mockup && npm run check`. Embed on the canvas using the sandbox `/preview/` URL (see {{skill("mockup-sandbox")}} for iframe creation). Label it "Current", then create new variant files alongside it.
 

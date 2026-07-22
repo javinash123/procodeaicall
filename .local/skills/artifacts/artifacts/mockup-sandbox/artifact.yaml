@@ -2,13 +2,10 @@ name: mockup-sandbox
 description: "isolated mockup sandbox for rapid UI prototyping on the canvas"
 kind: design
 
-# Databricks Apps are web-app only — exclude the design/mockup artifact so the
-# only artifact type advertised on a DATABRICKS_APP repl is react-vite.
 access:
-  type: not
-  condition:
-    type: stack
-    name: DATABRICKS_APP
+  type: flag
+  name: flag-mockup-sandbox-skill
+  variation: "true"
 
 service_configs:
   - name: "Component Preview Server"
