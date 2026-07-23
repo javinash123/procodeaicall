@@ -569,7 +569,10 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
             type: 'server_vad' as const,
             threshold: 0.2,
             prefix_padding_ms: 300,
-            silence_duration_ms: 1500,
+            // 2500ms silence required before the AI treats the customer as done speaking.
+            // This prevents the AI from jumping in while the customer pauses mid-sentence
+            // or takes a breath between thoughts — honouring the "never interrupt" rule.
+            silence_duration_ms: 2500,
             create_response: true,
             interrupt_response: true,
           },
@@ -915,6 +918,32 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
       case 'error':
         this._logger.error('OpenAI Realtime server error', { code: event.error.code, message: event.error.message });
         this._emit({ type: 'realtime.error', timestamp: ts, eventId: event.event_id, errorType: event.error.type, errorCode: event.error.code, message: event.error.message, fatal: false });
+        // When our 8-second fallback timer commits the buffer, server_vad has already
+        // "consumed" the audio as silence — leaving OpenAI's committable buffer empty.
+        // The error "buffer too small / 0.00ms" means no speech was detected, but the
+        // customer WAS present (they were on the line).  Treat this as a completed
+        // customer turn so the ConversationEvaluator can advance the stage and the AI
+        // can continue the conversation rather than looping in the same stage forever.
+        if (
+          event.error.message &&
+          event.error.message.includes('buffer too small')
+        ) {
+          this._logger.info('Buffer-too-small on fallback commit — treating as customer turn to unblock stage progression');
+          if (this._conversationContext) {
+            const result = this._conversationContext.onCustomerTurnCompleted();
+            if (result.stateChanged && result.updatedInstruction) {
+              this._logger.debug(
+                'Stage advanced after fallback customer turn',
+                { stage: result.currentStageLabel }
+              );
+              this._sendEvent({
+                type: 'session.update',
+                session: this._buildSessionConfig(result.updatedInstruction),
+              });
+              this._inputBufferBytesSent = 0;
+            }
+          }
+        }
         break;
 
       default:

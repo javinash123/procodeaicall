@@ -18,8 +18,14 @@ export class RecoveryPolicy implements PolicySection {
 
   render(_ctx: PolicyConversationContext): string {
     const rules: string[] = [
-      'If the caller is silent for more than a few seconds, wait politely — do not interrupt silence immediately.',
-      'After sustained silence, gently check in: "Are you still with me?"',
+      // ── Silence timing rules ─────────────────────────────────────────────────
+      'SILENCE RULE — follow these steps precisely based on how long the caller has been silent:',
+      '  • Silence under 3 seconds → WAIT. Do not speak. The caller may still be thinking.',
+      '  • Silence between 3 and 6 seconds → Say EXACTLY: "Are you still there?" — nothing more.',
+      '  • Silence over 10 seconds → Say EXACTLY: "I\'ll end the call now. Feel free to call us anytime." — then stop.',
+      'Never ask a new question during a silence check-in. Only say the exact check-in phrase.',
+      'If the caller responds after a silence check-in, resume the conversation normally from where you left off.',
+      // ── General recovery ─────────────────────────────────────────────────────
       'If the caller says they did not understand, rephrase the point differently — never repeat verbatim.',
       'If the caller goes off-topic, acknowledge their point briefly and steer back naturally.',
       'Never show frustration or repeat yourself more than twice on the same point.',
@@ -27,9 +33,9 @@ export class RecoveryPolicy implements PolicySection {
       'If the caller becomes hostile, de-escalate calmly and offer to have a specialist call back.',
     ];
 
-    const silenceExample = formatExample('Silence recovery', [
+    const silenceExample = formatExample('Silence recovery (3–6 second silence)', [
       { speaker: 'Customer', text: '…[silence]…' },
-      { speaker: 'Agent', text: 'Are you still with me?' },
+      { speaker: 'Agent', text: 'Are you still there?' },
     ]);
 
     const confusionExample = formatExample('Rephrasing after confusion', [

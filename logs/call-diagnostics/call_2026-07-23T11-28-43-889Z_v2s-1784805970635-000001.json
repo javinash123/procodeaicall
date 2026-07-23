@@ -1,0 +1,35 @@
+{
+  "sessionId": "v2s-1784805970635-000001",
+  "providerSessionId": "sess_E4lrDNY2moMEX8T696osv",
+  "callStartedAt": "2026-07-23T11:26:23.888Z",
+  "callEndedAt": "2026-07-23T11:28:43.890Z",
+  "callDurationMs": 140001,
+  "turnCount": 14,
+  "interruptions": 0,
+  "stageProgression": [
+    "Greeting"
+  ],
+  "avgLatencyMs": null,
+  "avgTtftMs": 350,
+  "avgSttLatencyMs": null,
+  "avgResponseDurMs": 1752,
+  "totalInputTokens": 73323,
+  "totalOutputTokens": 2987,
+  "totalTokens": 76310,
+  "estimatedCostUsd": 0.5116259999999999,
+  "errors": [
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio.",
+    "[invalid_request_error] Error committing input audio buffer: buffer too small. Expected at least 100ms of audio, but buffer only has 0.00ms of audio."
+  ]
+}

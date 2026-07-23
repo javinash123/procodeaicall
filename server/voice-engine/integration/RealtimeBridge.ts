@@ -254,12 +254,19 @@ export class RealtimeBridge implements IRealtimeBridge {
   private _muteUntilMs = 0;
 
   /**
-   * Fallback timer: if server VAD has not fired within CALLER_RESPONSE_TIMEOUT_MS
-   * after the AI finishes speaking, we commit the buffer and create a response.
-   * This prevents complete silence when server VAD misses a caller turn on phone
-   * audio.  Cancelled immediately when speech_started or response_completed fires.
+   * Staged silence timers — fired when the caller does not respond after the AI
+   * finishes speaking.
+   *
+   * _silenceCheckinTimer (3 s): injects a text cue so the AI says "Are you still there?"
+   * _silenceFarewellTimer (10 s): injects a farewell cue then gracefully completes the call.
+   *
+   * Both are cancelled immediately when server VAD detects caller speech.
    */
-  private _callerResponseTimer: ReturnType<typeof setTimeout> | null = null;
+  private _silenceCheckinTimer:  ReturnType<typeof setTimeout> | null = null;
+  private _silenceFarewellTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Set to true after the farewell cue is injected — triggers call completion on response_completed. */
+  private _farewellPending = false;
 
   // Tuning constants — matched to V1's VAD_THRESHOLD=200 on 8 kHz audio.
   // At 24 kHz PCM16 the same amplitude produces similar RMS values.
@@ -273,8 +280,10 @@ export class RealtimeBridge implements IRealtimeBridge {
   private static readonly VAD_MIN_SPEECH_MS    = 120;   // min speech before it counts
   private static readonly VAD_SILENCE_MS       = 700;   // silence after speech → commit
   private static readonly VAD_MAX_TURN_MS      = 14000; // drain buffer if speaker goes too long (no createResponse)
-  /** If server VAD fires no speech event within this window after AI finishes, create a response anyway. */
-  private static readonly CALLER_RESPONSE_TIMEOUT_MS = 8000;
+  /** Caller silence after which we check in: "Are you still there?" */
+  private static readonly SILENCE_CHECKIN_MS  = 3000;
+  /** Caller silence after which we say goodbye and end the call. */
+  private static readonly SILENCE_FAREWELL_MS = 10000;
 
   /** Diagnostics collector — created in connect(), detached in disconnect(). */
   private _diagnosticsCollector: TurnDiagnosticsCollector | null = null;
@@ -515,20 +524,61 @@ export class RealtimeBridge implements IRealtimeBridge {
     }
   }
 
-  private _startCallerResponseTimer(): void {
-    this._clearCallerResponseTimer();
-    this._callerResponseTimer = setTimeout(() => {
+  /**
+   * Starts the two staged silence timers after the AI finishes speaking.
+   *
+   * Timer 1 — SILENCE_CHECKIN_MS (3 s):
+   *   Injects a text cue so the AI asks "Are you still there?"
+   *
+   * Timer 2 — SILENCE_FAREWELL_MS (10 s):
+   *   Injects a farewell cue ("I'll end the call now…") and sets
+   *   _farewellPending so the call completes after the AI speaks.
+   *
+   * Both timers are cancelled the moment server VAD detects caller speech.
+   */
+  private _startSilenceTimers(): void {
+    this._clearSilenceTimers();
+
+    // ── 3-second check-in ───────────────────────────────────────────────────
+    this._silenceCheckinTimer = setTimeout(() => {
       if (this._destroyed || this._vadState !== 'listening') return;
-      if (this._serverVadActive) return; // server VAD is already handling this turn
-      console.log(`[FallbackTimer] No server VAD event in ${RealtimeBridge.CALLER_RESPONSE_TIMEOUT_MS}ms — committing buffer and creating response  sessionId=${this._sessionId}`);
-      this._commitTurn('silence_timeout');
-    }, RealtimeBridge.CALLER_RESPONSE_TIMEOUT_MS);
+      if (this._serverVadActive) return;
+
+      console.log(`[SilenceTimer] 3 s elapsed — injecting check-in cue  sessionId=${this._sessionId}`);
+      this._provider.sendText(
+        '[System: The caller has not responded for 3 seconds. ' +
+        'Say exactly: "Are you still there?" — nothing else. ' +
+        'Then wait silently for their reply.]',
+      ).catch((err: unknown) => {
+        this._logger.warn('SilenceTimer: check-in sendText failed', { error: String(err) });
+      });
+    }, RealtimeBridge.SILENCE_CHECKIN_MS);
+
+    // ── 10-second farewell ──────────────────────────────────────────────────
+    this._silenceFarewellTimer = setTimeout(() => {
+      if (this._destroyed || this._vadState !== 'listening') return;
+      if (this._serverVadActive) return;
+
+      console.log(`[SilenceTimer] 10 s elapsed — injecting farewell cue  sessionId=${this._sessionId}`);
+      this._farewellPending = true;
+      this._provider.sendText(
+        '[System: The caller has been silent for over 10 seconds. ' +
+        'Say exactly: "I\'ll end the call now. Feel free to call us anytime." ' +
+        'Then stop speaking — do not say anything else.]',
+      ).catch((err: unknown) => {
+        this._logger.warn('SilenceTimer: farewell sendText failed', { error: String(err) });
+      });
+    }, RealtimeBridge.SILENCE_FAREWELL_MS);
   }
 
-  private _clearCallerResponseTimer(): void {
-    if (this._callerResponseTimer !== null) {
-      clearTimeout(this._callerResponseTimer);
-      this._callerResponseTimer = null;
+  private _clearSilenceTimers(): void {
+    if (this._silenceCheckinTimer !== null) {
+      clearTimeout(this._silenceCheckinTimer);
+      this._silenceCheckinTimer = null;
+    }
+    if (this._silenceFarewellTimer !== null) {
+      clearTimeout(this._silenceFarewellTimer);
+      this._silenceFarewellTimer = null;
     }
   }
 
@@ -550,7 +600,7 @@ export class RealtimeBridge implements IRealtimeBridge {
     if (this._destroyed) return;
     this._destroyed = true;
     this._connected = false;
-    this._clearCallerResponseTimer();
+    this._clearSilenceTimers();
 
     this._logger.info('RealtimeBridge disconnecting');
 
@@ -655,8 +705,9 @@ export class RealtimeBridge implements IRealtimeBridge {
         audioStartMs: event.audioStartMs,
       });
 
-      // Server VAD took over — cancel the fallback timer and disable client VAD
-      this._clearCallerResponseTimer();
+      // Server VAD took over — cancel silence timers and disable client VAD
+      this._clearSilenceTimers();
+      this._farewellPending = false; // caller spoke — cancel any pending farewell
       this._serverVadActive = true;
       if (this._vadState === 'listening' || this._vadState === 'in_speech') {
         this._vadState     = 'responding';
@@ -694,8 +745,8 @@ export class RealtimeBridge implements IRealtimeBridge {
         this._vadState     = 'listening';
         this._vadSpeechMs  = 0;
         this._vadSilenceMs = 0;
-        console.log(`[ClientVAD] Greeting done — mute cooldown 400ms, then listening  sessionId=${this._sessionId}`);
-        this._startCallerResponseTimer();
+        console.log(`[ClientVAD] Greeting done — mute cooldown 1200ms, then listening  sessionId=${this._sessionId}`);
+        this._startSilenceTimers();
       } else if (this._vadState === 'responding') {
         // AI finished speaking — apply a 1200ms cooldown before resuming audio
         // forwarding. Exotel echo of the AI's voice can arrive for ~200ms after
@@ -707,8 +758,19 @@ export class RealtimeBridge implements IRealtimeBridge {
         this._vadState     = 'listening';
         this._vadSpeechMs  = 0;
         this._vadSilenceMs = 0;
-        console.log(`[ClientVAD] AI response done — mute cooldown 400ms, then listening  sessionId=${this._sessionId}`);
-        this._startCallerResponseTimer();
+        console.log(`[ClientVAD] AI response done — mute cooldown 1200ms, then listening  sessionId=${this._sessionId}`);
+
+        // If the farewell was pending (AI just said goodbye), complete the call gracefully.
+        if (this._farewellPending) {
+          this._farewellPending = false;
+          console.log(`[SilenceTimer] Farewell response done — completing call  sessionId=${this._sessionId}`);
+          this._mediaSession.complete('caller_silence_timeout').catch((err: unknown) => {
+            this._logger.warn('SilenceTimer: mediaSession.complete failed', { error: String(err) });
+          });
+          return; // do not start silence timers — call is ending
+        }
+
+        this._startSilenceTimers();
       }
     });
 
