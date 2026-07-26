@@ -90,6 +90,7 @@ import dashboardImage from "@assets/generated_images/futuristic_dashboard_interf
 import BulkSms from "./bulk-sms";
 import BulkWhatsapp from "./bulk-whatsapp";
 import AdminPlans from "./admin-plans";
+import { FeatureGate } from "@/components/feature-gate";
 
 // Helper function to format time ago
 const formatTimeAgo = (date: Date | string) => {
@@ -1318,62 +1319,44 @@ export default function Dashboard() {
             ) : (
               <>
                 <div className="mt-6 mb-2 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Core Tools</div>
-                <Button 
-                  variant={activeTab === "crm" ? "secondary" : "ghost"} 
-                  className="w-full justify-start hover-elevate h-11"
-                  onClick={() => setActiveTab("crm")}
-                >
-                  <Users className="mr-3 h-5 w-5" />
-                  Lead CRM
-                </Button>
-                <Button 
-                  variant={activeTab === "campaigns" ? "secondary" : "ghost"} 
-                  className="w-full justify-start hover-elevate h-11"
-                  onClick={() => setActiveTab("campaigns")}
-                >
-                  <Megaphone className="mr-3 h-5 w-5" />
-                  Campaigns
-                </Button>
-                <Button 
-                  variant={activeTab === "calendar" ? "secondary" : "ghost"} 
-                  className="w-full justify-start hover-elevate h-11"
-                  onClick={() => setActiveTab("calendar")}
-                >
-                  <Calendar className="mr-3 h-5 w-5" />
-                  Calendar
-                </Button>
-                <Button 
-                  variant={activeTab === "whatsapp" ? "secondary" : "ghost"} 
-                  className="w-full justify-start hover-elevate h-11"
-                  onClick={() => setActiveTab("whatsapp")}
-                >
-                  <MessageCircle className="mr-3 h-5 w-5" />
-                  Bulk WhatsApp
-                </Button>
-                <Button 
-                  variant={activeTab === "sms" ? "secondary" : "ghost"} 
-                  className="w-full justify-start hover-elevate h-11"
-                  onClick={() => setActiveTab("sms")}
-                >
-                  <MessageSquare className="mr-3 h-5 w-5" />
-                  Bulk SMS
-                </Button>
-                <Button 
-                  variant={activeTab === "callhistory" ? "secondary" : "ghost"} 
-                  className="w-full justify-start hover-elevate h-11"
-                  onClick={() => setActiveTab("callhistory")}
-                >
-                  <History className="mr-3 h-5 w-5" />
-                  Call History
-                </Button>
-                <Button
-                  variant={activeTab === "analytics" ? "secondary" : "ghost"}
-                  className="w-full justify-start hover-elevate h-11"
-                  onClick={() => setActiveTab("analytics")}
-                >
-                  <BarChart2 className="mr-3 h-5 w-5" />
-                  Analytics
-                </Button>
+                {(["crm", "campaigns", "calendar", "whatsapp", "bulk_sms", "call_history", "analytics"] as const).map((key) => {
+                  const tabMap: Record<string, string> = { crm: "crm", campaigns: "campaigns", calendar: "calendar", whatsapp: "whatsapp", bulk_sms: "sms", call_history: "callhistory", analytics: "analytics" };
+                  const labelMap: Record<string, string> = { crm: "Lead CRM", campaigns: "Campaigns", calendar: "Calendar", whatsapp: "Bulk WhatsApp", bulk_sms: "Bulk SMS", call_history: "Call History", analytics: "Analytics" };
+                  const iconMap: Record<string, React.ReactNode> = {
+                    crm: <Users className="mr-3 h-5 w-5" />,
+                    campaigns: <Megaphone className="mr-3 h-5 w-5" />,
+                    calendar: <Calendar className="mr-3 h-5 w-5" />,
+                    whatsapp: <MessageCircle className="mr-3 h-5 w-5" />,
+                    bulk_sms: <MessageSquare className="mr-3 h-5 w-5" />,
+                    call_history: <History className="mr-3 h-5 w-5" />,
+                    analytics: <BarChart2 className="mr-3 h-5 w-5" />,
+                  };
+                  const tab = tabMap[key];
+                  const label = labelMap[key];
+                  const icon = iconMap[key];
+                  const planFeatures: string[] = user?.planFeatures || [];
+                  const hasFeature = planFeatures.includes("*") || planFeatures.includes(key);
+                  const locked = !hasFeature;
+                  return (
+                    <Button
+                      key={key}
+                      variant={activeTab === tab ? "secondary" : "ghost"}
+                      className={`w-full justify-start hover-elevate h-11 ${locked ? "opacity-60" : ""}`}
+                      onClick={() => {
+                        if (locked) {
+                          setActiveTab(tab);
+                        } else {
+                          setActiveTab(tab);
+                        }
+                      }}
+                      data-testid={`nav-${key}`}
+                    >
+                      {icon}
+                      {label}
+                      {locked && <Lock className="ml-auto h-3.5 w-3.5 text-muted-foreground" />}
+                    </Button>
+                  );
+                })}
               </>
             )}
           </nav>
@@ -1434,8 +1417,8 @@ export default function Dashboard() {
         </header>
 
         <div className="flex-1 p-6 overflow-auto">
-          {activeTab === "whatsapp" && <BulkWhatsapp />}
-          {activeTab === "sms" && <BulkSms />}
+          {activeTab === "whatsapp" && <FeatureGate featureKey="whatsapp"><BulkWhatsapp /></FeatureGate>}
+          {activeTab === "sms" && <FeatureGate featureKey="bulk_sms"><BulkSms /></FeatureGate>}
           {activeTab === "plans" && <AdminPlans />}
           {activeTab === "overview" && (
             <div className="space-y-6">

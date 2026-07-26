@@ -171,6 +171,7 @@ export const planSchema = new mongoose.Schema({
 
 // Feature Model
 const featureSchema = new mongoose.Schema({
+  key: { type: String, required: true },
   name: { type: String, required: true },
 });
 

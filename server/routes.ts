@@ -115,6 +115,34 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     next();
   };
 
+  // Helper: resolve a user's plan feature keys from their subscription
+  async function getUserPlanFeatures(userId: string): Promise<string[]> {
+    try {
+      const user = await storage.getUser(userId);
+      if (!user) return [];
+      if (user.role === "admin") return ["*"];
+      if (!user.subscription?.plan) return [];
+      const plans = await storage.getPlans();
+      const plan = plans.find((p: any) => p.name === user.subscription?.plan && p.isActive !== false);
+      if (!plan) return [];
+      return (plan.features as string[]) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  // Feature-gate middleware factory — blocks API access if user's plan lacks the feature
+  const requireFeature = (featureKey: string) => async (req: Request, res: Response, next: Function) => {
+    if (!req.session?.userId) return res.status(401).json({ message: "Unauthorized" });
+    const features = await getUserPlanFeatures(req.session.userId);
+    if (features.includes("*") || features.includes(featureKey)) return next();
+    return res.status(403).json({
+      message: "Your current plan does not include this feature. Please upgrade to continue.",
+      feature: featureKey,
+      upgradeRequired: true,
+    });
+  };
+
   // Register
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -150,12 +178,15 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       req.session.userId = user._id;
       const { password: _, ...userWithoutPassword } = userWithPassword;
       
+      // Resolve plan features for this user
+      const planFeatures = await getUserPlanFeatures(user._id);
+      
       // Explicitly save session before responding
       req.session.save((err) => {
         if (err) {
           return res.status(500).json({ message: "Session save failed" });
         }
-        res.json({ user: userWithoutPassword });
+        res.json({ user: { ...userWithoutPassword, planFeatures } });
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -179,7 +210,8 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      res.json({ user });
+      const planFeatures = await getUserPlanFeatures(req.session.userId!);
+      res.json({ user: { ...user, planFeatures } });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -272,7 +304,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   // ==================== LEAD ROUTES ====================
   
   // Get all leads for current user (optionally filter by campaign)
-  app.get("/api/leads", requireAuth, async (req, res) => {
+  app.get("/api/leads", requireAuth, requireFeature("crm"), async (req, res) => {
     try {
       const campaignId = req.query.campaignId as string | undefined;
       const leads = await storage.getLeads(req.session.userId!, campaignId);
@@ -283,7 +315,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Get single lead
-  app.get("/api/leads/:id", requireAuth, async (req, res) => {
+  app.get("/api/leads/:id", requireAuth, requireFeature("crm"), async (req, res) => {
     try {
       const lead = await storage.getLead(req.params.id);
       
@@ -303,7 +335,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Create lead
-  app.post("/api/leads", requireAuth, async (req, res) => {
+  app.post("/api/leads", requireAuth, requireFeature("crm"), async (req, res) => {
     try {
       const data = insertLeadSchema.parse({
         ...req.body,
@@ -318,7 +350,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Update lead
-  app.patch("/api/leads/:id", requireAuth, async (req, res) => {
+  app.patch("/api/leads/:id", requireAuth, requireFeature("crm"), async (req, res) => {
     try {
       const lead = await storage.getLead(req.params.id);
       
@@ -338,7 +370,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Delete lead
-  app.delete("/api/leads/:id", requireAuth, async (req, res) => {
+  app.delete("/api/leads/:id", requireAuth, requireFeature("crm"), async (req, res) => {
     try {
       const lead = await storage.getLead(req.params.id);
       
@@ -358,7 +390,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Add lead history entry
-  app.post("/api/leads/:id/history", requireAuth, async (req, res) => {
+  app.post("/api/leads/:id/history", requireAuth, requireFeature("crm"), async (req, res) => {
     try {
       const lead = await storage.getLead(req.params.id);
       
@@ -732,7 +764,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Get stored call logs (authenticated)
-  app.get("/api/call-logs", requireAuth, async (req, res) => {
+  app.get("/api/call-logs", requireAuth, requireFeature("call_history"), async (req, res) => {
     try {
       const { leadId, campaignId } = req.query as { leadId?: string; campaignId?: string };
       const logs = await storage.getCallLogs({ leadId, campaignId });
@@ -766,7 +798,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Get all campaigns
-  app.get("/api/campaigns", requireAuth, async (req, res) => {
+  app.get("/api/campaigns", requireAuth, requireFeature("campaigns"), async (req, res) => {
     try {
       const campaigns = await storage.getCampaigns(req.session.userId!);
       res.json({ campaigns });
@@ -776,7 +808,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Get single campaign
-  app.get("/api/campaigns/:id", requireAuth, async (req, res) => {
+  app.get("/api/campaigns/:id", requireAuth, requireFeature("campaigns"), async (req, res) => {
     try {
       const campaign = await storage.getCampaign(req.params.id);
       
@@ -795,7 +827,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Create campaign
-  app.post("/api/campaigns", requireAuth, async (req, res) => {
+  app.post("/api/campaigns", requireAuth, requireFeature("campaigns"), async (req, res) => {
     try {
       const data = insertCampaignSchema.parse({
         ...req.body,
@@ -836,7 +868,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Update campaign
-  app.patch("/api/campaigns/:id", requireAuth, async (req, res) => {
+  app.patch("/api/campaigns/:id", requireAuth, requireFeature("campaigns"), async (req, res) => {
     try {
       const campaign = await storage.getCampaign(req.params.id);
       
@@ -856,7 +888,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Delete campaign
-  app.delete("/api/campaigns/:id", requireAuth, async (req, res) => {
+  app.delete("/api/campaigns/:id", requireAuth, requireFeature("campaigns"), async (req, res) => {
     try {
       const campaign = await storage.getCampaign(req.params.id);
       
@@ -1022,7 +1054,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   // ==================== APPOINTMENT ROUTES ====================
   
   // Get all appointments
-  app.get("/api/appointments", requireAuth, async (req, res) => {
+  app.get("/api/appointments", requireAuth, requireFeature("calendar"), async (req, res) => {
     try {
       const appointments = await storage.getAppointments(req.session.userId!);
       res.json({ appointments });
@@ -1032,7 +1064,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Get single appointment
-  app.get("/api/appointments/:id", requireAuth, async (req, res) => {
+  app.get("/api/appointments/:id", requireAuth, requireFeature("calendar"), async (req, res) => {
     try {
       const appointment = await storage.getAppointment(req.params.id);
       
@@ -1051,7 +1083,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Create appointment
-  app.post("/api/appointments", requireAuth, async (req, res) => {
+  app.post("/api/appointments", requireAuth, requireFeature("calendar"), async (req, res) => {
     try {
       const data = insertAppointmentSchema.parse({
         ...req.body,
@@ -1066,7 +1098,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Update appointment
-  app.patch("/api/appointments/:id", requireAuth, async (req, res) => {
+  app.patch("/api/appointments/:id", requireAuth, requireFeature("calendar"), async (req, res) => {
     try {
       const appointment = await storage.getAppointment(req.params.id);
       
@@ -1086,7 +1118,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   });
 
   // Delete appointment
-  app.delete("/api/appointments/:id", requireAuth, async (req, res) => {
+  app.delete("/api/appointments/:id", requireAuth, requireFeature("calendar"), async (req, res) => {
     try {
       const appointment = await storage.getAppointment(req.params.id);
       

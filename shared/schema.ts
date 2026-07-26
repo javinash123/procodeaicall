@@ -34,6 +34,7 @@ export type Plan = InsertPlan & {
 
 // Feature Schema (for dynamic management)
 export const insertFeatureSchema = z.object({
+  key: z.string().min(1),
   name: z.string().min(1),
 });
 
@@ -77,6 +78,7 @@ export type User = Omit<InsertUser, "password"> & {
   dltPrincipalEntityId?: string;
   dltHeaderId?: string;
   subscription?: SubscriptionInfo;
+  planFeatures?: string[];
   exotelConfig?: {
     apiKey: string;
     apiToken: string;
