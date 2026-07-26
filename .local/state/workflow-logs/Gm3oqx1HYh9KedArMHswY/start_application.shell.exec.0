@@ -1,0 +1,176 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0K⠹[1G[0KMongoDB connected successfully
+9:06:14 PM [ws] WebSocket server ready on path /stream
+9:06:14 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+9:06:16 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+9:06:21 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://localhost:5000 host=localhost:5000
+9:06:21 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+9:06:21 PM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}
+9:06:26 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev host=fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev
+9:06:26 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+9:06:30 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+9:06:41 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://localhost:5000 host=localhost:5000
+9:06:41 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+9:06:41 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+9:06:44 PM [ws] [upgrade] socket error on /vite-hmr: read ECONNRESET
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:14:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:14:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:15:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m [33m(x4)[39m
+[BABEL] Note: The code generator has deoptimised the styling of /home/runner/workspace/client/src/pages/dashboard.tsx as it exceeds the max of 500KB.
+9:19:50 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev host=fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev
+9:19:50 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+9:19:53 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}

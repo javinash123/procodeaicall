@@ -1,0 +1,422 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+8:58:01 PM [ws] WebSocket server ready on path /stream
+8:58:01 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+8:58:04 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+8:58:08 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://localhost:5000 host=localhost:5000
+8:58:08 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+8:58:10 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+8:58:16 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev host=fd97e8de-cb7b-4a30-91a7-a1e318d144d3-00-3k1kh12plddzz.picard.replit.dev
+8:58:16 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+8:58:17 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:02:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/lib/auth.tsx, /src/pages/auth.tsx, /src/pages/bulk-whatsapp.tsx, /src/pages/dashboard.tsx, /src/pages/bulk-sms.tsx[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:02:57 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/index.css[22m
+[2m9:02:58 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/lib/auth.tsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m9:02:58 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/pages/auth.tsx, /src/pages/admin-login.tsx, /src/pages/payment.tsx, /src/pages/notifications.tsx, /src/pages/bulk-whatsapp.tsx, /src/pages/dashboard.tsx, /src/pages/bulk-sms.tsx[22m
+9:02:59 PM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:03:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/index.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:03:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/index.css[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:03:19 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/index.css[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:03:25 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/index.css[22m [33m(x4)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:03:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/index.css[22m [33m(x5)[39m
+[replit-cartographer] Error processing /home/runner/workspace/client/src/pages/dashboard.tsx: SyntaxError: Identifier 'months12' has already been declared. (473:8)
+    at toParseError [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parse-error.ts:95:45[90m)[39m
+    at raise [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/tokenizer/index.ts:1503:19[90m)[39m
+    at checkRedeclarationInScope [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/util/scope.ts:164:19[90m)[39m
+    at declareName [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/util/scope.ts:118:12[90m)[39m
+    at declareName [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/plugins/typescript/scope.ts:89:11[90m)[39m
+    at declareNameFromIdentifier [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/lval.ts:818:16[90m)[39m
+    at checkIdentifier [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/lval.ts:813:12[90m)[39m
+    at checkLVal [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/lval.ts:713:12[90m)[39m
+    at parseVarId [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:1628:10[90m)[39m
+    at parseVarId [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/plugins/typescript/index.ts:3663:13[90m)[39m
+    at parseVar [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:1577:12[90m)[39m
+    at parseVarStatement [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:1246:10[90m)[39m
+    at parseVarStatement [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/plugins/typescript/index.ts:3126:33[90m)[39m
+    at parseStatementContent [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:607:21[90m)[39m
+    at parseStatementContent [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/plugins/typescript/index.ts:3185:20[90m)[39m
+    at parseStatementLike [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:477:17[90m)[39m
+    at parseStatementListItem [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:426:17[90m)[39m
+    at parseBlockOrModuleBlockBody [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:1439:16[90m)[39m
+    at parseBlockBody [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:1412:10[90m)[39m
+    at parseBlock [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:1380:10[90m)[39m
+    at parseFunctionBody [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/expression.ts:2616:24[90m)[39m
+    at parseFunctionBodyAndFinish [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/expression.ts:2585:10[90m)[39m
+    at parseFunctionBodyAndFinish [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/plugins/typescript/index.ts:2646:20[90m)[39m
+    at callback [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:1690:12[90m)[39m
+    at withSmartMixTopicForbiddingContext [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/expression.ts:3166:14[90m)[39m
+    at parseFunction [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:1688:10[90m)[39m
+    at parseExportDefaultExpression [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:2565:19[90m)[39m
+    at parseExportDefaultExpression [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/plugins/typescript/index.ts:3117:20[90m)[39m
+    at parseExport [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:2447:25[90m)[39m
+    at parseExport [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/plugins/typescript/index.ts:3087:22[90m)[39m
+    at parseStatementContent [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:644:25[90m)[39m
+    at parseStatementContent [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/plugins/typescript/index.ts:3185:20[90m)[39m
+    at parseStatementLike [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:477:17[90m)[39m
+    at parseModuleItem [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:414:17[90m)[39m
+    at parseBlockOrModuleBlockBody [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:1438:16[90m)[39m
+    at parseBlockBody [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:1412:10[90m)[39m
+    at parseProgram [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:229:10[90m)[39m
+    at parseTopLevel [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/statement.ts:203:25[90m)[39m
+    at parse [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/parser/index.ts:93:10[90m)[39m
+    at parse [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/plugins/typescript/index.ts:4309:20[90m)[39m
+    at parse [90m(/home/runner/workspace/[39mnode_modules/[4m@babel/parser[24m/src/index.ts:92:38[90m)[39m
+    at TransformPluginContext.handler [90m(/home/runner/workspace/[39mnode_modules/[4m@replit/vite-plugin-cartographer[24m/dist/index.mjs:74:23[90m)[39m
+    at EnvironmentPluginContainer.transform [90m(/home/runner/workspace/[39mnode_modules/[4mvite[24m/dist/node/chunks/config.js:28796:51[90m)[39m
+    at loadAndTransform [90m(/home/runner/workspace/[39mnode_modules/[4mvite[24m/dist/node/chunks/config.js:22669:48[90m)[39m
+    at async viteTransformMiddleware [90m(/home/runner/workspace/[39mnode_modules/[4mvite[24m/dist/node/chunks/config.js:24541:20[90m)[39m {
+  code: [32m'BABEL_PARSER_SYNTAX_ERROR'[39m,
+  reasonCode: [32m'VarRedeclaration'[39m,
+  loc: Position { line: [33m473[39m, column: [33m8[39m, index: [33m21982[39m },
+  pos: [33m21982[39m,
+  syntaxPlugin: [90mundefined[39m
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m9:03:55 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: /home/runner/workspace/client/src/pages/dashboard.tsx: Identifier 'months12' has already been declared. (473:8)
+
+[0m [90m 471 |[31m
+ [90m 472 |[31m   [90m// ── Monthly analytics data (12-month series) ──────────────────────────────[31m
+[31m[1m>[22m[31m[90m 473 |[31m   [36mconst[31m months12 [33m=[31m [[32m"Jan"[31m[33m,[31m[32m"Feb"[31m[33m,[31m[32m"Mar"[31m[33m,[31m[32m"Apr"[31m[33m,[31m[32m"May"[31m[33m,[31m[32m"Jun"[31m[33m,[31m[32m"Jul"[31m[33m,[31m[32m"Aug"[31m[33m,[31m[32m"Sep"[31m[33m,[31m[32m"Oct"[31m[33m,[31m[32m"Nov"[31m[33m,[31m[32m"Dec"[31m][33m;[31m
+ [90m     |[31m         [31m[1m^[22m[31m
+ [90m 474 |[31m
+ [90m 475 |[31m   [90m// WhatsApp monthly[31m
+ [90m 476 |[31m   [36mconst[31m wpMonthlyData [33m=[31m [[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36m/home/runner/workspace/client/src/pages/dashboard.tsx[39m:473:8
+[33m  471 |  
+  472 |    // ── Monthly analytics data (12-month series) ──────────────────────────────
+  473 |    const months12 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      |          ^
+  474 |  
+  475 |    // WhatsApp monthly[39m
+      at toParseError (/home/runner/workspace/node_modules/@babel/parser/src/parse-error.ts:95:45)
+      at raise (/home/runner/workspace/node_modules/@babel/parser/src/tokenizer/index.ts:1503:19)
+      at checkRedeclarationInScope (/home/runner/workspace/node_modules/@babel/parser/src/util/scope.ts:164:19)
+      at declareName (/home/runner/workspace/node_modules/@babel/parser/src/util/scope.ts:118:12)
+      at declareName (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/scope.ts:89:11)
+      at declareNameFromIdentifier (/home/runner/workspace/node_modules/@babel/parser/src/parser/lval.ts:818:16)
+      at checkIdentifier (/home/runner/workspace/node_modules/@babel/parser/src/parser/lval.ts:813:12)
+      at checkLVal (/home/runner/workspace/node_modules/@babel/parser/src/parser/lval.ts:713:12)
+      at parseVarId (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1628:10)
+      at parseVarId (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3663:13)
+      at parseVar (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1577:12)
+      at parseVarStatement (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1246:10)
+      at parseVarStatement (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3126:33)
+      at parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:607:21)
+      at parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3185:20)
+      at parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:477:17)
+      at parseStatementListItem (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:426:17)
+      at parseBlockOrModuleBlockBody (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1439:16)
+      at parseBlockBody (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1412:10)
+      at parseBlock (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1380:10)
+      at parseFunctionBody (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:2616:24)
+      at parseFunctionBodyAndFinish (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:2585:10)
+      at parseFunctionBodyAndFinish (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:2646:20)
+      at callback (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1690:12)
+      at withSmartMixTopicForbiddingContext (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:3166:14)
+      at parseFunction (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1688:10)
+      at parseExportDefaultExpression (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:2565:19)
+      at parseExportDefaultExpression (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3117:20)
+      at parseExport (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:2447:25)
+      at parseExport (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3087:22)
+      at parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:644:25)
+      at parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3185:20)
+      at parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:477:17)
+      at parseModuleItem (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:414:17)
+      at parseBlockOrModuleBlockBody (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1438:16)
+      at parseBlockBody (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1412:10)
+      at parseProgram (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:229:10)
+      at parseTopLevel (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:203:25)
+      at parse (/home/runner/workspace/node_modules/@babel/parser/src/parser/index.ts:93:10)
+      at parse (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:4309:20)
+      at parse (/home/runner/workspace/node_modules/@babel/parser/src/index.ts:92:38)
+      at parser (/home/runner/workspace/node_modules/@babel/core/src/parser/index.ts:28:19)
+      at parser.next (<anonymous>)
+      at normalizeFile (/home/runner/workspace/node_modules/@babel/core/src/transformation/normalize-file.ts:49:24)
+      at normalizeFile.next (<anonymous>)
+      at run (/home/runner/workspace/node_modules/@babel/core/src/transformation/index.ts:40:36)
+      at run.next (<anonymous>)
+      at transform (/home/runner/workspace/node_modules/@babel/core/src/transform.ts:29:20)
+      at transform.next (<anonymous>)
+      at step (/home/runner/workspace/node_modules/gensync/index.js:261:32)
+[1G[0K⠙[1G[0K[1G[0K⠙[1G[0K

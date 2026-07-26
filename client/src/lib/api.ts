@@ -270,6 +270,15 @@ export const campaignsApi = {
   },
 };
 
+// Call Logs API
+export const callLogsApi = {
+  getAll: async (params?: { leadId?: string; campaignId?: string }): Promise<any[]> => {
+    const query = params ? `?${new URLSearchParams(params as any).toString()}` : "";
+    const response = await fetch(`${API_BASE}/call-logs${query}`, { credentials: "include" });
+    return handleResponse<any[]>(response);
+  },
+};
+
 // File Upload API
 export type UploadedFile = {
   id: string;

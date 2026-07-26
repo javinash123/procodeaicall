@@ -1,0 +1,60 @@
+# Turn the imported Claude design into a real app
+
+## Goal
+
+The user imported a design from Claude. It has **already been set up as a real Replit app**: this repl is a `pnpm_workspace` and the imported design renders right now through a `react-vite` web artifact at `artifacts/claude-design/` — the design's HTML is that artifact's `index.html`, served by Vite at `/`. Your job is to turn that faithfully-rendered-but-static design into a real, interactive app in the same artifact. **It must keep looking exactly like the imported design**, and the static mockup should become real: forms submit, buttons act, navigation works.
+
+The imported markup is the user's real design work — every lost style, font, or layout detail is a regression they'll notice.
+
+## In scope
+
+- Refactor the embedded markup in `artifacts/claude-design/` into idiomatic React components.
+- Preserve the design exactly — markup, layout, colors, fonts, and assets.
+- Wire the interactions the design implies (navigation between sections/pages, form inputs, hover/active states, obvious buttons). Back any data the design implies with real state (in-memory, storage, or a small backend) only where the design clearly calls for it.
+
+## Out of scope
+
+- Building features or screens the design doesn't show.
+- Re-scaffolding the workspace, recreating the artifact, or moving the repl — it is **already** a `pnpm_workspace` with the `claude-design` artifact registered and running. Do not run a scaffold step and do not recreate the `claude-design` artifact.
+- Strict typecheck — use `// @ts-ignore` to keep moving. Visual + functional parity matters more than zero TS errors.
+
+## Order of operations (do NOT reorder)
+
+### 0. Understand the rendering design first
+
+The design already renders in the preview — leave it running. Screenshot the live preview to capture how it actually looks; that screenshot is the ground truth for the visual-parity check in step 2. This is a multi-artifact pnpm_workspace, so the app is served by the artifact preview proxy on port 80 — screenshot the preview on port 80, never the default `localhost:5000`. Read `artifacts/claude-design/index.html` (the imported design) to understand its structure, content, and intent.
+
+Then tell the user, in plain non-technical language, what "real" means for this specific design — conversational and outcome-first. For example: "Your design looks great and it's already live. Right now it's static; I'll wire up the [navigation / signup form / cart] so it actually works, then make it responsive on mobile." Lead with what they'll be able to do, name the one or two interactions that matter most, and skip the jargon. Don't ask for permission to proceed — state the plan and move on.
+
+### 1. Refactor the embedded design into React
+
+The artifact currently serves the imported design as a raw `index.html`. Turn it into an idiomatic `react-vite` app **without changing how it looks**:
+
+- Move the imported markup into the react-vite entry (`src/main.tsx` / `src/App.tsx`) and components, mounting at `#root`. Keep the imported `<head>` assets — Google Fonts `<link>` tags, CSS custom properties / theme variables, inline styles — intact.
+- Split the single page into components/routes as the design implies, but do not redesign — match the imported look exactly.
+- Note what's mocked as you read: hardcoded lists, placeholder values, dead buttons. Wire them to local state now, and leave a `TODO` so a backend follow-up has a clear target.
+- Keep the artifact's `vite.config.ts` (it wires `PORT` / `BASE_PATH` for workspace routing). If the design uses client-side routing, the router must respect `import.meta.env.BASE_URL`.
+
+**Polish only where the static mockup is silent — never restyle the given look.** Add what a flat mockup only *implies*: responsive behavior (small-screen reflow that preserves the desktop look), interaction states (`hover:`/`active:`/`focus:` + transitions matching the design's colors), and loading/empty/pending states for anything async.
+
+### 2. Verify — including visual parity against the original
+
+Restart the `claude-design` workflow, then exercise the interactions and screenshot each step. **Replit apps run via workflows, not a root-level `pnpm dev`.** Compare against the step-0 screenshot of the originally-rendered design: typography, colors, spacing, and layout must match (including the responsive view). If anything drifted, fix it and re-run.
+
+### 3. Propose follow-up tasks
+
+Before completing, propose these follow-ups in a single call. **The mobile task MUST be first and MUST be proposed on every Claude design import.**
+
+1. **"Take your app mobile"** — **ALWAYS FIRST.** A brand-new mobile artifact (Expo) matching the design's colors, typography, and key screens.
+2. **"Add a backend to your app"** — only if the design implies data or accounts. A new `api-server` artifact (+ `lib/db` only if data must persist) wiring the frontend off its mocks; the approved frontend design must not be restyled.
+3. **"Make a promo video for your app"** — a brand-new video artifact showcasing the design in motion.
+
+### 4. Complete
+
+Mark the task complete. The user will verify visual parity before anything else.
+
+## Note to the code reviewer
+
+- HONOR `Out of scope` — don't reject for `any` types, typecheck errors, or features the design doesn't show.
+- Do NOT flag the pre-existing scaffold packages (`artifacts/api-server/`, `artifacts/mockup-sandbox/`, `lib/*`) as agent additions.
+- The look must be unchanged from the imported design; flag restyling as a regression. Reject only for real regressions (broken runtime, lost styles, missing content, unreachable sections).
