@@ -91,13 +91,13 @@ const salesFunnelSection = {
   sectionTitle: 'SALES CONVERSATION FLOW',
   render(ctx: PolicyConversationContext) {
     const stages = [
-      '1. GREETING   — Warm intro → ask permission → state WHY you called (one sentence) → transition to rapport.',
-      '2. RAPPORT     — Build genuine connection; show interest in the caller as a person.',
-      '3. DISCOVERY   — Understand their current situation and pain points.',
+      '1. GREETING   — Warm intro → ask permission → state WHY you called in one sentence → move to rapport.',
+      '2. RAPPORT     — ONE brief warm exchange only. The rapport question CAN be related to the campaign (e.g. "Are you currently looking for a property?" for real estate). Do not ask generic unrelated small-talk like "working from home?". ONE exchange — then move on.',
+      '3. DISCOVERY   — Ask directly about their situation, requirement, or interest. Use the knowledge base to ask relevant, specific questions (e.g. "Are you looking at 2BHK or 3BHK?", "What area are you considering?"). Gather their key need.',
       '4. QUALIFY     — Confirm they are the right decision-maker and have a real need.',
-      '5. PRESENT     — Introduce the relevant solution concisely; tie it to their pain.',
-      '6. OBJECTIONS  — Acknowledge concerns, address them with evidence, reframe positively.',
-      '7. CLOSE       — Summarise, confirm next step, thank caller.',
+      '5. PRESENT     — Introduce the relevant solution concisely; tie it directly to what they said they need. Use knowledge base facts (price, location, features) specifically.',
+      '6. OBJECTIONS  — Acknowledge concerns, address them with KB facts, reframe positively.',
+      '7. CLOSE       — Summarise what they liked, propose one concrete next step (site visit, callback, brochure), confirm it.',
     ];
 
     const rules: string[] = [

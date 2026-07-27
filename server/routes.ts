@@ -6,6 +6,7 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 import bcryptjs from "bcryptjs";
 import session from "express-session";
+import MongoStore from "connect-mongo";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -88,6 +89,15 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     throw new Error("SESSION_SECRET environment variable is required");
   }
 
+  // Secure cookie logic:
+  //   - In dev: never secure (plain HTTP)
+  //   - In production: secure by default, but can be overridden with COOKIE_SECURE=false
+  //     (useful on EC2 when running HTTP-only without a TLS terminator, or during
+  //     initial setup before SSL is configured).
+  const cookieSecure =
+    process.env.NODE_ENV === "production" &&
+    process.env.COOKIE_SECURE !== "false";
+
   app.use(
     session({
       secret: process.env.SESSION_SECRET,
@@ -95,13 +105,22 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       saveUninitialized: false,
       name: "aiagent.sid",
       rolling: true, // Refresh cookie expiry on each request
+      // MongoDB-backed store: sessions survive server restarts.
+      // Falls back to in-memory if MONGODB_URI is not set (local dev without DB).
+      store: process.env.MONGODB_URI
+        ? MongoStore.create({
+            mongoUrl: process.env.MONGODB_URI,
+            collectionName: "sessions",
+            ttl: 60 * 60 * 24 * 7, // 1 week in seconds (matches cookie maxAge)
+            touchAfter: 24 * 3600,  // only update the session once per 24h unless data changed
+          })
+        : undefined,
       cookie: {
-        // Secure on HTTPS (production/proxied); plain HTTP in local dev
-        secure: process.env.NODE_ENV === "production",
+        secure: cookieSecure,
         httpOnly: true,
         path: "/",
         maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-        sameSite: "lax"
+        sameSite: "lax",
       },
     })
   );

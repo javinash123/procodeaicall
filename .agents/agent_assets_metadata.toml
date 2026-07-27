@@ -12,3 +12,9 @@ id = "UrBfC85wEzig66tLSV4m-"
 uri = "file://backups/mongodb_2026-07-27T14-09-37.zip"
 type = "unspecified"
 title = "MongoDB Backup — 2026-07-27 14:09 UTC"
+
+[[outputs]]
+id = "qyr6_tsl6vdt_llc5Wx6N"
+uri = "file://nijvox-deploy.tar.gz"
+type = "unspecified"
+title = "nijvox-deploy.tar.gz — EC2 deployment package"

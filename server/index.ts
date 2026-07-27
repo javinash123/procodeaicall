@@ -9,6 +9,11 @@ import { getV2Coordinator } from "./voice-engine/migration/CoordinatorBootstrap"
 const app = express();
 const httpServer = createServer(app);
 
+// Tell Express to trust the X-Forwarded-Proto header from nginx.
+// Without this, req.secure is always false behind a reverse proxy,
+// so the Secure cookie is set but never sent back → session lost on every request.
+app.set('trust proxy', 1);
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;

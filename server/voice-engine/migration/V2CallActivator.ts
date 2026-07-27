@@ -112,12 +112,25 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
       // agents and causes the AI to open the call with a full sales monologue.
       const script            = ((c.script || '') as string).trim();
 
-      // Build a meaningful campaign goal from available fields.
-      // goal (c.goal) is the TYPE ("sales"/"support"/"survey") not a description.
-      // Use name + additionalContext + scriptContent to compose a real goal.
+      // Build a call OBJECTIVE from goalType — tells AI *why* it is calling.
+      // goalType is the type-tag ("sales"/"appointment"/"survey"/"support").
+      // We convert it to a clear action phrase so the AI knows what to achieve,
+      // rather than getting a company-history string as its "goal".
+      const goalActionMap: Record<string, string> = {
+        'sales':       'present and sell',
+        'appointment': 'book a site visit or appointment for',
+        'survey':      'gather feedback on',
+        'support':     'resolve support queries about',
+      };
+      const goalAction = goalActionMap[goalType] || 'discuss';
+      const callObjective = campaignName
+        ? `${goalAction} ${campaignName}`
+        : 'speak with the prospect about our offering';
+
+      // Full goal description: objective + company background as context.
       const goalDescription = additionalContext
-        ? `${campaignName ? campaignName + ': ' : ''}${additionalContext}`
-        : campaignName || 'speak with the prospect';
+        ? `${callObjective}. Background: ${additionalContext}`
+        : callObjective;
 
       // Campaign type for persona shaping
       const campaignType = goalType as 'sales' | 'support' | 'survey';
@@ -133,17 +146,44 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
           .filter((t: string | undefined): t is string => !!t && t.trim().length > 0),
       ];
 
+      // ── Extract agent name / company from script as a fallback ─────────────
+      // Many campaigns embed the agent's name and company in the script opener,
+      // e.g. "Hi, I am Amit calling from Marine Real Estate Company."
+      // Parse these out so even minimally-filled campaigns sound correct.
+      let scriptAgentName: string | null = null;
+      let scriptCompanyName: string | null = null;
+      if (script) {
+        const agentMatch = script.match(
+          /(?:I am|I'm|this is)\s+([A-Z][a-zA-Z]+)\s+(?:calling|from)/i
+        );
+        scriptAgentName = agentMatch?.[1]?.trim() || null;
+
+        const companyMatch = script.match(
+          /(?:calling from|from)\s+([A-Z][^.!?\n,]+?)(?:\.|!|\?|,|\s+and\b|$)/i
+        );
+        // Reject matches that are just the agent's own name (false positives)
+        const raw = companyMatch?.[1]?.trim() || null;
+        scriptCompanyName = raw && raw !== scriptAgentName ? raw : null;
+      }
+
       // ── User (agent) data ────────────────────────────────────────────────────
-      let agentName   = 'Alex';
-      let companyName = campaignName || 'NIJVOX';
+      // Priority: campaign.agentName → script extraction → user.firstName → 'Alex'
+      let agentName   = (c.agentName as string | undefined)?.trim() || scriptAgentName || 'Alex';
+      // Priority: user.companyName → script extraction → campaign name → 'NIJVOX'
+      let companyName = scriptCompanyName || campaignName || 'NIJVOX';
       try {
         const userId = c.userId?.toString?.() || '';
         if (userId) {
           const user = await storage.getUser(userId);
           if (user) {
-            agentName   = (user as any).firstName?.trim() || agentName;
-            // Use campaign name as fallback if user hasn't set their company name
-            companyName = (user as any).companyName?.trim() || campaignName || 'NIJVOX';
+            agentName   = (c.agentName as string | undefined)?.trim()
+                       || scriptAgentName
+                       || (user as any).firstName?.trim()
+                       || agentName;
+            companyName = (user as any).companyName?.trim()
+                       || scriptCompanyName
+                       || campaignName
+                       || 'NIJVOX';
           }
         }
       } catch (userErr) {
@@ -187,11 +227,19 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
         });
       }
 
+      // ── Build product description: what the AI is selling ───────────────────
+      // Combine additionalContext + first KB chunk so the AI has real product
+      // knowledge even when additionalContext is just company background.
+      const kbSummary = kbChunks.length > 0 ? kbChunks[0].substring(0, 500) : '';
+      const productDescription = [additionalContext, kbSummary]
+        .filter(Boolean)
+        .join('\n') || campaignName || 'our product';
+
       // ── Build PolicyConversationContext ──────────────────────────────────────
       policyContext = {
         agentName,
         companyName,
-        productDescription: additionalContext || campaignName || 'our product',
+        productDescription,
         campaignGoal:       goalDescription,
         campaignType,
         language,

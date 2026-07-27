@@ -37,15 +37,15 @@ const STAGE_OBJECTIVES: readonly StageObjective[] = [
   },
   {
     stage: 'RAPPORT',
-    objective: 'Make the caller feel at ease as a person, not a prospect.',
-    doneLooksLike: 'The caller has responded naturally — a comment, a laugh, or an open answer about themselves.',
-    doNotAdvanceUntil: 'There has been at least one human exchange that is not about the product.',
+    objective: 'Build one brief moment of human warmth before moving to discovery. Keep it short.',
+    doneLooksLike: 'The caller has given any natural conversational response — even a short one like "I\'m good" or "sure".',
+    doNotAdvanceUntil: 'ONE genuine exchange has happened. Do NOT extend rapport with more small-talk — callers appreciate getting to the point quickly. One exchange is always enough.',
   },
   {
     stage: 'DISCOVERY',
-    objective: 'Identify at least one genuine pain point the caller wants solved.',
-    doneLooksLike: 'The caller has described a problem, frustration, or unmet need in their own words.',
-    doNotAdvanceUntil: 'At least one specific pain point is captured — do not advance on vague answers.',
+    objective: 'Understand the caller\'s situation, interest level, or specific need related to what you are offering.',
+    doneLooksLike: 'The caller has shared something relevant — their requirement, interest, timeline, budget range, or current situation.',
+    doNotAdvanceUntil: 'At least one piece of useful information is gathered. A direct answer to "what are you looking for?" counts. Do not advance on complete silence.',
   },
   {
     stage: 'QUALIFICATION',
