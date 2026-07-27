@@ -8,8 +8,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { generateCallScript, testOpenAI, generateAIResponse } from "./openaiService";
-import { makeExotelCall, getWssUrl } from "./exotelService";
-import { phoneCallMap, callSidMap, normalizePhone } from "./callMap";
+import { makeExotelCall, getWssUrl, terminateExotelCall } from "./exotelService";
+import { phoneCallMap, callSidMap, callCreditTimers, normalizePhone } from "./callMap";
 import { getV2Coordinator } from "./voice-engine/migration/CoordinatorBootstrap";
 import { extractTextFromFile } from "./textExtractor";
 import {
@@ -687,6 +687,36 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
           }
         }
 
+        // ── Credit-based call timer: hang up when credits run out ──────────────
+        if (result.callSid) {
+          try {
+            const timerUser = await storage.getUser(req.session.userId!);
+            if (timerUser?.subscription?.plan) {
+              const allTimerPlans = await storage.getPlans();
+              const timerPlan = allTimerPlans.find((p: any) => p.name === timerUser.subscription!.plan) as any;
+              if (timerPlan?.callingRate > 0) {
+                const available = (timerUser.subscription.monthlyCallCredits || 0)
+                  + ((timerUser.subscription as any).purchasedCredits || 0)
+                  - (timerUser.subscription.creditsUsed || 0);
+                // maxSeconds = (credits / rate_per_min) * 60, rounded down
+                const maxSeconds = Math.floor((available / timerPlan.callingRate) * 60);
+                if (maxSeconds > 0) {
+                  const sid = result.callSid;
+                  const timer = setTimeout(async () => {
+                    callCreditTimers.delete(sid);
+                    console.log(`[credits] Max call duration (${maxSeconds}s) reached for ${sid} — terminating`);
+                    await terminateExotelCall(sid);
+                  }, maxSeconds * 1000);
+                  callCreditTimers.set(sid, timer);
+                  console.log(`[credits] Call ${sid} — credit timer set for ${maxSeconds}s (${available} credits @ ₹${timerPlan.callingRate}/min)`);
+                }
+              }
+            }
+          } catch (timerErr: any) {
+            console.error("[credits] Failed to set call timer:", timerErr.message);
+          }
+        }
+
         res.json({
           success:   true,
           callSid:   result.callSid,
@@ -794,6 +824,13 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         leadId,
         rawPayload: payload,
       };
+
+      // ── Clear credit timer if the call ended naturally ─────────────────────
+      if (callSid && callCreditTimers.has(callSid)) {
+        clearTimeout(callCreditTimers.get(callSid)!);
+        callCreditTimers.delete(callSid);
+        console.log(`[credits] Credit timer cleared for ${callSid} (call ended via webhook)`);
+      }
 
       const callLog = await storage.upsertCallLog(callSid, logEntry);
 

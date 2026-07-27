@@ -13,6 +13,13 @@ export const callSidMap = new Map<string, string>();
 export const phoneCallMap = new Map<string, string>();
 
 /**
+ * CallSid → termination timer handle.
+ * Set when a call starts, cleared when the webhook fires (call ended naturally).
+ * If credits run out before the call ends, the timer fires and hangs up via Exotel API.
+ */
+export const callCreditTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+/**
  * Normalise a phone number to its last 10 digits.
  * Delegates to the shared canonical helper in phoneUtils.
  */

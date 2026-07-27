@@ -73,6 +73,22 @@ export async function updateExotelAppStreamUrl(): Promise<void> {
   );
 }
 
+/**
+ * Terminate an active Exotel call by setting its Status to "completed".
+ * Used for mid-call credit exhaustion enforcement.
+ */
+export async function terminateExotelCall(callSid: string): Promise<void> {
+  const url = `https://api.exotel.com/v1/Accounts/${EXOTEL_SID}/Calls/${callSid}/`;
+  try {
+    await axios.post(url, new URLSearchParams({ Status: "completed" }), {
+      auth: { username: EXOTEL_API_KEY, password: EXOTEL_API_TOKEN },
+    });
+    console.log(`[Exotel] Call ${callSid} terminated (credit exhausted)`);
+  } catch (err: any) {
+    console.error(`[Exotel] Failed to terminate call ${callSid}:`, err.response?.data || err.message);
+  }
+}
+
 export async function makeExotelCall(toNumber: string): Promise<ExotelCallResult> {
   console.log("Calling number:", toNumber);
 

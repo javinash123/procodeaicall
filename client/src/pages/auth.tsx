@@ -3,12 +3,22 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Phone, ArrowLeft, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Phone, ArrowLeft, Loader2, Check } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { authApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import type { Plan } from "@shared/schema";
+
+interface FormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
 
 export default function Auth() {
   const [location, setLocation] = useLocation();
@@ -16,6 +26,19 @@ export default function Auth() {
   const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Registration multi-step state
+  const [regStep, setRegStep] = useState<1 | 2>(1);
+  const [pendingForm, setPendingForm] = useState<FormData | null>(null);
+
+  // Fetch plans (for step 2 plan picker)
+  const { data: plansData } = useQuery<{ plans: Plan[] } | Plan[]>({
+    queryKey: ["/api/plans"],
+    enabled: !isLogin,
+  });
+  const plans: Plan[] = Array.isArray(plansData)
+    ? plansData
+    : (plansData && "plans" in plansData ? plansData.plans : []);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,81 +49,73 @@ export default function Auth() {
 
     try {
       await login(email, password);
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully logged in.",
-      });
+      toast({ title: "Welcome back!", description: "You've successfully logged in." });
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error.message || "Invalid email or password",
-      });
+      toast({ variant: "destructive", title: "Login failed", description: error.message || "Invalid email or password" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Step 1: Collect form data
+  const handleRegisterStep1 = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
     const formData = new FormData(e.currentTarget);
-    const firstName = formData.get("first-name") as string;
-    const lastName = formData.get("last-name") as string;
-    const email = formData.get("reg-email") as string;
-    const password = formData.get("reg-password") as string;
-    
+    const data: FormData = {
+      firstName: formData.get("first-name") as string,
+      lastName: formData.get("last-name") as string,
+      email: formData.get("reg-email") as string,
+      password: formData.get("reg-password") as string,
+    };
+
+    // Check if plan is already in URL (user came from pricing page)
     const queryParams = new URLSearchParams(window.location.search);
     const selectedPlanId = queryParams.get("plan");
 
-    if (!selectedPlanId) {
-      toast({
-        variant: "destructive",
-        title: "Plan required",
-        description: "Please select a pricing plan before registering.",
-      });
-      setLocation("/pricing");
-      return;
+    if (selectedPlanId) {
+      // Plan already chosen — skip step 2, go straight to registering
+      doRegister(data, selectedPlanId);
+    } else {
+      // No plan yet — move to step 2 (plan picker)
+      setPendingForm(data);
+      setRegStep(2);
     }
+  };
 
+  // Step 2: User picked a plan
+  const handlePlanSelected = (planId: string) => {
+    if (!pendingForm) return;
+    doRegister(pendingForm, planId);
+  };
+
+  // Actual API call + routing
+  const doRegister = async (data: FormData, planId: string) => {
+    setIsLoading(true);
     try {
-      const user = await authApi.register({
-        email,
-        password,
-        firstName,
-        lastName,
+      await authApi.register({
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
         role: "user",
-        selectedPlanId: selectedPlanId || undefined,
+        selectedPlanId: planId,
       });
 
-      // No login here yet, wait for payment
-      
-      const response = await fetch(`/api/plans/${selectedPlanId}`);
-      const plan = await response.json();
+      const planRes = await fetch(`/api/plans/${planId}`);
+      const plan = await planRes.json();
 
       if (plan && plan.price === 0) {
-        // For free plan, we can login and redirect
-        await login(email, password);
-        toast({
-          title: "Account created!",
-          description: "Free Plan Activated. Welcome to NIJVOX!",
-        });
+        await login(data.email, data.password);
+        toast({ title: "Account created!", description: "Free Plan Activated. Welcome to NIJVOX!" });
         setLocation("/dashboard");
       } else {
-        toast({
-          title: "Account created!",
-          description: "Please complete the payment to activate your account.",
-        });
-        // Redirect to payment page with email for prefill
-        setLocation(`/payment?plan=${selectedPlanId}&email=${encodeURIComponent(email)}`);
+        toast({ title: "Account created!", description: "Please complete the payment to activate your account." });
+        setLocation(`/payment?plan=${planId}&email=${encodeURIComponent(data.email)}`);
       }
-      
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Registration failed",
-        description: error.message || "Could not create account",
-      });
+      toast({ variant: "destructive", title: "Registration failed", description: error.message || "Could not create account" });
+      // On error go back to step 1
+      setRegStep(1);
     } finally {
       setIsLoading(false);
     }
@@ -127,114 +142,116 @@ export default function Auth() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={isLogin ? "login" : "register"} className="w-full" onValueChange={(val) => setLocation(val === "login" ? "/login" : "/register")}>
+          <Tabs
+            defaultValue={isLogin ? "login" : "register"}
+            className="w-full"
+            onValueChange={(val) => {
+              setRegStep(1);
+              setPendingForm(null);
+              setLocation(val === "login" ? "/login" : "/register");
+            }}
+          >
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
-            
+
+            {/* ── LOGIN ─────────────────────────────────────────────────────── */}
             <TabsContent value="login">
               <form className="space-y-4" onSubmit={handleLogin}>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    name="email"
-                    type="email" 
-                    placeholder="name@example.com" 
-                    required 
-                    data-testid="input-email"
-                    disabled={isLoading}
-                  />
+                  <Input id="email" name="email" type="email" placeholder="name@example.com" required data-testid="input-email" disabled={isLoading} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label htmlFor="password">Password</Label>
                     <a href="#" className="text-xs text-primary hover:underline">Forgot password?</a>
                   </div>
-                  <Input 
-                    id="password" 
-                    name="password"
-                    type="password" 
-                    required 
-                    data-testid="input-password"
-                    disabled={isLoading}
-                  />
+                  <Input id="password" name="password" type="password" required data-testid="input-password" disabled={isLoading} />
                 </div>
                 <Button type="submit" className="w-full h-10" data-testid="button-login" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
-                    </>
-                  ) : (
-                    "Sign In"
-                  )}
+                  {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</> : "Sign In"}
                 </Button>
               </form>
             </TabsContent>
-            
+
+            {/* ── REGISTER ──────────────────────────────────────────────────── */}
             <TabsContent value="register">
-              <form className="space-y-4" onSubmit={handleRegister}>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="first-name">First name</Label>
-                    <Input 
-                      id="first-name" 
-                      name="first-name"
-                      placeholder="John" 
-                      required 
-                      data-testid="input-firstname"
-                      disabled={isLoading}
-                    />
+              {/* Step indicators */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <div className={`flex items-center justify-center h-7 w-7 rounded-full text-xs font-bold border-2 transition-colors ${regStep >= 1 ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground text-muted-foreground"}`}>
+                  {regStep > 1 ? <Check className="h-3.5 w-3.5" /> : "1"}
+                </div>
+                <div className={`h-0.5 w-10 transition-colors ${regStep > 1 ? "bg-primary" : "bg-muted"}`} />
+                <div className={`flex items-center justify-center h-7 w-7 rounded-full text-xs font-bold border-2 transition-colors ${regStep >= 2 ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground text-muted-foreground"}`}>
+                  2
+                </div>
+              </div>
+
+              {regStep === 1 && (
+                <form className="space-y-4" onSubmit={handleRegisterStep1}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="first-name">First name</Label>
+                      <Input id="first-name" name="first-name" placeholder="John" required data-testid="input-firstname" disabled={isLoading} defaultValue={pendingForm?.firstName} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="last-name">Last name</Label>
+                      <Input id="last-name" name="last-name" placeholder="Doe" required data-testid="input-lastname" disabled={isLoading} defaultValue={pendingForm?.lastName} />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="last-name">Last name</Label>
-                    <Input 
-                      id="last-name" 
-                      name="last-name"
-                      placeholder="Doe" 
-                      required 
-                      data-testid="input-lastname"
-                      disabled={isLoading}
-                    />
+                    <Label htmlFor="reg-email">Email</Label>
+                    <Input id="reg-email" name="reg-email" type="email" placeholder="name@example.com" required data-testid="input-reg-email" disabled={isLoading} defaultValue={pendingForm?.email} />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-email">Email</Label>
-                  <Input 
-                    id="reg-email" 
-                    name="reg-email"
-                    type="email" 
-                    placeholder="name@example.com" 
-                    required 
-                    data-testid="input-reg-email"
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-password">Password</Label>
-                  <Input 
-                    id="reg-password" 
-                    name="reg-password"
-                    type="password" 
-                    required 
-                    minLength={6}
-                    data-testid="input-reg-password"
-                    disabled={isLoading}
-                  />
-                </div>
-                <Button type="submit" className="w-full h-10" data-testid="button-register" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
-                    </>
+                  <div className="space-y-2">
+                    <Label htmlFor="reg-password">Password</Label>
+                    <Input id="reg-password" name="reg-password" type="password" required minLength={6} data-testid="input-reg-password" disabled={isLoading} />
+                  </div>
+                  <Button type="submit" className="w-full h-10" data-testid="button-register" disabled={isLoading}>
+                    {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Please wait...</> : "Continue"}
+                  </Button>
+                </form>
+              )}
+
+              {regStep === 2 && (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground text-center">Choose a plan to get started</p>
+                  {plans.length === 0 ? (
+                    <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
                   ) : (
-                    "Create Account"
+                    <div className="space-y-3">
+                      {plans.map((plan) => (
+                        <button
+                          key={plan._id}
+                          onClick={() => !isLoading && handlePlanSelected(plan._id)}
+                          disabled={isLoading}
+                          className="w-full text-left rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all p-4 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-semibold text-sm">{plan.name}</div>
+                              <div className="text-xs text-muted-foreground mt-0.5">{plan.credits.toLocaleString()} credits · {plan.duration}</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {plan.price === 0 ? (
+                                <Badge variant="secondary">Free</Badge>
+                              ) : (
+                                <span className="text-sm font-bold text-primary">₹{plan.price}</span>
+                              )}
+                              {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   )}
-                </Button>
-              </form>
+                  <Button variant="ghost" className="w-full text-sm" onClick={() => setRegStep(1)} disabled={isLoading}>
+                    ← Back
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
