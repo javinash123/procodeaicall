@@ -1,0 +1,21 @@
+[
+  {
+    "_id": "6968c233a22cf9d37f943fd3",
+    "message": "first",
+    "type": "notification",
+    "readBy": [],
+    "createdAt": "2026-01-15T10:32:19.010Z",
+    "__v": 0
+  },
+  {
+    "_id": "6968c23aa22cf9d37f943fd6",
+    "message": "second",
+    "type": "announcement",
+    "readBy": [
+      "693bba0cd86bf0c4df24e4fb",
+      "695f8899fdbd362225ded321"
+    ],
+    "createdAt": "2026-01-15T10:32:26.731Z",
+    "__v": 0
+  }
+]

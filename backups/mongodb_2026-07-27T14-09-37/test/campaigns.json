@@ -1,0 +1,355 @@
+[
+  {
+    "_id": "693bc153638d4f2ccf6af12a",
+    "userId": "693bba0dd86bf0c4df24e4fe",
+    "name": "Summer Outreach 2024",
+    "goal": "sales",
+    "script": "Hi, this is a call from NIJVOX...",
+    "status": "Active",
+    "voice": "Rachel (American)",
+    "knowledgeBase": [],
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2025-12-12T07:16:35.017Z",
+    "__v": 0
+  },
+  {
+    "_id": "693bc7e3935694f6700a9293",
+    "userId": "693bc02c638d4f2ccf6af115",
+    "name": "prop camp",
+    "goal": "sales",
+    "script": "Hi, this is john",
+    "status": "Active",
+    "voice": "Drew (British)",
+    "knowledgeBase": [],
+    "additionalContext": "vvvcvvbcvc",
+    "callingHours": {
+      "start": "09:00",
+      "end": "14:04"
+    },
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2025-12-12T07:44:35.369Z",
+    "__v": 0
+  },
+  {
+    "_id": "693c162aae0a7b342d0caa02",
+    "userId": "693bc02c638d4f2ccf6af115",
+    "name": "vvvv",
+    "goal": "sales",
+    "script": "vvvvv",
+    "status": "Paused",
+    "voice": "Drew (British)",
+    "knowledgeBase": [],
+    "additionalContext": "fsfsdfsdfsf",
+    "callingHours": {
+      "start": "09:00",
+      "end": "18:00"
+    },
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2025-12-12T13:18:34.798Z",
+    "__v": 0
+  },
+  {
+    "_id": "693cd6edfb6f59c08ca52c13",
+    "userId": "693cd6abfb6f59c08ca52c0c",
+    "name": "Calling",
+    "goal": "sales",
+    "script": "Property related lead call",
+    "status": "Paused",
+    "voice": "Rachel (American)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [],
+    "additionalContext": "",
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2025-12-13T03:01:01.478Z",
+    "__v": 0
+  },
+  {
+    "_id": "6947f468fba20de07ebc3bec",
+    "userId": "693bc02c638d4f2ccf6af115",
+    "name": "rrrrr",
+    "goal": "support",
+    "script": "fdsdfsdf",
+    "status": "Draft",
+    "voice": "Rachel (American)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [],
+    "additionalContext": "",
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2025-12-21T13:21:44.666Z",
+    "__v": 0
+  },
+  {
+    "_id": "69480745af1696f243447e51",
+    "userId": "693bc02c638d4f2ccf6af115",
+    "name": "aaaa",
+    "goal": "survey",
+    "script": "aaaaa",
+    "status": "Paused",
+    "voice": "Drew (British)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [],
+    "additionalContext": "",
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2025-12-21T14:42:13.357Z",
+    "__v": 0
+  },
+  {
+    "_id": "6948da51cc5229fb42e5d420",
+    "userId": "693bc02c638d4f2ccf6af115",
+    "name": "Test",
+    "goal": "sales",
+    "script": "test",
+    "status": "Draft",
+    "voice": "Drew (British)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [],
+    "additionalContext": "",
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2025-12-22T05:42:41.245Z",
+    "__v": 0
+  },
+  {
+    "_id": "694a314c80f28094358d816f",
+    "userId": "693cd6abfb6f59c08ca52c0c",
+    "name": "yy",
+    "goal": "support",
+    "script": "Hi",
+    "status": "Draft",
+    "voice": "Rachel (American)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [],
+    "additionalContext": "",
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2025-12-23T06:06:04.523Z",
+    "__v": 0
+  },
+  {
+    "_id": "69674b413385b10205305835",
+    "userId": "695f8899fdbd362225ded321",
+    "name": "first campaign",
+    "goal": "support",
+    "script": "test",
+    "status": "Draft",
+    "voice": "Drew (Professional)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [],
+    "additionalContext": "test",
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "startDate": "2026-01-20",
+    "endDate": "2026-01-30",
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2026-01-14T07:52:33.055Z",
+    "__v": 0
+  },
+  {
+    "_id": "6967e25e88f8c3e73f08d4d9",
+    "userId": "695f8899fdbd362225ded321",
+    "name": "tttt",
+    "goal": "sales",
+    "script": "hhhhh",
+    "status": "Draft",
+    "voice": "Rachel (American)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [],
+    "additionalContext": "",
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "startDate": "2026-01-20",
+    "endDate": "2026-01-30",
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2026-01-14T18:37:18.355Z",
+    "__v": 0
+  },
+  {
+    "_id": "69bb5d800d70a42cbeee65a9",
+    "userId": "695f8899fdbd362225ded321",
+    "name": "Test 01",
+    "goal": "support",
+    "script": "Hi i calling from us",
+    "status": "Draft",
+    "voice": "Clyde (Friendly)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [],
+    "additionalContext": "",
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "startDate": "2026-03-19",
+    "endDate": "2026-03-19",
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2026-03-19T02:20:48.170Z",
+    "__v": 0
+  },
+  {
+    "_id": "69bd5558a57e122161197eab",
+    "userId": "693bc02c638d4f2ccf6af115",
+    "name": "Real Estate Campaign BL",
+    "goal": "sales",
+    "script": "Hi, I’m {Philip} calling from {Dream Homes Realty}. We help people find premium apartments in Bangalore. I wanted to check if you are looking to buy a property.",
+    "status": "Draft",
+    "voice": "Rachel (American)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [
+      {
+        "id": "1774015822997-435997297",
+        "name": "real estate.txt",
+        "type": "text/plain",
+        "size": 195,
+        "url": "/uploads/1774015822997-435997297-real estate.txt",
+        "uploadedAt": "2026-03-20T14:10:22.998Z",
+        "extractedText": "Project Name: Green Valley Residency\r\nLocation: Whitefield, Bangalore\r\nPrice: 2BHK - 80L, 3BHK - 1.1Cr\r\nAmenities: Pool, Gym, Parking, Splash court, Basketball.\r\nOffer: 5% discount till month end"
+      }
+    ],
+    "knowledgeBaseTexts": [],
+    "additionalContext": "We are selling 2BHK and 3BHK apartments in Bangalore starting from 80 lakhs. The project has amenities like swimming pool, gym, and clubhouse. We are offering limited time discounts.",
+    "callingHours": {
+      "start": "09:00",
+      "end": "19:00"
+    },
+    "startDate": "2026-03-20",
+    "endDate": "2026-03-30",
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2026-03-20T14:10:32.232Z",
+    "__v": 0,
+    "ai_generated_script": "Hi {name}, this is {Philip} from Dream Homes Realty. How are you today?\n\nI’m reaching out because you previously expressed interest in property investments, and I have an exciting opportunity for you. We're offering exquisite 2BHK and 3BHK apartments at Green Valley Residency in Whitefield, Bangalore, starting from just 80 lakhs. \n\nOur project boasts top-notch amenities such as a swimming pool, gym, parking, and more, providing a luxurious lifestyle for our residents. Plus, there's a basketball and splash court to keep the weekends lively!\n\nHere’s the best part—we’re running a special offer with a 5% discount until the end of the month. It’s a fantastic chance to secure your dream home at a great price.\n\nI’d love to provide more details and see how we can help you find the perfect fit. Would you be interested in setting up a time for a quick chat or a visit to our site?\n\nThank you, {name}, and I look forward to helping you find your dream home!"
+  },
+  {
+    "_id": "69ce774827d15a5f1b8f037c",
+    "userId": "693bc02c638d4f2ccf6af115",
+    "name": "april camp",
+    "goal": "sales",
+    "script": "Hello, I am John from Abc company.",
+    "status": "Draft",
+    "voice": "Rachel (American)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [
+      {
+        "id": "1775138630647-236138678",
+        "name": "real estate.txt",
+        "type": "text/plain",
+        "size": 195,
+        "url": "/uploads/1775138630647-236138678-real estate.txt",
+        "uploadedAt": "2026-04-02T14:03:50.651Z",
+        "extractedText": "Project Name: Green Valley Residency\r\nLocation: Whitefield, Bangalore\r\nPrice: 2BHK - 80L, 3BHK - 1.1Cr\r\nAmenities: Pool, Gym, Parking, Splash court, Basketball.\r\nOffer: 5% discount till month end"
+      }
+    ],
+    "knowledgeBaseTexts": [],
+    "additionalContext": "We have been running the business from 10 years.",
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "startDate": "2026-04-05",
+    "endDate": "2026-04-30",
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2026-04-02T14:03:52.324Z",
+    "__v": 0,
+    "ai_generated_script": "Hi {name}, this is John from ABC Company. How are you today?\n\nI wanted to personally reach out and let you know about an exciting opportunity at our Green Valley Residency in Whitefield, Bangalore. We've been proudly serving our community for 10 years, and this project is truly special. \n\nWhether you're looking for a 2BHK at 80 lakh or a 3BHK at 1.1 crore, Green Valley offers something for everyone. Plus, you'll enjoy top-notch amenities like a pool, gym, parking, splash court, and basketball facilities.\n\nAnd here's the best part: we're offering a 5% discount if you decide to move forward before the end of the month. It's a perfect time to invest!\n\nIf you're interested, I'd love to provide more details or arrange a visit. How does that sound to you, {name}?"
+  },
+  {
+    "_id": "6a06a320b95fed134bd65bba",
+    "userId": "693bba0cd86bf0c4df24e4fb",
+    "name": "Test0123",
+    "goal": "sales",
+    "script": "Hi i am calling from nijghar.com, how are you doing today.\n",
+    "status": "Draft",
+    "voice": "Rachel (American)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [],
+    "knowledgeBaseTexts": [],
+    "additionalContext": "",
+    "callingHours": {
+      "start": "10:29",
+      "end": "11:00"
+    },
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-15",
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2026-05-15T04:37:52.129Z",
+    "__v": 0,
+    "ai_generated_script": "Hi {name}, this is [Your AI Name] from Nijghar.com. How are you doing today?\n\nI’m reaching out because we have some exciting new offers on home improvement services that I think you’ll love. At Nijghar.com, we specialize in creating dream homes with high-quality renovations and personalized designs. \n\nAre you currently planning any home projects? I'd be happy to share how we can help bring your vision to life."
+  },
+  {
+    "_id": "6a3bae7f345e7a120528bd08",
+    "userId": "693bc02c638d4f2ccf6af115",
+    "name": "Indore Real estate",
+    "goal": "sales",
+    "script": "Hi , this is Alex from Indore Real Estate. How are you today?\n\nI’m reaching out because we have some exciting opportunities in the Indore property market that might be just what you’re looking for. Whether you're interested in a new home or an investment property, we have a range of options to suit your needs.\n\nOur latest offerings include properties in prime locations with excellent amenities and great growth potential. Plus, we’re committed to providing personalized support to help you make the best decision.\n\nI'd love to share more details and find out what you're specifically looking for. Are you available for a quick chat this week to discuss your options?\n\nThank you for your time, {name}. Looking forward to helping you find the perfect property in Indore!",
+    "status": "Draft",
+    "voice": "Rachel (American)",
+    "knowledgeBase": [],
+    "knowledgeBaseFiles": [],
+    "knowledgeBaseTexts": [],
+    "additionalContext": "We have 2BHK and 3BHK flats for sell at prime locations.",
+    "callingHours": {
+      "start": "09:00",
+      "end": "17:00"
+    },
+    "startDate": "2026-06-24",
+    "endDate": "2026-08-07",
+    "progress": 0,
+    "callsMade": 0,
+    "goalsMet": 0,
+    "createdAt": "2026-06-24T10:16:31.158Z",
+    "__v": 0,
+    "ai_generated_script": "Hi {name}, this is Alex from Indore Real Estate. How’s your day going?\n\nI’m excited to let you know about some fantastic opportunities in Indore's property market. We have a selection of beautiful 2BHK and 3BHK flats available in prime locations, complete with excellent amenities and promising growth potential. Whether you’re searching for a new home or considering an investment, we have options tailored just for you.\n\nOur team is dedicated to providing personalized support to ensure you find the perfect match for your needs. I’d love to understand more about what you’re looking for. Would you be open to a quick chat this week to explore your options?\n\nThanks for your time, {name}. I’m looking forward to assisting you in finding the ideal property in Indore!"
+  }
+]

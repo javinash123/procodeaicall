@@ -151,6 +151,7 @@ export default function Dashboard() {
   const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<any | null>(null);
   const [noteForm, setNoteForm] = useState({ title: "", content: "" });
+  const [playingRecordingUrl, setPlayingRecordingUrl] = useState<string | null>(null);
 
 
   // Form State for New Lead
@@ -3115,7 +3116,17 @@ export default function Dashboard() {
                               <TableCell className="text-sm">{new Date(history.date).toLocaleString()}</TableCell>
                               <TableCell><Badge variant="outline">{history.outcome}</Badge></TableCell>
                               <TableCell className="text-sm">{history.duration}</TableCell>
-                              <TableCell>{(() => { const url = findRecordingUrl(lead._id, history.date); return url ? <Button size="sm" variant="ghost" onClick={() => window.open(url, "_blank")}><Play className="h-4 w-4 mr-1" /> Play</Button> : <Button size="sm" variant="ghost" disabled title="No recording available" className="opacity-40"><Play className="h-4 w-4 mr-1" /> Play</Button>; })()}</TableCell>
+                              <TableCell>{(() => {
+                                const url = findRecordingUrl(lead._id, history.date);
+                                if (!url) return <Button size="sm" variant="ghost" disabled title="No recording available" className="opacity-40"><Play className="h-4 w-4 mr-1" />Play</Button>;
+                                if (playingRecordingUrl === url) return (
+                                  <div className="flex items-center gap-1">
+                                    <audio src={url} controls autoPlay className="h-8 w-44" onEnded={() => setPlayingRecordingUrl(null)} />
+                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 shrink-0" title="Close player" onClick={() => setPlayingRecordingUrl(null)}><X className="h-3 w-3" /></Button>
+                                  </div>
+                                );
+                                return <Button size="sm" variant="ghost" onClick={() => setPlayingRecordingUrl(url)}><Play className="h-4 w-4 mr-1" />Play</Button>;
+                              })()}</TableCell>
                               <TableCell className="text-right"><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}><Phone className="h-4 w-4" /></Button></TableCell>
                               <TableCell className="text-right"><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}><MessageSquare className="h-4 w-4" /></Button></TableCell>
                             </TableRow>

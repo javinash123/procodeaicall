@@ -1,0 +1,58 @@
+{
+  "timestamp": "2026-07-27T14-09-37",
+  "databases": [
+    {
+      "name": "test",
+      "collections": [
+        {
+          "name": "exotelconfigs",
+          "count": 0
+        },
+        {
+          "name": "notifications",
+          "count": 2
+        },
+        {
+          "name": "calllogs",
+          "count": 2
+        },
+        {
+          "name": "campaigns",
+          "count": 15
+        },
+        {
+          "name": "leads",
+          "count": 11
+        },
+        {
+          "name": "users",
+          "count": 13
+        },
+        {
+          "name": "appointments",
+          "count": 5
+        },
+        {
+          "name": "sessions",
+          "count": 0
+        },
+        {
+          "name": "features",
+          "count": 17
+        },
+        {
+          "name": "creditusages",
+          "count": 0
+        },
+        {
+          "name": "notes",
+          "count": 5
+        },
+        {
+          "name": "plans",
+          "count": 4
+        }
+      ]
+    }
+  ]
+}

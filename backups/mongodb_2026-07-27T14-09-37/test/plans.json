@@ -1,0 +1,91 @@
+[
+  {
+    "_id": "695e82f9b48e9a1c9f4f1b37",
+    "name": "Basic",
+    "price": 0,
+    "duration": "monthly",
+    "credits": 1000,
+    "features": [
+      "AI Agent Call",
+      "Bulk WhatsApp",
+      "Bulk SMS",
+      "WhatsApp Chatbot",
+      "Basic CRM"
+    ],
+    "limitations": [],
+    "description": "For solo founders and small tests.",
+    "isActive": true,
+    "createdAt": "2026-01-07T15:59:53.348Z",
+    "__v": 0,
+    "callingRate": 2,
+    "smsRate": 1,
+    "whatsappRate": 1
+  },
+  {
+    "_id": "695eb7794f11809159eb070a",
+    "name": "Advanced",
+    "price": 2500,
+    "duration": "monthly",
+    "credits": 2000,
+    "features": [
+      "AI Agent Call",
+      "Bulk WhatsApp",
+      "Bulk SMS",
+      "WhatsApp Chatbot",
+      "Basic CRM",
+      "Email Support",
+      "Analytics"
+    ],
+    "limitations": [],
+    "description": "For growing sales teams.",
+    "isActive": true,
+    "createdAt": "2026-01-07T19:43:53.845Z",
+    "__v": 0,
+    "callingRate": 1.5,
+    "smsRate": 0.75,
+    "whatsappRate": 0.75
+  },
+  {
+    "_id": "695eb7964f11809159eb070e",
+    "name": "Enterprise",
+    "price": 5000,
+    "duration": "monthly",
+    "credits": 5000,
+    "features": [
+      "AI Agent Call",
+      "Bulk SMS",
+      "WhatsApp Chatbot",
+      "Analytics",
+      "Email Support",
+      "Scheduling",
+      "Call Support",
+      "Basic CRM",
+      "Brand Identity",
+      "Bulk WhatsApp"
+    ],
+    "limitations": [],
+    "description": "For large organizations.",
+    "isActive": true,
+    "createdAt": "2026-01-07T19:44:22.609Z",
+    "__v": 0,
+    "callingRate": 1,
+    "smsRate": 0.5,
+    "whatsappRate": 0.5
+  },
+  {
+    "_id": "69b1238d6281153915bbe707",
+    "name": "Basic",
+    "price": 0,
+    "duration": "monthly",
+    "credits": 0,
+    "callingRate": 0,
+    "smsRate": 0,
+    "whatsappRate": 0,
+    "features": [],
+    "limitations": [],
+    "description": "",
+    "isActive": true,
+    "createdAt": "2026-03-11T08:10:53.466Z",
+    "__v": 0
+  }
+]

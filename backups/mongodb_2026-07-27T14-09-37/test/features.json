@@ -1,0 +1,104 @@
+[
+  {
+    "_id": "695e5c9fc55f71c3ffea4b0f",
+    "name": "One",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695e5ca4c55f71c3ffea4b13",
+    "name": "One",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695e7c4930dd248661ab6cb5",
+    "name": "aaaa",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695e7c4e30dd248661ab6cb9",
+    "name": "bbb",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695e7c5230dd248661ab6cbd",
+    "name": "ccc",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695e82cfb48e9a1c9f4f1b2f",
+    "name": "eeeee",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695e82d7b48e9a1c9f4f1b33",
+    "name": "asdasd",
+    "description": "dsasdasd",
+    "__v": 0
+  },
+  {
+    "_id": "695eb6bb4f11809159eb06df",
+    "name": "AI Agent Call",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695eb6c24f11809159eb06e3",
+    "name": "Bulk SMS",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695eb6d54f11809159eb06e7",
+    "name": "Bulk WhatsApp",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695eb6df4f11809159eb06eb",
+    "name": "WhatsApp Chatbot",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695eb6ee4f11809159eb06ef",
+    "name": "Brand Identity",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695eb6f44f11809159eb06f3",
+    "name": "Analytics",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695eb7194f11809159eb06f7",
+    "name": "Basic CRM",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695eb7264f11809159eb06fb",
+    "name": "Email Support",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695eb72c4f11809159eb06ff",
+    "name": "Call Suport",
+    "description": "",
+    "__v": 0
+  },
+  {
+    "_id": "695eb7324f11809159eb0703",
+    "name": "Scheduling",
+    "description": "",
+    "__v": 0
+  }
+]

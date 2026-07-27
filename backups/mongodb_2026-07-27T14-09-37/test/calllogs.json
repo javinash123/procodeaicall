@@ -1,0 +1,40 @@
+[
+  {
+    "_id": "69bd99a375299684e0be4d10",
+    "callSid": "test-call-001",
+    "__v": 0,
+    "createdAt": "2026-03-20T19:01:55.893Z",
+    "duration": 120,
+    "endTime": "2026-03-20T10:02:00.000Z",
+    "from": "+918888888888",
+    "rawPayload": {
+      "CallSid": "test-call-001",
+      "Status": "completed",
+      "To": "+919876543210",
+      "From": "+918888888888",
+      "Duration": "120",
+      "StartTime": "2026-03-20T10:00:00Z",
+      "EndTime": "2026-03-20T10:02:00Z"
+    },
+    "startTime": "2026-03-20T10:00:00.000Z",
+    "status": "answered",
+    "to": "+919876543210"
+  },
+  {
+    "_id": "69bd99b375299684e0be4d11",
+    "callSid": "test-call-002",
+    "__v": 0,
+    "createdAt": "2026-03-20T19:02:11.858Z",
+    "duration": 0,
+    "from": "+918888888888",
+    "rawPayload": {
+      "CallSid": "test-call-002",
+      "Status": "no-answer",
+      "To": "+919876543210",
+      "From": "+918888888888",
+      "Duration": "0"
+    },
+    "status": "missed",
+    "to": "+919876543210"
+  }
+]

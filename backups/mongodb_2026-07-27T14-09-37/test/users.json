@@ -1,0 +1,301 @@
+[
+  {
+    "_id": "693bba0cd86bf0c4df24e4fb",
+    "email": "admin@nijvox.com",
+    "password": "$2b$10$ZhPvdCfjB5Y2SozEyLM.e.UfXbqTywqik0J8q6rfzvfBvyBe2K9b6",
+    "firstName": "Admin",
+    "lastName": "User",
+    "role": "admin",
+    "subscription": {
+      "plan": "Enterprise",
+      "status": "Active",
+      "monthlyCallCredits": 10000,
+      "creditsUsed": 0,
+      "joinedDate": "2025-12-12T06:45:32.975Z"
+    },
+    "settings": {
+      "dailyCallLimit": 1000,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2025-12-12T06:45:32.982Z",
+    "__v": 0
+  },
+  {
+    "_id": "693bba0dd86bf0c4df24e4fe",
+    "email": "test@example.com",
+    "password": "$2b$10$xLVE3Lm9cGZj3RfvROIYWubnlXDm/IR9XKxk7.CupzxolCAzDkguO",
+    "firstName": "Test",
+    "lastName": "User",
+    "role": "user",
+    "companyName": "Test Company",
+    "phone": "+1234567890",
+    "subscription": {
+      "plan": "Pro",
+      "status": "Active",
+      "monthlyCallCredits": 2000,
+      "creditsUsed": 250,
+      "joinedDate": "2025-12-12T06:45:33.605Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2025-12-12T06:45:33.606Z",
+    "__v": 0
+  },
+  {
+    "_id": "693bbf7f638d4f2ccf6af110",
+    "email": "newuser@test.com",
+    "password": "$2b$10$REq9wkruRzBR3QLuV5yBGup2IqdRxWdyfBZedEh4VwEZpw5gq3dtO",
+    "firstName": "New",
+    "lastName": "User",
+    "role": "user",
+    "subscription": {
+      "renewalDate": "2026-01-11T07:08:47.237Z",
+      "plan": "Pro",
+      "status": "Active",
+      "monthlyCallCredits": 2000,
+      "creditsUsed": 0,
+      "joinedDate": "2025-12-12T07:08:47.241Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2025-12-12T07:08:47.241Z",
+    "__v": 0
+  },
+  {
+    "_id": "693bc02c638d4f2ccf6af115",
+    "email": "avinash@test.com",
+    "password": "$2b$10$spahfBVUwXwaoF9cMxZXZ.nvJHa/wmywelPimRtd6/jRCreo7KnEK",
+    "firstName": "avinash",
+    "lastName": "jain",
+    "role": "user",
+    "subscription": {
+      "plan": "Advanced",
+      "status": "Active",
+      "monthlyCallCredits": 2000,
+      "creditsUsed": 0,
+      "renewalDate": "2026-03-20T04:04:43.248Z",
+      "joinedDate": "2026-02-18T04:04:43.248Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2025-12-12T07:11:40.551Z",
+    "__v": 0,
+    "companyName": "",
+    "phone": ""
+  },
+  {
+    "_id": "693cd6abfb6f59c08ca52c0c",
+    "email": "singh.navtejpal@gmail.com",
+    "password": "$2b$10$o9GgrJBGmgLI4W3JYpk5jOdcd9U3uBR/hJpMp28t0ai6HjKi5tRgu",
+    "firstName": "Nij",
+    "lastName": "Vox",
+    "role": "user",
+    "subscription": {
+      "renewalDate": "2026-01-12T02:59:55.770Z",
+      "plan": "Pro",
+      "status": "Active",
+      "monthlyCallCredits": 2000,
+      "creditsUsed": 0,
+      "joinedDate": "2025-12-13T02:59:55.773Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2025-12-13T02:59:55.773Z",
+    "__v": 0
+  },
+  {
+    "_id": "694a939cf58ff4c4f7263ba4",
+    "email": "memanjari24@gmail.com",
+    "password": "$2b$10$H9WZD/cJGBcXn73aUjHMouj84QKoYdTBfwLmW47e6e7IZW4BpL8bm",
+    "firstName": "Manjari",
+    "lastName": "Sharma",
+    "role": "user",
+    "subscription": {
+      "renewalDate": "2026-01-22T13:05:32.503Z",
+      "plan": "Pro",
+      "status": "Active",
+      "monthlyCallCredits": 2000,
+      "creditsUsed": 0,
+      "joinedDate": "2025-12-23T13:05:32.509Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2025-12-23T13:05:32.509Z",
+    "__v": 0
+  },
+  {
+    "_id": "695f8899fdbd362225ded321",
+    "email": "test@test.com",
+    "password": "$2b$10$/bbxBaSsS59Yh823uD8TuOeLFOV5URg0L9KXqJau1TXs0riB59KE2",
+    "firstName": "test",
+    "lastName": "tst",
+    "role": "user",
+    "subscription": {
+      "plan": "Advanced",
+      "status": "Active",
+      "monthlyCallCredits": 2000,
+      "creditsUsed": 0,
+      "renewalDate": "2026-02-14T07:22:08.736Z",
+      "joinedDate": "2026-01-15T07:21:07.054Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2026-01-08T10:36:09.867Z",
+    "__v": 0,
+    "companyName": "rrrrre",
+    "phone": "5555555555"
+  },
+  {
+    "_id": "69899285a9ca869d25e09751",
+    "email": "www@www.www",
+    "password": "$2b$10$uy6SWZ1CI3cThO8p0rMf3u8JL860t4TRZkWNhpyJ.Jw.H9eOMoHcq",
+    "firstName": "aaa",
+    "lastName": "aaa",
+    "role": "user",
+    "subscription": {
+      "plan": "Pending",
+      "status": "Inactive",
+      "monthlyCallCredits": 0,
+      "creditsUsed": 0,
+      "joinedDate": "2026-02-09T07:53:41.069Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2026-02-09T07:53:41.077Z",
+    "__v": 0
+  },
+  {
+    "_id": "6989adf185fe0c5baedda306",
+    "email": "ooo@ooo.ooo",
+    "password": "$2b$10$XCjYe1ZzT8eTe7BoQlc1ueIj42.nhsvW7lOpQgS0s25WuRaXtUA26",
+    "firstName": "ooo",
+    "lastName": "ooo",
+    "role": "user",
+    "subscription": {
+      "plan": "Pending",
+      "status": "Inactive",
+      "monthlyCallCredits": 0,
+      "creditsUsed": 0,
+      "joinedDate": "2026-02-09T09:50:41.877Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2026-02-09T09:50:41.882Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a06a099d471c977721fe036",
+    "email": "a@gmail.com",
+    "password": "$2b$10$2ZoYTl6ir48V.9wYMLoKyu6guaAtMRtqFdI039vBJ0Aioj9NxW/Q6",
+    "firstName": "A",
+    "lastName": "B",
+    "role": "user",
+    "subscription": {
+      "plan": "Pending",
+      "status": "Inactive",
+      "monthlyCallCredits": 0,
+      "creditsUsed": 0,
+      "joinedDate": "2026-05-15T04:27:05.448Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2026-05-15T04:27:05.459Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a64d4343b1d6d8b3ced8ae7",
+    "email": "gg@gg.com",
+    "password": "$2b$10$FZieaLXpyctVDf3hfH8YAehWDbt86KFTLxomWvEByA5JXgu9pHvGC",
+    "firstName": "gg",
+    "lastName": "gg",
+    "role": "user",
+    "subscription": {
+      "plan": "Pending",
+      "status": "Inactive",
+      "monthlyCallCredits": 0,
+      "creditsUsed": 0,
+      "joinedDate": "2026-07-25T15:20:20.602Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2026-07-25T15:20:20.687Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a671e684c537ba139d02d4b",
+    "email": "kkk@kkk.kkk",
+    "password": "$2b$10$DB5byOm5caS3SnQzQ1yhXunbVRdyfd3rIVwSw8MdcGSPL9KKVotoe",
+    "firstName": "kkk",
+    "lastName": "kkk",
+    "role": "user",
+    "subscription": {
+      "plan": "Basic",
+      "status": "Active",
+      "monthlyCallCredits": 1000,
+      "creditsUsed": 0,
+      "renewalDate": "2026-08-26T09:01:28.737Z",
+      "joinedDate": "2026-07-27T09:01:28.737Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2026-07-27T09:01:28.260Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a67281ef1eb3e47a072df7a",
+    "email": "bv@test.com",
+    "password": "$2b$10$.8tHcq3zZ8kWZ8YZMdgKPumVoljkPrZHLo9y5k7Utjf1u.7.kPqxK",
+    "firstName": "bbb",
+    "lastName": "vvvv",
+    "role": "user",
+    "subscription": {
+      "plan": "Advanced",
+      "status": "Inactive",
+      "monthlyCallCredits": 0,
+      "creditsUsed": 0,
+      "purchasedCredits": 0,
+      "joinedDate": "2026-07-27T09:42:55.475Z"
+    },
+    "settings": {
+      "dailyCallLimit": 500,
+      "dndEnabled": false,
+      "localPresenceDialing": true
+    },
+    "createdAt": "2026-07-27T09:42:54.967Z",
+    "__v": 0
+  }
+]

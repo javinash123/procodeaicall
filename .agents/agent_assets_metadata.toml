@@ -6,3 +6,9 @@ id = "g8-36E2z0lTphZilngh0T"
 uri = "file://nijvox-production.zip"
 type = "unspecified"
 title = "nijvox-production.zip — Latest Build (5.3 MB)"
+
+[[outputs]]
+id = "UrBfC85wEzig66tLSV4m-"
+uri = "file://backups/mongodb_2026-07-27T14-09-37.zip"
+type = "unspecified"
+title = "MongoDB Backup — 2026-07-27 14:09 UTC"
