@@ -3,7 +3,7 @@ name: website-cloning
 description: Clone any website as a pixel-perfect React + Vite app using Playwright extraction.
 ---
 
-# Clone Website — Pixel-Perfect Methodology
+# Clone Website -- Pixel-Perfect Methodology
 
 Reverse-engineer and rebuild a target website as an exact replica React + Vite clone. Every font, color, icon, image, section, background, transition, and interaction must match the original. Zero guessing, zero placeholders.
 
@@ -16,7 +16,7 @@ Reverse-engineer and rebuild a target website as an exact replica React + Vite c
 4. **Build all sections, then verify the full page.** Building and screenshotting section-by-section is too slow. Build all components from raw HTML, assemble in App.tsx, then take a full-page screenshot and fix any discrepancies. This is 3-5x faster than per-section verification loops.
 
 5. **No fabricated content.** Every heading, subtitle, button label, badge, price, and link must come from the source HTML. Never invent text that doesn't exist on the original page.
-6. **Replace the scaffolded CSS entirely.** The `createArtifact`scaffold includes Tailwind/shadcn boilerplate. Replace`index.css` completely with plain CSS — a Google Font import, CSS reset, CSS variables for design tokens, and nothing else. Clone pages don't use component libraries.
+6. **Replace the scaffolded CSS entirely.** The `createArtifact`scaffold includes Tailwind/shadcn boilerplate. Replace`index.css` completely with plain CSS -- a Google Font import, CSS reset, CSS variables for design tokens, and nothing else. Clone pages don't use component libraries.
 
 ## Anti-Patterns (Common Mistakes to Avoid)
 
@@ -109,7 +109,7 @@ This file is the authoritative reference for ALL section structure, content, cla
 
 ### 1.2 Language & Locale Detection (CRITICAL)
 
-If the target URL contains a locale path (e.g., `/es-do`,`/fr`,`/de`,`/ja`), the clone MUST be in that language. However, server-side rendering may return English even for locale URLs — the localization often happens via client-side JavaScript after page load.
+If the target URL contains a locale path (e.g., `/es-do`,`/fr`,`/de`,`/ja`), the clone MUST be in that language. However, server-side rendering may return English even for locale URLs -- the localization often happens via client-side JavaScript after page load.
 
 #### Detection steps
 
@@ -142,13 +142,13 @@ url: window.location.href
 1. If the URL locale doesn't match the extracted text language, the page probably needs more time for JS to run, or the locale is cookie-based.
 2. **When in doubt, use the language implied by the URL locale.** If `/es-do` shows English text in the raw HTML, translate all user-facing text to Spanish when building. The URL locale is the user's intent.
 
-**Brand terms stay in the original language.** Product names (e.g., "ALO Runner"), color names (e.g., "SUNSHINE"), brand names (e.g., "ALO Wellness Club") should NOT be translated — the real site keeps these in English even on localized pages.
+**Brand terms stay in the original language.** Product names (e.g., "ALO Runner"), color names (e.g., "SUNSHINE"), brand names (e.g., "ALO Wellness Club") should NOT be translated -- the real site keeps these in English even on localized pages.
 
 ### 1.3 Screenshots (Desktop only for initial build)
 
 Take a full-page screenshot at 1440px. This becomes the primary visual reference. Tablet and mobile screenshots are only needed if the user specifically requests responsive behavior.
 
-**Take a separate header-only screenshot** at this stage — crop to just the top 150px. This will be your reference for logo placement, nav layout, banner color, and account/rewards UI. Header issues are the most common mistakes.
+**Take a separate header-only screenshot** at this stage -- crop to just the top 150px. This will be your reference for logo placement, nav layout, banner color, and account/rewards UI. Header issues are the most common mistakes.
 
 ### 1.4 Section Inventory
 
@@ -172,10 +172,10 @@ Extract CSS custom properties, body font-family, heading font-family, primary co
 
 #### Priority order
 
-1. **Download actual font files** — Check `@font-face`rules for`.woff2`/`.woff`URLs. Download to`public/fonts/`and declare`@font-face`in`index.css`.
-2. **Use Google Fonts if available** — If the site uses Google Fonts, add the `@import`or`<link>` tag.
+1. **Download actual font files** -- Check `@font-face`rules for`.woff2`/`.woff`URLs. Download to`public/fonts/`and declare`@font-face`in`index.css`.
+2. **Use Google Fonts if available** -- If the site uses Google Fonts, add the `@import`or`<link>` tag.
 
-3. **Map to closest equivalent** — Only as a last resort:
+3. **Map to closest equivalent** -- Only as a last resort:
 
 | Proprietary Font | Google Fonts Equivalent |
 
@@ -247,7 +247,7 @@ break
 
 ```
 
-**Never use an SVG `<text>`element as a logo substitute.** Extract the real SVG`<path>` elements from the source HTML. The logo is the most recognizable element on the page — getting it wrong immediately signals "fake."
+**Never use an SVG `<text>`element as a logo substitute.** Extract the real SVG`<path>` elements from the source HTML. The logo is the most recognizable element on the page -- getting it wrong immediately signals "fake."
 
 ### 1.8 Asset Download (ALL assets, ALL at once)
 
@@ -255,13 +255,13 @@ Download every image, video, SVG, background image, and font file before buildin
 
 **CDN URL upscaling** (increase resolution before downloading):
 
-- **Shopify `_small`suffix**:`_small.jpg`→`_1200x.jpg` (very common pattern)
-- **Shopify query params**: `?width=X`→`?width=1200`
+- **Shopify `_small`suffix**:`_small.jpg`--`_1200x.jpg` (very common pattern)
+- **Shopify query params**: `?width=X`--`?width=1200`
 
-- **Sanity**: `?w=X`→`?w=1200`
-- **Cloudinary**: `w_X`→`w_1200`
+- **Sanity**: `?w=X`--`?w=1200`
+- **Cloudinary**: `w_X`--`w_1200`
 
-- **Contentful**: `?w=X`→`?w=1200`
+- **Contentful**: `?w=X`--`?w=1200`
 
 **Verification:** After downloading, verify every file exists and is >100 bytes. The download script includes automatic retry with fallback User-Agent strings.
 
@@ -329,7 +329,7 @@ This prevents the three most common header mistakes: wrong banner color, wrong l
 
 ### 1.10 Footer Link Extraction
 
-Extract all footer links separately — they're needed for the footer component:
+Extract all footer links separately -- they're needed for the footer component:
 
 ```python
 
@@ -365,10 +365,10 @@ text: a.innerText.trim(), href: a.getAttribute('href')
 
 ## Phase 2: Foundation Build
 
-Sequential — do this yourself, not delegated.
+Sequential -- do this yourself, not delegated.
 
 1. **Create artifact** via `createArtifact()`with type`react-vite`
-2. **Replace `index.css` entirely** — Remove ALL Tailwind/shadcn boilerplate. Write plain CSS:
+2. **Replace `index.css` entirely** -- Remove ALL Tailwind/shadcn boilerplate. Write plain CSS:
 
 - Google Fonts `@import`(or`@font-face` for self-hosted)
 - Universal reset (`*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }`)
@@ -378,14 +378,14 @@ Sequential — do this yourself, not delegated.
 
 - Reset styles for `a`,`button`,`img`,`ul/ol`
 
-1. **Replace `App.tsx`** — Remove all router/query/toast boilerplate. A clone is a single static page.
+1. **Replace `App.tsx`** -- Remove all router/query/toast boilerplate. A clone is a single static page.
 2. **Organize assets** in `public/images/`
 
 ---
 
 ## Phase 3: Build All Sections
 
-Build all components from the section inventory, referencing `raw.html` for exact content. Use inline styles or CSS modules — not Tailwind.
+Build all components from the section inventory, referencing `raw.html` for exact content. Use inline styles or CSS modules -- not Tailwind.
 
 ### For EACH section in the inventory
 
@@ -407,12 +407,12 @@ Build all components from the section inventory, referencing `raw.html` for exac
 ### Build tips
 
 - **Build ALL sections before verifying.** Don't stop to screenshot after each one.
-- **Use inline styles** — Simpler than CSS files for clones, and avoids naming/scoping issues.
+- **Use inline styles** -- Simpler than CSS files for clones, and avoids naming/scoping issues.
 
 - **Reusable components are okay when the visual pattern is truly identical** (e.g., two hero banners that differ only in image/button text can share a `HeroBanner` component with props).
-- **`href="#"` is fine** — For a visual clone, real link targets are a nice-to-have, not a requirement.
+- **`href="#"` is fine** -- For a visual clone, real link targets are a nice-to-have, not a requirement.
 
-- **Remove unused scaffolded dependencies** — The `package.json`from`createArtifact` includes 40+ shadcn/Radix packages. These are dead weight for a clone.
+- **Remove unused scaffolded dependencies** -- The `package.json`from`createArtifact` includes 40+ shadcn/Radix packages. These are dead weight for a clone.
 
 ---
 
@@ -424,7 +424,7 @@ Build all components from the section inventory, referencing `raw.html` for exac
 3. Compare against the original screenshot from Phase 1
 4. Fix discrepancies section by section
 
-5. Run e2e test to verify all sections render (use `runTest()`)
+5. Run e2e test to verify all sections render (must see testing skill if needed)
 
 ### Verification checklist
 
@@ -483,7 +483,7 @@ For complex sections dispatched to subagents, write specs at `docs/research/comp
 
 ## Text Content (verbatim from raw.html)
 
-<Every heading, paragraph, button label — copy-pasted exactly>
+<Every heading, paragraph, button label -- copy-pasted exactly>
 
 ## Assets (local paths)
 
@@ -493,7 +493,7 @@ For complex sections dispatched to subagents, write specs at `docs/research/comp
 
 ### Hover on card
 
-- transform: none → scale(1.02)
+- transform: none -- scale(1.02)
 - transition: transform 0.3s ease
 
 ```
@@ -507,31 +507,31 @@ For complex sections dispatched to subagents, write specs at `docs/research/comp
 1. pip install playwright; find Chromium path
 2. Navigate to target URL with Playwright
 
-3. Save raw.html (page.content()) — THIS IS THE SOURCE OF TRUTH
+3. Save raw.html (page.content()) -- THIS IS THE SOURCE OF TRUTH
 4. Detect locale/language from URL path (e.g., /es-do = Spanish)
 
 5. Take full-page desktop screenshot + header-only screenshot (top 150px)
-6. Build section inventory from raw.html → clone-data/inventory.json
+6. Build section inventory from raw.html -- clone-data/inventory.json
 
-7. Extract design tokens → clone-data/tokens.json
+7. Extract design tokens -- clone-data/tokens.json
 8. Extract SVG logo from raw.html (search for <svg near 'logo' classes)
 
 9. Extract header details: banner color, logo position, nav links, rewards/loyalty text
 10. Extract fonts (download .woff2 files or map to Google Fonts)
 
 11. Download ALL images/videos/SVGs to public/images/ (batch with retry)
-12. Extract footer links → clone-data/footer.json
+12. Extract footer links -- clone-data/footer.json
 
 13. createArtifact("react-vite", ...)
-14. Replace index.css (plain CSS reset + design tokens — NO Tailwind/shadcn)
+14. Replace index.css (plain CSS reset + design tokens -- NO Tailwind/shadcn)
 
-15. Replace App.tsx (remove router/query boilerplate — single page)
+15. Replace App.tsx (remove router/query boilerplate -- single page)
 16. Build ALL section components (referencing raw.html, using correct language)
 
 17. Assemble page in App.tsx (exact DOM order from inventory)
 18. Start dev server, take full-page screenshot, compare vs original
 
-19. Fix discrepancies (check header first — most common mistake area)
+19. Fix discrepancies (check header first -- most common mistake area)
 20. Run e2e test to verify all sections render
 
 21. Present artifact
@@ -540,5 +540,5 @@ For complex sections dispatched to subagents, write specs at `docs/research/comp
 
 ## Reference Files
 
-- `extraction.md` — Complete Python extraction scripts (Playwright)
-- `pitfalls.md` — Detailed common pitfalls and solutions
+- `extraction.md` -- Complete Python extraction scripts (Playwright)
+- `pitfalls.md` -- Detailed common pitfalls and solutions

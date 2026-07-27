@@ -95,10 +95,8 @@ Never generate:
   to harass or harm someone or to hide that it is
   AI-generated. Never clone a minor's voice.
 - Elections: voter suppression, impersonating candidates or
-  elected officials (even with authorization), or
-  election-related campaigning, including soliciting votes or
-  donations. Ordinary issue advocacy unconnected to an
-  election is fine.
+  elected officials (even with authorization), or political
+  campaigning, including soliciting votes or donations.
 - Network attacks and surveillance: hacking, malware, spyware,
   or unauthorized monitoring of individuals.
 - Non-fictional violence, hate, or harassment: threats,
@@ -121,10 +119,6 @@ Allowed only with conditions — flag or gate these:
 - AI voice agents must clearly disclose they are AI, not
   human.
 
-Do not sell or distribute generated sound effects on a
-standalone basis (isolated files or a sound-effects library).
-
-The full policy summary, including platform rules (age limits
-and teen consent, government entities, machine-learning use of
-outputs), is in
+The full policy summary, including platform rules (age limits,
+government entities, machine-learning use of outputs), is in
 `.local/skills/media-generation/elevenlabs-prohibited-uses.md`.

@@ -24,7 +24,7 @@ Create social posts, newsletters, and marketing copy that respects platform mech
 
 ## Step 1: Voice Analysis
 
-Ask for 3-5 existing posts. Extract: avg sentence length, contraction usage, emoji density, POV (I/we/you), signature phrases. If none exist, ask for 2 creators they want to sound like and use `webFetch` to pull recent posts as voice reference.
+Ask for 3-5 existing posts. Extract: avg sentence length, contraction usage, emoji density, POV (I/we/you), signature phrases. If none exist, ask for 2 creators they want to sound like and use `webFetch` to pull recent posts as voice reference. For X creators, `webFetch` cannot read X profiles — pull recent posts with the `externalApi__x` callback (`GET /2/users/by/username/${handle}` to get the user id, then `GET /2/users/${id}/tweets`); read `.local/skills/external-apis/references/x.md`.
 
 ## Step 2: Platform Mechanics (2025-2026 Specs)
 

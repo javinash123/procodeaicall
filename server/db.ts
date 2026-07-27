@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
     status: { type: String, enum: ["Active", "Inactive", "Cancelled"], default: "Active" },
     monthlyCallCredits: { type: Number, default: 0 },
     creditsUsed: { type: Number, default: 0 },
+    purchasedCredits: { type: Number, default: 0 },
     renewalDate: Date,
     joinedDate: { type: Date, default: Date.now },
   },
@@ -161,6 +162,8 @@ export const planSchema = new mongoose.Schema({
   callingRate: { type: Number, default: 0 },
   smsRate: { type: Number, default: 0 },
   whatsappRate: { type: Number, default: 0 },
+  extraCreditPrice: { type: Number, default: 0 },
+  maxCreditPurchase: { type: Number, default: 0 },
   features: [String],
   limitations: [String],
   description: String,
@@ -191,6 +194,16 @@ export const callLogSchema = new mongoose.Schema({
   createdAt:    { type: Date, default: Date.now },
 });
 
+// CreditUsage Model — tracks every credit deduction/addition event
+export const creditUsageSchema = new mongoose.Schema({
+  userId:     { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  type:       { type: String, enum: ["call", "sms", "whatsapp", "purchase", "plan_grant"], required: true },
+  amount:     { type: Number, required: true }, // positive = added, negative = deducted
+  description:{ type: String },                 // e.g. "Call to +91XXXXXXXX (45s)"
+  balanceAfter: { type: Number },               // available credits after this event
+  createdAt:  { type: Date, default: Date.now },
+});
+
 export const UserModel = mongoose.models.User || mongoose.model("User", userSchema);
 export const LeadModel = mongoose.models.Lead || mongoose.model("Lead", leadSchema);
 export const CampaignModel = mongoose.models.Campaign || mongoose.model("Campaign", campaignSchema);
@@ -200,3 +213,4 @@ export const NotificationModel = mongoose.models.Notification || mongoose.model(
 export const PlanModel = mongoose.models.Plan || mongoose.model("Plan", planSchema);
 export const FeatureModel = mongoose.models.Feature || mongoose.model("Feature", featureSchema);
 export const CallLogModel = mongoose.models.CallLog || mongoose.model("CallLog", callLogSchema);
+export const CreditUsageModel = mongoose.models.CreditUsage || mongoose.model("CreditUsage", creditUsageSchema);

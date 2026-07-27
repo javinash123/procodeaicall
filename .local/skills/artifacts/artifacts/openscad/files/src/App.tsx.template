@@ -26,6 +26,8 @@ type ModelState =
 const modelUrl = `${import.meta.env.BASE_URL}model.stl`;
 const missingModelMessage =
   'Run `pnpm --filter @workspace/__REPLIT_ARTIFACT_SLUG__ run render` to generate public/model.stl.';
+const maxLoadAttempts = 10;
+const retryDelayMs = 1_500;
 
 function useDarkMode(): boolean {
   const [isDark, setIsDark] = useState(() =>
@@ -121,41 +123,76 @@ function App() {
     const abort = new AbortController();
 
     async function loadModel() {
-      try {
-        const response = await fetch(modelUrl, {
-          cache: 'no-store',
-          signal: abort.signal,
-        });
-        if (!response.ok || response.headers.get('content-type')?.includes('text/html')) {
-          throw new Error(missingModelMessage);
-        }
+      for (let attempt = 1; attempt <= maxLoadAttempts; attempt += 1) {
+        let geometry: THREE.BufferGeometry | undefined;
 
-        const buffer = await response.arrayBuffer();
-        const geometry = new STLLoader().parse(buffer);
-        const position = geometry.getAttribute('position');
-        if (position.count === 0) {
-          geometry.dispose();
-          throw new Error('The rendered STL contains no geometry.');
-        }
-
-        geometry.computeVertexNormals();
-        geometry.computeBoundingBox();
-        const size = geometry.boundingBox?.getSize(new THREE.Vector3());
-        if (!size || ![size.x, size.y, size.z].every(Number.isFinite)) {
-          geometry.dispose();
-          throw new Error('Unable to read the rendered STL bounds.');
-        }
-
-        setModelState({
-          status: 'ready',
-          model: { geometry, size, byteLength: buffer.byteLength },
-        });
-      } catch (error) {
-        if (!abort.signal.aborted) {
-          setModelState({
-            status: 'error',
-            message: error instanceof Error ? error.message : String(error),
+        try {
+          const response = await fetch(modelUrl, {
+            cache: 'no-store',
+            signal: abort.signal,
           });
+          if (
+            !response.ok ||
+            response.headers.get('content-type')?.includes('text/html')
+          ) {
+            throw new Error(missingModelMessage);
+          }
+
+          const buffer = await response.arrayBuffer();
+          geometry = new STLLoader().parse(buffer);
+          const position = geometry.getAttribute('position');
+          if (!position || position.count < 3 || position.count % 3 !== 0) {
+            throw new Error('The rendered STL contains no geometry.');
+          }
+
+          geometry.computeVertexNormals();
+          geometry.computeBoundingBox();
+          const size = geometry.boundingBox?.getSize(new THREE.Vector3());
+          if (
+            !size ||
+            ![size.x, size.y, size.z].every(Number.isFinite) ||
+            size.lengthSq() === 0
+          ) {
+            throw new Error('Unable to read the rendered STL bounds.');
+          }
+
+          setModelState({
+            status: 'ready',
+            model: { geometry, size, byteLength: buffer.byteLength },
+          });
+          return;
+        } catch (error) {
+          geometry?.dispose();
+
+          if (abort.signal.aborted) {
+            return;
+          }
+
+          if (attempt === maxLoadAttempts) {
+            setModelState({
+              status: 'error',
+              message: error instanceof Error ? error.message : String(error),
+            });
+            return;
+          }
+
+          await new Promise<void>((resolve) => {
+            const timeout = window.setTimeout(() => {
+              abort.signal.removeEventListener('abort', onAbort);
+              resolve();
+            }, retryDelayMs);
+
+            function onAbort() {
+              window.clearTimeout(timeout);
+              resolve();
+            }
+
+            abort.signal.addEventListener('abort', onAbort, { once: true });
+          });
+
+          if (abort.signal.aborted) {
+            return;
+          }
         }
       }
     }
@@ -178,20 +215,6 @@ function App() {
 
         {modelState.status === 'ready' ? (
           <>
-            <section className="mesh-section">
-              <div className="section-heading">
-                <h2>Meshes</h2>
-                <span>1</span>
-              </div>
-              <div className="mesh-row">
-                <div className="mesh-icon" aria-hidden="true" />
-                <div>
-                  <strong>model.stl</strong>
-                  <small>STL mesh</small>
-                </div>
-              </div>
-            </section>
-
             <dl className="details">
               <div>
                 <dt>Dimensions</dt>

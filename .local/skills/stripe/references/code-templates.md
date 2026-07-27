@@ -586,3 +586,5 @@ app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 ```
+
+Note: reading `process.env.REPLIT_DOMAINS` for `webhookBaseUrl` is correct because it runs inside the app at runtime — in a deployment it resolves to the production domain; in the dev workspace it registers a dev-domain webhook for local testing. Do not copy this pattern into shell commands or agent-side logic to discover the production URL — use `getDeploymentInfo()` from the deployment skill for that.

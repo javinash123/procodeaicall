@@ -2,8 +2,6 @@
 
 These are reference snippets. Adapt them to the app's routing, framework, and state patterns.
 
-For end-to-end catalog seeding, prefer copying the known-good `./seed-products.mjs` golden script (it wires the snippets below together in the correct order with the required `@idempotent` directives and re-run safety) rather than hand-assembling the sequence from these snippets.
-
 Admin setup scripts are orchestration only and should not run during integration onboarding. Only create products/inventory after the user explicitly asks for catalog setup. Scripts should resolve publication and location IDs dynamically, check every mutation's `userErrors`, and write only stable mapping data (handles, product IDs, variant IDs) after Shopify confirms success. Every Admin API call must go through the OpenInt proxy helper; do not call Shopify Admin endpoints directly or handle Admin tokens in generated app code.
 
 ## Create, price, stock, and publish a product
@@ -12,24 +10,12 @@ Use `shopify-admin-api.mjs` through the OpenInt proxy.
 
 Do not replace this helper with a direct `https://{shop_domain}/admin/...` request, Shopify Admin SDK client, or custom OAuth/token flow. OpenInt owns Shopify Admin authentication.
 
-Make seed scripts safe to re-run: `productCreate` does **not** support the `@idempotent` directive, so look the product up by its stable `handle` first and reuse the existing product/variant/inventoryItem IDs instead of creating a duplicate. Only call `productCreate` when the handle does not already exist.
-
-```graphql
-query ProductByHandle($handle: String!) {
-  productByHandle(handle: $handle) {
-    id
-    variants(first: 1) { nodes { id inventoryItem { id } } }
-  }
-}
-```
-
 ```bash
 node shopify-admin-api.mjs '{
   "query": "mutation ProductCreate($product: ProductCreateInput!) { productCreate(product: $product) { product { id title handle } userErrors { field message } } }",
   "variables": {
     "product": {
       "title": "Example T-shirt",
-      "handle": "example-t-shirt",
       "descriptionHtml": "<p>Soft cotton shirt.</p>",
       "status": "ACTIVE"
     }
@@ -85,74 +71,31 @@ Variables (one call per inventory item):
 { "id": "<inventoryItem.id>", "input": { "tracked": true } }
 ```
 
-1. Activate the inventory item at the resolved location so a stock level exists there. Shopify **requires** the `@idempotent` directive on this mutation — attach it at the **field** level (on `inventoryActivate`, not on the operation) with a stable per-item key so a retried seed does not double-apply or get rejected with `The @idempotent directive is required for this mutation but was not provided`:
+1. Activate the inventory item at the resolved location so a stock level exists there:
 
 ```graphql
 mutation InventoryActivate($inventoryItemId: ID!, $locationId: ID!) {
-  inventoryActivate(inventoryItemId: $inventoryItemId, locationId: $locationId)
-    @idempotent(key: "activate-<stable-per-item-key>") {
+  inventoryActivate(inventoryItemId: $inventoryItemId, locationId: $locationId) {
     inventoryLevel { id }
     userErrors { field message }
   }
 }
 ```
 
-1. Set the actual quantity with a compare-and-set adjustment. Read the current `available` level first, then apply the delta with `inventoryAdjustQuantities`, which **requires** the `@idempotent` directive at the **field** level with a stable per-item key. The per-change `changeFromQuantity` is the CAS field — pass the value you just read so a concurrent change fails loudly instead of silently clobbering (pass `null` to skip the check):
+1. Set the actual quantity:
 
 ```graphql
-query InventoryLevel($id: ID!, $locationId: ID!) {
-  inventoryItem(id: $id) {
-    inventoryLevel(locationId: $locationId) {
-      quantities(names: ["available"]) { name quantity }
-    }
-  }
-}
-```
-
-```graphql
-mutation InventoryAdjustQuantities($input: InventoryAdjustQuantitiesInput!) {
-  inventoryAdjustQuantities(input: $input)
-    @idempotent(key: "setqty-<stable-per-item-key>") {
+mutation InventorySetQuantities($input: InventorySetQuantitiesInput!) {
+  inventorySetQuantities(input: $input) {
     inventoryAdjustmentGroup { id }
     userErrors { field message }
   }
 }
 ```
 
-Variables (one change per inventory item; `delta = target - current`):
+Always inspect `userErrors` on each of these and stop on the first non-empty array; the activation step in particular can fail if `read_locations` / `write_inventory` scopes are missing or the location ID does not belong to the store.
 
-```json
-{
-  "input": {
-    "name": "available",
-    "reason": "correction",
-    "changes": [
-      {
-        "inventoryItemId": "<inventoryItem.id>",
-        "locationId": "<location.id>",
-        "delta": 100,
-        "changeFromQuantity": 0
-      }
-    ]
-  }
-}
-```
-
-`inventorySetQuantities` is an alternative that sets an absolute value, but on API version `2026-04` it dropped `ignoreCompareQuantity` and requires a per-item `changeFromQuantity` (pass `null` to skip the CAS check) plus the same `@idempotent` directive — prefer the `inventoryAdjustQuantities` delta form above.
-
-Use a stable key derived from the item (e.g. the product handle), not a random value, so re-running the seed is safe. Always inspect `userErrors` on each of these and stop on the first non-empty array; the activation step in particular can fail if `read_locations` / `write_inventory` scopes are missing or the location ID does not belong to the store.
-
-Resolve the publication ID at runtime; the connection payload does not expose one. Prefer the Replit-owned channel: the installed Replit Sales Channel App is a channel app, so its own publication is authoritative — resolve it directly via `currentAppInstallation` (this is how the Replit `shopify-store` connector identifies it):
-
-```graphql
-query AppPublication {
-  currentAppInstallation {
-    publication { id }
-  }
-}
-```
-
-If `currentAppInstallation.publication` is absent, fall back to the publication named exactly `Online Store` so the storefront is not empty:
+Resolve the publication ID at runtime by querying Shopify; the connection payload does not expose one. Prefer the Replit-owned Sales Channel publication when present, and only fall back to a shop publication such as `Online Store` for Replit-created Vibe/dev stores or after explicit user confirmation on live stores:
 
 ```graphql
 query Publications {
@@ -161,8 +104,6 @@ query Publications {
   }
 }
 ```
-
-Match the **exact** name `Online Store` — do not match a broad `Sales Channel` substring (it catches unrelated channels like `Google & YouTube Sales Channel`). On a transferred live merchant store, publishing to `Online Store` makes products visible on their existing storefront, so gate that case behind explicit user confirmation. If neither publication exists, skip publishing and tell the user the Sales Channel publication is not provisioned yet.
 
 Then publish with `publishablePublish`, after price and inventory are configured:
 
@@ -277,7 +218,7 @@ If opening `checkoutUrl` hits the dev-store password page, keep the real cart an
 Do not bake transfer or launch steps into generated storefront code. Go Live is an integration-management workflow:
 
 - The merchant explicitly clicks/asks for Go Live.
-- The connection payload does not expose a claim link. Direct the merchant to Replit's Shopify integration management surface by UI navigation rather than a `replit.com` URL: open the **Integrations** tab, go to **Shopify** and click **Manage**, and initiate the transfer there. (That surface is environment-correct in dev/staging/prod; a hardcoded host would send staging/local sessions to the wrong environment.) Do not have generated app code call an OpenInt connector RPC directly to mint a claim link. Surface `pending_transfer` status from the connection if useful.
+- The connection payload does not expose a claim link. Point the merchant to Replit's Shopify connection management page at the path `/integrations/shopify_store/apps/<REPL_ID>` (substitute the current Repl's `REPL_ID`) to initiate the transfer, presented as a clear call-to-action link that opens in a new tab rather than a bare URL — use an HTML anchor with `target="_blank"` and the path as `href`, e.g. `<a href="/integrations/shopify_store/apps/<REPL_ID>" target="_blank" rel="noopener noreferrer">Open your Shopify connection settings →</a>`. Resolve against the current Replit home origin — do NOT hardcode `https://replit.com` (the host is `localhost` in dev, `replit-staging` on staging, `replit.com` in prod). Do not have generated app code call an OpenInt connector RPC directly to mint a claim link. Surface `pending_transfer` status from the connection if useful.
 - If the merchant provides first and last name, the Go Live surface can pass them along with the transfer request; otherwise Replit/OpenInt may derive a minimal display name from the email for Shopify's transfer API. Do not collect or persist raw Shopify credentials in generated app code.
 - The generated app keeps reading the same Shopify connection. Dev-store preview behavior (`channel=online_store`) is caller-controlled — toggle it off once the app is targeting the live storefront.
 - If Shopify Admin actions start returning reauthorization-required status after transfer, ask the merchant to reconnect Shopify rather than creating a new connection.

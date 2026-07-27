@@ -1,0 +1,215 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+10:10:34 PM [ws] WebSocket server ready on path /stream
+10:10:34 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+10:10:35 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+10:10:37 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://localhost:5000 host=localhost:5000
+10:10:37 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+[BABEL] Note: The code generator has deoptimised the styling of /home/runner/workspace/client/src/pages/dashboard.tsx as it exceeds the max of 500KB.
+10:10:39 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+10:10:42 PM [ws] [upgrade] socket error on /vite-hmr: read ECONNRESET
+10:10:43 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://9dcadcd4-71fd-4465-989c-2f23bf4bb305-00-r6ktkqg4lzkv.spock.replit.dev host=9dcadcd4-71fd-4465-989c-2f23bf4bb305-00-r6ktkqg4lzkv.spock.replit.dev
+10:10:43 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:10:44 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:14:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/payment.tsx[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:15:12 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m
+[BABEL] Note: The code generator has deoptimised the styling of /home/runner/workspace/client/src/pages/dashboard.tsx as it exceeds the max of 500KB.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:15:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m [33m(x2)[39m
+[BABEL] Note: The code generator has deoptimised the styling of /home/runner/workspace/client/src/pages/dashboard.tsx as it exceeds the max of 500KB.
+10:15:48 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://9dcadcd4-71fd-4465-989c-2f23bf4bb305-00-r6ktkqg4lzkv.spock.replit.dev host=9dcadcd4-71fd-4465-989c-2f23bf4bb305-00-r6ktkqg4lzkv.spock.replit.dev
+10:15:48 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:15:50 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://9dcadcd4-71fd-4465-989c-2f23bf4bb305-00-r6ktkqg4lzkv.spock.replit.dev host=9dcadcd4-71fd-4465-989c-2f23bf4bb305-00-r6ktkqg4lzkv.spock.replit.dev
+10:15:50 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:15:53 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:16:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m [33m(x3)[39m
+[BABEL] Note: The code generator has deoptimised the styling of /home/runner/workspace/client/src/pages/dashboard.tsx as it exceeds the max of 500KB.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:16:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m [33m(x4)[39m
+[BABEL] Note: The code generator has deoptimised the styling of /home/runner/workspace/client/src/pages/dashboard.tsx as it exceeds the max of 500KB.
+10:16:22 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://localhost:5000 host=localhost:5000
+10:16:22 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:16:23 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}

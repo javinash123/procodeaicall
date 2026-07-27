@@ -6,6 +6,7 @@ export type SubscriptionInfo = {
   status: "Active" | "Inactive" | "Cancelled";
   monthlyCallCredits: number;
   creditsUsed: number;
+  purchasedCredits: number; // Extra credits bought on top of plan
   renewalDate?: Date;
   joinedDate: Date;
 };
@@ -19,6 +20,8 @@ export const insertPlanSchema = z.object({
   callingRate: z.number().min(0).default(0),
   smsRate: z.number().min(0).default(0),
   whatsappRate: z.number().min(0).default(0),
+  extraCreditPrice: z.number().min(0).default(0), // ₹ per extra credit purchased
+  maxCreditPurchase: z.number().min(0).default(0), // max credits user can buy in one go
   features: z.array(z.string()),
   limitations: z.array(z.string()),
   description: z.string().optional(),

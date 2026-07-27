@@ -35,8 +35,6 @@ Use this skill when you need to:
 
 If confused about package installation in Nix or language package managers, use web search.
 
-If a package install fails with HTTP 403 from `package-firewall.replit.local`, treat it as a likely security block and do not retry the same install.
-
 **After installing a module:**
 
 - Update `.gitignore` with the language's standard ignore patterns
@@ -48,15 +46,15 @@ If a package install fails with HTTP 403 from `package-firewall.replit.local`, t
 
 ## Available Functions
 
-### listAvailableModules(langName=None)
+### listAvailableModules(language=None)
 
 List available language toolchains that can be installed.
 
 **Parameters:**
 
-- `langName` (str, optional): Language name to filter by (e.g., "python", "nodejs", "rust"). If not provided, returns all available modules.
+- `language` (str, optional): Language name to filter by (e.g., "python", "nodejs", "rust"). If not provided, returns all available modules.
 
-**Returns:** Dict with `success`, `message`, `langName`, and `modules` list
+**Returns:** Dict with `success`, `message`, `language`, and `modules` list
 
 Each module contains: id, name, version, description
 
@@ -68,11 +66,11 @@ const modules = await listAvailableModules();
 // Returns: {modules: [{id: "python-3.11", ...}, {id: "nodejs-20", ...}, ...]}
 
 // Find available Python versions
-const pythonModules = await listAvailableModules({ langName: "python" });
+const pythonModules = await listAvailableModules({ language: "python" });
 // Returns: {modules: [{id: "python-3.11", name: "Python", version: "3.11", ...}, ...]}
 
 // Find available Node.js versions
-const nodeModules = await listAvailableModules({ langName: "nodejs" });
+const nodeModules = await listAvailableModules({ language: "nodejs" });
 ```
 
 ### installProgrammingLanguage(language)
@@ -83,13 +81,13 @@ Install a programming language runtime and its package manager.
 
 - `language` (str, required): Language identifier like "python-3.11", "nodejs-20"
 
-**Returns:** Dict with `success`, `message`, `language`, and `installedModuleId` keys
+**Returns:** Dict with `success`, `message`, `requestedLanguage`, `moduleId`, and `alreadyInstalled` keys
 
 **Example:**
 
 ```javascript
 // First, check available versions
-const modules = await listAvailableModules({ langName: "python" });
+const modules = await listAvailableModules({ language: "python" });
 console.log(modules);  // See available Python versions
 
 // Install specific version
@@ -155,6 +153,29 @@ const result2 = await installLanguagePackages({
   - Wrong: `packages: "express"`
   - Wrong: `packages: [{name: "express"}]`
 
+**Replit Package Firewall recovery:**
+
+If an install fails because the Replit Package Firewall or security registry
+blocked a vulnerable package, do not give up immediately and do not bypass the
+firewall. First check whether the same dependency has a newer latest version,
+then attempt to update/install that latest version.
+
+- Direct dependency: install the latest version of the same package first, such
+  as `package@latest` for JavaScript packages or the unpinned package name for
+  Python.
+- Existing pinned dependency: update the project dependency file to the latest
+  version and reinstall.
+- Transitive dependency: identify which direct dependency pulls it in, update
+  that direct dependency to its latest version, then reinstall. Use
+  overrides/resolutions only when the parent has no safe latest version and the
+  package manager supports it cleanly.
+
+If the latest available version still gets blocked or is incompatible with the
+project, choose a safer alternative package yourself and continue. Prefer
+alternatives with active maintenance, similar APIs, and no known firewall block;
+only involve the user if the replacement changes product behavior or there is no
+reasonable substitute.
+
 ### uninstallLanguagePackages(language, packages)
 
 Remove language-specific packages.
@@ -183,7 +204,7 @@ Install system-level dependencies via Nix.
 
 - `packages` (list[str], required): Nixpkgs attribute paths (NOT apt package names)
 
-**Returns:** Dict with `success`, `message`, and `packages` keys
+**Returns:** Dict with `success`, `message`, `packages`, and `output` keys
 
 **Important:** Use Nix package names, not apt/debian names:
 
@@ -233,7 +254,7 @@ const result = await uninstallSystemDependencies({ packages: ["jq"] });
 
 ```javascript
 // Check available Python versions
-const modules = await listAvailableModules({ langName: "python" });
+const modules = await listAvailableModules({ language: "python" });
 console.log(modules);
 
 // Set up a Python Flask project

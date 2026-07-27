@@ -85,8 +85,15 @@ export default function BulkSms() {
 
     setSending(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast({ title: "Success", description: `SMS sent to ${selectedLeads.length} leads.` });
+      const res = await fetch("/api/sms/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ leadIds: selectedLeads, message }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to send SMS");
+      toast({ title: "SMS Sent", description: `Sent to ${data.sent} lead(s)${data.failed > 0 ? `, ${data.failed} failed` : ""}.` });
       setMessage("");
       setSelectedLeads([]);
     } catch (error: any) {

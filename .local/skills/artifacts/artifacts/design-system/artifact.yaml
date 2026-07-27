@@ -9,7 +9,7 @@ kind: design-system
 
 access:
   type: flag
-  name: flag-design-system-creation-ld
+  name: gate_design_system_creation
   variation: "true"
 
 service_configs:
@@ -18,7 +18,7 @@ service_configs:
       run: pnpm --filter @workspace/__SLUG__ run dev
 
 initial_open_files:
-  - SKILL.md
+  - docs/AGENTS.md
   - tokens.json
   - src/index.css
   - src/App.tsx

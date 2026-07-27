@@ -59,7 +59,9 @@ import {
   PhoneMissed,
   PhoneOff,
   PhoneIncoming,
-  Timer
+  Timer,
+  AlertTriangle,
+  RefreshCw
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { leadsApi, campaignsApi, appointmentsApi, usersApi, settingsApi, uploadApi, notesApi, plansApi, notificationsApi, callLogsApi, type UploadedFile } from "@/lib/api";
@@ -88,6 +90,7 @@ import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tool
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import dashboardImage from "@assets/generated_images/futuristic_dashboard_interface_mockup_glowing_in_orange..png";
 import BulkSms from "./bulk-sms";
+import BuyCreditsDialog from "@/components/BuyCreditsDialog";
 import BulkWhatsapp from "./bulk-whatsapp";
 import AdminPlans from "./admin-plans";
 import { FeatureGate } from "@/components/feature-gate";
@@ -145,6 +148,7 @@ export default function Dashboard() {
   const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<any | null>(null);
   const [noteForm, setNoteForm] = useState({ title: "", content: "" });
+
 
   // Form State for New Lead
   const [newLead, setNewLead] = useState({ name: "", company: "", email: "", phone: "", notes: "", status: "New" as const, campaignId: "" });
@@ -1417,6 +1421,44 @@ export default function Dashboard() {
         </header>
 
         <div className="flex-1 p-6 overflow-auto">
+          {/* Subscription expiry banner */}
+          {!isAdmin && (() => {
+            const sub = user?.subscription;
+            if (!sub?.renewalDate) return null;
+            const renewalDate = new Date(sub.renewalDate);
+            const now = new Date();
+            const daysLeft = Math.ceil((renewalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            const expired = renewalDate < now;
+            const expiringSoon = !expired && daysLeft <= 7;
+            const currentPlan = plans.find((p: Plan) => p.name === sub.plan);
+            if (!expired && !expiringSoon) return null;
+            return (
+              <div className={`mb-6 flex items-center justify-between gap-4 rounded-lg border px-5 py-4 ${expired ? "bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-400" : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400"}`}>
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {expired ? "Your subscription has expired" : `Your subscription expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`}
+                    </p>
+                    <p className="text-xs opacity-80 mt-0.5">
+                      {expired
+                        ? "Renew now to restore access to all features and your call credits."
+                        : `Renewal due on ${renewalDate.toLocaleDateString()}. Renew early to avoid any interruption.`}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant={expired ? "default" : "outline"}
+                  className={expired ? "bg-red-600 hover:bg-red-700 text-white border-none shrink-0" : "shrink-0"}
+                  onClick={() => currentPlan && setLocation(`/payment?plan=${currentPlan._id}&renew=true`)}
+                >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                  Renew Now
+                </Button>
+              </div>
+            );
+          })()}
           {activeTab === "whatsapp" && <FeatureGate featureKey="whatsapp"><BulkWhatsapp /></FeatureGate>}
           {activeTab === "sms" && <FeatureGate featureKey="bulk_sms"><BulkSms /></FeatureGate>}
           {activeTab === "plans" && <AdminPlans />}
@@ -3824,15 +3866,33 @@ export default function Dashboard() {
                           <CardDescription>Details about your current active subscription.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                          <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg border border-primary/10">
-                            <div>
-                              <h3 className="text-lg font-bold">{user?.subscription?.plan || "Free"} Plan</h3>
-                              <p className="text-sm text-muted-foreground">Next renewal: {user?.subscription?.renewalDate ? new Date(user.subscription.renewalDate).toLocaleDateString() : "N/A"}</p>
-                            </div>
-                            <Badge variant="default" className="bg-green-500 hover:bg-green-600 border-none">
-                              {user?.subscription?.status || "Active"}
-                            </Badge>
-                          </div>
+                          {(() => {
+                            const sub = user?.subscription;
+                            const renewalDate = sub?.renewalDate ? new Date(sub.renewalDate) : null;
+                            const expired = renewalDate ? renewalDate < new Date() : false;
+                            const daysLeft = renewalDate ? Math.ceil((renewalDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+                            return (
+                              <div className={`flex items-center justify-between p-4 rounded-lg border ${expired ? "bg-red-500/10 border-red-500/20" : "bg-primary/5 border-primary/10"}`}>
+                                <div>
+                                  <h3 className="text-lg font-bold">{sub?.plan || "Free"} Plan</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {expired
+                                      ? `Expired on ${renewalDate?.toLocaleDateString()}`
+                                      : renewalDate
+                                        ? `Renews on ${renewalDate.toLocaleDateString()}${daysLeft !== null && daysLeft <= 7 ? ` · ${daysLeft}d left` : ""}`
+                                        : "No renewal date set"}
+                                  </p>
+                                </div>
+                                {expired ? (
+                                  <Badge variant="destructive" className="border-none">Expired</Badge>
+                                ) : sub?.status === "Active" ? (
+                                  <Badge variant="default" className="bg-green-500 hover:bg-green-600 border-none">Active</Badge>
+                                ) : (
+                                  <Badge variant="secondary">{sub?.status || "Inactive"}</Badge>
+                                )}
+                              </div>
+                            );
+                          })()}
 
                           <div className="grid grid-cols-2 gap-4 pt-4">
                             <div className="p-4 border rounded-lg">
@@ -3841,9 +3901,37 @@ export default function Dashboard() {
                             </div>
                             <div className="p-4 border rounded-lg">
                               <p className="text-xs text-muted-foreground mb-1 uppercase font-bold tracking-wider">Remaining Credits</p>
-                              <p className="text-2xl font-bold">{(user?.subscription?.monthlyCallCredits || 0) - (user?.subscription?.creditsUsed || 0)}</p>
+                              <p className="text-2xl font-bold">{Math.max(0, (user?.subscription?.monthlyCallCredits || 0) + ((user?.subscription as any)?.purchasedCredits || 0) - (user?.subscription?.creditsUsed || 0))}</p>
+                              {((user?.subscription as any)?.purchasedCredits || 0) > 0 && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Plan: {user?.subscription?.monthlyCallCredits || 0} + Purchased: {(user?.subscription as any)?.purchasedCredits || 0}
+                                </p>
+                              )}
                             </div>
                           </div>
+
+                          {/* Credit usage breakdown */}
+                          {(() => {
+                            const sub = user?.subscription as any;
+                            const total = (sub?.monthlyCallCredits || 0) + (sub?.purchasedCredits || 0);
+                            const used = sub?.creditsUsed || 0;
+                            const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+                            return total > 0 ? (
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Credits used this period</span>
+                                  <span className="font-medium">{used} / {total}</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-2">
+                                  <div
+                                    className={`h-2 rounded-full transition-all ${pct > 85 ? "bg-destructive" : pct > 60 ? "bg-yellow-500" : "bg-primary"}`}
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                                <p className="text-xs text-muted-foreground">{pct}% used — {Math.max(0, total - used)} credits remaining</p>
+                              </div>
+                            ) : null;
+                          })()}
                         </CardContent>
                         <CardFooter className="border-t bg-muted/5 flex flex-wrap justify-between gap-4">
                           <Dialog>
@@ -3958,12 +4046,27 @@ export default function Dashboard() {
                             </DialogContent>
                           </Dialog>
                           
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             <Button variant="outline" className="text-primary border-primary hover:bg-primary/5" onClick={() => {
-                              const plan = plans.find(p => p.name === user?.subscription?.plan);
+                              const plan = plans.find((p: Plan) => p.name === user?.subscription?.plan);
                               if (!plan) return;
-                              setLocation(`/payment?plan=${plan._id}`);
-                            }}>Renew Now</Button>
+                              setLocation(`/payment?plan=${plan._id}&renew=true`);
+                            }}>
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Renew Now
+                            </Button>
+
+                            {/* Buy Extra Credits */}
+                            {(() => {
+                              const currentPlan = plans.find((p: Plan) => p.name === user?.subscription?.plan) as any;
+                              if (!currentPlan?.extraCreditPrice || currentPlan.extraCreditPrice <= 0) return null;
+                              return (
+                                <BuyCreditsDialog
+                                  plan={currentPlan}
+                                  onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] })}
+                                />
+                              );
+                            })()}
                             
                             <Dialog>
                               <DialogTrigger asChild>
@@ -4949,6 +5052,7 @@ export default function Dashboard() {
       <AlertDialog open={deleteConfirm.type !== null} onOpenChange={(open) => !open && setDeleteConfirm({ type: null, id: "", name: "" })}>
         <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete the {deleteConfirm.type} "<strong>{deleteConfirm.name}</strong>". This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => { if (deleteConfirm.type === 'lead') handleDeleteLead(deleteConfirm.id); else if (deleteConfirm.type === 'campaign') campaignsApi.delete(deleteConfirm.id).then(() => setCampaigns(campaigns.filter(c => c._id !== deleteConfirm.id))); else if (deleteConfirm.type === 'appointment') handleDeleteAppointment(deleteConfirm.id); setDeleteConfirm({ type: null, id: "", name: "" }); }}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
       </AlertDialog>
+
     </div>
   );
 }

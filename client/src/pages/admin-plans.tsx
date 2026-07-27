@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Loader2, List, Edit2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Loader2, List, Edit2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -27,7 +27,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -105,6 +105,17 @@ export default function AdminPlans() {
     },
   });
 
+  const deleteFeatureMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/features/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/features"] });
+      toast({ title: "Deleted", description: "Feature deleted successfully" });
+    },
+  });
+
   const form = useForm({
     resolver: zodResolver(insertPlanSchema),
     defaultValues: {
@@ -115,6 +126,8 @@ export default function AdminPlans() {
       callingRate: 0,
       smsRate: 0,
       whatsappRate: 0,
+      extraCreditPrice: 0,
+      maxCreditPurchase: 0,
       features: [] as string[],
       limitations: [] as string[],
       description: "",
@@ -133,6 +146,8 @@ export default function AdminPlans() {
       callingRate: 0,
       smsRate: 0,
       whatsappRate: 0,
+      extraCreditPrice: 0,
+      maxCreditPurchase: 0,
       features: [] as string[],
       limitations: [] as string[],
       description: "",
@@ -144,9 +159,16 @@ export default function AdminPlans() {
   const featureForm = useForm({
     resolver: zodResolver(insertFeatureSchema),
     defaultValues: {
+      key: "",
       name: "",
     },
   });
+
+  // Limitations tag-input state
+  const [newLimInput, setNewLimInput] = useState("");
+  const [editLimInput, setEditLimInput] = useState("");
+  const newLimRef = useRef<HTMLInputElement>(null);
+  const editLimRef = useRef<HTMLInputElement>(null);
 
   const handleEdit = (plan: Plan) => {
     setEditingPlan(plan);
@@ -158,6 +180,8 @@ export default function AdminPlans() {
       callingRate: plan.callingRate || 0,
       smsRate: plan.smsRate || 0,
       whatsappRate: plan.whatsappRate || 0,
+      extraCreditPrice: (plan as any).extraCreditPrice || 0,
+      maxCreditPurchase: (plan as any).maxCreditPurchase || 0,
       features: plan.features || [],
       limitations: plan.limitations || [],
       description: plan.description || "",
@@ -195,20 +219,51 @@ export default function AdminPlans() {
               </DialogHeader>
               <div className="space-y-6">
                 <Form {...featureForm}>
-                  <form onSubmit={featureForm.handleSubmit((data) => createFeatureMutation.mutate(data))} className="flex flex-col gap-4">
+                  <form
+                    onSubmit={featureForm.handleSubmit((data) => createFeatureMutation.mutate(data))}
+                    className="space-y-3"
+                  >
                     <FormField
                       control={featureForm.control}
                       name="name"
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel>Feature Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Feature Name (e.g., Bulk SMS)" {...field} />
+                            <Input
+                              placeholder="e.g., Bulk SMS"
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                featureForm.setValue(
+                                  "key",
+                                  e.target.value
+                                    .toLowerCase()
+                                    .replace(/\s+/g, "_")
+                                    .replace(/[^a-z0-9_]/g, "")
+                                );
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button type="submit" disabled={createFeatureMutation.isPending}>
+                    <FormField
+                      control={featureForm.control}
+                      name="key"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Feature Key <span className="text-xs text-muted-foreground">(auto-generated)</span></FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., bulk_sms" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full" disabled={createFeatureMutation.isPending}>
+                      {createFeatureMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       <Plus className="h-4 w-4 mr-2" /> Add Feature
                     </Button>
                   </form>
@@ -216,12 +271,28 @@ export default function AdminPlans() {
 
                 <div className="space-y-2">
                   <h3 className="font-semibold">Existing Features</h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
                     {Array.isArray(features) && features.length > 0 ? (
                       features.map((feature) => (
-                        <Badge key={feature._id} variant="secondary" className="px-3 py-1">
-                          {feature.name}
-                        </Badge>
+                        <div key={feature._id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-md border bg-muted/30">
+                          <div>
+                            <p className="text-sm font-medium">{feature.name}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{feature.key}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
+                            onClick={() => {
+                              if (confirm(`Delete feature "${feature.name}"?`)) {
+                                deleteFeatureMutation.mutate(feature._id);
+                              }
+                            }}
+                            disabled={deleteFeatureMutation.isPending}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       ))
                     ) : (
                       <p className="text-sm text-muted-foreground">No features created yet.</p>
@@ -349,6 +420,36 @@ export default function AdminPlans() {
                       )}
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="extraCreditPrice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Extra Credit Price (₹/credit)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" placeholder="0 = disabled" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground">Price users pay per extra credit. 0 = purchases disabled.</p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="maxCreditPurchase"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Max Credits Per Purchase</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="0 = unlimited" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground">Max credits per transaction. 0 = unlimited.</p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={form.control}
                     name="description"
@@ -388,6 +489,62 @@ export default function AdminPlans() {
                           No features available. Please add features first.
                         </p>
                       )}
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <Label>Limitations</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        ref={newLimRef}
+                        placeholder="Add a limitation and press Enter"
+                        value={newLimInput}
+                        onChange={(e) => setNewLimInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const val = newLimInput.trim();
+                            if (!val) return;
+                            const current = (form.getValues("limitations") || []) as string[];
+                            if (!current.includes(val)) {
+                              form.setValue("limitations", [...current, val]);
+                            }
+                            setNewLimInput("");
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          const val = newLimInput.trim();
+                          if (!val) return;
+                          const current = (form.getValues("limitations") || []) as string[];
+                          if (!current.includes(val)) {
+                            form.setValue("limitations", [...current, val]);
+                          }
+                          setNewLimInput("");
+                          newLimRef.current?.focus();
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(form.watch("limitations") || []).map((lim, idx) => (
+                        <Badge key={idx} variant="secondary" className="gap-1 pr-1">
+                          {lim}
+                          <button
+                            type="button"
+                            className="ml-1 rounded-full hover:bg-muted"
+                            onClick={() => {
+                              const current = (form.getValues("limitations") || []) as string[];
+                              form.setValue("limitations", current.filter((_, i) => i !== idx));
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
                     </div>
                   </div>
                   <FormField
@@ -533,6 +690,36 @@ export default function AdminPlans() {
                       )}
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="extraCreditPrice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Extra Credit Price (₹/credit)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" placeholder="0 = disabled" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground">Price users pay per extra credit. 0 = purchases disabled.</p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="maxCreditPurchase"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Max Credits Per Purchase</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="0 = unlimited" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground">Max credits per transaction. 0 = unlimited.</p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={editForm.control}
                     name="description"
@@ -572,6 +759,62 @@ export default function AdminPlans() {
                           No features available.
                         </p>
                       )}
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <Label>Limitations</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        ref={editLimRef}
+                        placeholder="Add a limitation and press Enter"
+                        value={editLimInput}
+                        onChange={(e) => setEditLimInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const val = editLimInput.trim();
+                            if (!val) return;
+                            const current = (editForm.getValues("limitations") || []) as string[];
+                            if (!current.includes(val)) {
+                              editForm.setValue("limitations", [...current, val]);
+                            }
+                            setEditLimInput("");
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          const val = editLimInput.trim();
+                          if (!val) return;
+                          const current = (editForm.getValues("limitations") || []) as string[];
+                          if (!current.includes(val)) {
+                            editForm.setValue("limitations", [...current, val]);
+                          }
+                          setEditLimInput("");
+                          editLimRef.current?.focus();
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(editForm.watch("limitations") || []).map((lim, idx) => (
+                        <Badge key={idx} variant="secondary" className="gap-1 pr-1">
+                          {lim}
+                          <button
+                            type="button"
+                            className="ml-1 rounded-full hover:bg-muted"
+                            onClick={() => {
+                              const current = (editForm.getValues("limitations") || []) as string[];
+                              editForm.setValue("limitations", current.filter((_, i) => i !== idx));
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
                     </div>
                   </div>
                   <FormField
@@ -641,6 +884,7 @@ export default function AdminPlans() {
                 <TableHead>Duration</TableHead>
                 <TableHead>Credits</TableHead>
                 <TableHead>Rates (Call/SMS/WA)</TableHead>
+                <TableHead>Credit Purchase</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -657,6 +901,18 @@ export default function AdminPlans() {
                         <div>Call: ₹{plan.callingRate}/min</div>
                         <div>SMS: ₹{plan.smsRate}/msg</div>
                         <div>WA: ₹{plan.whatsappRate}/msg</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-xs space-y-0.5">
+                        {(plan as any).extraCreditPrice > 0 ? (
+                          <>
+                            <div>₹{(plan as any).extraCreditPrice}/credit</div>
+                            <div className="text-muted-foreground">Max: {(plan as any).maxCreditPurchase > 0 ? (plan as any).maxCreditPurchase : "∞"}</div>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">Disabled</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">

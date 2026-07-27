@@ -1,4 +1,4 @@
-import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel, PlanModel, FeatureModel, NotificationModel, CallLogModel } from "./db";
+import { UserModel, LeadModel, CampaignModel, AppointmentModel, NoteModel, PlanModel, FeatureModel, NotificationModel, CallLogModel, CreditUsageModel } from "./db";
 import type {
   User,
   InsertUser,
@@ -62,6 +62,11 @@ export interface IStorage {
   updateSettings(userId: string, settings: UpdateSettings): Promise<User | null>;
   getSettings(userId: string): Promise<User | null>;
   updateUserSubscription(userId: string, subscription: SubscriptionInfo): Promise<User | null>;
+
+  // Credit methods
+  deductCredits(userId: string, amount: number, type: "call" | "sms" | "whatsapp", description: string): Promise<{ success: boolean; balance: number }>;
+  addPurchasedCredits(userId: string, amount: number, description: string): Promise<User | null>;
+  getCreditUsage(userId: string, limit?: number): Promise<any[]>;
   updateExotelConfig(userId: string, config: any): Promise<User | null>;
   updateGupshupConfig(userId: string, config: any): Promise<User | null>;
   getAdminSettings(): Promise<any>;
@@ -84,6 +89,7 @@ export interface IStorage {
   // Feature methods
   getFeatures(): Promise<Feature[]>;
   createFeature(feature: InsertFeature): Promise<Feature>;
+  deleteFeature(id: string): Promise<boolean>;
 
   // Notification methods
   getNotifications(): Promise<Notification[]>;
@@ -319,6 +325,73 @@ export class MongoStorage implements IStorage {
     return { ...(user as any), _id: (user as any)._id.toString() } as any as User;
   }
 
+  // ==================== CREDIT METHODS ====================
+
+  async deductCredits(userId: string, amount: number, type: "call" | "sms" | "whatsapp", description: string): Promise<{ success: boolean; balance: number }> {
+    // Atomically increment creditsUsed only if user has enough available credits
+    const user = await UserModel.findById(userId).lean() as any;
+    if (!user || !user.subscription) return { success: false, balance: 0 };
+
+    const available = (user.subscription.monthlyCallCredits || 0)
+      + (user.subscription.purchasedCredits || 0)
+      - (user.subscription.creditsUsed || 0);
+
+    if (available < amount) return { success: false, balance: available };
+
+    const updated = await UserModel.findByIdAndUpdate(
+      userId,
+      { $inc: { "subscription.creditsUsed": amount } },
+      { new: true }
+    ).lean() as any;
+
+    const newAvailable = (updated.subscription.monthlyCallCredits || 0)
+      + (updated.subscription.purchasedCredits || 0)
+      - (updated.subscription.creditsUsed || 0);
+
+    // Log the usage event
+    await CreditUsageModel.create({
+      userId,
+      type,
+      amount: -amount,
+      description,
+      balanceAfter: newAvailable,
+    });
+
+    return { success: true, balance: newAvailable };
+  }
+
+  async addPurchasedCredits(userId: string, amount: number, description: string): Promise<User | null> {
+    const updated = await UserModel.findByIdAndUpdate(
+      userId,
+      { $inc: { "subscription.purchasedCredits": amount } },
+      { new: true }
+    ).select("-password").lean() as any;
+
+    if (!updated) return null;
+
+    const newAvailable = (updated.subscription.monthlyCallCredits || 0)
+      + (updated.subscription.purchasedCredits || 0)
+      - (updated.subscription.creditsUsed || 0);
+
+    await CreditUsageModel.create({
+      userId,
+      type: "purchase",
+      amount: +amount,
+      description,
+      balanceAfter: newAvailable,
+    });
+
+    return { ...(updated as any), _id: (updated as any)._id.toString() } as any as User;
+  }
+
+  async getCreditUsage(userId: string, limit = 50): Promise<any[]> {
+    const logs = await CreditUsageModel.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+    return logs.map((l: any) => ({ ...l, _id: l._id.toString() }));
+  }
+
   async updateExotelConfig(userId: string, config: any): Promise<User | null> {
     const user = await UserModel.findByIdAndUpdate(
       userId,
@@ -421,6 +494,11 @@ export class MongoStorage implements IStorage {
     const newFeature = await FeatureModel.create(feature);
     const obj = newFeature.toObject();
     return { ...(obj as any), _id: obj._id.toString() } as any as Feature;
+  }
+
+  async deleteFeature(id: string): Promise<boolean> {
+    const result = await FeatureModel.findByIdAndDelete(id);
+    return !!result;
   }
 
   // Notification methods

@@ -115,6 +115,12 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     next();
   };
 
+  // Helper: check if a subscription is expired
+  function isSubscriptionExpired(user: any): boolean {
+    if (!user.subscription?.renewalDate) return false;
+    return new Date(user.subscription.renewalDate) < new Date();
+  }
+
   // Helper: resolve a user's plan feature keys from their subscription
   async function getUserPlanFeatures(userId: string): Promise<string[]> {
     try {
@@ -122,6 +128,8 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       if (!user) return [];
       if (user.role === "admin") return ["*"];
       if (!user.subscription?.plan) return [];
+      // Block features if subscription is expired
+      if (isSubscriptionExpired(user)) return [];
       const plans = await storage.getPlans();
       const plan = plans.find((p: any) => p.name === user.subscription?.plan && p.isActive !== false);
       if (!plan) return [];
@@ -134,6 +142,14 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   // Feature-gate middleware factory — blocks API access if user's plan lacks the feature
   const requireFeature = (featureKey: string) => async (req: Request, res: Response, next: Function) => {
     if (!req.session?.userId) return res.status(401).json({ message: "Unauthorized" });
+    const user = await storage.getUser(req.session.userId);
+    if (user && isSubscriptionExpired(user)) {
+      return res.status(403).json({
+        message: "Your subscription has expired. Please renew to continue.",
+        feature: featureKey,
+        subscriptionExpired: true,
+      });
+    }
     const features = await getUserPlanFeatures(req.session.userId);
     if (features.includes("*") || features.includes(featureKey)) return next();
     return res.status(403).json({
@@ -152,6 +168,26 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         return res.status(400).json({ message: "Email already in use" });
       }
       const user = await storage.createUser(data);
+
+      // Auto-assign subscription if a plan was selected during registration
+      if (data.selectedPlanId) {
+        const plan = await storage.getPlan(data.selectedPlanId);
+        if (plan) {
+          const isFree = plan.price === 0;
+          await storage.updateUserSubscription(user._id, {
+            plan: plan.name,
+            status: isFree ? "Active" : "Inactive",
+            monthlyCallCredits: isFree ? plan.credits : 0,
+            creditsUsed: 0,
+            purchasedCredits: 0,
+            renewalDate: isFree
+              ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+              : undefined,
+            joinedDate: new Date(),
+          });
+        }
+      }
+
       res.status(201).json({ user });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -588,6 +624,26 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         return res.status(400).json({ message: "Lead has no phone number" });
       }
 
+      // ── Credit check before placing the call ───────────────────────────────
+      const caller = await storage.getUser(req.session.userId!);
+      if (caller?.subscription?.plan) {
+        const allPlans = await storage.getPlans();
+        const userPlan = allPlans.find((p: any) => p.name === caller.subscription!.plan);
+        if (userPlan && (userPlan as any).callingRate > 0) {
+          const available = (caller.subscription.monthlyCallCredits || 0)
+            + ((caller.subscription as any).purchasedCredits || 0)
+            - (caller.subscription.creditsUsed || 0);
+          const minRequired = Math.ceil((userPlan as any).callingRate); // cost of 1 minute
+          if (available < minRequired) {
+            return res.status(402).json({
+              message: `Insufficient credits. You need at least ${minRequired} credits for a 1-minute call. Available: ${available}. Please purchase more credits.`,
+              creditsRequired: minRequired,
+              creditsAvailable: available,
+            });
+          }
+        }
+      }
+
       const phone      = lead.phone as string;
       const campaignId = lead.campaignId ? String(lead.campaignId) : undefined;
 
@@ -754,6 +810,35 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
           outcome: status,
           note: outcomeLabel,
         });
+
+        // ── Credit deduction for answered calls ─────────────────────────────
+        if (status === "answered" && duration > 0) {
+          try {
+            const { LeadModel: LM } = await import("./db");
+            const leadDoc = await LM.findById(leadId).lean() as any;
+            if (leadDoc?.userId) {
+              const callerUser = await storage.getUser(leadDoc.userId.toString());
+              if (callerUser?.subscription?.plan) {
+                const allPlans = await storage.getPlans();
+                const userPlan = allPlans.find((p: any) => p.name === callerUser.subscription!.plan);
+                if (userPlan && (userPlan as any).callingRate > 0) {
+                  const minutes = Math.ceil(duration / 60);
+                  const creditsToDeduct = Math.ceil(minutes * (userPlan as any).callingRate);
+                  if (creditsToDeduct > 0) {
+                    await storage.deductCredits(
+                      leadDoc.userId.toString(),
+                      creditsToDeduct,
+                      "call",
+                      `Call to ${to} (${duration}s, ${minutes} min × ₹${(userPlan as any).callingRate}/min = ${creditsToDeduct} credits)`
+                    );
+                  }
+                }
+              }
+            }
+          } catch (creditErr: any) {
+            console.error("Credit deduction error:", creditErr.message);
+          }
+        }
       }
 
       res.json({ received: true, callSid, status, leadId: leadId || null });
@@ -1022,6 +1107,7 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         status: "Active",
         monthlyCallCredits: plan.credits,
         creditsUsed: 0,
+        purchasedCredits: 0,
         renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         joinedDate: new Date(),
       });
@@ -1032,19 +1118,261 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     }
   });
 
-  // Renew subscription
-  app.post("/api/billing/renew", requireAuth, async (req, res) => {
+  // ==================== CREDIT PURCHASE ROUTES ====================
+
+  // Buy extra credits (called client-side after successful Razorpay payment)
+  app.post("/api/billing/buy-credits", requireAuth, async (req, res) => {
     try {
+      const { credits } = req.body;
+      if (!credits || typeof credits !== "number" || credits <= 0) {
+        return res.status(400).json({ message: "Invalid credits amount" });
+      }
+
       const user = await storage.getUser(req.session.userId!);
       if (!user || !user.subscription) {
         return res.status(400).json({ message: "No active subscription" });
       }
-      
+
+      // Validate against plan limits
+      const allPlans = await storage.getPlans();
+      const userPlan = allPlans.find((p: any) => p.name === user.subscription!.plan) as any;
+      if (!userPlan) {
+        return res.status(400).json({ message: "Plan not found" });
+      }
+      if (!userPlan.extraCreditPrice || userPlan.extraCreditPrice <= 0) {
+        return res.status(400).json({ message: "Credit purchases are not enabled for your plan" });
+      }
+      if (userPlan.maxCreditPurchase > 0 && credits > userPlan.maxCreditPurchase) {
+        return res.status(400).json({ message: `Maximum ${userPlan.maxCreditPurchase} credits can be purchased at once` });
+      }
+
+      const updatedUser = await storage.addPurchasedCredits(
+        req.session.userId!,
+        credits,
+        `Purchased ${credits} extra credits at ₹${userPlan.extraCreditPrice}/credit`
+      );
+
+      res.json({ user: updatedUser, creditsAdded: credits });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Get credit usage history
+  app.get("/api/credits/usage", requireAuth, async (req, res) => {
+    try {
+      const limit = parseInt((req.query.limit as string) || "50");
+      const usage = await storage.getCreditUsage(req.session.userId!, limit);
+      res.json(usage);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ==================== SMS / WHATSAPP PROXY ROUTES ====================
+
+  // Send bulk SMS via Gupshup (deducts smsRate credits per message)
+  app.post("/api/sms/send", requireAuth, requireFeature("bulk_sms"), async (req, res) => {
+    try {
+      const { leadIds, message } = req.body as { leadIds: string[]; message: string };
+      if (!leadIds?.length || !message?.trim()) {
+        return res.status(400).json({ message: "leadIds and message are required" });
+      }
+
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.gupshupConfig?.apiKey || !user?.gupshupConfig?.userId) {
+        return res.status(400).json({ message: "Gupshup is not configured. Please add your API credentials in Settings." });
+      }
+
+      const allPlans = await storage.getPlans();
+      const userPlan = allPlans.find((p: any) => p.name === user.subscription?.plan) as any;
+      const smsRate: number = userPlan?.smsRate || 0;
+
+      const available = (user.subscription?.monthlyCallCredits || 0)
+        + ((user.subscription as any)?.purchasedCredits || 0)
+        - (user.subscription?.creditsUsed || 0);
+
+      const totalCostCredits = Math.ceil(smsRate * leadIds.length);
+      if (smsRate > 0 && available < totalCostCredits) {
+        return res.status(402).json({
+          message: `Insufficient credits. Sending ${leadIds.length} SMS requires ${totalCostCredits} credits. Available: ${available}.`,
+          creditsRequired: totalCostCredits,
+          creditsAvailable: available,
+        });
+      }
+
+      // Fetch leads to get phone numbers
+      const results: { leadId: string; success: boolean; error?: string }[] = [];
+      for (const leadId of leadIds) {
+        const lead = await storage.getLead(leadId);
+        if (!lead || lead.userId !== req.session.userId) {
+          results.push({ leadId, success: false, error: "Lead not found" });
+          continue;
+        }
+        try {
+          const gupshupRes = await fetch(
+            `https://api.gupshup.io/sm/api/v1/msg`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "apikey": user.gupshupConfig.apiKey,
+              },
+              body: new URLSearchParams({
+                channel: "sms",
+                source: user.gupshupConfig.userId,
+                destination: lead.phone,
+                message: JSON.stringify({ type: "text", text: message }),
+                "src.name": user.gupshupConfig.userId,
+              }).toString(),
+            }
+          );
+          const ok = gupshupRes.ok;
+          results.push({ leadId, success: ok, error: ok ? undefined : await gupshupRes.text() });
+        } catch (err: any) {
+          results.push({ leadId, success: false, error: err.message });
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      // Deduct credits only for successfully sent messages
+      if (smsRate > 0 && successCount > 0) {
+        const creditsToDeduct = Math.ceil(smsRate * successCount);
+        await storage.deductCredits(
+          req.session.userId!,
+          creditsToDeduct,
+          "sms",
+          `Bulk SMS: ${successCount} messages sent (${creditsToDeduct} credits @ ₹${smsRate}/msg)`
+        );
+      }
+
+      res.json({ sent: successCount, failed: results.length - successCount, results });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Send WhatsApp message via Gupshup (deducts whatsappRate credits per message)
+  app.post("/api/whatsapp/send", requireAuth, requireFeature("whatsapp"), async (req, res) => {
+    try {
+      const { leadIds, message, templateId } = req.body as { leadIds: string[]; message: string; templateId?: string };
+      if (!leadIds?.length || !message?.trim()) {
+        return res.status(400).json({ message: "leadIds and message are required" });
+      }
+
+      const user = await storage.getUser(req.session.userId!);
+      if (!user?.gupshupConfig?.apiKey || !user?.gupshupConfig?.userId) {
+        return res.status(400).json({ message: "Gupshup is not configured. Please add your API credentials in Settings." });
+      }
+
+      const allPlans = await storage.getPlans();
+      const userPlan = allPlans.find((p: any) => p.name === user.subscription?.plan) as any;
+      const waRate: number = userPlan?.whatsappRate || 0;
+
+      const available = (user.subscription?.monthlyCallCredits || 0)
+        + ((user.subscription as any)?.purchasedCredits || 0)
+        - (user.subscription?.creditsUsed || 0);
+
+      const totalCostCredits = Math.ceil(waRate * leadIds.length);
+      if (waRate > 0 && available < totalCostCredits) {
+        return res.status(402).json({
+          message: `Insufficient credits. Sending ${leadIds.length} WhatsApp messages requires ${totalCostCredits} credits. Available: ${available}.`,
+          creditsRequired: totalCostCredits,
+          creditsAvailable: available,
+        });
+      }
+
+      const results: { leadId: string; success: boolean; error?: string }[] = [];
+      for (const leadId of leadIds) {
+        const lead = await storage.getLead(leadId);
+        if (!lead || lead.userId !== req.session.userId) {
+          results.push({ leadId, success: false, error: "Lead not found" });
+          continue;
+        }
+        try {
+          const gupshupRes = await fetch(
+            `https://api.gupshup.io/sm/api/v1/msg`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "apikey": user.gupshupConfig.apiKey,
+              },
+              body: new URLSearchParams({
+                channel: "whatsapp",
+                source: user.gupshupConfig.userId,
+                destination: lead.phone,
+                message: JSON.stringify({ type: "text", text: message }),
+                "src.name": user.gupshupConfig.userId,
+                ...(templateId ? { template: templateId } : {}),
+              }).toString(),
+            }
+          );
+          const ok = gupshupRes.ok;
+          results.push({ leadId, success: ok, error: ok ? undefined : await gupshupRes.text() });
+        } catch (err: any) {
+          results.push({ leadId, success: false, error: err.message });
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      if (waRate > 0 && successCount > 0) {
+        const creditsToDeduct = Math.ceil(waRate * successCount);
+        await storage.deductCredits(
+          req.session.userId!,
+          creditsToDeduct,
+          "whatsapp",
+          `WhatsApp: ${successCount} messages sent (${creditsToDeduct} credits @ ₹${waRate}/msg)`
+        );
+      }
+
+      res.json({ sent: successCount, failed: results.length - successCount, results });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Renew subscription (called after successful Razorpay payment for renewal)
+  app.post("/api/billing/renew", requireAuth, async (req, res) => {
+    try {
+      const { planId } = req.body;
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || !user.subscription) {
+        return res.status(400).json({ message: "No active subscription" });
+      }
+
+      // Look up plan to get fresh credits/name (planId optional — falls back to current plan)
+      let plan: any = null;
+      if (planId) {
+        plan = await storage.getPlan(planId);
+      } else {
+        const allPlans = await storage.getPlans();
+        plan = allPlans.find((p: any) => p.name === user.subscription!.plan);
+      }
+
+      if (!plan) {
+        return res.status(404).json({ message: "Plan not found" });
+      }
+
+      // Calculate new renewalDate based on plan duration
+      const durationMs: Record<string, number> = {
+        monthly: 30 * 24 * 60 * 60 * 1000,
+        quarterly: 90 * 24 * 60 * 60 * 1000,
+        yearly: 365 * 24 * 60 * 60 * 1000,
+        lifetime: 100 * 365 * 24 * 60 * 60 * 1000,
+      };
+      const ms = durationMs[plan.duration] ?? durationMs.monthly;
+
       const updatedUser = await storage.updateUserSubscription(req.session.userId!, {
-        ...user.subscription,
-        renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        plan: plan.name,
+        status: "Active",
+        monthlyCallCredits: plan.credits,
+        creditsUsed: 0,
+        purchasedCredits: 0, // reset purchased credits on renewal
+        renewalDate: new Date(Date.now() + ms),
+        joinedDate: user.subscription.joinedDate, // preserve original join date
       });
-      
+
       res.json({ user: updatedUser });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -1322,6 +1650,53 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       const data = insertFeatureSchema.parse(req.body);
       const feature = await storage.createFeature(data);
       res.status(201).json({ feature });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Delete feature (admin only)
+  app.delete("/api/features/:id", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (user?.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      const success = await storage.deleteFeature(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Feature not found" });
+      }
+      res.json({ message: "Feature deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin assign plan to a user
+  app.post("/api/admin/users/:userId/assign-plan", requireAuth, async (req, res) => {
+    try {
+      const admin = await storage.getUser(req.session.userId!);
+      if (admin?.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      const { planId } = req.body;
+      const plan = await storage.getPlan(planId);
+      if (!plan) {
+        return res.status(404).json({ message: "Plan not found" });
+      }
+      const updatedUser = await storage.updateUserSubscription(req.params.userId, {
+        plan: plan.name,
+        status: "Active",
+        monthlyCallCredits: plan.credits,
+        creditsUsed: 0,
+        purchasedCredits: 0,
+        renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        joinedDate: new Date(),
+      });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ user: updatedUser });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }

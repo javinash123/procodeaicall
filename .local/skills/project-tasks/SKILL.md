@@ -135,6 +135,7 @@ When an assigned project task is done, call `markTaskComplete({...})` as the fin
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
+| `task_ref` | str | Yes | Reference number of the assigned task you are completing (for example `"#12"`). The call is rejected when it is missing or does not match the currently assigned task. |
 | `commit_message` | str | No | Message for the task's merge commit. |
 | `skip_validation_reason` | str | No | Audited reason for skipping configured validation. Only use when validation genuinely cannot run. |
 | `pull_request_url` | str | No | Canonical GitHub, GitLab, or Bitbucket PR URL. Required when PR workflow is enabled. |
@@ -147,10 +148,12 @@ When an assigned project task is done, call `markTaskComplete({...})` as the fin
 
 ```javascript
 await markTaskComplete({
+  task_ref: "#12",
   commit_message: "Implement payment webhook handling",
 });
 
 await markTaskComplete({
+  task_ref: "#12",
   skip_validation_reason: "Requires external Stripe credentials that are not available in this environment.",
 });
 ```
