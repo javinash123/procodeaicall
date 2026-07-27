@@ -22,6 +22,8 @@ import Notifications from "@/pages/notifications";
 import BulkWhatsapp from "@/pages/bulk-whatsapp";
 import Payment from "@/pages/payment";
 import TestAI from "@/pages/test-ai";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 
 function Router() {
   const [location] = useLocation();
@@ -45,6 +47,9 @@ function Router() {
             <Route path="/admin" component={AdminLogin} />
             <Route path="/login" component={Auth} />
             <Route path="/register" component={Auth} />
+            <Route path="/auth">{() => { window.location.replace("/login"); return null; }}</Route>
+            <Route path="/forgot-password" component={ForgotPassword} />
+            <Route path="/reset-password" component={ResetPassword} />
             <Route path="/features" component={Features} />
             <Route path="/pricing" component={Pricing} />
             <Route path="/about" component={About} />

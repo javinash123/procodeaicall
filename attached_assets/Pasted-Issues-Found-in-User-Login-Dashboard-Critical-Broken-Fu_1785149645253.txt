@@ -1,0 +1,34 @@
+Issues Found in User Login & Dashboard
+🔴 Critical (Broken Functionality)
+
+
+5. Post-registration paid-plan login message not shown After successful payment, users redirected to /login?message=Account activated successfully... never see that message — the login page reads queryParams but does not render the message param as a toast or banner anywhere.
+
+6. "Forgot Password" link is dead The login form has a "Forgot password?" anchor (href="#") that does nothing. There is no reset password route, no email flow, no UI — it's a broken dead link.
+🟡 Medium (Incorrect Behavior)
+
+7. Credit Usage chart uses random fake data The credit usage chart in the billing section is generated with Math.random() on every render instead of real usage data pulled from the database.
+
+8. "Call Support" misspelled in Enterprise plan The Enterprise plan has the feature named "Call Suport" (missing 'p'). Even after fixing the name mismatch, this would prevent it from matching any valid feature key.
+
+9. Upgrade button in billing tab may resolve the wrong plan The "Renew Now" button correctly navigates to /payment?plan=<id>&renew=true, but if the user's plan name matches the duplicate empty-features "Basic" plan, currentPlan will be undefined and the button is disabled (the currentPlan && guard silently hides it).
+🔵 Minor / UX
+
+10. Dashboard header search bar is non-functional The search input in the top header of the dashboard is a visual-only element — it has a placeholder but no onChange, no search logic, and no results display.
+
+11. /auth route returns 404 Navigating to /auth shows a 404 page. The correct paths are /login and /register. Any external link or old bookmark pointing to /auth breaks.
+
+12. Dashboard file exceeds 500KB — Babel deoptimised The build log shows Babel deoptimised dashboard.tsx (>500KB). This slows cold-start compile time and signals the file needs splitting, though it doesn't break functionality today.
+
+Summary table:
+#	Section	Issue	Severity
+5	Registration flow	Post-payment message not shown on login	🟠 High
+6	Login	Forgot password link dead	🟠 High
+7	Billing tab	Credit usage chart is random fake data	🟡 Medium
+8	Enterprise plan	"Call Suport" typo in plan features	🟡 Medium
+9	Billing → Renew	Button may be hidden if wrong Basic plan assigned	🟡 Medium
+10	Dashboard header	Search bar non-functional	🔵 Minor
+11	Routing	/auth returns 404	🔵 Minor
+12	Build	dashboard.tsx >500KB, Babel deoptimised	🔵 Minor
+
+Want me to start fixing these? I'd recommend starting with #1 (feature key mismatch) since it blocks everything else.

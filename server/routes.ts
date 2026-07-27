@@ -1,7 +1,9 @@
 import type { Express, Request, Response } from "express";
 import { Server } from "http";
 import { storage } from "./storage";
-import { connectDB } from "./db";
+import { connectDB, UserModel, CreditUsageModel, PlanModel } from "./db";
+import crypto from "crypto";
+import mongoose from "mongoose";
 import bcryptjs from "bcryptjs";
 import session from "express-session";
 import multer from "multer";
@@ -121,6 +123,22 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     return new Date(user.subscription.renewalDate) < new Date();
   }
 
+  // One-time migration: fix "Call Suport" typo → "Call Support" in all plan documents
+  (async () => {
+    try {
+      const result = await PlanModel.updateMany(
+        { features: "Call Suport" },
+        { $set: { "features.$[elem]": "Call Support" } },
+        { arrayFilters: [{ "elem": "Call Suport" }] }
+      );
+      if (result.modifiedCount > 0) {
+        console.log(`[Migration] Fixed "Call Suport" typo in ${result.modifiedCount} plan(s).`);
+      }
+    } catch (e) {
+      console.error("[Migration] Failed to fix Call Suport typo:", e);
+    }
+  })();
+
   // Map human-readable plan feature names (stored in DB) → system feature keys (used by gates)
   const PLAN_FEATURE_NAME_TO_KEY: Record<string, string> = {
     "Basic CRM": "crm",
@@ -128,7 +146,6 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     "Scheduling": "calendar",
     "Bulk WhatsApp": "whatsapp",
     "Bulk SMS": "bulk_sms",
-    "Call Suport": "call_history",   // intentional typo match from DB
     "Call Support": "call_history",
     "Analytics": "analytics",
   };
@@ -1814,6 +1831,114 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         return res.status(404).json({ message: "Plan not found" });
       }
       res.json({ message: "Plan deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ==================== PASSWORD RESET ====================
+
+  // Request password reset — generate token, store it, log reset URL
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ message: "Email is required" });
+
+      const user = await storage.getUserByEmail(email);
+      // Always return success to prevent email enumeration
+      if (!user) {
+        return res.json({ message: "If an account with that email exists, a reset link has been sent." });
+      }
+
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await UserModel.findByIdAndUpdate(user._id, {
+        resetPasswordToken: token,
+        resetPasswordExpiry: expiry,
+      });
+
+      const host = req.get("host") || "localhost:5000";
+      const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
+      const resetUrl = `${protocol}://${host}/reset-password?token=${token}`;
+
+      // Log to console — wire up an email provider here when ready
+      console.log(`[Password Reset] Link for ${email}: ${resetUrl}`);
+
+      res.json({ message: "If an account with that email exists, a reset link has been sent." });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Consume reset token and set new password
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and password are required" });
+      }
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+
+      const user = await UserModel.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpiry: { $gt: new Date() },
+      }).lean();
+
+      if (!user) {
+        return res.status(400).json({ message: "Reset link is invalid or has expired." });
+      }
+
+      const hashed = await bcryptjs.hash(password, 10);
+      await UserModel.findByIdAndUpdate((user as any)._id, {
+        password: hashed,
+        $unset: { resetPasswordToken: "", resetPasswordExpiry: "" },
+      });
+
+      res.json({ message: "Password reset successfully. You can now log in." });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ==================== CREDIT USAGE DAILY CHART ====================
+
+  // Returns per-day aggregated credit deductions for the billing chart
+  app.get("/api/credits/usage/daily", requireAuth, async (req, res) => {
+    try {
+      const month = parseInt((req.query.month as string) ?? String(new Date().getMonth()));
+      const year  = parseInt((req.query.year  as string) ?? String(new Date().getFullYear()));
+
+      const start = new Date(year, month, 1);
+      const end   = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+      const records = await CreditUsageModel.find({
+        userId:    new mongoose.Types.ObjectId(req.session.userId!),
+        createdAt: { $gte: start, $lte: end },
+        amount:    { $lt: 0 }, // deductions only
+      }).lean();
+
+      const byDay: Record<number, { call: number; sms: number; whatsapp: number }> = {};
+      for (const r of records as any[]) {
+        const day = new Date(r.createdAt).getDate();
+        if (!byDay[day]) byDay[day] = { call: 0, sms: 0, whatsapp: 0 };
+        const amt = Math.abs(r.amount);
+        if (r.type === "call")      byDay[day].call      += amt;
+        else if (r.type === "sms")  byDay[day].sms       += amt;
+        else if (r.type === "whatsapp") byDay[day].whatsapp += amt;
+      }
+
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const result = Array.from({ length: daysInMonth }, (_, i) => ({
+        date:      i + 1,
+        call:      Math.round(byDay[i + 1]?.call      ?? 0),
+        sms:       Math.round(byDay[i + 1]?.sms       ?? 0),
+        whatsapp:  Math.round(byDay[i + 1]?.whatsapp  ?? 0),
+      }));
+
+      res.json(result);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

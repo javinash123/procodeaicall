@@ -32,14 +32,16 @@ export default function Auth() {
   const [pendingForm, setPendingForm] = useState<FormData | null>(null);
 
   // Show success message passed via ?message= query param (e.g. after paid plan activation)
+  const [activationBanner, setActivationBanner] = useState<string | null>(null);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const msg = params.get("message");
     if (msg) {
+      setActivationBanner(msg);
       toast({ title: "Account Activated", description: msg });
-      // Remove the param from the URL so it doesn't show again on refresh
-      const clean = window.location.pathname;
-      window.history.replaceState({}, "", clean);
+      // Remove the param from the URL so it doesn't re-show on refresh
+      window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
 
@@ -170,6 +172,12 @@ export default function Auth() {
 
             {/* ── LOGIN ─────────────────────────────────────────────────────── */}
             <TabsContent value="login">
+              {activationBanner && (
+                <div className="mb-4 flex items-start gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
+                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <span>{activationBanner}</span>
+                </div>
+              )}
               <form className="space-y-4" onSubmit={handleLogin}>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -178,7 +186,7 @@ export default function Auth() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label htmlFor="password">Password</Label>
-                    <a href="#" className="text-xs text-primary hover:underline">Forgot password?</a>
+                    <Link href="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
                   </div>
                   <Input id="password" name="password" type="password" required data-testid="input-password" disabled={isLoading} />
                 </div>

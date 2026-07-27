@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   LayoutDashboard, 
@@ -94,6 +94,7 @@ import BuyCreditsDialog from "@/components/BuyCreditsDialog";
 import BulkWhatsapp from "./bulk-whatsapp";
 import AdminPlans from "./admin-plans";
 import { FeatureGate } from "@/components/feature-gate";
+import DashboardAnalyticsTab from "./dashboard-analytics-tab";
 
 // Helper function to format time ago
 const formatTimeAgo = (date: Date | string) => {
@@ -319,6 +320,11 @@ export default function Dashboard() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [campaignFilter, setCampaignFilter] = useState("all");
+
+  // Header global search
+  const [headerSearch, setHeaderSearch] = useState("");
+  const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
+  const headerSearchRef = useRef<HTMLDivElement>(null);
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [message, setMessage] = useState("");
@@ -624,6 +630,48 @@ export default function Dashboard() {
     { label: "Credit Balance", value: `₹${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, change: "0%", icon: Wallet, tab: "settings" },
   ];
 
+  // Header search results — computed from existing data, no extra fetches needed
+  const headerSearchResults = useMemo(() => {
+    const q = headerSearch.trim().toLowerCase();
+    if (q.length < 2) return { leads: [], campaigns: [], users: [] };
+    if (isAdmin) {
+      return {
+        leads: [],
+        campaigns: [],
+        users: registeredUsers.filter(u =>
+          `${u.firstName} ${u.lastName}`.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          (u.companyName || "").toLowerCase().includes(q)
+        ).slice(0, 6),
+      };
+    }
+    return {
+      leads: leads.filter(l =>
+        l.name.toLowerCase().includes(q) ||
+        l.phone.includes(q) ||
+        (l.company || "").toLowerCase().includes(q)
+      ).slice(0, 4),
+      campaigns: campaigns.filter(c => c.name.toLowerCase().includes(q)).slice(0, 3),
+      users: [],
+    };
+  }, [headerSearch, leads, campaigns, registeredUsers, isAdmin]);
+
+  const headerSearchHasResults =
+    headerSearchResults.leads.length > 0 ||
+    headerSearchResults.campaigns.length > 0 ||
+    headerSearchResults.users.length > 0;
+
+  // Close header search dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (headerSearchRef.current && !headerSearchRef.current.contains(e.target as Node)) {
+        setHeaderSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   // Fetch data on mount
   useEffect(() => {
     if (!user) return;
@@ -676,16 +724,22 @@ export default function Dashboard() {
 
     const fetchCreditUsage = async () => {
       try {
-        const daysInMonth = new Date(creditUsageYearFilter, creditUsageMonthFilter + 1, 0).getDate();
-        const mockData = Array.from({ length: daysInMonth }, (_, i) => ({
-          date: i + 1,
-          call: Math.floor(Math.random() * 50),
-          sms: Math.floor(Math.random() * 30),
-          whatsapp: Math.floor(Math.random() * 20),
-        }));
-        setCreditUsageData(mockData);
+        const params = new URLSearchParams({
+          month: String(creditUsageMonthFilter),
+          year: String(creditUsageYearFilter),
+        });
+        if (creditUsageCampaignFilter !== "all") {
+          params.set("campaignId", creditUsageCampaignFilter);
+        }
+        const res = await fetch(`/api/credits/usage/daily?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed to fetch usage");
+        const data = await res.json();
+        setCreditUsageData(data);
       } catch (error) {
         console.error("Error fetching credit usage:", error);
+        // Fallback: fill with zeros so the chart renders cleanly
+        const daysInMonth = new Date(creditUsageYearFilter, creditUsageMonthFilter + 1, 0).getDate();
+        setCreditUsageData(Array.from({ length: daysInMonth }, (_, i) => ({ date: i + 1, call: 0, sms: 0, whatsapp: 0 })));
       }
     };
 
@@ -1405,9 +1459,74 @@ export default function Dashboard() {
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b flex items-center justify-between px-6 bg-background/50 backdrop-blur sticky top-0 z-10">
           <div className="flex items-center gap-4 w-full max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder={isAdmin ? "Search users..." : "Search leads, campaigns..."} className="pl-9 bg-muted/20 border-none focus-visible:ring-1" />
+            <div className="relative w-full" ref={headerSearchRef}>
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder={isAdmin ? "Search users..." : "Search leads, campaigns..."}
+                className="pl-9 bg-muted/20 border-none focus-visible:ring-1"
+                value={headerSearch}
+                onChange={(e) => { setHeaderSearch(e.target.value); setHeaderSearchOpen(true); }}
+                onFocus={() => setHeaderSearchOpen(true)}
+                onKeyDown={(e) => { if (e.key === "Escape") { setHeaderSearchOpen(false); setHeaderSearch(""); } }}
+              />
+              {headerSearchOpen && headerSearch.length >= 2 && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg border border-border bg-popover shadow-xl overflow-hidden">
+                  {!headerSearchHasResults ? (
+                    <div className="px-4 py-6 text-center text-sm text-muted-foreground">No results found.</div>
+                  ) : (
+                    <div className="max-h-72 overflow-y-auto py-1">
+                      {headerSearchResults.leads.length > 0 && (
+                        <>
+                          <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Leads</div>
+                          {headerSearchResults.leads.map((lead: any) => (
+                            <button
+                              key={lead._id}
+                              className="w-full text-left px-3 py-2 hover:bg-muted/60 flex items-center gap-2 text-sm"
+                              onMouseDown={() => { setActiveTab("crm"); setSearchTerm(lead.name); setHeaderSearch(""); setHeaderSearchOpen(false); }}
+                            >
+                              <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span className="font-medium">{lead.name}</span>
+                              <span className="text-muted-foreground text-xs ml-auto">{lead.phone}</span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+                      {headerSearchResults.campaigns.length > 0 && (
+                        <>
+                          <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-t border-border/50">Campaigns</div>
+                          {headerSearchResults.campaigns.map((c: any) => (
+                            <button
+                              key={c._id}
+                              className="w-full text-left px-3 py-2 hover:bg-muted/60 flex items-center gap-2 text-sm"
+                              onMouseDown={() => { setActiveTab("campaigns"); setHeaderSearch(""); setHeaderSearchOpen(false); }}
+                            >
+                              <Megaphone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span className="font-medium">{c.name}</span>
+                              <Badge variant="outline" className="ml-auto text-[10px] h-4">{c.status}</Badge>
+                            </button>
+                          ))}
+                        </>
+                      )}
+                      {headerSearchResults.users.length > 0 && (
+                        <>
+                          <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Users</div>
+                          {headerSearchResults.users.map((u: any) => (
+                            <button
+                              key={u._id}
+                              className="w-full text-left px-3 py-2 hover:bg-muted/60 flex items-center gap-2 text-sm"
+                              onMouseDown={() => { setActiveTab("users"); setSearchTerm(`${u.firstName} ${u.lastName}`); setHeaderSearch(""); setHeaderSearchOpen(false); }}
+                            >
+                              <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span className="font-medium">{u.firstName} {u.lastName}</span>
+                              <span className="text-muted-foreground text-xs ml-auto">{u.email}</span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -1430,7 +1549,10 @@ export default function Dashboard() {
             const daysLeft = Math.ceil((renewalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
             const expired = renewalDate < now;
             const expiringSoon = !expired && daysLeft <= 7;
-            const currentPlan = plans.find((p: Plan) => p.name === sub.plan);
+            // Prefer plan with features; fall back to any name match
+            const currentPlan =
+              plans.find((p: Plan) => p.name === sub.plan && (p.features?.length ?? 0) > 0) ??
+              plans.find((p: Plan) => p.name === sub.plan);
             if (!expired && !expiringSoon) return null;
             return (
               <div className={`mb-6 flex items-center justify-between gap-4 rounded-lg border px-5 py-4 ${expired ? "bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-400" : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400"}`}>
@@ -1451,7 +1573,7 @@ export default function Dashboard() {
                   size="sm"
                   variant={expired ? "default" : "outline"}
                   className={expired ? "bg-red-600 hover:bg-red-700 text-white border-none shrink-0" : "shrink-0"}
-                  onClick={() => currentPlan && setLocation(`/payment?plan=${currentPlan._id}&renew=true`)}
+                  onClick={() => currentPlan ? setLocation(`/payment?plan=${currentPlan._id}&renew=true`) : setLocation("/pricing")}
                 >
                   <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                   Renew Now
@@ -4048,9 +4170,11 @@ export default function Dashboard() {
                           
                           <div className="flex gap-2 flex-wrap">
                             <Button variant="outline" className="text-primary border-primary hover:bg-primary/5" onClick={() => {
-                              const plan = plans.find((p: Plan) => p.name === user?.subscription?.plan);
-                              if (!plan) return;
-                              setLocation(`/payment?plan=${plan._id}&renew=true`);
+                              // Prefer plan with features to avoid matching a duplicate empty-features record
+                              const plan =
+                                plans.find((p: Plan) => p.name === user?.subscription?.plan && (p.features?.length ?? 0) > 0) ??
+                                plans.find((p: Plan) => p.name === user?.subscription?.plan);
+                              setLocation(plan ? `/payment?plan=${plan._id}&renew=true` : "/pricing");
                             }}>
                               <RefreshCw className="h-4 w-4 mr-2" />
                               Renew Now
