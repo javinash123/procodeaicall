@@ -1,0 +1,122 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+10:20:38 AM [ws] WebSocket server ready on path /stream
+10:20:38 AM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+10:20:38 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[BABEL] Note: The code generator has deoptimised the styling of /home/runner/workspace/client/src/pages/dashboard.tsx as it exceeds the max of 500KB.
+10:20:51 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev host=3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev
+10:20:51 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:20:51 AM [express] POST /api/auth/login 401 in 246ms :: {"message":"Invalid credentials"}
+10:20:51 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+10:20:53 AM [express] POST /api/auth/login 401 in 576ms :: {"message":"Invalid credentials"}
+10:20:59 AM [express] POST /api/auth/login 401 in 233ms :: {"message":"Invalid credentials"}
+10:22:57 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev host=3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev
+10:22:57 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:23:03 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev host=3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev
+10:23:03 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:23:16 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:23:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/auth.tsx, /src/index.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:24:05 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/auth.tsx, /src/index.css[22m [33m(x2)[39m
+10:25:59 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev host=3f72266c-7201-4366-b4f8-5dce45c69651-00-2el91rdnhymxr.riker.replit.dev
+10:25:59 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:26:22 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}

@@ -121,6 +121,18 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     return new Date(user.subscription.renewalDate) < new Date();
   }
 
+  // Map human-readable plan feature names (stored in DB) → system feature keys (used by gates)
+  const PLAN_FEATURE_NAME_TO_KEY: Record<string, string> = {
+    "Basic CRM": "crm",
+    "AI Agent Call": "campaigns",
+    "Scheduling": "calendar",
+    "Bulk WhatsApp": "whatsapp",
+    "Bulk SMS": "bulk_sms",
+    "Call Suport": "call_history",   // intentional typo match from DB
+    "Call Support": "call_history",
+    "Analytics": "analytics",
+  };
+
   // Helper: resolve a user's plan feature keys from their subscription
   async function getUserPlanFeatures(userId: string): Promise<string[]> {
     try {
@@ -133,7 +145,11 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       const plans = await storage.getPlans();
       const plan = plans.find((p: any) => p.name === user.subscription?.plan && p.isActive !== false);
       if (!plan) return [];
-      return (plan.features as string[]) || [];
+      // Convert human-readable feature names to system feature keys
+      const rawFeatures: string[] = (plan.features as string[]) || [];
+      return rawFeatures
+        .map((f) => PLAN_FEATURE_NAME_TO_KEY[f] ?? null)
+        .filter((k): k is string => k !== null);
     } catch {
       return [];
     }
@@ -314,7 +330,19 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     }
   });
 
-  // Change password
+  // Change password — convenience route used by the dashboard (/api/user/change-password)
+  app.post("/api/user/change-password", requireAuth, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+      const success = await storage.changePassword(req.session.userId!, currentPassword, newPassword);
+      if (!success) return res.status(400).json({ message: "Invalid current password" });
+      res.json({ message: "Password changed successfully" });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Change password (legacy route — kept for backwards compatibility)
   app.post("/api/users/:id/password", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;

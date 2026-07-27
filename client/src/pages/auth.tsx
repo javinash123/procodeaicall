@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Phone, ArrowLeft, Loader2, Check } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { authApi } from "@/lib/api";
@@ -30,6 +30,18 @@ export default function Auth() {
   // Registration multi-step state
   const [regStep, setRegStep] = useState<1 | 2>(1);
   const [pendingForm, setPendingForm] = useState<FormData | null>(null);
+
+  // Show success message passed via ?message= query param (e.g. after paid plan activation)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const msg = params.get("message");
+    if (msg) {
+      toast({ title: "Account Activated", description: msg });
+      // Remove the param from the URL so it doesn't show again on refresh
+      const clean = window.location.pathname;
+      window.history.replaceState({}, "", clean);
+    }
+  }, []);
 
   // Fetch plans (for step 2 plan picker)
   const { data: plansData } = useQuery<{ plans: Plan[] } | Plan[]>({
