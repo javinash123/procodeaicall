@@ -129,6 +129,8 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [callLogs, setCallLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [llmInsights, setLlmInsights] = useState<string[]>([]);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   // UI State
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
@@ -325,13 +327,15 @@ export default function Dashboard() {
   const [headerSearch, setHeaderSearch] = useState("");
   const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
   const headerSearchRef = useRef<HTMLDivElement>(null);
+  const csvImportRef = useRef<HTMLInputElement>(null);
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
 
   // ── Analytics computed values ────────────────────────────────────────────────
-  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  // Use UTC midnight so client-side filters align with server-stored UTC timestamps.
+  const todayStart = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00.000Z');
   const closedLeads = leads.filter(l => l.status === "Closed").length;
   const interestedLeads = leads.filter(l => l.status === "Interested").length;
   const followUpLeads = leads.filter(l => l.status === "Follow Up").length;
@@ -370,12 +374,16 @@ export default function Dashboard() {
   if (aiInsights.length === 0) aiInsights.push("Add leads and run campaigns to unlock AI-powered insights.");
 
   // ── Today's Performance data ──────────────────────────────────────────────
-  const todayReplies = leads.filter(l => {
-    const h = (l.history || []).filter(h => h.type === "call" && new Date(h.date || 0) >= todayStart);
-    return h.length > 0 && ["Interested","Closed"].includes(l.status || "");
-  }).length;
+  // Messages = SMS and WhatsApp history entries logged today.
   const todayMessages = leads.reduce((acc, l) =>
-    acc + (l.history || []).filter(h => (h.type === "email") && new Date(h.date || 0) >= todayStart).length, 0);
+    acc + (l.history || []).filter(h =>
+      (h.type === "sms" || h.type === "whatsapp") && new Date(h.date || 0) >= todayStart
+    ).length, 0);
+  // Replies = note entries logged today (each note typically documents a lead's reply or callback).
+  const todayReplies = leads.reduce((acc, l) =>
+    acc + (l.history || []).filter(h =>
+      h.type === "note" && new Date(h.date || 0) >= todayStart
+    ).length, 0);
 
   // ── Live Activity Feed ────────────────────────────────────────────────────
   const liveActivityFeed = leads
@@ -645,16 +653,32 @@ export default function Dashboard() {
   if (adminInsights.length === 0) adminInsights.push("All users are active and subscribed. Great platform health!");
 
   // Stats derived from data
+  // ── Month-over-month KPI deltas (reuse _thisMonthStart declared above) ────
+  const _lastMonthStart = new Date(_thisMonthStart.getFullYear(), _thisMonthStart.getMonth() - 1, 1);
+  const _pctChange = (cur: number, prev: number): string => {
+    if (prev === 0) return cur > 0 ? "+100%" : "0%";
+    const p = ((cur - prev) / prev) * 100;
+    return (p >= 0 ? "+" : "") + p.toFixed(1) + "%";
+  };
+  const _thisLeads   = leads.filter(l => new Date((l as any).createdAt) >= _thisMonthStart).length;
+  const _lastLeads   = leads.filter(l => { const d = new Date((l as any).createdAt); return d >= _lastMonthStart && d < _thisMonthStart; }).length;
+  const _thisCamps   = campaigns.filter(c => new Date((c as any).createdAt) >= _thisMonthStart).length;
+  const _lastCamps   = campaigns.filter(c => { const d = new Date((c as any).createdAt); return d >= _lastMonthStart && d < _thisMonthStart; }).length;
+  const _thisAppts   = appointments.filter(a => new Date((a as any).createdAt) >= _thisMonthStart).length;
+  const _lastAppts   = appointments.filter(a => { const d = new Date((a as any).createdAt); return d >= _lastMonthStart && d < _thisMonthStart; }).length;
+  const _thisCredits = user?.subscription?.monthlyCallCredits || 0;
+  const _lastCredits = user?.subscription?.previousMonthCredits ?? _thisCredits;
+
   const stats = isAdmin ? [
     { label: "Total Users", value: registeredUsers.length.toString(), icon: Users, tab: "admin-users", change: "" },
     { label: "Total Plans", value: plans.length.toString(), icon: CreditCard, tab: "plans", change: "", href: "/admin/plans" },
     { label: "Active Subscriptions", value: registeredUsers.filter(u => u.subscription?.status === "Active").length.toString(), icon: CheckCircle2, tab: "admin-users", change: "" },
     { label: "Total Revenue", value: `₹${registeredUsers.reduce((acc, u) => acc + (plans.find(p => p.name === u.subscription?.plan)?.price || 0), 0).toLocaleString()}`, icon: Wallet, tab: "admin-users", change: "" },
   ] : [
-    { label: "Leads", value: leads.length.toString(), change: "+12.5%", icon: PhoneCall, tab: "crm" },
-    { label: "Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: "+4.2%", icon: CheckCircle2, tab: "campaigns" },
-    { label: "Appointments", value: appointments.length.toString(), change: "-1.1%", icon: Clock, tab: "calendar" },
-    { label: "Credit Balance", value: `₹${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, change: "0%", icon: Wallet, tab: "settings" },
+    { label: "Leads", value: leads.length.toString(), change: _pctChange(_thisLeads, _lastLeads), icon: PhoneCall, tab: "crm" },
+    { label: "Campaigns", value: campaigns.filter(c => c.status === "Active").length.toString(), change: _pctChange(_thisCamps, _lastCamps), icon: CheckCircle2, tab: "campaigns" },
+    { label: "Appointments", value: appointments.length.toString(), change: _pctChange(_thisAppts, _lastAppts), icon: Clock, tab: "calendar" },
+    { label: "Credit Balance", value: `₹${(user?.subscription?.monthlyCallCredits || 0).toLocaleString()}`, change: _pctChange(_thisCredits, _lastCredits), icon: Wallet, tab: "settings" },
   ];
 
   // Header search results — computed from existing data, no extra fetches needed
@@ -687,6 +711,121 @@ export default function Dashboard() {
     headerSearchResults.leads.length > 0 ||
     headerSearchResults.campaigns.length > 0 ||
     headerSearchResults.users.length > 0;
+
+  // ── Growth Analytics — real monthly lead count filtered by year + campaign ──
+  const growthAnalyticsData = useMemo(() => {
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return months.map((name, idx) => ({
+      name,
+      leads: leads.filter(l => {
+        const d = new Date((l as any).createdAt || 0);
+        if (d.getFullYear() !== selectedChartYear) return false;
+        if (d.getMonth() !== idx) return false;
+        if (dailyActivityCampaignFilter !== "all" && l.campaignId !== dailyActivityCampaignFilter) return false;
+        return true;
+      }).length,
+    }));
+  }, [leads, selectedChartYear, dailyActivityCampaignFilter]);
+
+  // True only when at least one month has a non-zero lead count
+  const growthAnalyticsHasData = useMemo(
+    () => growthAnalyticsData.some(d => d.leads > 0),
+    [growthAnalyticsData],
+  );
+
+  // ── Daily Call Activity — real per-day call log count for selected month/year ──
+  const dailyCallActivityData = useMemo(() => {
+    const daysInMonth = new Date(selectedChartYear, selectedChartMonth + 1, 0).getDate();
+    return Array.from({ length: daysInMonth }, (_, i) => {
+      const day = i + 1;
+      return {
+        name: String(day),
+        calls: callLogs.filter(log => {
+          const d = new Date(log.createdAt || log.startTime || 0);
+          if (d.getFullYear() !== selectedChartYear) return false;
+          if (d.getMonth() !== selectedChartMonth) return false;
+          if (d.getDate() !== day) return false;
+          if (callActivityCampaignFilter !== "all" && log.campaignId !== callActivityCampaignFilter) return false;
+          return true;
+        }).length,
+      };
+    });
+  }, [callLogs, selectedChartMonth, selectedChartYear, callActivityCampaignFilter]);
+
+  // ── LLM-powered AI Insights (fetched once per session when data is ready) ─
+  const insightsFetchedRef = useRef(false);
+  useEffect(() => {
+    if (insightsFetchedRef.current || loading || leads.length === 0) return;
+    // Check localStorage cache (15 min TTL per user)
+    const cacheKey = `nijvox_insights_${user?._id}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const { ts, insights } = JSON.parse(cached);
+        if (Date.now() - ts < 15 * 60 * 1000 && Array.isArray(insights) && insights.length > 0) {
+          setLlmInsights(insights);
+          insightsFetchedRef.current = true;
+          return;
+        }
+      } catch { /* ignore */ }
+    }
+    insightsFetchedRef.current = true;
+    setInsightsLoading(true);
+    const topCamp = [...campaignPerformance].sort((a, b) => b.closed - a.closed)[0];
+    fetch("/api/insights", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        totalLeads: leads.length,
+        interestedLeads: leads.filter(l => l.status === "Interested").length,
+        followUpLeads: leads.filter(l => l.status === "Follow Up").length,
+        closedLeads: leads.filter(l => l.status === "Closed").length,
+        activeCampaigns: campaigns.filter(c => c.status === "Active").length,
+        totalCampaigns: campaigns.length,
+        todaysCalls: todaysCalls,
+        totalCalls: leads.reduce((acc, l) => acc + (l.history || []).filter(h => h.type === "call").length, 0),
+        upcomingAppointments: appointments.filter(a => new Date(a.date) >= new Date()).length,
+        topCampaign: topCamp?.closed > 0 ? { name: topCamp.name, closed: topCamp.closed } : null,
+      }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data.insights) && data.insights.length > 0) {
+          setLlmInsights(data.insights);
+          localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), insights: data.insights }));
+        }
+      })
+      .catch(() => { /* silently fall back to heuristic insights */ })
+      .finally(() => setInsightsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, leads.length]);
+
+  // Helper: compute lead engagement score from status + history
+  const leadScore = (lead: Lead): "High" | "Med" | "Low" => {
+    if (lead.status === "Interested" || lead.status === "Closed") return "High";
+    const callCount = (lead.history || []).filter(h => h.type === "call").length;
+    if (lead.status === "Follow Up" || lead.status === "In Progress" || callCount >= 2) return "Med";
+    return "Low";
+  };
+  const leadScoreVariant = (score: "High" | "Med" | "Low") =>
+    score === "High" ? "default" : "secondary";
+  const leadScoreClass = (score: "High" | "Med" | "Low") =>
+    score === "High"
+      ? "bg-green-500/15 text-green-600 dark:text-green-400 border-none"
+      : score === "Med"
+      ? "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-none"
+      : "bg-slate-500/10 text-slate-500 border-none";
+
+  // Helper: find Exotel recording URL from callLogs by leadId + date proximity
+  const findRecordingUrl = (leadId: string, date: Date): string | undefined => {
+    const ts = new Date(date).getTime();
+    const WINDOW_MS = 8 * 60 * 1000; // 8-minute window
+    return callLogs.find(
+      cl => cl.leadId === leadId &&
+            Math.abs(new Date(cl.startTime || cl.createdAt).getTime() - ts) < WINDOW_MS &&
+            cl.recordingUrl,
+    )?.recordingUrl;
+  };
 
   // Close header search dropdown when clicking outside
   useEffect(() => {
@@ -1162,6 +1301,79 @@ export default function Dashboard() {
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error deleting campaign", description: error.message });
     }
+  };
+
+  // ── Campaign Start / Stop toggle ─────────────────────────────────────────
+  const handleToggleCampaignStatus = async (campaign: Campaign) => {
+    const nextStatus = campaign.status === "Active" ? "Paused" : "Active";
+    try {
+      const updated = await campaignsApi.update((campaign as any)._id, { status: nextStatus as any });
+      setCampaigns(campaigns.map(c => c._id === (campaign as any)._id ? updated : c));
+      toast({ title: `Campaign ${nextStatus === "Active" ? "started" : "paused"}` });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Failed to update campaign", description: error.message });
+    }
+  };
+
+  // ── CSV Import ─────────────────────────────────────────────────────────────
+  const handleCsvImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    e.target.value = ""; // reset so re-importing same file triggers onChange again
+
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) {
+      toast({ variant: "destructive", title: "CSV is empty or has no data rows" });
+      return;
+    }
+
+    // Parse header row — support any column order, case-insensitive
+    const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, ""));
+    const col = (name: string) => headers.indexOf(name);
+
+    const pick = (row: string[], ...keys: string[]) => {
+      for (const k of keys) {
+        const idx = col(k);
+        if (idx !== -1 && row[idx]?.trim()) return row[idx].trim();
+      }
+      return "";
+    };
+
+    let created = 0;
+    let skipped = 0;
+    const newLeads: Lead[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      // Naive CSV split — handles simple quoted fields
+      const row = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/^"|"$/g, "")) ?? lines[i].split(",");
+      const phone = pick(row, "phone", "mobile", "phonenumber", "contact");
+      const name  = pick(row, "name", "fullname", "leadname", "firstname") || phone;
+      if (!phone && !name) { skipped++; continue; }
+
+      try {
+        const lead = await leadsApi.create({
+          userId:     user._id,
+          name:       name || phone,
+          phone:      phone,
+          email:      pick(row, "email", "emailaddress"),
+          company:    pick(row, "company", "companyname", "organisation", "organization"),
+          notes:      pick(row, "notes", "note", "comments", "comment"),
+          status:     "New",
+          outcome:    "Pending",
+        });
+        newLeads.push(lead as Lead);
+        created++;
+      } catch {
+        skipped++;
+      }
+    }
+
+    if (newLeads.length > 0) setLeads(prev => [...newLeads, ...prev]);
+    toast({
+      title: `CSV imported: ${created} lead${created !== 1 ? "s" : ""} added`,
+      description: skipped > 0 ? `${skipped} row${skipped !== 1 ? "s" : ""} skipped (missing phone/name or duplicate)` : undefined,
+    });
   };
 
   const handleTestCall = async () => {
@@ -2562,7 +2774,13 @@ export default function Dashboard() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-3">
-                          {aiInsights.map((insight, i) => (
+                          {insightsLoading && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                              Generating AI insights…
+                            </div>
+                          )}
+                          {(llmInsights.length > 0 ? llmInsights : aiInsights).map((insight, i) => (
                             <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-background/60 border border-border/40">
                               <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
                                 <Zap className="h-3.5 w-3.5 text-primary" />
@@ -2570,6 +2788,9 @@ export default function Dashboard() {
                               <p className="text-sm leading-relaxed">{insight}</p>
                             </div>
                           ))}
+                          {llmInsights.length > 0 && (
+                            <p className="text-xs text-muted-foreground text-right pt-1">Powered by OpenAI · refreshes every 15 min</p>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -2614,7 +2835,7 @@ export default function Dashboard() {
                           </Select>
                         </div>
                       </CardHeader>
-                      <CardContent className="h-80"><ResponsiveContainer width="100%" height="100%"><AreaChart data={[{ name: "Jan", leads: 400 }, { name: "Feb", leads: 300 }, { name: "Mar", leads: 600 }, { name: "Apr", leads: 800 }, { name: "May", leads: 500 }, { name: "Jun", leads: 900 }]}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6}/><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} /><Area type="monotone" dataKey="leads" stroke="hsl(var(--primary))" strokeWidth={5} fillOpacity={1} fill="url(#colorGrowth)" animationDuration={2000} strokeLinecap="round" /></AreaChart></ResponsiveContainer></CardContent>
+                      <CardContent className="h-80">{growthAnalyticsHasData ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={growthAnalyticsData}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6}/><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} /><Area type="monotone" dataKey="leads" stroke="hsl(var(--primary))" strokeWidth={5} fillOpacity={1} fill="url(#colorGrowth)" animationDuration={2000} strokeLinecap="round" /></AreaChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center text-muted-foreground">No data yet</div>}</CardContent>
                     </Card>
                   </div>
 
@@ -2652,7 +2873,7 @@ export default function Dashboard() {
                         </SelectContent>
                       </Select>
                     </CardHeader>
-                    <CardContent className="h-80"><ResponsiveContainer width="100%" height="100%"><LineChart data={[{ name: "Mon", calls: 120 }, { name: "Tue", calls: 150 }, { name: "Wed", calls: 180 }, { name: "Thu", calls: 140 }, { name: "Fri", calls: 160 }, { name: "Sat", calls: 90 }, { name: "Sun", calls: 70 }]}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} /><RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} /><Line type="monotone" dataKey="calls" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 6, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--background))" }} /></LineChart></ResponsiveContainer></CardContent>
+                    <CardContent className="h-80"><ResponsiveContainer width="100%" height="100%"><LineChart data={dailyCallActivityData}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} interval="preserveStartEnd" /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} allowDecimals={false} /><RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} /><Line type="monotone" dataKey="calls" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--background))" }} /></LineChart></ResponsiveContainer></CardContent>
                   </Card>
 
                   <Card>
@@ -2894,7 +3115,7 @@ export default function Dashboard() {
                               <TableCell className="text-sm">{new Date(history.date).toLocaleString()}</TableCell>
                               <TableCell><Badge variant="outline">{history.outcome}</Badge></TableCell>
                               <TableCell className="text-sm">{history.duration}</TableCell>
-                              <TableCell><Button size="sm" variant="ghost"><Play className="h-4 w-4 mr-1" /> Play</Button></TableCell>
+                              <TableCell>{(() => { const url = findRecordingUrl(lead._id, history.date); return url ? <Button size="sm" variant="ghost" onClick={() => window.open(url, "_blank")}><Play className="h-4 w-4 mr-1" /> Play</Button> : <Button size="sm" variant="ghost" disabled title="No recording available" className="opacity-40"><Play className="h-4 w-4 mr-1" /> Play</Button>; })()}</TableCell>
                               <TableCell className="text-right"><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}><Phone className="h-4 w-4" /></Button></TableCell>
                               <TableCell className="text-right"><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}><MessageSquare className="h-4 w-4" /></Button></TableCell>
                             </TableRow>
@@ -2913,7 +3134,14 @@ export default function Dashboard() {
                <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Lead CRM</h1>
                 <div className="flex gap-2">
-                  <Button variant="outline">Import CSV</Button>
+                  <input
+                    ref={csvImportRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="hidden"
+                    onChange={handleCsvImport}
+                  />
+                  <Button variant="outline" onClick={() => csvImportRef.current?.click()}>Import CSV</Button>
                   <Dialog open={isAddLeadOpen} onOpenChange={setIsAddLeadOpen}>
                     <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Lead</Button></DialogTrigger>
                     <DialogContent>
@@ -2981,11 +3209,11 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Company</TableHead><TableHead>Campaign</TableHead><TableHead>Status</TableHead><TableHead>Last Interaction</TableHead><TableHead className="text-right">Call</TableHead><TableHead className="text-right">SMS</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Company</TableHead><TableHead>Campaign</TableHead><TableHead>Status</TableHead><TableHead>Score</TableHead><TableHead>Last Interaction</TableHead><TableHead className="text-right">Call</TableHead><TableHead className="text-right">SMS</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {leads.filter(lead => { const searchLower = campaignSearch.toLowerCase(); const matchesSearch = !campaignSearch || lead.name.toLowerCase().includes(searchLower) || (lead.company || "").toLowerCase().includes(searchLower) || (lead.phone || "").toLowerCase().includes(searchLower) || (lead.email || "").toLowerCase().includes(searchLower) || (lead.status || "").toLowerCase().includes(searchLower) || (lead.campaignName || "").toLowerCase().includes(searchLower); if (!matchesSearch) return false; if (leadCampaignFilter === "all") return true; if (leadCampaignFilter === "none") return !lead.campaignId; return lead.campaignId === leadCampaignFilter; }).map((lead) => (
                         <TableRow key={lead._id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleViewLead(lead)}>
-                          <TableCell className="font-medium">{lead.name}</TableCell><TableCell>{lead.company || "-"}</TableCell><TableCell>{lead.campaignName ? <Badge variant="secondary">{lead.campaignName}</Badge> : <span className="text-muted-foreground">-</span>}</TableCell><TableCell><Badge variant="outline">{lead.status}</Badge></TableCell><TableCell className="text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
+                          <TableCell className="font-medium">{lead.name}</TableCell><TableCell>{lead.company || "-"}</TableCell><TableCell>{lead.campaignName ? <Badge variant="secondary">{lead.campaignName}</Badge> : <span className="text-muted-foreground">-</span>}</TableCell><TableCell><Badge variant="outline">{lead.status}</Badge></TableCell><TableCell>{(() => { const s = leadScore(lead); return <Badge variant={leadScoreVariant(s)} className={leadScoreClass(s)}>{s}</Badge>; })()}</TableCell><TableCell className="text-muted-foreground">{formatTimeAgo(lead.lastContact)}</TableCell>
                           <TableCell className="text-right"><Button size="sm" variant="ghost" data-testid={`button-call-${lead._id}`} onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "call" }); }}><Phone className="h-4 w-4" /></Button></TableCell>
                           <TableCell className="text-right"><Button size="sm" variant="ghost" data-testid={`button-sms-${lead._id}`} onClick={(e) => { e.stopPropagation(); setCallConfirm({ leadId: lead._id, type: "sms" }); }}><MessageSquare className="h-4 w-4" /></Button></TableCell>
                           <TableCell className="text-right"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" data-testid={`button-actions-${lead._id}`} onClick={(e) => e.stopPropagation()}><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead); }}>View Details</DropdownMenuItem><DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditLead(lead); }}>Edit Lead</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onClick={(e) => { e.stopPropagation(); confirmDeleteLead(lead); }} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
@@ -3660,7 +3888,7 @@ export default function Dashboard() {
                       <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => { setTestCallCampaign(campaign); setTestCallPhone(""); setTestCallResult(null); setIsTestCallOpen(true); }}><Phone className="mr-2 h-4 w-4" />Test Call</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onClick={() => { setSelectedCampaign(campaign); setEditCampaignForm({ name: campaign.name, goal: (campaign.goal as "sales" | "support" | "survey" | "appointment") || "sales", script: campaign.script, voice: campaign.voice, additionalContext: campaign.additionalContext || "", callingHours: campaign.callingHours || { start: "09:00", end: "17:00" }, status: (campaign.status as "Active" | "Paused" | "Draft") || "Draft", knowledgeBaseFiles: campaign.knowledgeBaseFiles || [], startDate: campaign.startDate || "", endDate: campaign.endDate || "" }); setIsEditCampaignOpen(true); }}>Edit Campaign</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => setDeleteConfirm({ type: "campaign", id: (campaign as any)._id, name: campaign.name })}>Delete Campaign</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
                     </CardHeader>
                     <CardContent className="pb-2"><p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{campaign.script}</p><div className="flex items-center gap-4 mt-4"><div className="flex flex-col"><span className="text-2xl font-bold">{leads.filter(l => l.campaignId === campaign._id).length}</span><span className="text-[10px] text-muted-foreground uppercase font-bold">Leads</span></div><div className="flex flex-col"><span className="text-2xl font-bold">{leads.filter(l => l.campaignId === campaign._id && l.status === 'Interested').length}</span><span className="text-[10px] text-muted-foreground uppercase font-bold">Interested</span></div></div></CardContent>
-                    <CardFooter className="pt-2 border-t flex items-center justify-between bg-muted/5"><Badge variant={campaign.status === "Active" ? "default" : "secondary"}>{campaign.status}</Badge><div className="flex items-center gap-2"><Button variant="ghost" size="icon" className="h-8 w-8">{campaign.status === "Active" ? <X className="h-4 w-4" /> : <Play className="h-4 w-4" />}</Button></div></CardFooter>
+                    <CardFooter className="pt-2 border-t flex items-center justify-between bg-muted/5"><Badge variant={campaign.status === "Active" ? "default" : "secondary"}>{campaign.status}</Badge><div className="flex items-center gap-2"><Button variant="ghost" size="icon" className="h-8 w-8" title={campaign.status === "Active" ? "Pause campaign" : "Start campaign"} onClick={() => handleToggleCampaignStatus(campaign)}>{campaign.status === "Active" ? <X className="h-4 w-4" /> : <Play className="h-4 w-4" />}</Button></div></CardFooter>
                   </Card>
                 ))}
               </div>

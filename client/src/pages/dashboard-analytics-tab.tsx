@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import type { Lead, Campaign, Appointment } from "@shared/schema";
 import {
   PhoneCall, PhoneIncoming, Target, CalendarDays, Timer, Activity, TrendingUp,
@@ -148,36 +149,36 @@ export default function DashboardAnalyticsTab({
   if (inactiveUsers > 0) adminInsights.push(`${inactiveUsers} user${inactiveUsers > 1 ? "s" : ""} with inactive/no subscription. Review for re-engagement.`);
   if (adminInsights.length === 0) adminInsights.push("All users are active and subscribed. Great platform health!");
 
-  // ── Monthly channel data (representative series) ──────────────────────────
-  const wpMonthlyData = [
-    { m:"Jan", sent:3200, delivered:3010, replies:620 },
-    { m:"Feb", sent:3800, delivered:3570, replies:740 },
-    { m:"Mar", sent:4100, delivered:3860, replies:810 },
-    { m:"Apr", sent:3700, delivered:3480, replies:690 },
-    { m:"May", sent:4500, delivered:4230, replies:930 },
-    { m:"Jun", sent:5200, delivered:4890, replies:1080 },
-    { m:"Jul", sent:5800, delivered:5460, replies:1230 },
-    { m:"Aug", sent:6100, delivered:5740, replies:1290 },
-    { m:"Sep", sent:5600, delivered:5270, replies:1150 },
-    { m:"Oct", sent:6400, delivered:6020, replies:1380 },
-    { m:"Nov", sent:7200, delivered:6780, replies:1560 },
-    { m:"Dec", sent:8100, delivered:7620, replies:1740 },
-  ];
+  // ── Monthly channel data — fetched from real credit usage records ──────────
+  const EMPTY_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    .map(m => ({ m, whatsapp: 0, sms: 0 }));
 
-  const smsMonthlyData = [
-    { m:"Jan", sent:5100, delivered:4960, failed:140, clicks:720 },
-    { m:"Feb", sent:6200, delivered:6020, failed:180, clicks:870 },
-    { m:"Mar", sent:7100, delivered:6890, failed:210, clicks:1020 },
-    { m:"Apr", sent:6500, delivered:6310, failed:190, clicks:930 },
-    { m:"May", sent:8200, delivered:7960, failed:240, clicks:1180 },
-    { m:"Jun", sent:9400, delivered:9130, failed:270, clicks:1350 },
-    { m:"Jul", sent:10200, delivered:9900, failed:300, clicks:1460 },
-    { m:"Aug", sent:11000, delivered:10680, failed:320, clicks:1580 },
-    { m:"Sep", sent:9800, delivered:9510, failed:290, clicks:1410 },
-    { m:"Oct", sent:12100, delivered:11750, failed:350, clicks:1740 },
-    { m:"Nov", sent:13500, delivered:13110, failed:390, clicks:1940 },
-    { m:"Dec", sent:15200, delivered:14760, failed:440, clicks:2180 },
-  ];
+  const [rawMonthlyUsage, setRawMonthlyUsage] = useState<Array<{ m: string; whatsapp: number; sms: number }>>(EMPTY_MONTHS);
+
+  useEffect(() => {
+    const year = new Date().getFullYear();
+    fetch(`/api/analytics/monthly-usage?year=${year}`, { credentials: "include" })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data: Array<{ m: string; whatsapp: number; sms: number }>) => {
+        if (Array.isArray(data) && data.length === 12) setRawMonthlyUsage(data);
+      })
+      .catch(() => { /* leave zeros */ });
+  }, []);
+
+  const wpMonthlyData = rawMonthlyUsage.map(d => ({
+    m: d.m,
+    sent: d.whatsapp,
+    delivered: 0,   // delivery status not tracked
+    replies: 0,     // reply tracking not available
+  }));
+
+  const smsMonthlyData = rawMonthlyUsage.map(d => ({
+    m: d.m,
+    sent: d.sms,
+    delivered: 0,   // delivery status not tracked
+    failed: 0,      // failure tracking not available
+    clicks: 0,      // click tracking not available
+  }));
 
   const tooltipStyle = { backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", borderRadius: "8px" };
   const tickStyle = { fill: "hsl(var(--muted-foreground))", fontSize: 11 };

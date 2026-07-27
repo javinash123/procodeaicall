@@ -9,7 +9,7 @@ import session from "express-session";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { generateCallScript, testOpenAI, generateAIResponse } from "./openaiService";
+import { generateCallScript, testOpenAI, generateAIResponse, generateTextResponse } from "./openaiService";
 import { makeExotelCall, getWssUrl, terminateExotelCall } from "./exotelService";
 import { phoneCallMap, callSidMap, callCreditTimers, normalizePhone } from "./callMap";
 import { getV2Coordinator } from "./voice-engine/migration/CoordinatorBootstrap";
@@ -938,6 +938,49 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       res.json(logs);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Generate AI-powered dashboard insights
+  app.post("/api/insights", requireAuth, async (req, res) => {
+    try {
+      const {
+        totalLeads, interestedLeads, followUpLeads, closedLeads,
+        activeCampaigns, totalCampaigns, todaysCalls, totalCalls,
+        upcomingAppointments, topCampaign,
+      } = req.body;
+
+      const prompt = `You are an expert sales analytics AI. Based on the following CRM metrics, generate exactly 4 concise, actionable insights for a sales team. Each insight must be 1-2 sentences, specific to the numbers given, and focus on a distinct aspect (conversion, follow-up, activity, or performance). Return a JSON array of 4 strings only — no keys, no markdown, no extra text.
+
+Metrics:
+- Total leads: ${totalLeads}
+- Interested leads: ${interestedLeads} (${totalLeads > 0 ? Math.round(interestedLeads / totalLeads * 100) : 0}% conversion)
+- Leads needing follow-up: ${followUpLeads}
+- Closed deals: ${closedLeads}
+- Active campaigns: ${activeCampaigns} of ${totalCampaigns} total
+- Calls today: ${todaysCalls}
+- Total calls logged: ${totalCalls}
+- Upcoming appointments: ${upcomingAppointments}
+${topCampaign ? `- Top campaign: "${topCampaign.name}" with ${topCampaign.closed} closed leads` : ""}
+
+Return only a JSON array like: ["insight 1","insight 2","insight 3","insight 4"]`;
+
+      const raw = await generateTextResponse(prompt);
+      // Parse the JSON array — strip any accidental markdown fences
+      const cleaned = raw.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim();
+      let insights: string[];
+      try {
+        insights = JSON.parse(cleaned);
+        if (!Array.isArray(insights)) throw new Error("not an array");
+        insights = insights.filter(s => typeof s === "string").slice(0, 5);
+      } catch {
+        // Fallback: split on newlines if JSON parse fails
+        insights = cleaned.split(/\n+/).filter(l => l.trim().length > 10).slice(0, 4);
+      }
+
+      res.json({ insights });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to generate insights" });
     }
   });
 
@@ -1939,6 +1982,36 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       }));
 
       res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ── Monthly channel usage — count of credit-deduction records per type per month ──
+  // Used by the Analytics tab WP/SMS performance charts.
+  app.get("/api/analytics/monthly-usage", requireAuth, async (req, res) => {
+    try {
+      const year  = parseInt((req.query.year  as string) ?? String(new Date().getFullYear()));
+      const start = new Date(year, 0, 1);
+      const end   = new Date(year, 11, 31, 23, 59, 59, 999);
+
+      const records = await CreditUsageModel.find({
+        userId:    new mongoose.Types.ObjectId(req.session.userId!),
+        createdAt: { $gte: start, $lte: end },
+        amount:    { $lt: 0 },
+      }).lean();
+
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const byMonth: Record<number, { whatsapp: number; sms: number }> = {};
+      for (let i = 0; i < 12; i++) byMonth[i] = { whatsapp: 0, sms: 0 };
+
+      for (const r of records as any[]) {
+        const m = new Date(r.createdAt).getMonth();
+        if      (r.type === "whatsapp") byMonth[m].whatsapp++;
+        else if (r.type === "sms")      byMonth[m].sms++;
+      }
+
+      res.json(months.map((m, i) => ({ m, whatsapp: byMonth[i].whatsapp, sms: byMonth[i].sms })));
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
