@@ -11,6 +11,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { generateCallScript, testOpenAI, generateAIResponse, generateTextResponse } from "./openaiService";
+import { SYSTEM_FEATURES } from "@shared/features";
 import { makeExotelCall, getWssUrl, terminateExotelCall } from "./exotelService";
 import { phoneCallMap, callSidMap, callCreditTimers, normalizePhone } from "./callMap";
 import { getV2Coordinator } from "./voice-engine/migration/CoordinatorBootstrap";
@@ -84,19 +85,70 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Public runtime config — safe to expose (public keys only, no secrets)
+  app.get("/api/config", (_req, res) => {
+    res.json({
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID || "",
+    });
+  });
+
   // Session middleware MUST be registered BEFORE routes
   if (!process.env.SESSION_SECRET) {
     throw new Error("SESSION_SECRET environment variable is required");
   }
 
-  // Secure cookie logic:
-  //   - In dev: never secure (plain HTTP)
-  //   - In production: secure by default, but can be overridden with COOKIE_SECURE=false
-  //     (useful on EC2 when running HTTP-only without a TLS terminator, or during
-  //     initial setup before SSL is configured).
+  // In production, MongoDB-backed sessions are required.
+  // MemoryStore silently breaks under PM2 cluster mode and loses sessions on
+  // every restart — it must never be used in production.
+  if (process.env.NODE_ENV === "production" && !process.env.MONGODB_URI) {
+    throw new Error(
+      "MONGODB_URI environment variable is required in production. " +
+      "Without it sessions fall back to MemoryStore, which breaks under " +
+      "PM2 cluster mode and loses all sessions on restart."
+    );
+  }
+
+  // -----------------------------------------------------------------------
+  // NGINX SSL TERMINATION FIX
+  //
+  // express-session's internal issecure() checks the X-Forwarded-Proto
+  // request header directly. If nginx doesn't forward that header,
+  // issecure() returns false and express-session silently skips writing
+  // the Set-Cookie response header entirely — meaning no session cookie
+  // is ever delivered to the browser, so every request looks like a fresh
+  // unauthenticated visit (401 on all protected routes).
+  //
+  // Fix: in production, if the header is absent, inject it as 'https'.
+  // This is safe because nginx enforces the HTTP→HTTPS redirect, so
+  // Express only ever sees traffic that arrived over HTTPS.
+  // -----------------------------------------------------------------------
+  if (process.env.NODE_ENV === "production") {
+    app.use((req: Request, _res: Response, next: Function) => {
+      if (!req.headers["x-forwarded-proto"]) {
+        req.headers["x-forwarded-proto"] = "https";
+      }
+      next();
+    });
+  }
+
+  // Secure cookie: always true in production (nginx handles HTTP→HTTPS).
+  // Can be overridden with COOKIE_SECURE=false during initial HTTP-only setup.
   const cookieSecure =
     process.env.NODE_ENV === "production" &&
     process.env.COOKIE_SECURE !== "false";
+
+  const sessionStore = process.env.MONGODB_URI
+    ? MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        collectionName: "sessions",
+        ttl: 60 * 60 * 24 * 7, // 1 week in seconds (matches cookie maxAge)
+        touchAfter: 24 * 3600,  // only update the session once per 24h unless data changed
+      })
+    : undefined;
+
+  // Log session config at startup so EC2 logs show exactly what's happening
+  console.log(`[session] store=${process.env.MONGODB_URI ? "MongoDB (connect-mongo)" : "MemoryStore (dev only)"}`);
+  console.log(`[session] cookie.secure=${cookieSecure} NODE_ENV=${process.env.NODE_ENV}`);
 
   app.use(
     session({
@@ -104,17 +156,8 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       resave: false,
       saveUninitialized: false,
       name: "aiagent.sid",
-      rolling: true, // Refresh cookie expiry on each request
-      // MongoDB-backed store: sessions survive server restarts.
-      // Falls back to in-memory if MONGODB_URI is not set (local dev without DB).
-      store: process.env.MONGODB_URI
-        ? MongoStore.create({
-            mongoUrl: process.env.MONGODB_URI,
-            collectionName: "sessions",
-            ttl: 60 * 60 * 24 * 7, // 1 week in seconds (matches cookie maxAge)
-            touchAfter: 24 * 3600,  // only update the session once per 24h unless data changed
-          })
-        : undefined,
+      rolling: true,
+      store: sessionStore,
       cookie: {
         secure: cookieSecure,
         httpOnly: true,
@@ -142,50 +185,61 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     return new Date(user.subscription.renewalDate) < new Date();
   }
 
-  // One-time migration: fix "Call Suport" typo → "Call Support" in all plan documents
+  // ---------------------------------------------------------------------------
+  // Startup migration: convert any plans that still store old human-readable
+  // feature names (e.g. "Basic CRM") to the canonical system keys ("crm").
+  // This runs once at boot and is a no-op after the first successful run.
+  // ---------------------------------------------------------------------------
   (async () => {
+    const OLD_TO_KEY: Record<string, string> = {
+      "Basic CRM": "crm",
+      "AI Agent Call": "campaigns",
+      "Scheduling": "calendar",
+      "Bulk WhatsApp": "whatsapp",
+      "Bulk SMS": "bulk_sms",
+      "Call Support": "call_history",
+      "Call Suport": "call_history", // typo variant
+      "Analytics": "analytics",
+    };
+    const validKeys = SYSTEM_FEATURES.map((f) => f.key);
     try {
-      const result = await PlanModel.updateMany(
-        { features: "Call Suport" },
-        { $set: { "features.$[elem]": "Call Support" } },
-        { arrayFilters: [{ "elem": "Call Suport" }] }
-      );
-      if (result.modifiedCount > 0) {
-        console.log(`[Migration] Fixed "Call Suport" typo in ${result.modifiedCount} plan(s).`);
+      const plans = await storage.getPlans();
+      for (const plan of plans as any[]) {
+        const raw: string[] = plan.features || [];
+        // Convert any old names; leave existing valid keys untouched
+        const migrated = Array.from(
+          new Set(
+            raw.map((f) => ((validKeys as string[]).includes(f) ? f : (OLD_TO_KEY[f] ?? null)))
+               .filter((k): k is string => k !== null)
+          )
+        );
+        const changed = JSON.stringify(raw.slice().sort()) !== JSON.stringify(migrated.slice().sort());
+        if (changed) {
+          await PlanModel.updateOne({ _id: plan._id }, { $set: { features: migrated } });
+          console.log(`[Migration] Plan "${plan.name}": features migrated to keys`, migrated);
+        }
       }
     } catch (e) {
-      console.error("[Migration] Failed to fix Call Suport typo:", e);
+      console.error("[Migration] Feature key migration failed:", e);
     }
   })();
 
-  // Map human-readable plan feature names (stored in DB) → system feature keys (used by gates)
-  const PLAN_FEATURE_NAME_TO_KEY: Record<string, string> = {
-    "Basic CRM": "crm",
-    "AI Agent Call": "campaigns",
-    "Scheduling": "calendar",
-    "Bulk WhatsApp": "whatsapp",
-    "Bulk SMS": "bulk_sms",
-    "Call Support": "call_history",
-    "Analytics": "analytics",
-  };
-
-  // Helper: resolve a user's plan feature keys from their subscription
+  // Helper: resolve a user's plan feature keys from their subscription.
+  // Plans now store feature KEYS directly (e.g. "crm", "campaigns").
+  // No translation table needed.
   async function getUserPlanFeatures(userId: string): Promise<string[]> {
     try {
       const user = await storage.getUser(userId);
       if (!user) return [];
       if (user.role === "admin") return ["*"];
       if (!user.subscription?.plan) return [];
-      // Block features if subscription is expired
       if (isSubscriptionExpired(user)) return [];
       const plans = await storage.getPlans();
       const plan = plans.find((p: any) => p.name === user.subscription?.plan && p.isActive !== false);
       if (!plan) return [];
-      // Convert human-readable feature names to system feature keys
-      const rawFeatures: string[] = (plan.features as string[]) || [];
-      return rawFeatures
-        .map((f) => PLAN_FEATURE_NAME_TO_KEY[f] ?? null)
-        .filter((k): k is string => k !== null);
+      // Features are now stored as system keys — return them directly.
+      const validKeys = SYSTEM_FEATURES.map((f) => f.key);
+      return ((plan.features as string[]) || []).filter((k) => (validKeys as string[]).includes(k));
     } catch {
       return [];
     }
@@ -1774,46 +1828,10 @@ Return only a JSON array like: ["insight 1","insight 2","insight 3","insight 4"]
     }
   });
 
-  // Get all features
-  app.get("/api/features", async (req, res) => {
-    try {
-      const features = await storage.getFeatures();
-      res.json({ features });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  // Create feature (admin only)
-  app.post("/api/features", requireAuth, async (req, res) => {
-    try {
-      const user = await storage.getUser(req.session.userId!);
-      if (user?.role !== "admin") {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      const data = insertFeatureSchema.parse(req.body);
-      const feature = await storage.createFeature(data);
-      res.status(201).json({ feature });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  });
-
-  // Delete feature (admin only)
-  app.delete("/api/features/:id", requireAuth, async (req, res) => {
-    try {
-      const user = await storage.getUser(req.session.userId!);
-      if (user?.role !== "admin") {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      const success = await storage.deleteFeature(req.params.id);
-      if (!success) {
-        return res.status(404).json({ message: "Feature not found" });
-      }
-      res.json({ message: "Feature deleted successfully" });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
+  // Get system features — returns the hardcoded SYSTEM_FEATURES list from code.
+  // Features are no longer stored in the database; the code is the source of truth.
+  app.get("/api/features", (_req, res) => {
+    res.json({ features: SYSTEM_FEATURES });
   });
 
   // Admin assign plan to a user

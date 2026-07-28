@@ -1,4 +1,4 @@
-import type { User, InsertUser, Lead, InsertLead, Campaign, InsertCampaign, Appointment, InsertAppointment, Plan, Feature, InsertPlan, InsertFeature } from "@shared/schema";
+import type { User, InsertUser, Lead, InsertLead, Campaign, InsertCampaign, Appointment, InsertAppointment, Plan, InsertPlan } from "@shared/schema";
 
 const getApiBase = () => {
   return '/api';
@@ -476,32 +476,9 @@ export const plansApi = {
   },
 };
 
-// Features API
-export const featuresApi = {
-  getAll: async (): Promise<Feature[]> => {
-    try {
-      const response = await fetch(`${API_BASE}/features`, {
-        credentials: "include",
-      });
-      const data = await handleResponse<{ features: Feature[] }>(response);
-      return data.features || [];
-    } catch (error) {
-      console.error("Error fetching features:", error);
-      return [];
-    }
-  },
-
-  create: async (data: InsertFeature): Promise<Feature> => {
-    const response = await fetch(`${API_BASE}/features`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      credentials: "include",
-    });
-    const result = await handleResponse<{ feature: Feature }>(response);
-    return result.feature;
-  },
-};
+// Features are now code-defined constants in @shared/features (SYSTEM_FEATURES).
+// The /api/features endpoint still exists and returns the same list, but there
+// is no need to create or delete features through the API anymore.
 
 // Notifications API
 export const notificationsApi = {

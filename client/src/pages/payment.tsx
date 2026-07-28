@@ -79,7 +79,7 @@ export default function Payment() {
     }
 
     const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_placeholder",
+      key: (window as any).__RAZORPAY_KEY__ || "",
       amount: plan.price * 100,
       currency: "INR",
       name: "NIJVOX",

@@ -1,0 +1,25 @@
+# NIJVOX — systemd service file
+# Place at: /etc/systemd/system/nijvox.service
+# Then run:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable nijvox
+#   sudo systemctl start nijvox
+
+[Unit]
+Description=NIJVOX AI Calling Platform
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/nijvox
+EnvironmentFile=/home/ec2-user/nijvox/.env
+ExecStart=/usr/bin/node dist/index.cjs
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nijvox
+
+[Install]
+WantedBy=multi-user.target

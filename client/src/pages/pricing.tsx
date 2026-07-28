@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { type Plan, type Feature } from "@shared/schema";
+import { type Plan } from "@shared/schema";
+import { SYSTEM_FEATURES } from "@shared/features";
 import { Check, X, Loader2, Phone, MessageSquare, MessageCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -19,18 +20,16 @@ export default function Pricing() {
   const { data: plansResponse, isLoading: plansLoading } = useQuery<{ plans: Plan[] } | Plan[]>({ 
     queryKey: ["/api/plans"],
   });
-  const { data: featuresResponse, isLoading: featuresLoading } = useQuery<{ features: Feature[] } | Feature[]>({ 
-    queryKey: ["/api/features"],
-  });
 
   const plans = Array.isArray(plansResponse) ? plansResponse : (plansResponse && 'plans' in plansResponse ? plansResponse.plans : []);
-  const features = Array.isArray(featuresResponse) ? featuresResponse : (featuresResponse && 'features' in featuresResponse ? featuresResponse.features : []);
+  // Features are code-defined constants — no API fetch needed
+  const features = SYSTEM_FEATURES;
 
   const handleGetStarted = (planId: string) => {
     setLocation(`/register?plan=${planId}`);
   };
 
-  if (plansLoading || featuresLoading) {
+  if (plansLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -112,12 +111,13 @@ export default function Pricing() {
                   </TableRow>
 
                   {features.map((feature) => (
-                    <TableRow key={feature._id} className="hover:bg-muted/30 border-b">
+                    <TableRow key={feature.key} className="hover:bg-muted/30 border-b">
                       <TableCell className="py-4">
-                        <div className="font-medium">{feature.name}</div>
+                        <div className="font-medium">{feature.label}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{feature.description}</div>
                       </TableCell>
                       {plans.map((plan) => {
-                        const hasFeature = plan.features?.includes(feature.name);
+                        const hasFeature = (plan.features as string[] | undefined)?.includes(feature.key);
                         return (
                           <TableCell key={plan._id} className="text-center py-4">
                             {hasFeature ? (

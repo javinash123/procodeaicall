@@ -1,0 +1,52 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+[session] store=MongoDB (connect-mongo)
+[session] cookie.secure=false NODE_ENV=development
+10:53:44 AM [ws] WebSocket server ready on path /stream
+10:53:44 AM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+[Migration] Plan "Basic": features migrated to keys [ [32m'campaigns'[39m, [32m'whatsapp'[39m, [32m'bulk_sms'[39m, [32m'crm'[39m ]
+[Migration] Plan "Advanced": features migrated to keys [ [32m'campaigns'[39m, [32m'whatsapp'[39m, [32m'bulk_sms'[39m, [32m'crm'[39m, [32m'analytics'[39m ]
+[Migration] Plan "Enterprise": features migrated to keys [
+  [32m'campaigns'[39m,
+  [32m'bulk_sms'[39m,
+  [32m'analytics'[39m,
+  [32m'calendar'[39m,
+  [32m'call_history'[39m,
+  [32m'crm'[39m,
+  [32m'whatsapp'[39m
+]
+10:53:45 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+10:53:47 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+10:53:47 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:53:51 AM [express] GET /api/config 200 in 39ms :: {"razorpayKeyId":""}
+10:53:51 AM [express] GET /api/auth/me 401 in 6ms :: {"message":"Unauthorized","redirectTo":"/login"}
+10:53:57 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://127.0.0.1:5000 host=127.0.0.1:5000
+10:53:57 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:53:58 AM [express] GET /api/config 304 in 2ms :: {"razorpayKeyId":""}
+10:53:58 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/admin"}
+10:53:58 AM [express] GET /api/plans 200 in 7ms :: {"plans":[{"_id":"695e82f9b48e9a1c9f4f1b37","name":"Basic","price":0,"duration":"monthly","credits":1000,"features":["campaigns","whatsapp","bulk_sms","crm"],"limitations":[],"description":"For solo founders and small tests.","isActive":true,"createdAt":"2026-01-07T15:59:53.348Z","__v":0,"callingRate":2,"smsRate":1,"whatsappRate":1},{"_id":"695eb7794f11809159eb070a","name":"Advanced","price":2500,"duration":"monthly","credits":2000,"features":["campaigns","whatsapp","bulk_sms","crm","analytics"],"limitations":[],"description":"For growing sales teams.","isActive":true,"createdAt":"2026-01-07T19:43:53.845Z","__v":0,"callingRate":1.5,"smsRate":0.75,"whatsappRate":0.75},{"_id":"695eb7964f11809159eb070e","name":"Enterprise","price":5000,"duration":"monthly","credits":5000,"features":["campaigns","bulk_sms","analytics","calendar","call_history","crm","whatsapp"],"limitations":[],"description":"For large organizations.","isActive":true,"createdAt":"2026-01-07T19:44:22.609Z","__v":0,"callingRate":1,"smsRate":0.5,"whatsappRate":0.5},{"_id":"69b1238d6281153915bbe707","name":"Basic","price":0,"duration":"monthly","credits":0,"callingRate":0,"smsRate":0,"whatsappRate":0,"features":[],"limitations":[],"description":"","isActive":true,"createdAt":"2026-03-11T08:10:53.466Z","__v":0}]}

@@ -58,7 +58,7 @@ export default function BuyCreditsDialog({ plan, onSuccess }: BuyCreditsDialogPr
     }
 
     const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_placeholder",
+      key: (window as any).__RAZORPAY_KEY__ || "",
       amount: Math.round(totalAmount * 100), // paise
       currency: "INR",
       name: "NIJVOX",

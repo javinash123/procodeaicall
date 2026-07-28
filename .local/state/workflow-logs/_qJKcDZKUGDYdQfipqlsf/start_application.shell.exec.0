@@ -1,0 +1,251 @@
+[1G[0K⠙[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K⠙[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+[session] store=MongoDB (connect-mongo)
+[session] cookie.secure=false NODE_ENV=development COOKIE_SECURE=(not set)
+8:44:02 AM [ws] WebSocket server ready on path /stream
+8:44:02 AM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+8:44:03 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+8:44:07 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+8:44:07 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+8:44:12 AM [express] GET /api/config 200 in 2ms :: {"razorpayKeyId":""}
+8:44:13 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+9:49:39 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+9:49:39 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+9:49:40 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+9:49:40 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+9:49:40 AM [express] GET /api/config 200 in 1ms :: {"razorpayKeyId":""}
+9:49:40 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:50:37 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/admin-plans.tsx[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:51:03 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/lib/auth.tsx, /src/pages/bulk-whatsapp.tsx, /src/pages/auth.tsx, /src/pages/dashboard.tsx[22m
+[2m10:51:05 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/lib/auth.tsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m10:51:05 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/pages/admin-login.tsx, /src/pages/notifications.tsx, /src/pages/bulk-whatsapp.tsx, /src/pages/payment.tsx, /src/pages/auth.tsx, /src/pages/dashboard.tsx, /src/components/feature-gate.tsx[22m
+10:51:07 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:51:22 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/pricing.tsx[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:51:23 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/lib/auth.tsx, /src/pages/bulk-whatsapp.tsx, /src/pages/auth.tsx, /src/pages/dashboard.tsx[22m
+[2m10:51:24 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/lib/auth.tsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m10:51:24 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/pages/admin-login.tsx, /src/pages/notifications.tsx, /src/pages/bulk-whatsapp.tsx, /src/pages/payment.tsx, /src/pages/auth.tsx, /src/pages/dashboard.tsx, /src/components/feature-gate.tsx[22m
+10:51:24 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:51:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/pricing.tsx[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:51:42 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/pricing.tsx[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:51:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/pricing.tsx[22m [33m(x3)[39m
+10:51:52 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://127.0.0.1:5000 host=127.0.0.1:5000
+10:51:52 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:51:53 AM [express] GET /api/config 200 in 4ms :: {"razorpayKeyId":""}
+10:51:53 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/admin"}
+10:51:53 AM [express] GET /api/plans 200 in 17ms :: {"plans":[{"_id":"695e82f9b48e9a1c9f4f1b37","name":"Basic","price":0,"duration":"monthly","credits":1000,"features":["AI Agent Call","Bulk WhatsApp","Bulk SMS","WhatsApp Chatbot","Basic CRM"],"limitations":[],"description":"For solo founders and small tests.","isActive":true,"createdAt":"2026-01-07T15:59:53.348Z","__v":0,"callingRate":2,"smsRate":1,"whatsappRate":1},{"_id":"695eb7794f11809159eb070a","name":"Advanced","price":2500,"duration":"monthly","credits":2000,"features":["AI Agent Call","Bulk WhatsApp","Bulk SMS","WhatsApp Chatbot","Basic CRM","Email Support","Analytics"],"limitations":[],"description":"For growing sales teams.","isActive":true,"createdAt":"2026-01-07T19:43:53.845Z","__v":0,"callingRate":1.5,"smsRate":0.75,"whatsappRate":0.75},{"_id":"695eb7964f11809159eb070e","name":"Enterprise","price":5000,"duration":"monthly","credits":5000,"features":["AI Agent Call","Bulk SMS","WhatsApp Chatbot","Analytics","Email Support","Scheduling","Call Support","Basic CRM","Brand Identity","Bulk WhatsApp"],"limitations":[],"description":"For large organizations.","isActive":true,"createdAt":"2026-01-07T19:44:22.609Z","__v":0,"callingRate":1,"smsRate":0.5,"whatsappRate":0.5},{"_id":"69b1238d6281153915bbe707","name":"Basic","price":0,"duration":"monthly","credits":0,"callingRate":0,"smsRate":0,"whatsappRate":0,"features":[],"limitations":[],"description":"","isActive":true,"createdAt":"2026-03-11T08:10:53.466Z","__v":0}]}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:52:37 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/admin-plans.tsx[22m
+10:53:12 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://127.0.0.1:5000 host=127.0.0.1:5000
+10:53:12 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:53:13 AM [express] GET /api/config 304 in 1ms :: {"razorpayKeyId":""}
+10:53:13 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/admin"}
+10:53:13 AM [express] GET /api/plans 304 in 10ms :: {"plans":[{"_id":"695e82f9b48e9a1c9f4f1b37","name":"Basic","price":0,"duration":"monthly","credits":1000,"features":["AI Agent Call","Bulk WhatsApp","Bulk SMS","WhatsApp Chatbot","Basic CRM"],"limitations":[],"description":"For solo founders and small tests.","isActive":true,"createdAt":"2026-01-07T15:59:53.348Z","__v":0,"callingRate":2,"smsRate":1,"whatsappRate":1},{"_id":"695eb7794f11809159eb070a","name":"Advanced","price":2500,"duration":"monthly","credits":2000,"features":["AI Agent Call","Bulk WhatsApp","Bulk SMS","WhatsApp Chatbot","Basic CRM","Email Support","Analytics"],"limitations":[],"description":"For growing sales teams.","isActive":true,"createdAt":"2026-01-07T19:43:53.845Z","__v":0,"callingRate":1.5,"smsRate":0.75,"whatsappRate":0.75},{"_id":"695eb7964f11809159eb070e","name":"Enterprise","price":5000,"duration":"monthly","credits":5000,"features":["AI Agent Call","Bulk SMS","WhatsApp Chatbot","Analytics","Email Support","Scheduling","Call Support","Basic CRM","Brand Identity","Bulk WhatsApp"],"limitations":[],"description":"For large organizations.","isActive":true,"createdAt":"2026-01-07T19:44:22.609Z","__v":0,"callingRate":1,"smsRate":0.5,"whatsappRate":0.5},{"_id":"69b1238d6281153915bbe707","name":"Basic","price":0,"duration":"monthly","credits":0,"callingRate":0,"smsRate":0,"whatsappRate":0,"features":[],"limitations":[],"description":"","isActive":true,"createdAt":"2026-03-11T08:10:53.466Z","__v":0}]}
+10:53:14 AM [ws] [upgrade] socket error on /vite-hmr: read ECONNRESET

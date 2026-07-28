@@ -1,0 +1,180 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+10:31:30 PM [ws] WebSocket server ready on path /stream
+10:31:30 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+10:31:30 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+10:31:33 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+10:31:33 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:31:36 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+10:31:42 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://127.0.0.1:5000 host=127.0.0.1:5000
+10:31:42 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:31:42 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:43:36 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/payment.tsx, /src/index.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:43:37 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/BuyCreditsDialog.tsx[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m10:44:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/main.tsx[22m
+10:44:04 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+10:44:04 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:44:05 PM [express] GET /api/config 200 in 7ms
+10:44:05 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Unauthorized","redirectTo":"/login"}
+10:58:35 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+10:58:35 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:58:35 PM [express] GET /api/config 200 in 5ms
+10:58:40 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+10:59:04 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+10:59:04 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:59:08 PM [express] GET /api/config 200 in 7ms
+10:59:09 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+10:59:39 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+10:59:39 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+10:59:43 PM [express] GET /api/config 200 in 5ms
+10:59:45 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:00:10 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:00:10 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:00:11 PM [express] GET /api/config 200 in 4ms
+11:00:13 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:00:50 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:00:50 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:00:58 PM [express] GET /api/config 200 in 5ms
+11:00:59 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:01:24 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:01:24 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:01:28 PM [express] GET /api/config 200 in 6ms
+11:01:29 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:02:01 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:02:01 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:02:05 PM [express] GET /api/config 200 in 5ms
+11:02:07 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:02:50 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:02:50 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:02:51 PM [express] GET /api/config 200 in 4ms
+11:02:51 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:03:26 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:03:26 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:03:27 PM [express] GET /api/config 200 in 5ms
+11:03:27 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:03:57 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:03:57 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:03:58 PM [express] GET /api/config 200 in 3ms
+11:03:59 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:04:30 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:04:30 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:04:31 PM [express] GET /api/config 200 in 11ms
+11:04:31 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:04:59 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:04:59 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:05:00 PM [express] GET /api/config 200 in 5ms
+11:05:01 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:05:38 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:05:38 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:05:40 PM [express] GET /api/config 200 in 5ms
+11:05:40 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:06:23 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:06:23 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:06:25 PM [express] GET /api/config 200 in 6ms
+11:06:25 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:06:52 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:06:52 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:06:53 PM [express] GET /api/config 200 in 3ms
+11:06:54 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:07:32 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:07:32 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:07:33 PM [express] GET /api/config 200 in 44ms
+11:07:34 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+11:09:47 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev host=86cef015-ff7f-4401-a158-6f6d8e9b2a5c-00-34s61uk6yalm8.pike.replit.dev
+11:09:47 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+11:10:04 PM [express] GET /api/config 200 in 5ms
+11:10:04 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
