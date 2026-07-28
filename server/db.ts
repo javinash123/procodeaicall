@@ -155,6 +155,7 @@ export const notificationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// ──────────────────────────────────────────────────────────────────────────────
 // Plan Model
 export const planSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -171,6 +172,7 @@ export const planSchema = new mongoose.Schema({
   description: String,
   isActive: { type: Boolean, default: true },
   selfBranding: { type: Boolean, default: false },
+  overviewLevel: { type: String, enum: ["basic", "intermediate", "advanced", "complete"], default: "basic" },
   createdAt: { type: Date, default: Date.now },
 });
 

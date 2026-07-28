@@ -17,7 +17,7 @@ import {
   Plus, Trash2, Loader2, Edit2, Search,
   ChevronLeft, ChevronRight, X, Users, Megaphone,
   Calendar, MessageCircle, MessageSquare, History, BarChart2,
-  CheckCircle2, LucideIcon,
+  CheckCircle2, LayoutDashboard, LucideIcon,
 } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -151,6 +151,59 @@ function PlanFormFields({
           </p>
         </div>
         <div className="space-y-2">
+          {/* Overview Dashboard Tier */}
+          <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 mb-4">
+            <FormField
+              control={form.control}
+              name="overviewLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center gap-2 mb-2">
+                    <LayoutDashboard className="h-4 w-4 text-primary" />
+                    <FormLabel className="text-sm font-medium text-primary">Dashboard Overview Level</FormLabel>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Controls how much of the Overview page this plan can see. Always included for all plans.
+                  </p>
+                  <Select onValueChange={field.onChange} value={field.value ?? "basic"}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select overview level" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="basic">
+                        <div className="flex flex-col text-left">
+                          <span className="font-medium">Basic</span>
+                          <span className="text-xs text-muted-foreground">Today's performance + stats grid only</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="intermediate">
+                        <div className="flex flex-col text-left">
+                          <span className="font-medium">Intermediate</span>
+                          <span className="text-xs text-muted-foreground">+ Channel sparklines, AI suggestions, activity feed, KPI row</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="advanced">
+                        <div className="flex flex-col text-left">
+                          <span className="font-medium">Advanced</span>
+                          <span className="text-xs text-muted-foreground">+ Campaign performance table, upcoming appointments</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="complete">
+                        <div className="flex flex-col text-left">
+                          <span className="font-medium">Complete</span>
+                          <span className="text-xs text-muted-foreground">Full overview: all charts, lead distribution, growth analytics</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           {SYSTEM_FEATURES.map((feature) => {
             const Icon = ICON_MAP[feature.icon] ?? CheckCircle2;
             const selected: string[] = form.watch("features") || [];
@@ -438,6 +491,7 @@ const DEFAULT_VALUES = {
   description: "",
   isActive: true,
   selfBranding: false,
+  overviewLevel: "basic" as const,
 };
 
 // ─── Main component ────────────────────────────────────────────────────────────
@@ -531,6 +585,7 @@ export default function AdminPlans() {
       description: plan.description || "",
       isActive: plan.isActive ?? true,
       selfBranding: plan.selfBranding ?? false,
+      overviewLevel: ((plan as any).overviewLevel || "basic") as "basic" | "intermediate" | "advanced" | "complete",
     });
     setEditLimInput("");
     setIsEditOpen(true);

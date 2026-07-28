@@ -120,6 +120,13 @@ export default function Dashboard() {
   // Role Detection
   const isAdmin = user?.role === "admin" || location.startsWith("/admin");
 
+  // Overview tier — controls which sections of the overview page are visible per plan
+  const ovTier: string = isAdmin ? "complete" : (user?.overviewLevel ?? "basic");
+  const tierAtLeast = (min: "basic" | "intermediate" | "advanced" | "complete") => {
+    const order = ["basic", "intermediate", "advanced", "complete"];
+    return order.indexOf(ovTier) >= order.indexOf(min);
+  };
+
   // Data State
   const [leads, setLeads] = useState<Lead[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -1889,7 +1896,7 @@ export default function Dashboard() {
               </Card>
 
               {/* ── Channel Performance Sparklines ──────────────────────────── */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {tierAtLeast("intermediate") && (<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
                   {
                     label: "AI Calls",
@@ -1939,7 +1946,7 @@ export default function Dashboard() {
                     </div>
                   </Card>
                 ))}
-              </div>
+              </div>)}
 
               {/* Stats Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1962,7 +1969,7 @@ export default function Dashboard() {
               </div>
 
               {/* ── AI Suggestions + Live Activity Feed ─────────────────────── */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {tierAtLeast("intermediate") && (<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* AI Suggestions */}
                 <Card className="hover-elevate border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
                   <CardHeader className="pb-3">
@@ -2037,7 +2044,7 @@ export default function Dashboard() {
                     )}
                   </CardContent>
                 </Card>
-              </div>
+              </div>)}
 
               {/* Admin Dashboard Charts */}
               {isAdmin && (<>
@@ -2597,6 +2604,7 @@ export default function Dashboard() {
 
               {!isAdmin && (
                 <>
+                  {tierAtLeast("intermediate") && (<>
                   {/* ── User: Secondary KPI Row ─────────────────────────────────────── */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <Card className="hover-elevate border-l-4 border-l-green-500">
@@ -2680,6 +2688,8 @@ export default function Dashboard() {
                     </CardContent>
                   </Card>
 
+                  </>)}
+                  {tierAtLeast("advanced") && (<>
                   {/* ── Campaign Performance Table ──────────────────────────────────── */}
                   <Card className="hover-elevate">
                     <CardHeader>
@@ -2796,7 +2806,8 @@ export default function Dashboard() {
                       </CardContent>
                     </Card>
                   </div>
-
+                  </>)}
+                  {tierAtLeast("complete") && (<>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card className="hover-elevate shadow-lg border-primary/10 overflow-hidden group">
                       <CardHeader className="flex flex-row items-center justify-between gap-4">
@@ -3022,12 +3033,14 @@ export default function Dashboard() {
                       </ResponsiveContainer>
                     </CardContent>
                   </Card>
+                  </>)}
                 </>
               )}
             </div>
           )}
 
           {activeTab === "callhistory" && !isAdmin && (
+            <FeatureGate featureKey="call_history">
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Call History</h1>
@@ -3138,9 +3151,11 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+            </FeatureGate>
           )}
 
           {activeTab === "crm" && !isAdmin && (
+             <FeatureGate featureKey="crm">
              <div className="space-y-6">
                <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Lead CRM</h1>
@@ -3886,6 +3901,7 @@ export default function Dashboard() {
 
           {/* Campaigns View */}
           {activeTab === "campaigns" && !isAdmin && (
+            <FeatureGate featureKey="campaigns">
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
@@ -3904,10 +3920,12 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
+            </FeatureGate>
           )}
 
           {/* Calendar View */}
           {activeTab === "calendar" && !isAdmin && (
+            <FeatureGate featureKey="calendar">
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
@@ -4575,6 +4593,7 @@ export default function Dashboard() {
           {/* ══ ANALYTICS TAB ═══════════════════════════════════════════════ */}
           {activeTab === "analytics" && (
             <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+              <FeatureGate featureKey="analytics">
               <DashboardAnalyticsTab
                 leads={leads}
                 campaigns={campaigns}
@@ -4583,6 +4602,7 @@ export default function Dashboard() {
                 registeredUsers={registeredUsers}
                 isAdmin={isAdmin}
               />
+              </FeatureGate>
             </Suspense>
           )}
         </div>

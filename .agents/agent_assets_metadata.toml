@@ -24,3 +24,9 @@ id = "a5KZivsDX8Gt5H4kU1JPn"
 uri = "file://nijvox-dist.tar.gz"
 type = "unspecified"
 title = "nijvox-dist.tar.gz — Session fix build"
+
+[[outputs]]
+id = "UBLYnTJ4jFqV_3yxF90To"
+uri = "file://nijvox-production.tar.gz"
+type = "unspecified"
+title = "NIJVOX Production Build"

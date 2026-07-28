@@ -27,6 +27,7 @@ export const insertPlanSchema = z.object({
   description: z.string().optional(),
   isActive: z.boolean().default(true),
   selfBranding: z.boolean().default(false),
+  overviewLevel: z.enum(["basic", "intermediate", "advanced", "complete"]).default("basic"),
 });
 
 export type InsertPlan = z.infer<typeof insertPlanSchema>;
@@ -82,6 +83,7 @@ export type User = Omit<InsertUser, "password"> & {
   dltHeaderId?: string;
   subscription?: SubscriptionInfo;
   planFeatures?: string[];
+  overviewLevel?: string;
   exotelConfig?: {
     apiKey: string;
     apiToken: string;

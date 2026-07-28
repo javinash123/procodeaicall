@@ -245,6 +245,21 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     }
   }
 
+  // Returns the overview tier level from the user's plan ("basic" | "intermediate" | "advanced" | "complete")
+  async function getUserOverviewLevel(userId: string): Promise<string> {
+    try {
+      const user = await storage.getUser(userId);
+      if (!user) return "basic";
+      if (user.role === "admin") return "complete";
+      if (!user.subscription?.plan || isSubscriptionExpired(user)) return "basic";
+      const plans = await storage.getPlans();
+      const plan = plans.find((p: any) => p.name === user.subscription?.plan && p.isActive !== false);
+      return (plan as any)?.overviewLevel || "basic";
+    } catch {
+      return "basic";
+    }
+  }
+
   // Feature-gate middleware factory — blocks API access if user's plan lacks the feature
   const requireFeature = (featureKey: string) => async (req: Request, res: Response, next: Function) => {
     if (!req.session?.userId) return res.status(401).json({ message: "Unauthorized" });
@@ -320,15 +335,16 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       req.session.userId = user._id;
       const { password: _, ...userWithoutPassword } = userWithPassword;
       
-      // Resolve plan features for this user
+      // Resolve plan features and overview tier for this user
       const planFeatures = await getUserPlanFeatures(user._id);
-      
+      const overviewLevel = await getUserOverviewLevel(user._id);
+
       // Explicitly save session before responding
       req.session.save((err) => {
         if (err) {
           return res.status(500).json({ message: "Session save failed" });
         }
-        res.json({ user: { ...userWithoutPassword, planFeatures } });
+        res.json({ user: { ...userWithoutPassword, planFeatures, overviewLevel } });
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -353,7 +369,8 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
         return res.status(404).json({ message: "User not found" });
       }
       const planFeatures = await getUserPlanFeatures(req.session.userId!);
-      res.json({ user: { ...user, planFeatures } });
+      const overviewLevel = await getUserOverviewLevel(req.session.userId!);
+      res.json({ user: { ...user, planFeatures, overviewLevel } });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
