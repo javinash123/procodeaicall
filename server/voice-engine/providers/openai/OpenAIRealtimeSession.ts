@@ -265,16 +265,17 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
           console.log('[AUDIT] session.update sent:\n' + JSON.stringify(sessionUpdateEvent, null, 2));
           this._sendEvent(sessionUpdateEvent);
 
-          // Greeting fallback: fire response.create after 1 s if session.updated
+          // Greeting fallback: fire response.create after 400 ms if session.updated
           // hasn't already triggered it.  This prevents a session.update error
           // (wrong field, rejected param, etc.) from silencing the entire call.
+          // Reduced from 1000 ms → 400 ms to beat Exotel's ~5 s inactivity timeout.
           setTimeout(() => {
             if (!this._greetingSent && this._ws?.readyState === WebSocket.OPEN && this._state === 'connected') {
-              console.log('[GREETING-FALLBACK] session.updated not received in 1s — firing greeting directly');
+              console.log('[GREETING-FALLBACK] session.updated not received in 400ms — firing greeting directly');
               this._greetingSent = true;
               this._sendEvent({ type: 'response.create' });
             }
-          }, 1000);
+          }, 400);
 
           resolve();
         }
@@ -614,11 +615,11 @@ export class OpenAIRealtimeSession implements IOpenAIRealtimeSession {
         this._emit({ type: 'realtime.session_updated', timestamp: ts, eventId: event.event_id, session: event.session });
         if (!this._greetingSent) {
           this._greetingSent = true;
-          setTimeout(() => {
-            if (this._ws?.readyState === WebSocket.OPEN && this._state === 'connected') {
-              this._sendEvent({ type: 'response.create' });
-            }
-          }, 250);
+          // Fire immediately — no delay needed; session.updated confirms the
+          // config was applied and the model is ready to respond.
+          if (this._ws?.readyState === WebSocket.OPEN && this._state === 'connected') {
+            this._sendEvent({ type: 'response.create' });
+          }
         }
         break;
       }

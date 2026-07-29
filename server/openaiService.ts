@@ -98,11 +98,25 @@ function replaceScriptVariables(text: string, lead: LeadData): string {
 
 /**
  * Short, permission-seeking greeting ONLY — single sentence.
- * No product, price, location, or reason for calling.
+ * Personalised to the campaign name/goal but does NOT pitch the product yet.
  */
 export async function generateGreeting(campaignData: CampaignData): Promise<string> {
-  const { goal } = campaignData;
+  const { goal, name: campaignName, additionalContext, script } = campaignData;
   const isSupport = (goal || "").toLowerCase().includes("support");
+
+  // Extract agent name from script if present (e.g. "Hi, I am Amit calling from…")
+  let agentName = "Alex";
+  if (script) {
+    const m = script.match(/(?:I am|I'm|this is)\s+([A-Z][a-zA-Z]+)\s+(?:calling|from)/i);
+    if (m?.[1]) agentName = m[1];
+  }
+
+  // Build a compact campaign context hint for the model
+  const contextHint = [
+    campaignName ? `Campaign: ${campaignName}` : null,
+    additionalContext ? `Context: ${additionalContext.substring(0, 120)}` : null,
+    goal ? `Goal: ${goal}` : null,
+  ].filter(Boolean).join(" | ");
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -112,19 +126,18 @@ export async function generateGreeting(campaignData: CampaignData): Promise<stri
         content: `Write ONE sentence spoken by an AI phone agent at the very start of an outbound call.
 
 RULES (failure to follow any rule = wrong answer):
-- One sentence ONLY. Introduce yourself with a first name + ask for a moment of time.
-- Do NOT mention the product, service, price, location, company name, or reason for calling.
-- Do NOT say more than one sentence. No second clause about anything else.
-- Keep it under 12 words total.
+- One sentence ONLY. Introduce yourself as "${agentName}" and ask for a moment of time.
+- Do NOT mention the product, service, price, or specific reason for calling yet.
+- Keep it natural, friendly, and under 15 words.
 - Examples of correct output:
-    Hi, this is Sarah — do you have a quick minute?
-    Hey, this is James — is now a good time?
-    Hi, this is Alex — got a moment to chat?
+    Hi, this is ${agentName} — do you have a quick minute?
+    Hey, this is ${agentName} — is now a good time to chat?
+    Hi, this is ${agentName} — got a moment?
 - Output ONLY the spoken sentence, no quotes.`,
       },
       {
         role: "user",
-        content: isSupport ? "support call" : "sales call",
+        content: contextHint || (isSupport ? "support call" : "sales call"),
       },
     ],
     max_tokens: 30,
@@ -133,7 +146,7 @@ RULES (failure to follow any rule = wrong answer):
 
   return (
     response.choices[0]?.message?.content?.trim() ||
-    "Hi, this is Sarah — do you have a quick minute?"
+    `Hi, this is ${agentName} — do you have a quick minute?`
   );
 }
 

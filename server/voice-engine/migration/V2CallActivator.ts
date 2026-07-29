@@ -166,64 +166,60 @@ export async function activateV2Session(ctx: SessionContext): Promise<IRuntimeIn
         scriptCompanyName = raw && raw !== scriptAgentName ? raw : null;
       }
 
-      // ── User (agent) data ────────────────────────────────────────────────────
-      // Priority: campaign.agentName → script extraction → user.firstName → 'Alex'
+      // ── User (agent) + Caller (lead) data — fetched in parallel ────────────────
+      // Parallelising these two DB calls shaves ~200-600 ms from activation time,
+      // which is critical for beating Exotel's ~5 s first-audio timeout.
       let agentName   = (c.agentName as string | undefined)?.trim() || scriptAgentName || 'Alex';
-      // Priority: user.companyName → script extraction → campaign name → 'NIJVOX'
       let companyName = scriptCompanyName || campaignName || 'NIJVOX';
-      try {
-        const userId = c.userId?.toString?.() || '';
-        if (userId) {
-          const user = await storage.getUser(userId);
-          if (user) {
-            agentName   = (c.agentName as string | undefined)?.trim()
-                       || scriptAgentName
-                       || (user as any).firstName?.trim()
-                       || agentName;
-            companyName = (user as any).companyName?.trim()
-                       || scriptCompanyName
-                       || campaignName
-                       || 'NIJVOX';
-          }
-        }
-      } catch (userErr) {
-        logger.warn('Could not load user data — using defaults', { error: String(userErr) });
+      let callerMeta: CallerMetadata | undefined;
+
+      const userId = c.userId?.toString?.() || '';
+      const [userResult, leadsResult] = await Promise.allSettled([
+        userId ? storage.getUser(userId) : Promise.resolve(null),
+        (userId && ctx.phone) ? storage.getLeads(userId, ctx.campaignId) : Promise.resolve([]),
+      ]);
+
+      // Apply user result
+      if (userResult.status === 'fulfilled' && userResult.value) {
+        const user = userResult.value as any;
+        agentName   = (c.agentName as string | undefined)?.trim()
+                   || scriptAgentName
+                   || user.firstName?.trim()
+                   || agentName;
+        companyName = user.companyName?.trim()
+                   || scriptCompanyName
+                   || campaignName
+                   || 'NIJVOX';
+      } else if (userResult.status === 'rejected') {
+        logger.warn('Could not load user data — using defaults', { error: String(userResult.reason) });
       }
 
-      // ── Caller (lead) metadata ───────────────────────────────────────────────
-      // Look up the lead whose phone matches ctx.phone so the greeting can
-      // address the caller by name and the KB can reference their company.
-      let callerMeta: CallerMetadata | undefined;
-      try {
-        if (ctx.phone) {
-          const userId = c.userId?.toString?.() || '';
-          if (userId) {
-            const leads = await storage.getLeads(userId, ctx.campaignId);
-            const normalizedCtxPhone = normalizePhoneNumber(ctx.phone);
-            const matchedLead = leads.find((l) => {
-              try {
-                return normalizePhoneNumber(l.phone) === normalizedCtxPhone;
-              } catch {
-                return l.phone === ctx.phone;
-              }
+      // Apply leads result — find lead matching ctx.phone for personalised greeting
+      if (leadsResult.status === 'fulfilled' && ctx.phone) {
+        try {
+          const normalizedCtxPhone = normalizePhoneNumber(ctx.phone);
+          const matchedLead = (leadsResult.value as any[]).find((l: any) => {
+            try { return normalizePhoneNumber(l.phone) === normalizedCtxPhone; }
+            catch { return l.phone === ctx.phone; }
+          });
+          if (matchedLead) {
+            const nameParts = (matchedLead.name || '').trim().split(/\s+/);
+            callerMeta = {
+              firstName: nameParts[0] || undefined,
+              company:   matchedLead.company?.trim() || undefined,
+              note:      matchedLead.notes?.trim() || undefined,
+            };
+            logger.info('Caller identified from lead record', {
+              leadName:    matchedLead.name,
+              leadCompany: matchedLead.company || '(none)',
             });
-            if (matchedLead) {
-              const nameParts  = (matchedLead.name || '').trim().split(/\s+/);
-              callerMeta = {
-                firstName: nameParts[0] || undefined,
-                company:   (matchedLead as any).company?.trim() || undefined,
-                note:      (matchedLead as any).notes?.trim() || undefined,
-              };
-              logger.info('Caller identified from lead record', {
-                leadName:    matchedLead.name,
-                leadCompany: (matchedLead as any).company || '(none)',
-              });
-            }
           }
+        } catch (leadErr) {
+          logger.warn('Could not match lead by phone', { error: String(leadErr) });
         }
-      } catch (leadErr) {
+      } else if (leadsResult.status === 'rejected') {
         logger.warn('Could not look up lead by phone — proceeding without caller metadata', {
-          error: String(leadErr),
+          error: String(leadsResult.reason),
         });
       }
 
