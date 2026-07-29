@@ -1,6 +1,6 @@
 ---
 name: mockup-sandbox
-description: "Use when the user wants to create, preview, or iterate on any web UI content on the canvas. This is the only way to show live rendered components on the board — all other canvas shapes are static. Activate for: designing or prototyping components on the canvas, comparing design variants side-by-side, showing responsive previews (mobile/tablet/desktop), previewing component states (loading/error/empty), comparing dark vs light mode, or any request that involves putting rendered web content on the board. Sets up a vite dev server with isolated component preview URLs for iframe embedding. For variant exploration (2+ design alternatives), includes subagent orchestration patterns for parallelizing work with DESIGN subagents. Never embed the main app URL directly — always use this skill. Read the entire skill carefully — it contains critical path conventions, image handling rules, and subagent delegation patterns that cause silent failures when skipped. For two specific workflows, also activate the companion skill: use mockup-extract when the user wants to pull an existing component from the main app onto the canvas, and mockup-graduate when the user approves a mockup and wants it integrated into the main app."
+description: "Use when the user wants to create, preview, or iterate on any web UI content on the canvas. This is the only way to show live rendered components on the board — all other canvas shapes are static. Activate for: designing or prototyping components on the canvas, comparing design variants side-by-side, showing responsive previews (mobile/tablet/desktop), previewing component states (loading/error/empty), comparing dark vs light mode, mocking up social media posts (Instagram, X/Twitter, LinkedIn, TikTok) as live interactive iframes rather than generated images, or any request that involves putting rendered web content on the board. Sets up a vite dev server with isolated component preview URLs for iframe embedding. For variant exploration (2+ design alternatives), includes subagent orchestration patterns for parallelizing work with DESIGN subagents. Never embed the main app URL directly — always use this skill. Read the entire skill carefully — it contains critical path conventions, image handling rules, and subagent delegation patterns that cause silent failures when skipped. For two specific workflows, also activate the companion skill: use mockup-extract when the user wants to pull an existing component from the main app onto the canvas, and mockup-graduate when the user approves a mockup and wants it integrated into the main app."
 ---
 # Mockup Sandbox Skill
 
@@ -16,10 +16,20 @@ Activate this skill when the user wants to:
 - Preview responsive behavior ("how does this look on mobile?", "show me mobile and desktop")
 - Preview component states ("show me loading, error, and empty states")
 - Compare themes ("dark mode vs light mode", "what about a warmer color scheme?")
+- Mock up social media content ("design an Instagram post", "make a LinkedIn post for our launch", "show me what this looks like as a tweet")
 - Show a multi-page flow, **only when the user explicitly requests multiple pages** ("preview the signup flow: landing -- signup -- dashboard")
 - Iterate on an existing component's design on the canvas (also activates mockup-extract)
 
 **Rule of thumb:** if the result should be rendered HTML/CSS/React on the canvas, use this skill. If it's just shapes, text, or diagrams, the canvas skill handles it directly.
+
+## Social Media Posts Are UI, Not Images
+
+When the user asks for an Instagram post, tweet, LinkedIn post, TikTok slide, story, or any other social media content, **build it as a live component in the mockup sandbox and embed it as an iframe -- do not produce it as a single generated image.** A generated image is a dead end: the user can't tweak the caption, swap the photo, adjust the layout, or compare variants without regenerating the whole thing. A rendered component gives them a live mockup they can play with and iterate on -- copy edits, color changes, and layout tweaks hot-reload instantly in the iframe.
+
+- By default, build **only the post artwork itself** -- the creative that would be uploaded to the platform -- as a React component (Tailwind CSS) in the mockup sandbox, sized to the platform's aspect ratio (e.g. 1080x1080 square post, 1080x1350 portrait, 1080x1920 story -- scale to fit the iframe). Do NOT include the platform's interface UI (avatar/username header, like/comment/share row, caption block, follower counts, feed frame) unless the user explicitly asks for an "in-feed" or "how it looks in the app" mockup.
+- **Exportable assets render edge-to-edge.** Social posts, stories, ad creatives, and thumbnails are deliverables the user will download. Render them edge-to-edge: `h-screen w-full`, no page padding, no background matting, no drop shadow, no wrapper decoration. A capture of the iframe must be the finished asset.
+- Use `generateImage` **only for the visual assets inside the post** (the photo, product shot, or background art), saved to `artifacts/mockup-sandbox/public/images/` per the [Images](#images) rules -- never for the post as a whole.
+- Embed each post as its own iframe on the canvas, following the standard placeholder -- live flow, so the user can request variants and see them side-by-side like any other mockup.
 
 ## Extract First, Then Iterate
 
@@ -77,6 +87,22 @@ await restartWorkflow({ workflowName: "artifacts/mockup-sandbox: Component Previ
 
 The dev server must be running first so that component files are picked up by the Vite plugin and preview URLs resolve correctly. Preview URLs use path-based routing: `https://${REPLIT_DOMAINS}/__mockup/preview/{folder}/{ComponentName}` -- no port number needed.
 
+**Design-system entries.** In addition to the default entry above, each design system previews through its own entry at `artifacts/mockup-sandbox/src/ds/<ds-slug>/`, served at `https://${REPLIT_DOMAINS}/__mockup/src/ds/<ds-slug>/#/{ComponentName}` (hash routing). If that folder doesn't exist yet, create it once:
+
+1. Copy the entry template and point it at the design system's package:
+
+   ```bash
+   mkdir -p artifacts/mockup-sandbox/src/ds
+   cp -r .local/skills/mockup-sandbox/templates/ds-entry artifacts/mockup-sandbox/src/ds/<ds-slug>
+   ```
+
+   Replace `__DS_SLUG__` with `<ds-slug>` in `src/ds/<ds-slug>/styles.css` (the only file with the placeholder; the rest are slug-agnostic). The entry lives under `src/`, so it's already covered by the sandbox `tsconfig.json` -- no config change needed.
+
+2. Add the design system as a workspace dependency in `artifacts/mockup-sandbox/package.json` (`devDependencies`): `"@workspace/<ds-slug>": "workspace:*"`.
+
+3. Make sure the design system scans its own components: if `artifacts/<ds-slug>/src/index.css` has no `@source "./components"` line (design systems created before component self-registration), add `@source "./components";` to `artifacts/<ds-slug>/scripts/theme-template.css` and regenerate with `pnpm --filter @workspace/<ds-slug> tokens`.
+
+4. Run `pnpm install` from the project root, then restart the "artifacts/mockup-sandbox: Component Preview Server" workflow so the dependency and entry are picked up.
 
 ### Step 2: Create mockup components
 
@@ -461,6 +487,14 @@ Parent: Place iframe(s) with state: "building" on canvas
 ```
 
 For modifications to existing mockups, set `state: "modifying"` on the iframe, edit the file in place, then set `state: "live"` when done. **Do not** create a new file for modifications. If the user wants to preserve the old version for comparison, *then* duplicate the file into a new variant first.
+**Applying or switching a design system on an existing mockup is not an in-place edit.** When the user applies a design system to a mockup that currently lives in the default entry (`src/components/mockups/`) or under a *different* design system's entry, the mockup must end up under the target design system's entry -- re-home it, don't just restyle it where it sits. (If the mockup already lives under the target design system's entry, this is an ordinary in-place edit -- skip the move.) This applies whether the design system already existed or you created/imported it earlier this turn.
+
+1. Wire the target design system's entry if `artifacts/mockup-sandbox/src/ds/<ds-slug>/` does not exist yet -- follow the numbered **Design-system entries** steps in Step 1 above.
+2. Create the rebuilt mockup at `artifacts/mockup-sandbox/src/ds/<ds-slug>/mockups/<ComponentName>.tsx`, importing the design system's own components from `@workspace/<ds-slug>/*`.
+3. Repoint **every** canvas frame that renders the old file -- one component file can back several frames (e.g. the responsive mobile/tablet/desktop comparison), so check for siblings first -- setting each frame's `url` to `https://${REPLIT_DOMAINS}/__mockup/src/ds/<ds-slug>/#/<ComponentName>` and its `componentPath` to the new `artifacts/mockup-sandbox/src/ds/<ds-slug>/mockups/<ComponentName>.tsx`. A brand-new entry (step 1) needs the workflow restart; an existing entry picks up the new file automatically via `import.meta.glob`.
+4. Delete the mockup's previous file only once no frame still references it.
+
+This is the one case where you replace a mockup's file with a new file under a different entry instead of editing in place.
 
 
 
@@ -652,7 +686,9 @@ When done, update the canvas iframes to show real previews (set state: "live" on
 
 5. **Tell subagents the image path convention.** Always include this in the subagent task: "Place all images in `artifacts/mockup-sandbox/public/images/` and reference them as `<img src="/__mockup/images/filename.jpg" />`. Do NOT put images in `src/assets/` and reference them by URL path -- Vite does not serve `src/` as static assets and they will 404. For `generateImage`, use `outputPath` starting with `artifacts/mockup-sandbox/public/images/`."
 
-6. **Give subagents creative freedom.** Subagents produce better designs when given high-level requirements, not prescriptive specs. Pass:
+6. **Tell subagents the social-post constraints.** When delegating social post work, pass the artwork-only and edge-to-edge constraints explicitly in the task -- subagents otherwise default to building full post chrome with a padded presentation wrapper. Include: "Build only the post artwork itself (no platform interface UI -- no avatar/username header, like/comment/share row, caption block, or feed frame) and render it edge-to-edge: `h-screen w-full`, no page padding, no background matting, no drop shadow, no wrapper decoration."
+
+7. **Give subagents creative freedom.** Subagents produce better designs when given high-level requirements, not prescriptive specs. Pass:
    - Target file path and exported function name
    - Shape ID + dev URL for iframe update
    - Shared file paths to import (for multi-page projects)
@@ -663,7 +699,7 @@ When done, update the canvas iframes to show real previews (set state: "live" on
 
    **Exception:** For multi-page apps (only when the user explicitly requests multiple pages), the parent defines the design system in `_shared/` and the subagent works within it. Creative freedom applies to page content and layout, not the shared chrome.
 
-7. **Match the config kind to the task type.** Use `config: { $kind: "design" }` for creative mockup creation (building new components, designing variants) -- it's tuned for visual output and produces better, more diverse designs. Use `config: { $kind: "general" }` for engineering tasks (extract, graduate) -- it's built for codebase navigation, dependency tracing, and architecture-aware transformations. Never use design for extract/graduate or general for mockup creation.
+8. **Match the config kind to the task type.** Use `config: { $kind: "design" }` for creative mockup creation (building new components, designing variants) -- it's tuned for visual output and produces better, more diverse designs. Use `config: { $kind: "general" }` for engineering tasks (extract, graduate) -- it's built for codebase navigation, dependency tracing, and architecture-aware transformations. Never use design for extract/graduate or general for mockup creation.
 
 ## Related Skills
 
@@ -696,6 +732,10 @@ When showing the **same component** at multiple screen widths, use these standar
 - Mobile: 390 -- 844
 - Tablet: 768 -- 1024
 - Desktop: 1280 -- 720
+
+### Social / export formats
+
+For social posts, stories, ad creatives, and other exportable assets, size the iframe to the platform's **exact aspect ratio** -- 4:5 feed post (e.g. 620 -- 775), 1:1 square, 9:16 story -- so the frame ratio matches the export ratio.
 
 ## Common Pitfalls
 

@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
-import { sdmHmrPlugin } from './src/sdm/sdmHmrPlugin';
+import { sdmHmrPlugin } from './src/.sdm/sdmHmrPlugin';
 
 const rawPort = process.env.PORT;
 

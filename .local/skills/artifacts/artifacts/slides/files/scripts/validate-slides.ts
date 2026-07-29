@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { readdirSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { access } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -8,6 +8,11 @@ import {
   safeParseSlidesManifest,
   type SlideEntry,
 } from '../src/data/slidesManifestSchema';
+import {
+  findOrphanSdmFiles,
+  validateSdmEntries,
+  type SdmValidationIo,
+} from './sdmValidation';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +41,10 @@ function formatIssuePath(issuePath: PropertyKey[]): string {
 }
 
 function getSlideFilenames(): string[] {
+  if (!existsSync(slidesDir)) {
+    return [];
+  }
+
   return readdirSync(slidesDir).filter((name) => name.endsWith('.tsx'));
 }
 
@@ -86,10 +95,14 @@ function validateContiguousPositions(issues: ValidationIssue[]) {
   }
 }
 
+function jsxSlides(): SlideEntry[] {
+  return slides.filter((slide) => slide.kind !== 'sdm');
+}
+
 function validateFilepaths(issues: ValidationIssue[]) {
   const knownSlideFiles = new Set(getSlideFilenames());
 
-  for (const slide of slides) {
+  for (const slide of jsxSlides()) {
     const filename = path.basename(slide.filepath);
     const expectedFilepath = `src/pages/slides/${filename}`;
 
@@ -119,7 +132,7 @@ function validateFilepaths(issues: ValidationIssue[]) {
 
 function validateOrphanedSlideFiles(issues: ValidationIssue[]) {
   const manifestSet = new Set(
-    slides.map((slide) =>
+    jsxSlides().map((slide) =>
       path.normalize(path.resolve(projectRoot, slide.filepath)),
     ),
   );
@@ -132,6 +145,42 @@ function validateOrphanedSlideFiles(issues: ValidationIssue[]) {
         message: `Orphaned slide file: ${relativeToProject(file)} (not referenced in manifest)`,
       });
     }
+  }
+}
+
+function validateSdmSlides(issues: ValidationIssue[]) {
+  const io: SdmValidationIo = {
+    readFile: (relativePath) => {
+      try {
+        return readFileSync(path.join(projectRoot, relativePath), 'utf8');
+      } catch {
+        return null;
+      }
+    },
+    listFiles: (relativeDir) => {
+      try {
+        return readdirSync(path.join(projectRoot, relativeDir), {
+          recursive: true,
+          withFileTypes: true,
+        })
+          .filter((entry) => entry.isFile())
+          .map((entry) =>
+            relativeToProject(path.join(entry.parentPath, entry.name)).slice(
+              `${relativeDir}/`.length,
+            ),
+          );
+      } catch {
+        return [];
+      }
+    },
+  };
+  const sdmEntries = slides.filter((slide) => slide.kind === 'sdm');
+  const messages = [
+    ...validateSdmEntries(sdmEntries, io),
+    ...findOrphanSdmFiles(slides, io),
+  ];
+  for (const message of messages) {
+    issues.push({ message });
   }
 }
 
@@ -184,6 +233,7 @@ async function main() {
   validateContiguousPositions(issues);
   validateFilepaths(issues);
   validateOrphanedSlideFiles(issues);
+  validateSdmSlides(issues);
 
   if (issues.length > 0) {
     console.error(

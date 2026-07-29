@@ -852,22 +852,36 @@ export default function Dashboard() {
 
     const fetchData = async () => {
       setLoading(true);
+
+      // Wrap feature-gated API calls so a 403 (plan doesn't include this feature)
+      // returns an empty array instead of throwing and blocking the whole load.
+      // The overview page is always accessible regardless of plan; only the
+      // dedicated tab for each feature shows the UpgradePrompt.
+      const gated = async <T,>(fn: () => Promise<T>, fallback: T): Promise<T> => {
+        try {
+          return await fn();
+        } catch (err: any) {
+          // ApiError with status 403 = feature not in plan → silent empty fallback
+          if (err?.status === 403 || err?.upgradeRequired) return fallback;
+          throw err; // re-throw real errors (network, 500s, etc.)
+        }
+      };
+
       try {
         const [leadsRes, campaignsRes, appointmentsRes, notesRes, plansRes, notificationsRes] = await Promise.all([
-          leadsApi.getAll(),
-          campaignsApi.getAll(),
-          appointmentsApi.getAll(),
+          gated(() => leadsApi.getAll(), []),
+          gated(() => campaignsApi.getAll(), []),
+          gated(() => appointmentsApi.getAll(), []),
           notesApi.getAll(),
           plansApi.getAll(),
           notificationsApi.getAll()
         ]);
-        
+
         setLeads(Array.isArray(leadsRes) ? leadsRes : (leadsRes as any).leads || []);
         setCampaigns(Array.isArray(campaignsRes) ? campaignsRes : (campaignsRes as any).campaigns || []);
         setAppointments(Array.isArray(appointmentsRes) ? appointmentsRes : (appointmentsRes as any).appointments || []);
         setNotes(Array.isArray(notesRes) ? notesRes : (notesRes as any).notes || []);
         setPlans(Array.isArray(plansRes) ? plansRes : (plansRes as any).plans || []);
-        
         setNotifications(Array.isArray(notificationsRes) ? notificationsRes : (notificationsRes as any).notifications || []);
 
         if (isAdmin) {
@@ -875,10 +889,10 @@ export default function Dashboard() {
           setRegisteredUsers(Array.isArray(usersRes) ? usersRes : (usersRes as any).users || []);
         }
 
-        try {
-          const logsRes = await callLogsApi.getAll();
-          setCallLogs(Array.isArray(logsRes) ? logsRes : []);
-        } catch { /* call logs optional */ }
+        // Call logs are also feature-gated (call_history) — same silent fallback
+        const logsRes = await gated(() => callLogsApi.getAll(), []);
+        setCallLogs(Array.isArray(logsRes) ? logsRes : []);
+
       } catch (error: any) {
         toast({
           variant: "destructive",
@@ -1646,14 +1660,9 @@ export default function Dashboard() {
                     <Button
                       key={key}
                       variant={activeTab === tab ? "secondary" : "ghost"}
-                      className={`w-full justify-start hover-elevate h-11 ${locked ? "opacity-60" : ""}`}
-                      onClick={() => {
-                        if (locked) {
-                          setActiveTab(tab);
-                        } else {
-                          setActiveTab(tab);
-                        }
-                      }}
+                      className={`w-full justify-start hover-elevate h-11 ${locked ? "opacity-50 cursor-pointer" : ""}`}
+                      onClick={() => setActiveTab(tab)}
+                      title={locked ? "Upgrade your plan to unlock this feature" : undefined}
                       data-testid={`nav-${key}`}
                     >
                       {icon}
@@ -3251,6 +3260,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
              </div>
+             </FeatureGate>
           )}
 
           {/* Campaign Creation Dialog */}
@@ -4046,6 +4056,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+            </FeatureGate>
           )}
 
           {activeTab === "profile" && (

@@ -1,5 +1,5 @@
 name: openscad
-description: 'OpenSCAD model viewer'
+description: 'parametric 3D CAD models: mechanical/printable parts, enclosures, fixtures, handles/grips — not realistic or sculptural shapes like vehicles, characters, or figurines (use generate3DModel for those)'
 kind: web
 
 access:

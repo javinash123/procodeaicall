@@ -4,7 +4,7 @@ import {
   parseSlidesManifest,
   type SlideEntry,
 } from '@/data/slidesManifestSchema';
-import { SdmSlide } from '@/sdm/SdmSlide';
+import { SdmSlide } from '@/.sdm/SdmSlide';
 
 export interface LoadedSlide extends SlideEntry {
   Component: ComponentType;

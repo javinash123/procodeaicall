@@ -17,7 +17,7 @@ title = "MongoDB Backup — 2026-07-27 14:09 UTC"
 id = "qyr6_tsl6vdt_llc5Wx6N"
 uri = "file://nijvox-deploy.tar.gz"
 type = "unspecified"
-title = "nijvox-deploy.tar.gz — EC2 deployment package"
+title = "NIJVOX Production Build — nijvox-deploy.tar.gz"
 
 [[outputs]]
 id = "a5KZivsDX8Gt5H4kU1JPn"

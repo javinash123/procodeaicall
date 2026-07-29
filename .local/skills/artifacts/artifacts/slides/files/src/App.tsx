@@ -14,7 +14,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { slides } from '@/slideLoader';
-import type { Action } from '@/sdm/core/schema';
+import type { Action } from '@/.sdm/core/schema';
 import { useLocation } from 'wouter';
 
 function getSlideIndex(pathname: string): number {
@@ -209,6 +209,7 @@ function AllSlides() {
       {slides.map((slide) => (
         <div
           key={slide.id}
+          data-slide-id={slide.id}
           className="slide relative aspect-video overflow-hidden"
           style={{ width: '1920px', height: '1080px' }}
         >

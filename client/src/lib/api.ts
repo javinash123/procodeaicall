@@ -6,10 +6,25 @@ const getApiBase = () => {
 
 const API_BASE = getApiBase();
 
+class ApiError extends Error {
+  status: number;
+  upgradeRequired?: boolean;
+  constructor(message: string, status: number, upgradeRequired?: boolean) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.upgradeRequired = upgradeRequired;
+  }
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: "Request failed" }));
-    throw new Error(error.message || "Request failed");
+    throw new ApiError(
+      error.message || "Request failed",
+      response.status,
+      error.upgradeRequired
+    );
   }
   return response.json();
 }

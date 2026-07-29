@@ -1,0 +1,97 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+[session] store=MongoDB (connect-mongo)
+[session] cookie.secure=false NODE_ENV=development
+4:05:31 PM [ws] WebSocket server ready on path /stream
+4:05:31 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+4:05:31 PM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+4:05:36 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://a77d2f5b-c0eb-45b4-bb80-c617cc4b0824-00-2oscwij6ahf17.pike.replit.dev host=a77d2f5b-c0eb-45b4-bb80-c617cc4b0824-00-2oscwij6ahf17.pike.replit.dev
+4:05:36 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+4:05:38 PM [express] GET /api/config 200 in 2ms :: {"razorpayKeyId":""}
+4:05:38 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+4:05:45 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://127.0.0.1:5000 host=127.0.0.1:5000
+4:05:45 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+4:05:45 PM [express] GET /api/config 200 in 1ms :: {"razorpayKeyId":""}
+4:05:45 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m4:14:55 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m
+4:15:01 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://127.0.0.1:5000 host=127.0.0.1:5000
+4:15:01 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+4:15:02 PM [express] GET /api/config 304 in 0ms :: {"razorpayKeyId":""}
+4:15:02 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Unauthorized","redirectTo":"/login"}
+4:15:04 PM [ws] [upgrade] socket error on /vite-hmr: read ECONNRESET
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:08:18 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m [33m(x2)[39m
+5:08:27 PM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://127.0.0.1:5000 host=127.0.0.1:5000
+5:08:27 PM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+5:08:28 PM [express] GET /api/config 200 in 1ms :: {"razorpayKeyId":""}
+5:08:28 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}

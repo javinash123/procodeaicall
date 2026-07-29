@@ -1,0 +1,76 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+[session] store=MongoDB (connect-mongo)
+[session] cookie.secure=false NODE_ENV=development
+4:05:06 PM [ws] WebSocket server ready on path /stream
+4:05:06 PM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+4:05:06 PM [express] serving on port 5000
+[31m(!) Failed to run dependency scan. Skipping dependency pre-bundling. Error: [31m  Failed to scan for dependencies from entries:
+  /home/runner/workspace/client/index.html
+
+  [31m[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mThe character "}" is not valid inside a JSX element[0m
+
+    client/src/pages/dashboard.tsx:3254:11:
+[37m      3254 │           )[32m}[37m
+           │            [32m^[37m
+           ╵            [32m{'}'}[0m
+
+  Did you mean to escape it as "{'}'}" instead?
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUnexpected closing "div" tag does not match opening "FeatureGate" tag[0m
+
+    client/src/pages/dashboard.tsx:4609:10:
+[37m      4609 │         </[32mdiv[37m>
+           │           [32m~~~[37m
+           ╵           [32mFeatureGate[0m
+
+  The opening "FeatureGate" tag is here:
+
+    client/src/pages/dashboard.tsx:3158:14:
+[37m      3158 │              <[32mFeatureGate[37m featureKey="crm">
+           ╵               [32m~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUnterminated regular expression[0m
+
+    client/src/pages/dashboard.tsx:4610:13:
+[37m      4610 │       </main>[32m[37m
+           ╵              [32m^[0m
+
+
+    at failureErrorWithLog (/home/runner/workspace/node_modules/esbuild/lib/main.js:1467:15)
+    at /home/runner/workspace/node_modules/esbuild/lib/main.js:926:25
+    at runOnEndCallbacks (/home/runner/workspace/node_modules/esbuild/lib/main.js:1307:45)
+    at buildResponseToResult (/home/runner/workspace/node_modules/esbuild/lib/main.js:924:7)
+    at /home/runner/workspace/node_modules/esbuild/lib/main.js:936:9
+    at new Promise (<anonymous>)
+    at requestCallbacks.on-end (/home/runner/workspace/node_modules/esbuild/lib/main.js:935:54)
+    at handleRequest (/home/runner/workspace/node_modules/esbuild/lib/main.js:628:17)
+    at handleIncomingPacket (/home/runner/workspace/node_modules/esbuild/lib/main.js:653:7)
+    at Socket.readFromStdout (/home/runner/workspace/node_modules/esbuild/lib/main.js:581:7)[39m
+[1G[0K⠙[1G[0K[1G[0K⠙[1G[0K

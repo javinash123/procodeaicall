@@ -1,0 +1,126 @@
+[1G[0K⠙[1G[0K⠹[1G[0K⠸[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development npx tsx server/index.ts
+
+[1G[0K⠸[1G[0K[1G[0K⠙[1G[0KMongoDB connected successfully
+[session] store=MongoDB (connect-mongo)
+[session] cookie.secure=false NODE_ENV=development
+5:51:23 AM [ws] WebSocket server ready on path /stream
+5:51:23 AM [ws] Exotel voicebot stream ready on path /exotel-stream
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] Initialising V2SessionCoordinator singleton
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI API Key Present = YES
+
+[OPENAI PROVIDER VALIDATION]
+  Outbound events    ... OK
+  Inbound events     ... OK
+  Session.update     ... OK
+  Response schema    ... OK
+  Audio schema       ... OK
+  Tool schema        ... OK
+
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] [VoiceEngine] OpenAI LLM provider registered in DI chain
+[DI VALIDATION]
+ILogger............. OK
+ILLMProvider........ OK
+ISTTProvider........ OK
+ITTSProvider........ OK
+IMetricsCollector... OK
+HealthRegistry...... OK
+Config.............. OK
+[V2Migration {"subsystem":"V2SessionCoordinator"}] [INFO] V2SessionCoordinator ready {"activeSessions":0}
+5:51:25 AM [express] serving on port 5000
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+5:51:28 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://a77d2f5b-c0eb-45b4-bb80-c617cc4b0824-00-2oscwij6ahf17.pike.replit.dev host=a77d2f5b-c0eb-45b4-bb80-c617cc4b0824-00-2oscwij6ahf17.pike.replit.dev
+5:51:28 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+5:51:30 AM [express] GET /api/config 200 in 2ms :: {"razorpayKeyId":""}
+5:51:30 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:52:21 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/lib/auth.tsx, /src/pages/bulk-whatsapp.tsx, /src/pages/auth.tsx, /src/pages/dashboard.tsx[22m
+[2m5:52:22 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/lib/auth.tsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m5:52:22 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/pages/bulk-whatsapp.tsx, /src/pages/notifications.tsx, /src/pages/payment.tsx, /src/pages/admin-login.tsx, /src/pages/auth.tsx, /src/pages/dashboard.tsx, /src/components/feature-gate.tsx[22m
+5:52:25 AM [express] GET /api/auth/me 401 in 3ms :: {"message":"Unauthorized","redirectTo":"/login"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:52:29 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m
+5:52:42 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=http://127.0.0.1:5000 host=127.0.0.1:5000
+5:52:42 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+5:52:42 AM [express] GET /api/config 200 in 3ms :: {"razorpayKeyId":""}
+5:52:42 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
+5:52:55 AM [express] POST /api/auth/login 200 in 144ms :: {"user":{"_id":"6a68d56c588ffb077121850c","email":"test@example.com","firstName":"Test","lastName":"User","role":"user","companyName":"Test Company","phone":"+1234567890","subscription":{"plan":"Pro","status":"Active","monthlyCallCredits":2000,"creditsUsed":250,"joinedDate":"2026-07-28T16:14:36.777Z","purchasedCredits":0},"settings":{"dailyCallLimit":500,"dndEnabled":false,"localPresenceDialing":true},"createdAt":"2026-07-28T16:14:36.778Z","__v":0,"planFeatures":["crm","campaigns","calendar","call_history","analytics"],"overviewLevel":"intermediate"}}
+5:52:55 AM [express] GET /api/leads 200 in 25ms :: {"leads":[]}
+5:52:55 AM [express] GET /api/campaigns 200 in 29ms :: {"campaigns":[]}
+5:52:55 AM [express] GET /api/appointments 200 in 29ms :: {"appointments":[]}
+5:52:55 AM [express] GET /api/call-logs 200 in 30ms :: [{"_id":"6a6767e6427f4543cc2ad214","userId":"6a6767e6427f4543cc2ad1fd","leadId":"6a6767e6427f4543cc2ad203","callSid":"CA003","status":"completed","duration":175,"startTime":"2026-07-22T14:15:02.288Z","recordingUrl":null,"campaignId":"6a6767e6427f4543cc2ad1ff","createdAt":"2026-07-22T14:15:02.288Z"},{"_id":"6a6767e6427f4543cc2ad216","userId":"6a6767e6427f4543cc2ad1fd","leadId":"6a6767e6427f4543cc2ad20b","callSid":"CA005","status":"no-answer","duration":0,"startTime":"2026-07-21T14:15:02.288Z","recordingUrl":null,"campaignId":"6a6767e6427f4543cc2ad1ff","createdAt":"2026-07-21T14:15:02.288Z"},{"_id":"6a6767e6427f4543cc2ad213","userId":"6a6767e6427f4543cc2ad1fd","leadId":"6a6767e6427f4543cc2ad202","callSid":"CA002","status":"completed","duration":370,"startTime":"2026-07-12T14:15:02.288Z","recordingUrl":null,"campaignId":"6a6767e6427f4543cc2ad1fe","createdAt":"2026-07-12T14:15:02.288Z"},{"_id":"6a6767e6427f4543cc2ad212","userId":"6a6767e6427f4543cc2ad1fd","leadId":"6a6767e6427f4543cc2ad201","callSid":"CA001","status":"completed","duration":192,"startTime":"2026-07-07T14:15:02.288Z","recordingUrl":null,"campaignId":"6a6767e6427f4543cc2ad1fe","createdAt":"2026-07-07T14:15:02.288Z"},{"_id":"6a6767e6427f4543cc2ad215","userId":"6a6767e6427f4543cc2ad1fd","leadId":"6a6767e6427f4543cc2ad207","callSid":"CA004","status":"completed","duration":230,"startTime":"2026-07-02T14:15:02.288Z","recordingUrl":null,"campaignId":"6a6767e6427f4543cc2ad200","createdAt":"2026-07-02T14:15:02.288Z"}]
+5:53:08 AM [express] POST /api/auth/login 401 in 6ms :: {"message":"Invalid credentials"}
+5:53:27 AM [express] POST /api/whatsapp/send 403 in 21ms :: {"message":"Your current plan does not include this feature. Please upgrade to continue.","feature":"whatsapp","upgradeRequired":true}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m5:53:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/dashboard.tsx[22m [33m(x2)[39m
+7:09:27 AM [ws] [upgrade] path=/vite-hmr from=127.0.0.1 origin=https://a77d2f5b-c0eb-45b4-bb80-c617cc4b0824-00-2oscwij6ahf17.pike.replit.dev host=a77d2f5b-c0eb-45b4-bb80-c617cc4b0824-00-2oscwij6ahf17.pike.replit.dev
+7:09:27 AM [ws] [upgrade] unhandled path /vite-hmr — leaving for other listeners
+7:09:28 AM [express] GET /api/config 200 in 9ms :: {"razorpayKeyId":""}
+7:09:28 AM [express] GET /api/auth/me 401 in 1ms :: {"message":"Unauthorized","redirectTo":"/login"}
